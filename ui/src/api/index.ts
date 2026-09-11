@@ -9,7 +9,6 @@ import type {
   PageResult,
   LoveAlbum,
   LoveAlbumPhoto,
-  LoveConfig,
   LoveDailyItem,
   LoveStory,
   MiniProgramLink,
@@ -48,13 +47,6 @@ export const appVersionsApi = {
     http.put<AppVersion>(`${PLUGIN_BASE}/app-versions/${name}`, data),
   delete: (name: string) =>
     http.delete<{ success: boolean }>(`${PLUGIN_BASE}/app-versions/${name}`),
-};
-
-// ===== 恋爱管理 =====
-
-export const loveConfigApi = {
-  get: () => http.get<LoveConfig>(`${PLUGIN_BASE}/love-config`),
-  save: (data: LoveConfig) => http.put<LoveConfig>(`${PLUGIN_BASE}/love-config`, data),
 };
 
 // ===== 通用配置（GeneralConfig 单例）=====
@@ -230,7 +222,7 @@ export const miniProgramLinkSubmissionsApi = {
     http.delete<{ success: boolean }>(`${SUBMISSION_BASE}/${name}`),
 };
 
-// ===== 审核配置 =====
+// ===== 审核模式 =====
 
 const AUDIT_DATA_BASE = `${PLUGIN_BASE}/audit-data`;
 

@@ -73,6 +73,7 @@ public class CaptchaServiceImpl implements CaptchaService {
                         node.path(KEY_ENABLED).asBoolean(true),
                         scopeEnabled(node, CaptchaScope.LINK_SUBMISSION),
                         scopeEnabled(node, CaptchaScope.LOVE_ALBUM_UNLOCK),
+                        scopeEnabled(node, CaptchaScope.LOVE_MODULE_UNLOCK),
                         parseType(node.path(KEY_TYPE).asText(CaptchaType.ALPHANUMERIC.name())),
                         node.path(KEY_LENGTH).asInt(4),
                         node.path(KEY_RANGE).asInt(10)));
@@ -98,7 +99,8 @@ public class CaptchaServiceImpl implements CaptchaService {
     }
 
     private record CaptchaConfig(boolean enabled, boolean linkSubmissionEnabled,
-            boolean loveAlbumUnlockEnabled, CaptchaType type, int length, int range) {
+            boolean loveAlbumUnlockEnabled, boolean loveModuleUnlockEnabled,
+            CaptchaType type, int length, int range) {
 
         boolean scopeEnabled(CaptchaScope scope) {
             if (scope == null) {
@@ -107,6 +109,7 @@ public class CaptchaServiceImpl implements CaptchaService {
             return switch (scope) {
                 case LINK_SUBMISSION -> linkSubmissionEnabled;
                 case LOVE_ALBUM_UNLOCK -> loveAlbumUnlockEnabled;
+                case LOVE_MODULE_UNLOCK -> loveModuleUnlockEnabled;
             };
         }
     }

@@ -72,27 +72,6 @@ export const PLATFORMS = ["Android", "iOS", "Harmony"];
 
 // ===== 恋爱管理 =====
 
-export interface LoveInfo {
-  boyNickname?: string;
-  boyAvatar?: string;
-  girlNickname?: string;
-  girlAvatar?: string;
-}
-
-// pageImages（图片配置）与模块开关（loveAlbum/loveDaily/ourStory 的
-// enabled/iconUrl）不进入模型，继续由 setting.yaml 的 loveConfig 组配置
-
-export interface LoveConfigSpec {
-  loveDateTitle?: string;
-  loveDate?: string;
-  loveInfo?: LoveInfo;
-}
-
-export interface LoveConfig {
-  metadata: Metadata;
-  spec: LoveConfigSpec;
-}
-
 export interface LoveAlbumPhoto {
   name?: string;
   url?: string;
@@ -456,7 +435,7 @@ export const SUBMISSION_STATUS_OPTIONS: { label: string; value?: string }[] = [
   { label: "已拒绝", value: "REJECTED" },
 ];
 
-// ===== 审核配置 =====
+// ===== 审核模式 =====
 
 /** 被选中引用的快照（name 为扩展 metadata.name，其余字段按类型选择性填充） */
 export interface AuditDataRef {
@@ -492,7 +471,7 @@ export interface AuditDataConfig {
   spec: AuditDataConfigSpec;
 }
 
-/** 审核配置详情（管理端 GET /audit-data 返回）：原始配置 + 各类型已选条目的最新详情 */
+/** 审核模式详情（管理端 GET /audit-data 返回）：原始配置 + 各类型已选条目的最新详情 */
 export interface AuditDataConfigDetail {
   config: AuditDataConfig;
   selections: Record<AuditCandidateType, AuditDataRef[]>;
@@ -691,6 +670,52 @@ export interface GeneralConfigPages {
     copyrightDesc?: string;
     copyrightViolation?: string;
   };
+  /** 恋爱日记页（页面标题 + 恋爱页背景图，客户端 pageConfig.loveDiaryConfig） */
+  loveDiaryConfig?: {
+    pageTitle?: string;
+    /** 恋爱页背景图（2026-09-11 起由恋爱设置-基本设置迁入） */
+    bgImageUrl?: string;
+  };
+  /** 联系博主页（页面标题，客户端 pageConfig.contactConfig） */
+  contactConfig?: {
+    pageTitle?: string;
+  };
+  /** 我的收藏页（页面标题，客户端 pageConfig.favoritesConfig） */
+  favoritesConfig?: {
+    pageTitle?: string;
+  };
+  /** 友情链接页（页面标题，客户端 pageConfig.friendLinksConfig） */
+  friendLinksConfig?: {
+    pageTitle?: string;
+  };
+  /** 文章归档页（页面标题，客户端 pageConfig.archivesConfig） */
+  archivesConfig?: {
+    pageTitle?: string;
+  };
+  /** 投票中心页（页面标题，客户端 pageConfig.voteConfig） */
+  voteConfig?: {
+    pageTitle?: string;
+  };
+  /** 数据看板页（页面标题，客户端 pageConfig.dataVisualConfig） */
+  dataVisualConfig?: {
+    pageTitle?: string;
+  };
+  /** 偏好设置页（页面标题，客户端 pageConfig.settingConfig） */
+  settingConfig?: {
+    pageTitle?: string;
+  };
+  /** 关于项目页（页面标题，客户端 pageConfig.aboutProjectConfig） */
+  aboutProjectConfig?: {
+    pageTitle?: string;
+  };
+  /** 公告中心页（页面标题，客户端 pageConfig.noticeConfig） */
+  noticeConfig?: {
+    pageTitle?: string;
+  };
+  /** 搜索页面（页面标题，客户端 pageConfig.searchConfig） */
+  searchConfig?: {
+    pageTitle?: string;
+  };
 }
 
 /** 快捷导航项（字段与客户端 uh-home-quick-nav 对齐） */
@@ -767,12 +792,30 @@ export interface GeneralConfigLove {
     /** 背景图片 */
     bgImageUrl?: string;
   };
+  /** 恋爱日记入口开关（恋爱页本身，设置密码后进入恋爱页前需先验证密码） */
+  loveDiary?: GeneralConfigLoveModule;
   /** 恋爱故事模块入口开关（数据在「恋爱管理-恋爱故事」维护） */
   ourStory?: GeneralConfigLoveModule;
   /** 恋爱相册模块入口开关（数据在「恋爱管理-恋爱相册」维护） */
   lovePhoto?: GeneralConfigLoveModule;
   /** 恋爱清单模块入口开关（数据在「恋爱管理-恋爱清单」维护） */
   loveDaily?: GeneralConfigLoveModule;
+  /** 恋爱信息（纪念日 + 恋人信息，2026-09-11 起由「恋爱管理-恋爱配置」迁入，
+   * 配置在恋爱设置-恋爱信息 tab，经 getConfigs 下发 loveConfig.loveInfo） */
+  loveInfo?: {
+    /** 纪念日标题（默认「这是我们一起走过的」） */
+    loveDateTitle?: string;
+    /** 恋爱纪念日（yyyy-MM-dd），用于计算恋爱天数 */
+    loveDate?: string;
+    /** 男生昵称 */
+    boyNickname?: string;
+    /** 男生头像 */
+    boyAvatar?: string;
+    /** 女生昵称 */
+    girlNickname?: string;
+    /** 女生头像 */
+    girlAvatar?: string;
+  };
 }
 
 /**

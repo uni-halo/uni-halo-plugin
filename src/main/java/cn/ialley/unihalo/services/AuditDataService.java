@@ -7,7 +7,7 @@ import cn.ialley.unihalo.vo.AuditDataConfigDetail;
 import reactor.core.publisher.Mono;
 
 /**
- * 审核配置服务（单例模型 audit-data-config）。
+ * 审核模式服务（单例模型 audit-data-config）。
  *
  * <p>承载「审核模式模拟数据」的选中引用列表：审核模式开启后小程序端仅展示
  * 此处挑选的站内真实数据。保存时服务端校验并剔除失效引用；候选数据按类型

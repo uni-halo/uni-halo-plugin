@@ -145,7 +145,10 @@ public class GeneralConfig extends AbstractExtension {
         private String copyrightViolation;
     }
 
-    /** 页面与排版：首页/图库/分类页/瞬间页/关于页/文章详情页/免责声明页视觉 */
+    /** 页面与排版：首页/图库/分类页/瞬间页/关于页/文章详情页/免责声明页视觉，
+     * 以及其余功能页面标题（恋爱日记/联系博主/我的收藏/友情链接/文章归档/投票中心/
+     * 数据看板/偏好设置/关于项目/公告中心/搜索页面，均经 getConfigs 下发
+     * pageConfig.xxxConfig，页面标题留空时客户端回退内置标题） */
     @Data
     public static class Pages {
         private Home homeConfig;
@@ -162,6 +165,28 @@ public class GeneralConfig extends AbstractExtension {
         private Disclaimer disclaimers;
         /** 文章详情页内容与版权文案 */
         private PostDetail postDetailConfig;
+        /** 恋爱日记页（页面标题，客户端 pageConfig.loveDiaryConfig） */
+        private LoveDiaryPage loveDiaryConfig;
+        /** 联系博主页（页面标题，客户端 pageConfig.contactConfig） */
+        private ContactPage contactConfig;
+        /** 我的收藏页（页面标题，客户端 pageConfig.favoritesConfig） */
+        private FavoritesPage favoritesConfig;
+        /** 友情链接页（页面标题，客户端 pageConfig.friendLinksConfig） */
+        private FriendLinksPage friendLinksConfig;
+        /** 文章归档页（页面标题，客户端 pageConfig.archivesConfig） */
+        private ArchivesPage archivesConfig;
+        /** 投票中心页（页面标题，客户端 pageConfig.voteConfig） */
+        private VotePage voteConfig;
+        /** 数据看板页（页面标题，客户端 pageConfig.dataVisualConfig） */
+        private DataVisualPage dataVisualConfig;
+        /** 偏好设置页（页面标题，客户端 pageConfig.settingConfig） */
+        private SettingPage settingConfig;
+        /** 关于项目页（页面标题，客户端 pageConfig.aboutProjectConfig） */
+        private AboutProjectPage aboutProjectConfig;
+        /** 公告中心页（页面标题，客户端 pageConfig.noticeConfig） */
+        private NoticePage noticeConfig;
+        /** 搜索页面（页面标题，客户端 pageConfig.searchConfig） */
+        private SearchPage searchConfig;
     }
 
     /** 首页（轮播渲染参数由 app 端默认开启、快捷导航逐项可配置） */
@@ -255,6 +280,85 @@ public class GeneralConfig extends AbstractExtension {
         private String waveImageUrl;
     }
 
+    /** 恋爱日记页（客户端 pageConfig.loveDiaryConfig） */
+    @Data
+    public static class LoveDiaryPage {
+        /** 页面标题 */
+        private String pageTitle;
+        /** 恋爱页背景图（2026-09-11 起由恋爱设置-基本设置迁入，客户端内置回退） */
+        private String bgImageUrl;
+    }
+
+    /** 联系博主页（客户端 pageConfig.contactConfig） */
+    @Data
+    public static class ContactPage {
+        /** 页面标题 */
+        private String pageTitle;
+    }
+
+    /** 我的收藏页（客户端 pageConfig.favoritesConfig） */
+    @Data
+    public static class FavoritesPage {
+        /** 页面标题 */
+        private String pageTitle;
+    }
+
+    /** 友情链接页（客户端 pageConfig.friendLinksConfig） */
+    @Data
+    public static class FriendLinksPage {
+        /** 页面标题 */
+        private String pageTitle;
+    }
+
+    /** 文章归档页（客户端 pageConfig.archivesConfig） */
+    @Data
+    public static class ArchivesPage {
+        /** 页面标题 */
+        private String pageTitle;
+    }
+
+    /** 投票中心页（客户端 pageConfig.voteConfig） */
+    @Data
+    public static class VotePage {
+        /** 页面标题 */
+        private String pageTitle;
+    }
+
+    /** 数据看板页（客户端 pageConfig.dataVisualConfig） */
+    @Data
+    public static class DataVisualPage {
+        /** 页面标题 */
+        private String pageTitle;
+    }
+
+    /** 偏好设置页（客户端 pageConfig.settingConfig） */
+    @Data
+    public static class SettingPage {
+        /** 页面标题 */
+        private String pageTitle;
+    }
+
+    /** 关于项目页（客户端 pageConfig.aboutProjectConfig） */
+    @Data
+    public static class AboutProjectPage {
+        /** 页面标题 */
+        private String pageTitle;
+    }
+
+    /** 公告中心页（客户端 pageConfig.noticeConfig） */
+    @Data
+    public static class NoticePage {
+        /** 页面标题 */
+        private String pageTitle;
+    }
+
+    /** 搜索页面（客户端 pageConfig.searchConfig） */
+    @Data
+    public static class SearchPage {
+        /** 页面标题 */
+        private String pageTitle;
+    }
+
     /** 资源与兜底：加载占位图片（仅 loading/error 两图，客户端内置回退兜底） */
     @Data
     public static class Assets {
@@ -292,18 +396,39 @@ public class GeneralConfig extends AbstractExtension {
      * 入口展示由模块入口开关与 navList 统一管理） */
     @Data
     public static class Love {
-        /** 恋爱页图片配置 */
-        private PageImages pageImages;
+        /** 恋爱日记入口开关（恋爱页本身，即 app 端 love 页；
+         * 设置密码后进入恋爱页前需先验证密码） */
+        private ModuleSwitch loveDiary;
         /** 恋爱故事模块入口开关（数据在「恋爱管理-恋爱故事」维护） */
         private ModuleSwitch ourStory;
         /** 恋爱相册模块入口开关（数据在「恋爱管理-恋爱相册」维护） */
         private ModuleSwitch lovePhoto;
         /** 恋爱清单模块入口开关（数据在「恋爱管理-恋爱清单」维护） */
         private ModuleSwitch loveDaily;
+        /** 恋爱信息（原「恋爱管理-恋爱配置」内容：纪念日 + 恋人信息，
+         * 2026-09-11 迁入通用配置-恋爱设置-恋爱信息 tab） */
+        private LoveInfo loveInfo;
         /** 恋爱页入口列表（固定 3 项，key 对应模块；
          * 仅 title/subTitle 可编辑 + priority 排序 + visible 开关，不可增删；
          * 经 getConfigs 下发 loveConfig.navList） */
         private List<LoveNavItem> navList;
+    }
+
+    /** 恋爱信息（纪念日 + 恋人信息；原 LoveConfig 单例模型内容迁入） */
+    @Data
+    public static class LoveInfo {
+        /** 纪念日标题，默认「这是我们一起走过的」 */
+        private String loveDateTitle;
+        /** 恋爱纪念日（yyyy-MM-dd），用于计算恋爱天数 */
+        private String loveDate;
+        /** 男生昵称 */
+        private String boyNickname;
+        /** 男生头像 */
+        private String boyAvatar;
+        /** 女生昵称 */
+        private String girlNickname;
+        /** 女生头像 */
+        private String girlAvatar;
     }
 
     /** 恋爱页入口项（固定 3 项，key 对应 ourStory/lovePhoto/loveDaily 模块，
@@ -320,13 +445,6 @@ public class GeneralConfig extends AbstractExtension {
         private Integer priority;
         /** 是否展示（不可删除，仅禁用/启用开关；与模块开关 enabled 均 true 才展示） */
         private Boolean visible;
-    }
-
-    /** 恋爱页图片（仅背景图，客户端内置回退） */
-    @Data
-    public static class PageImages {
-        /** 背景图片 */
-        private String bgImageUrl;
     }
 
     /**

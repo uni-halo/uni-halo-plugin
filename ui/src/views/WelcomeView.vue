@@ -91,8 +91,8 @@ const consoleFeatures = [
   },
   {
     icon: RiShieldCheckLine,
-    title: '审核配置',
-    description: '内容审核模式、数据引用管理、审核规则配置',
+    title: '审核模式',
+    description: '内容审核、数据引用管理、审核规则配置',
     color: '#06B6D4',
   },
   {

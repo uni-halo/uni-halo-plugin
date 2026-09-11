@@ -85,12 +85,11 @@ class PublicConfigAssemblerTest {
     @Test
     void shouldStripSensitiveAndRetireFieldsAndPassThroughOthers() throws Exception {
         // 内容组由 GeneralConfig 重建；love 分区映射回旧 loveConfig 顶层键（脱敏输出；
-        // 2026-09-10 起总开关 loveEnabled 已下线）
+        // 2026-09-10 起总开关 loveEnabled 已下线；pageImages 已迁移至
+        // pageConfig.loveDiaryConfig.bgImageUrl，不再经 loveConfig 下发）
         GeneralConfig config = config("""
                 {"spec":{"profile":{"blogger":{"nickname":"测试博主"}},
-                  "love":{"pageImages":{"bgImageUrl":"https://img/bg.png",
-                      "waveImageUrl":"/plugins/plugin-uni-halo/assets/static/uni_halo_about_wave.gif"},
-                    "ourStory":{"enabled":true,"iconUrl":"","passwordHash":"$2a$10$fakehash"},
+                  "love":{"ourStory":{"enabled":true,"iconUrl":"","passwordHash":"$2a$10$fakehash"},
                     "lovePhoto":{"enabled":false,"iconUrl":""},
                     "loveDaily":{"enabled":false,"iconUrl":""}}}}
                 """);
@@ -108,15 +107,13 @@ class PublicConfigAssemblerTest {
         assertEquals("测试博主",
                 root.get("authorConfig").get("blogger").get("nickname").asText());
         // loveConfig 由 spec.love 重建（不再透传旧 ConfigMap loveConfig 值；
-        // 总开关 loveEnabled 已下线不输出）
+        // 总开关 loveEnabled 已下线不输出；pageImages 已迁移不输出）
         assertFalse(root.get("loveConfig").has("loveEnabled"),
                 "总开关 loveEnabled 已下线不应输出");
+        assertFalse(root.get("loveConfig").has("pageImages"),
+                "pageImages 已迁移至 pageConfig.loveDiaryConfig.bgImageUrl 不应输出");
         assertTrue(root.get("loveConfig").get("ourStory").get("enabled").asBoolean());
-        // 2026-09-08 脱敏：pageImages 仅 bgImageUrl；模块仅 enabled + passwordEnabled
-        assertEquals("https://img/bg.png",
-                root.get("loveConfig").get("pageImages").get("bgImageUrl").asText());
-        assertFalse(root.get("loveConfig").get("pageImages").has("waveImageUrl"),
-                "已下线 waveImageUrl 不应输出");
+        // 模块仅 enabled + passwordEnabled
         assertTrue(root.get("loveConfig").get("ourStory").get("passwordEnabled").asBoolean(),
                 "ourStory 有密码哈希 → passwordEnabled=true");
         assertFalse(root.get("loveConfig").get("lovePhoto").get("passwordEnabled").asBoolean());
@@ -312,9 +309,6 @@ class PublicConfigAssemblerTest {
     void shouldRebuildLoveConfigFromSpecLove() throws Exception {
         GeneralConfig config = config("""
                 {"spec":{"love":{
-                  "pageImages":{"bgImageUrl":"/plugins/plugin-uni-halo/assets/static/logo.png",
-                    "waveImageUrl":"/plugins/plugin-uni-halo/assets/static/uni_halo_about_wave.gif",
-                    "heartImageUrl":""},
                   "ourStory":{"enabled":true,"iconUrl":"https://img/our-story.png",
                     "passwordHash":"$2a$10$fakehash","passwordEnabled":true},
                   "lovePhoto":{"enabled":false,"iconUrl":""},
@@ -326,14 +320,13 @@ class PublicConfigAssemblerTest {
         ObjectNode root = assembler.assemble(legacySettings(), config);
 
         // spec.love → 旧顶层 loveConfig shape；2026-09-08 起脱敏输出：
-        // pageImages 仅 bgImageUrl，模块仅 enabled + passwordEnabled（密码字段不下发）；
-        // 2026-09-10 起总开关 loveEnabled 已下线
+        // 模块仅 enabled + passwordEnabled（密码字段不下发）；
+        // 2026-09-10 起总开关 loveEnabled 已下线；
+        // pageImages 已迁移至 pageConfig.loveDiaryConfig.bgImageUrl 不再输出
         assertFalse(root.get("loveConfig").has("loveEnabled"),
                 "总开关 loveEnabled 已下线不应输出");
-        assertEquals("/plugins/plugin-uni-halo/assets/static/logo.png",
-                root.get("loveConfig").get("pageImages").get("bgImageUrl").asText());
-        assertFalse(root.get("loveConfig").get("pageImages").has("waveImageUrl"));
-        assertFalse(root.get("loveConfig").get("pageImages").has("heartImageUrl"));
+        assertFalse(root.get("loveConfig").has("pageImages"),
+                "pageImages 已迁移至 pageConfig.loveDiaryConfig.bgImageUrl 不应输出");
         assertTrue(root.get("loveConfig").get("loveDaily").get("enabled").asBoolean());
         // passwordEnabled 按哈希非空派生：ourStory 有哈希 → true；loveDaily 哈希为空 → false
         assertTrue(root.get("loveConfig").get("ourStory").get("passwordEnabled").asBoolean());

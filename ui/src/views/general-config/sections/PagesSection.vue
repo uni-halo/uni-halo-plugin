@@ -85,7 +85,7 @@ function restoreQuickNavigationDefaults() {
   });
 }
 
-// ===== 首页分类栏选择（固定 3 个，复用审核配置候选弹窗 AuditCandidatesModal）=====
+// ===== 首页分类栏选择（固定 3 个，复用审核模式候选弹窗 AuditCandidatesModal）=====
 
 const categoryModalVisible = ref(false);
 
@@ -327,7 +327,7 @@ function restoreMyPageDefaults(group: "common" | "other") {
       <VSwitch v-model="formState.spec.pages.homeConfig.useCategory" />
     </div>
 
-    <!-- 首页分类栏选中（固定 3 个，快照含封面/名称，拖拽排序；复用审核配置候选弹窗 AuditCandidatesModal） -->
+    <!-- 首页分类栏选中（固定 3 个，快照含封面/名称，拖拽排序；复用审核模式候选弹窗 AuditCandidatesModal） -->
     <div
       v-if="formState.spec.pages.homeConfig.useCategory"
       class=":uno: mt-4 rounded-lg bg-gray-50 p-4"
@@ -623,7 +623,63 @@ function restoreMyPageDefaults(group: "common" | "other") {
     <RichTextEditorField v-model="formState.spec.pages.disclaimers!.content" placeholder="输入免责声明内容，支持图文混排……留空则不展示免责声明页" />
   </template>
 
-  <!-- 首页分类栏选择（固定 3 个，复用审核配置候选弹窗） -->
+  <!-- 页面与排版 → 恋爱日记页（页面标题 + 恋爱页背景图；背景图 2026-09-11 起由恋爱设置-基本设置迁入） -->
+  <template v-if="subTab === 'loveDiary'">
+    <FormKit v-model="formState.spec.pages.loveDiaryConfig!.pageTitle" name="love_diary_page_title" label="页面标题" type="text" help="恋爱日记页展示标题，留空使用默认" />
+    <FormKit v-model="formState.spec.pages.loveDiaryConfig!.bgImageUrl" name="love_diary_bg_image" label="恋爱页背景图" type="attachment" :accepts="['image/*']" help="恋爱页（恋爱日记）顶部背景图，留空使用内置回退" />
+  </template>
+
+  <!-- 页面与排版 → 联系博主页（暂仅页面标题，留空使用默认） -->
+  <template v-if="subTab === 'contactBlogger'">
+    <FormKit v-model="formState.spec.pages.contactConfig!.pageTitle" name="contact_page_title" label="页面标题" type="text" help="联系博主页展示标题，留空使用默认" />
+  </template>
+
+  <!-- 页面与排版 → 我的收藏页（暂仅页面标题，留空使用默认） -->
+  <template v-if="subTab === 'favorites'">
+    <FormKit v-model="formState.spec.pages.favoritesConfig!.pageTitle" name="favorites_page_title" label="页面标题" type="text" help="我的收藏页展示标题，留空使用默认" />
+  </template>
+
+  <!-- 页面与排版 → 友情链接页（暂仅页面标题，留空使用默认） -->
+  <template v-if="subTab === 'friendLinks'">
+    <FormKit v-model="formState.spec.pages.friendLinksConfig!.pageTitle" name="friend_links_page_title" label="页面标题" type="text" help="友情链接页展示标题，留空使用默认" />
+  </template>
+
+  <!-- 页面与排版 → 文章归档页（暂仅页面标题，留空使用默认） -->
+  <template v-if="subTab === 'archives'">
+    <FormKit v-model="formState.spec.pages.archivesConfig!.pageTitle" name="archives_page_title" label="页面标题" type="text" help="文章归档页展示标题，留空使用默认" />
+  </template>
+
+  <!-- 页面与排版 → 投票中心页（暂仅页面标题，留空使用默认） -->
+  <template v-if="subTab === 'vote'">
+    <FormKit v-model="formState.spec.pages.voteConfig!.pageTitle" name="vote_page_title" label="页面标题" type="text" help="投票中心页展示标题，留空使用默认" />
+  </template>
+
+  <!-- 页面与排版 → 数据看板页（暂仅页面标题，留空使用默认） -->
+  <template v-if="subTab === 'dataVisual'">
+    <FormKit v-model="formState.spec.pages.dataVisualConfig!.pageTitle" name="data_visual_page_title" label="页面标题" type="text" help="数据看板页展示标题，留空使用默认" />
+  </template>
+
+  <!-- 页面与排版 → 偏好设置页（暂仅页面标题，留空使用默认） -->
+  <template v-if="subTab === 'setting'">
+    <FormKit v-model="formState.spec.pages.settingConfig!.pageTitle" name="setting_page_title" label="页面标题" type="text" help="偏好设置页展示标题，留空使用默认" />
+  </template>
+
+  <!-- 页面与排版 → 关于项目页（暂仅页面标题，留空使用默认） -->
+  <template v-if="subTab === 'aboutProject'">
+    <FormKit v-model="formState.spec.pages.aboutProjectConfig!.pageTitle" name="about_project_page_title" label="页面标题" type="text" help="关于项目页展示标题，留空使用默认" />
+  </template>
+
+  <!-- 页面与排版 → 公告中心页（暂仅页面标题，留空使用默认） -->
+  <template v-if="subTab === 'notice'">
+    <FormKit v-model="formState.spec.pages.noticeConfig!.pageTitle" name="notice_page_title" label="页面标题" type="text" help="公告中心页展示标题，留空使用默认" />
+  </template>
+
+  <!-- 页面与排版 → 搜索页面（暂仅页面标题，留空使用默认） -->
+  <template v-if="subTab === 'search'">
+    <FormKit v-model="formState.spec.pages.searchConfig!.pageTitle" name="search_page_title" label="页面标题" type="text" help="搜索页面展示标题，留空使用默认" />
+  </template>
+
+  <!-- 首页分类栏选择（固定 3 个，复用审核模式候选弹窗） -->
   <AuditCandidatesModal
     v-if="categoryModalVisible"
     type="category"

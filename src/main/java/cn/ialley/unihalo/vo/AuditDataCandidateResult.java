@@ -5,7 +5,7 @@ import java.util.List;
 import cn.ialley.unihalo.scheme.AuditDataConfig;
 
 /**
- * 审核配置-候选数据分页结果。
+ * 审核模式-候选数据分页结果。
  *
  * @param items        当前页候选项（name + 展示字段快照，可直接用于已选列表渲染）
  * @param page         当前页码（从 1 开始）

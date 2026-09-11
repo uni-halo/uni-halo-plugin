@@ -6,8 +6,8 @@ metadata:
     halo.run/role-template: "true"
     rbac.authorization.halo.run/aggregate-to-admin: "true"
   annotations:
-    rbac.authorization.halo.run/module: "UniHalo 审核配置"
-    rbac.authorization.halo.run/display-name: "审核配置查看"
+    rbac.authorization.halo.run/module: "UniHalo 审核模式"
+    rbac.authorization.halo.run/display-name: "审核模式查看"
     rbac.authorization.halo.run/ui-permissions: |
       ["plugin:uni-halo:audit-data:view"]
 rules:
@@ -29,8 +29,8 @@ metadata:
   annotations:
     rbac.authorization.halo.run/dependencies: |
       [ "plugin-uni-halo-role-template-view-audit-data" ]
-    rbac.authorization.halo.run/module: "UniHalo 审核配置"
-    rbac.authorization.halo.run/display-name: "审核配置管理"
+    rbac.authorization.halo.run/module: "UniHalo 审核模式"
+    rbac.authorization.halo.run/display-name: "审核模式管理"
     rbac.authorization.halo.run/ui-permissions: |
       ["plugin:uni-halo:audit-data:manage"]
 rules:

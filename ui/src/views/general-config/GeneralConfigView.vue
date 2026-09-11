@@ -29,7 +29,7 @@ type BigGroup = "profile" | "preferences" | "pages" | "assets" | "love" | "linkI
 const GROUP_ITEMS: Array<{id: BigGroup; label: string; desc: string}> = [
   {id: "profile", label: "应用设置", desc: "应用信息 / 博主 / 社交"},
   {id: "preferences", label: "偏好设置", desc: "首页/列表/归档布局与卡片样式"},
-  {id: "pages", label: "页面设置", desc: "首页 / 图库 / 关于页 / 文章详情 / 免责声明"},
+  {id: "pages", label: "页面设置", desc: "各页面标题 / 首页 / 图库 / 关于页 / 文章详情"},
   {id: "assets", label: "资源设置", desc: "加载占位"},
   {id: "love", label: "恋爱设置", desc: "恋爱页图片与模块入口"},
   {id: "linkInfo", label: "友链信息", desc: "站点信息 / 小程序信息"},
@@ -57,12 +57,23 @@ const SUB_TABS: Record<BigGroup, Array<{id: string; label: string}>> = {
     {id: "aboutPage", label: "关于页"},
     {id: "postDetail", label: "文章详情页"},
     {id: "disclaimersPage", label: "免责声明页"},
+    {id: "loveDiary", label: "恋爱日记"},
+    {id: "contactBlogger", label: "联系博主"},
+    {id: "favorites", label: "我的收藏"},
+    {id: "friendLinks", label: "友情链接"},
+    {id: "archives", label: "文章归档"},
+    {id: "vote", label: "投票中心"},
+    {id: "dataVisual", label: "数据看板"},
+    {id: "setting", label: "偏好设置"},
+    {id: "aboutProject", label: "关于项目"},
+    {id: "notice", label: "公告中心"},
+    {id: "search", label: "搜索页面"},
   ],
   assets: [
     {id: "loading", label: "加载占位"},
   ],
   love: [
-    {id: "basic", label: "基本设置"},
+    {id: "info", label: "恋爱信息"},
     {id: "modules", label: "模块入口"},
   ],
   linkInfo: [
@@ -151,6 +162,18 @@ function defaultSpec(): GeneralConfigSpec {
         copyrightViolation:
           "若侵害到您的权利，请您及时联系我，在收到通知后第一时间处理，邮箱：xxxx@xx.com",
       },
+      // 其余功能页面标题（2026-09-11 起新增，默认留空，客户端回退内置标题）
+      loveDiaryConfig: {pageTitle: ""},
+      contactConfig: {pageTitle: ""},
+      favoritesConfig: {pageTitle: ""},
+      friendLinksConfig: {pageTitle: ""},
+      archivesConfig: {pageTitle: ""},
+      voteConfig: {pageTitle: ""},
+      dataVisualConfig: {pageTitle: ""},
+      settingConfig: {pageTitle: ""},
+      aboutProjectConfig: {pageTitle: ""},
+      noticeConfig: {pageTitle: ""},
+      searchConfig: {pageTitle: ""},
     },
     assets: {
       loadingGifUrl: "/plugins/plugin-uni-halo/assets/static/uni_halo_img_lazyload.gif",
@@ -172,9 +195,20 @@ function defaultSpec(): GeneralConfigSpec {
       pageImages: {
         bgImageUrl: "",
       },
+      loveDiary: {enabled: true, passwordEnabled: false, password: "", passwordRemoved: false},
       ourStory: {enabled: true, passwordEnabled: false, password: "", passwordRemoved: false},
       lovePhoto: {enabled: false, passwordEnabled: false, password: "", passwordRemoved: false},
       loveDaily: {enabled: false, passwordEnabled: false, password: "", passwordRemoved: false},
+      // 恋爱信息（纪念日 + 恋人信息，2026-09-11 起由「恋爱管理-恋爱配置」迁入；
+      // 默认留空，前端回退默认标题）
+      loveInfo: {
+        loveDateTitle: "",
+        loveDate: "",
+        boyNickname: "",
+        boyAvatar: "",
+        girlNickname: "",
+        girlAvatar: "",
+      },
     },
     linkInfo: {
       // 友链信息默认：基本配置开放公开提交申请；miniInfo/siteInfo 留空

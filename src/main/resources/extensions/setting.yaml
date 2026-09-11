@@ -34,7 +34,7 @@ spec:
       formSchema:
         - $formkit: group
           name: captchaConfig
-          label: 防刷验证码
+          label: 验证码
           children:
             - $formkit: radio
               name: enabled
@@ -78,6 +78,17 @@ spec:
                     - label: 关闭
                       value: false
                   help: 开启后，加密恋爱相册解锁时需要输入验证码，防止暴力试密码。
+                  validation: required
+                - $formkit: select
+                  name: loveModuleUnlock
+                  label: 恋爱模块解锁
+                  value: true
+                  options:
+                    - label: 开启
+                      value: true
+                    - label: 关闭
+                      value: false
+                  help: 开启后，恋爱日记/恋爱故事/恋爱相册/恋爱清单等模块入口解锁时需要输入验证码，防止暴力试密码。
                   validation: required
             - $formkit: select
               if: "$get(captchaEnabled).value === true"

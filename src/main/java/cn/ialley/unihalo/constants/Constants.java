@@ -67,7 +67,7 @@ public class Constants {
     public static final String BANNER_API_BASE_PATH = "plugins/plugin-uni-halo/banners";
 
     /**
-     * 审核配置（console/公开）接口基础路径
+     * 审核模式（console/公开）接口基础路径
      */
     public static final String AUDIT_DATA_API_BASE_PATH = "plugins/plugin-uni-halo/audit-data";
 
@@ -100,7 +100,7 @@ public class Constants {
     public static final String LOVE_CONFIG_SINGLETON_NAME = "love-config";
 
     /**
-     * 审核配置单例名称（metadata.name 固定值）
+     * 审核模式单例名称（metadata.name 固定值）
      */
     public static final String AUDIT_DATA_CONFIG_SINGLETON_NAME = "audit-data-config";
 

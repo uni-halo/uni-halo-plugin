@@ -108,7 +108,11 @@ public class PublicConfigAssembler {
             // 页脚版权取自 profile.copyrightConfig，输出端映射回
             // pageConfig.aboutConfig.copyrightConfig（app 端消费位置不变）
             pick(pages, pageConfig, "homeConfig", "galleryConfig", "aboutConfig",
-                    "categoryConfig", "momentConfig", "postDetailConfig", "disclaimers");
+                    "categoryConfig", "momentConfig", "postDetailConfig", "disclaimers",
+                    // 其余功能页面标题（2026-09-11 起新增，均含 pageTitle）
+                    "loveDiaryConfig", "contactConfig", "favoritesConfig",
+                    "friendLinksConfig", "archivesConfig", "voteConfig", "dataVisualConfig",
+                    "settingConfig", "aboutProjectConfig", "noticeConfig", "searchConfig");
             // 页脚版权（来自 profile.copyrightConfig；app 端 about.vue 读
             // pageConfig.aboutConfig.copyrightConfig 保持不变）
             JsonNode copyright = profile != null ? profile.get("copyrightConfig") : null;
@@ -259,24 +263,18 @@ public class PublicConfigAssembler {
 
     /**
      * 恋爱配置公开输出脱敏（getConfigs loveConfig 组）：
-     * pageImages.bgImageUrl 原样保留；入口展示由模块入口开关与 navList
-     * 统一管理（app 端按模块开关判定）；
+     * 入口展示由模块入口开关与 navList 统一管理（app 端按模块开关判定）；
      * 模块开关仅输出 enabled + passwordEnabled（按 passwordHash 非空派生），
      * password / passwordHash / passwordRemoved 等密码字段一律不下发小程序端；
      * navList（入口列表：key/title/subTitle/priority/visible，
-     * 全部 visible=false 或列表为空时不输出，app 端回退内置默认）。
+     * 全部 visible=false 或列表为空时不输出，app 端回退内置默认）；
+     * loveInfo（纪念日 + 恋人信息，2026-09-11 起迁入）：含任意非空字段时输出，
+     * 全空不输出（app 端回退内置默认标题）。
+     * 恋爱页背景图不再经 loveConfig 下发（2026-09-11 起由 pageConfig.loveDiaryConfig.bgImageUrl 承担）。
      */
     private static JsonNode sanitizeLove(JsonNode love) {
         ObjectNode out = JsonNodeFactory.instance.objectNode();
-        JsonNode pageImages = love.get("pageImages");
-        if (pageImages != null && pageImages.isObject()) {
-            ObjectNode pageImagesOut = JsonNodeFactory.instance.objectNode();
-            pick(pageImages, pageImagesOut, "bgImageUrl");
-            if (pageImagesOut.size() > 0) {
-                out.set("pageImages", pageImagesOut);
-            }
-        }
-        for (String moduleKey : new String[]{"ourStory", "lovePhoto", "loveDaily"}) {
+        for (String moduleKey : new String[]{"loveDiary", "ourStory", "lovePhoto", "loveDaily"}) {
             JsonNode module = love.get(moduleKey);
             if (module != null && module.isObject()) {
                 ObjectNode moduleOut = JsonNodeFactory.instance.objectNode();
@@ -294,6 +292,11 @@ public class PublicConfigAssembler {
         if (navList != null && navList.isArray() && navList.size() > 0
                 && hasVisibleTrue(navList)) {
             out.set("navList", navList);
+        }
+        // 恋爱信息（additive：无内容不输出，app 端回退内置默认）
+        JsonNode loveInfo = love.get("loveInfo");
+        if (loveInfo != null && loveInfo.isObject() && hasNonBlankText(loveInfo)) {
+            out.set("loveInfo", loveInfo);
         }
         return out;
     }

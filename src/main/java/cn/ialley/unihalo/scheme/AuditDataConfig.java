@@ -11,7 +11,7 @@ import static cn.ialley.unihalo.constants.Constants.BASIC_DOMAIN_NAME;
 import static cn.ialley.unihalo.constants.Constants.PLUGIN_API_VERSION;
 
 /**
- * 审核配置（单例，metadata.name 固定为 audit-data-config）。
+ * 审核模式（单例，metadata.name 固定为 audit-data-config）。
  *
  * <p>承载「审核模式模拟数据」的选中引用：审核模式开启后，小程序端仅展示
  * 此处挑选的站内真实数据。每条引用以 {@link AuditDataRef} 存储（name 为

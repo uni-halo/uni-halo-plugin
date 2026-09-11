@@ -32,7 +32,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 /**
- * 审核配置服务单元测试：单例读写、失效引用剔除、候选查询（映射/过滤/分页/插件缺失容错）。
+ * 审核模式服务单元测试：单例读写、失效引用剔除、候选查询（映射/过滤/分页/插件缺失容错）。
  *
  * @author 小莫唐尼
  */

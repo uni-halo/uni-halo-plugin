@@ -15,7 +15,11 @@ public enum CaptchaScope {
     LINK_SUBMISSION("linkSubmission"),
 
     /** 加密恋爱相册解锁（POST /love-albums/{name}/unlock，键 loveAlbumUnlock） */
-    LOVE_ALBUM_UNLOCK("loveAlbumUnlock");
+    LOVE_ALBUM_UNLOCK("loveAlbumUnlock"),
+
+    /** 恋爱模块入口解锁（POST /love-modules/unlock，键 loveModuleUnlock；
+     * 覆盖恋爱日记/恋爱故事/恋爱相册入口/恋爱清单等模块入口） */
+    LOVE_MODULE_UNLOCK("loveModuleUnlock");
 
     private final String configKey;
 

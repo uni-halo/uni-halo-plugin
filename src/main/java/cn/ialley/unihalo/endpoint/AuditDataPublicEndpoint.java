@@ -17,7 +17,7 @@ import run.halo.app.core.extension.endpoint.CustomEndpoint;
 import run.halo.app.extension.GroupVersion;
 
 /**
- * 审核配置公开接口（app 端/小程序端，匿名可访问）。
+ * 审核模式公开接口（app 端/小程序端，匿名可访问）。
  *
  * <p>联动通用配置「应用设置-审核模式」开关（GeneralConfig.spec.auditMode.enabled）：
  * enabled=true 时返回剔除失效引用后的选中列表（小程序端据此过滤真实数据展示），

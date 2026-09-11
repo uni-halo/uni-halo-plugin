@@ -123,7 +123,7 @@ export default definePlugin({
         path: baseRoutePath('/love'),
         name: 'LoveManage',
         component: () => import('@/views/love-manage/LoveManageLayout.vue'),
-        redirect: baseRoutePath('/love/config'),
+        redirect: baseRoutePath('/love/albums'),
         meta: {
           title: '恋爱管理',
           searchable: false,
@@ -137,22 +137,6 @@ export default definePlugin({
           },
         },
         children: [
-          {
-            path: 'config',
-            name: 'LoveConfig',
-            component: () => import('@/views/love-manage/LoveConfigView.vue'),
-            meta: {
-              title: '恋爱配置',
-              searchable: true,
-              hideFooter: false,
-              permissions: ["plugin:uni-halo:love:view"],
-              menu: {
-                name: '恋爱配置',
-                icon: markRaw(RiHeartLine),
-                priority: 0,
-              },
-            },
-          },
           {
             path: 'albums',
             name: 'LoveAlbums',
@@ -286,12 +270,12 @@ export default definePlugin({
         name: 'AuditConfig',
         component: () => import('@/views/audit-config/AuditConfigView.vue'),
         meta: {
-          title: '审核配置',
+          title: '审核模式',
           searchable: true,
           hideFooter: false,
           permissions: ["plugin:uni-halo:audit-data:view"],
           menu: {
-            name: '审核配置',
+            name: '审核模式',
             group: GROUP_NAME,
             icon: markRaw(RiShieldCheckLine),
             priority: 5,

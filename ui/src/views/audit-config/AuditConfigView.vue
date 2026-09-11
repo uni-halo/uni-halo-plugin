@@ -240,7 +240,7 @@ const handleSave = async () => {
     @confirm="(selected) => handleModalConfirm(modalType!, selected)"
   />
 
-  <VPageHeader title="UniHalo-审核配置">
+  <VPageHeader title="UniHalo-审核模式">
     <template #actions>
       <VSpace>
         <VButton type="secondary" @click="refetch">
@@ -264,7 +264,7 @@ const handleSave = async () => {
         <div class=":uno: text-sm leading-6 text-gray-500">
           审核模式开启后，小程序端（微信审核等场景）<b class=":uno: text-gray-700"
             >仅展示以下挑选的数据</b
-          >。开关在「设置 → 审核配置」中开启；此处仅维护「展示哪些数据」。
+          >。开关在「通用配置 → 应用设置 → 审核模式」中开启；此处仅维护「展示哪些数据」。
           数据均为站内真实数据的引用，被删除后自动标记<span class=":uno: text-red-500">已失效</span>，保存时剔除。
         </div>
       </div>

@@ -11,29 +11,40 @@ import org.springframework.stereotype.Service;
 import cn.ialley.unihalo.constants.Constants;
 import cn.ialley.unihalo.scheme.GeneralConfig;
 import cn.ialley.unihalo.scheme.GeneralConfig.About;
+import cn.ialley.unihalo.scheme.GeneralConfig.AboutProjectPage;
+import cn.ialley.unihalo.scheme.GeneralConfig.ArchivesPage;
 import cn.ialley.unihalo.scheme.GeneralConfig.Assets;
 import cn.ialley.unihalo.scheme.GeneralConfig.AuditMode;
 import cn.ialley.unihalo.scheme.GeneralConfig.Blogger;
 import cn.ialley.unihalo.scheme.GeneralConfig.CategoryPage;
+import cn.ialley.unihalo.scheme.GeneralConfig.ContactPage;
 import cn.ialley.unihalo.scheme.GeneralConfig.Copyright;
+import cn.ialley.unihalo.scheme.GeneralConfig.DataVisualPage;
 import cn.ialley.unihalo.scheme.GeneralConfig.Disclaimer;
+import cn.ialley.unihalo.scheme.GeneralConfig.FavoritesPage;
+import cn.ialley.unihalo.scheme.GeneralConfig.FriendLinksPage;
 import cn.ialley.unihalo.scheme.GeneralConfig.Gallery;
 import cn.ialley.unihalo.scheme.GeneralConfig.Home;
 import cn.ialley.unihalo.scheme.GeneralConfig.LinkInfo;
 import cn.ialley.unihalo.scheme.GeneralConfig.Love;
+import cn.ialley.unihalo.scheme.GeneralConfig.LoveDiaryPage;
+import cn.ialley.unihalo.scheme.GeneralConfig.LoveInfo;
 import cn.ialley.unihalo.scheme.GeneralConfig.LoveNavItem;
 import cn.ialley.unihalo.scheme.GeneralConfig.Maintenance;
 import cn.ialley.unihalo.scheme.GeneralConfig.MomentPage;
 import cn.ialley.unihalo.scheme.GeneralConfig.ModuleSwitch;
 import cn.ialley.unihalo.scheme.GeneralConfig.MyPage;
-import cn.ialley.unihalo.scheme.GeneralConfig.PageImages;
+import cn.ialley.unihalo.scheme.GeneralConfig.NoticePage;
 import cn.ialley.unihalo.scheme.GeneralConfig.Pages;
 import cn.ialley.unihalo.scheme.GeneralConfig.PostDetail;
 import cn.ialley.unihalo.scheme.GeneralConfig.Profile;
 import cn.ialley.unihalo.scheme.GeneralConfig.QuickNavigationItem;
+import cn.ialley.unihalo.scheme.GeneralConfig.SearchPage;
+import cn.ialley.unihalo.scheme.GeneralConfig.SettingPage;
 import cn.ialley.unihalo.scheme.GeneralConfig.Social;
 import cn.ialley.unihalo.scheme.GeneralConfig.SocialItem;
 import cn.ialley.unihalo.scheme.GeneralConfig.Spec;
+import cn.ialley.unihalo.scheme.GeneralConfig.VotePage;
 import cn.ialley.unihalo.services.GeneralConfigService;
 import cn.ialley.unihalo.utils.MaintenanceResolver;
 import reactor.core.publisher.Mono;
@@ -156,6 +167,7 @@ public class GeneralConfigServiceImpl implements GeneralConfigService {
         }
         Love love = config.getSpec().getLove();
         return switch (module) {
+            case "loveDiary" -> love.getLoveDiary();
             case "ourStory" -> love.getOurStory();
             case "lovePhoto" -> love.getLovePhoto();
             case "loveDaily" -> love.getLoveDaily();
@@ -251,11 +263,12 @@ public class GeneralConfigServiceImpl implements GeneralConfigService {
                     if (images != null && images.isObject() && images.size() > 0) {
                         overlay.set("assets", images);
                     }
-                    // 恋爱模块：旧 loveConfig 字段（loveEnabled/pageImages/模块开关）
-                    // 从 ConfigMap 导入 spec.love，兼容 featureConfig.loveConfig
-                    // 与旧顶层键 loveConfig 两种旧结构；仅显式挑选仍有效的字段
-                    // （loveEnabled/pageImages.bgImageUrl/模块 enabled），
-                    // 旧 iconUrl/waveImageUrl/heartImageUrl 等字段不再导入。
+                    // 恋爱模块：旧 loveConfig 字段（模块开关）从 ConfigMap 导入
+                    // spec.love，兼容 featureConfig.loveConfig 与旧顶层键 loveConfig
+                    // 两种旧结构；仅显式挑选仍有效的字段（模块 enabled），
+                    // 旧 iconUrl/waveImageUrl/heartImageUrl/loveEnabled/pageImages
+                    // 等字段不再导入（背景图 2026-09-11 起由
+                    // pages.loveDiaryConfig.bgImageUrl 承担）。
                     JsonNode love = values.get("loveConfig");
                     if (love == null || !love.isObject()) {
                         JsonNode feature = values.get("featureConfig");
@@ -266,14 +279,6 @@ public class GeneralConfigServiceImpl implements GeneralConfigService {
                     if (love != null && love.isObject() && love.size() > 0) {
                         ObjectNode loveOut = JsonNodeFactory.instance.objectNode();
                         // 入口展示由模块入口开关与 navList 统一管理，loveEnabled 不导入
-                        JsonNode pageImages = love.get("pageImages");
-                        if (pageImages != null && pageImages.isObject()) {
-                            ObjectNode pageImagesOut = JsonNodeFactory.instance.objectNode();
-                            pick(pageImages, pageImagesOut, "bgImageUrl");
-                            if (pageImagesOut.size() > 0) {
-                                loveOut.set("pageImages", pageImagesOut);
-                            }
-                        }
                         for (String moduleKey : new String[]{"ourStory", "lovePhoto", "loveDaily"}) {
                             JsonNode module = love.get(moduleKey);
                             if (module != null && module.isObject()) {
@@ -531,6 +536,53 @@ public class GeneralConfigServiceImpl implements GeneralConfigService {
         momentPage.setPageTitle("");
         pages.setMomentConfig(momentPage);
 
+        // 其余功能页面标题（2026-09-11 起新增，默认留空，客户端回退内置标题）
+        LoveDiaryPage loveDiaryPage = new LoveDiaryPage();
+        loveDiaryPage.setPageTitle("");
+        // 恋爱页背景图（2026-09-11 起由恋爱设置-基本设置迁入，默认留空客户端内置回退）
+        loveDiaryPage.setBgImageUrl("");
+        pages.setLoveDiaryConfig(loveDiaryPage);
+
+        ContactPage contactPage = new ContactPage();
+        contactPage.setPageTitle("");
+        pages.setContactConfig(contactPage);
+
+        FavoritesPage favoritesPage = new FavoritesPage();
+        favoritesPage.setPageTitle("");
+        pages.setFavoritesConfig(favoritesPage);
+
+        FriendLinksPage friendLinksPage = new FriendLinksPage();
+        friendLinksPage.setPageTitle("");
+        pages.setFriendLinksConfig(friendLinksPage);
+
+        ArchivesPage archivesPage = new ArchivesPage();
+        archivesPage.setPageTitle("");
+        pages.setArchivesConfig(archivesPage);
+
+        VotePage votePage = new VotePage();
+        votePage.setPageTitle("");
+        pages.setVoteConfig(votePage);
+
+        DataVisualPage dataVisualPage = new DataVisualPage();
+        dataVisualPage.setPageTitle("");
+        pages.setDataVisualConfig(dataVisualPage);
+
+        SettingPage settingPage = new SettingPage();
+        settingPage.setPageTitle("");
+        pages.setSettingConfig(settingPage);
+
+        AboutProjectPage aboutProjectPage = new AboutProjectPage();
+        aboutProjectPage.setPageTitle("");
+        pages.setAboutProjectConfig(aboutProjectPage);
+
+        NoticePage noticePage = new NoticePage();
+        noticePage.setPageTitle("");
+        pages.setNoticeConfig(noticePage);
+
+        SearchPage searchPage = new SearchPage();
+        searchPage.setPageTitle("");
+        pages.setSearchConfig(searchPage);
+
         About about = new About();
         about.setPageTitle("关于博主");
         about.setBgImageUrl("/plugins/plugin-uni-halo/assets/static/uni_halo_profile_bg.jpg");
@@ -672,15 +724,17 @@ public class GeneralConfigServiceImpl implements GeneralConfigService {
 
     /**
      * 默认 love（对齐旧 setting.yaml 的 value 缺省）：入口展示由模块入口开关
-     * 与 navList 统一管理；恋爱页背景图默认留空（由站长配置或客户端内置回退）；
-     * pageImages 仅背景图、模块入口仅开关+密码（均默认未设置）。
+     * 与 navList 统一管理；恋爱页背景图由 pages.loveDiaryConfig.bgImageUrl 承担
+     * （默认留空，站长配置或客户端内置回退）；模块入口仅开关+密码（均默认未设置）。
      */
     private static Love buildDefaultLove() {
         Love love = new Love();
 
-        PageImages pageImages = new PageImages();
-        pageImages.setBgImageUrl("");
-        love.setPageImages(pageImages);
+        // 恋爱日记入口（恋爱页本身）默认开启（enabled=true）
+        ModuleSwitch loveDiary = new ModuleSwitch();
+        loveDiary.setEnabled(true);
+        loveDiary.setPasswordEnabled(false);
+        love.setLoveDiary(loveDiary);
 
         // 恋爱故事模块默认开启（enabled=true）
         ModuleSwitch ourStory = new ModuleSwitch();
@@ -701,6 +755,9 @@ public class GeneralConfigServiceImpl implements GeneralConfigService {
         // 恋爱页入口列表（固定 3 项，key 对应模块；文案对齐 app 端
         // love.vue 现有硬编码，priority 默认 1/2/3、visible 默认 true）
         love.setNavList(defaultLoveNavList());
+
+        // 恋爱信息（纪念日 + 恋人信息）：默认留空（前端/输出端回退默认标题）
+        love.setLoveInfo(new LoveInfo());
         return love;
     }
 
@@ -749,6 +806,7 @@ public class GeneralConfigServiceImpl implements GeneralConfigService {
         if (love == null) {
             return;
         }
+        applyModulePassword(love.getLoveDiary(), existing != null ? existing.getLoveDiary() : null);
         applyModulePassword(love.getOurStory(), existing != null ? existing.getOurStory() : null);
         applyModulePassword(love.getLovePhoto(),
                 existing != null ? existing.getLovePhoto() : null);
@@ -786,6 +844,7 @@ public class GeneralConfigServiceImpl implements GeneralConfigService {
         GeneralConfig copy = objectMapper.convertValue(config, GeneralConfig.class);
         Love love = copy.getSpec() != null ? copy.getSpec().getLove() : null;
         if (love != null) {
+            maskModulePassword(love.getLoveDiary());
             maskModulePassword(love.getOurStory());
             maskModulePassword(love.getLovePhoto());
             maskModulePassword(love.getLoveDaily());

@@ -33,7 +33,7 @@ import run.halo.app.extension.SchemeManager;
 import static run.halo.app.extension.index.query.Queries.isNull;
 
 /**
- * 审核配置服务实现（单例模型 audit-data-config）。
+ * 审核模式服务实现（单例模型 audit-data-config）。
  *
  * <p>选中引用以 {@link AuditDataConfig.AuditDataRef} 快照存储（name + 展示字段）；
  * 候选数据按类型映射到外部扩展 GVK（通过本地同 GVK 引用类查询，插件未安装时
@@ -176,7 +176,7 @@ public class AuditDataServiceImpl implements AuditDataService {
 
     /**
      * 全量拉取某类型候选（按创建时间倒序），供内存关键字过滤 + 手动分页。
-     * 数据量级：文章/分组/瞬间/链接分组，审核配置为低频操作，全量可接受。
+     * 数据量级：文章/分组/瞬间/链接分组，审核模式为低频操作，全量可接受。
      * 候选读路径：排除删除中对象。
      */
     private Flux<Extension> listAllRef(CandidateType type) {

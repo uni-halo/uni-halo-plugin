@@ -7,7 +7,7 @@ import cn.ialley.unihalo.enums.CandidateType;
 import cn.ialley.unihalo.scheme.AuditDataConfig;
 
 /**
- * 审核配置详情（管理端 GET /audit-data 返回）。
+ * 审核模式详情（管理端 GET /audit-data 返回）。
  *
  * <p>除原始配置（含选中引用的展示字段快照）外，附带各类型已选条目的最新详情，
  * 供控制台已选列表刷新展示；已选但详情中缺失的 name 即「已失效」（引用对象已删除）。</p>

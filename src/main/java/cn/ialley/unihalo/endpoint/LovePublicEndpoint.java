@@ -18,10 +18,8 @@ import cn.ialley.unihalo.constants.Constants;
 import cn.ialley.unihalo.scheme.GeneralConfig;
 import cn.ialley.unihalo.scheme.GeneralConfig.ModuleSwitch;
 import cn.ialley.unihalo.scheme.LoveAlbum;
-import cn.ialley.unihalo.scheme.LoveConfig;
 import cn.ialley.unihalo.services.GeneralConfigService;
 import cn.ialley.unihalo.services.LoveAlbumService;
-import cn.ialley.unihalo.services.LoveConfigService;
 import cn.ialley.unihalo.services.LoveDailyItemService;
 import cn.ialley.unihalo.services.LoveStoryService;
 import cn.ialley.unihalo.utils.AlbumTokenManager;
@@ -31,7 +29,6 @@ import reactor.core.publisher.Mono;
 import run.halo.app.core.extension.endpoint.CustomEndpoint;
 import run.halo.app.extension.GroupVersion;
 import run.halo.app.extension.ListResult;
-import tools.jackson.databind.ObjectMapper;
 
 /**
  * 恋爱功能公开接口（小程序端，匿名可访问）。
@@ -52,7 +49,6 @@ import tools.jackson.databind.ObjectMapper;
 public class LovePublicEndpoint implements CustomEndpoint {
 
     private final GeneralConfigService generalConfigService;
-    private final LoveConfigService loveConfigService;
     private final LoveAlbumService loveAlbumService;
     private final LoveDailyItemService loveDailyItemService;
     private final LoveStoryService loveStoryService;
@@ -60,13 +56,7 @@ public class LovePublicEndpoint implements CustomEndpoint {
     private final LoveModuleTokenManager loveModuleTokenManager;
     private final CaptchaService captchaService;
 
-    /**
-     * 插件 Spring 上下文未注册 Jackson 3 ObjectMapper bean，故内部自行创建。
-     */
-    private final ObjectMapper objectMapper = new ObjectMapper();
-
     public LovePublicEndpoint(GeneralConfigService generalConfigService,
-            LoveConfigService loveConfigService,
             LoveAlbumService loveAlbumService,
             LoveDailyItemService loveDailyItemService,
             LoveStoryService loveStoryService,
@@ -74,7 +64,6 @@ public class LovePublicEndpoint implements CustomEndpoint {
             LoveModuleTokenManager loveModuleTokenManager,
             CaptchaService captchaService) {
         this.generalConfigService = generalConfigService;
-        this.loveConfigService = loveConfigService;
         this.loveAlbumService = loveAlbumService;
         this.loveDailyItemService = loveDailyItemService;
         this.loveStoryService = loveStoryService;
@@ -104,28 +93,37 @@ public class LovePublicEndpoint implements CustomEndpoint {
     }
 
     /**
-     * 恋爱配置：loveEnabled（来自通用配置总开关）+ LoveConfig 模型内容
-     * （纪念日 + 恋人信息）。恋爱页图片与模块开关随通用配置
-     * spec.love 下发（getConfigs loveConfig 组），不在本接口重复返回。
+     * 恋爱配置：loveEnabled（来自通用配置总开关）+ 恋爱信息
+     * （纪念日 + 恋人信息，2026-09-11 起数据源为 GeneralConfig.spec.love.loveInfo，
+     * 原「恋爱管理-恋爱配置」LoveConfig 单例模型内容迁入；输出 shape 不变，
+     * 客户端无感）。恋爱页图片与模块开关随通用配置 spec.love 下发
+     * （getConfigs loveConfig 组），不在本接口重复返回。
+     * 恋爱日记入口（love 页本身）设置密码时要求携带模块 token。
      */
     private Mono<ServerResponse> getLoveConfig(ServerRequest request) {
-        return Mono.zip(loveConfigService.get(), fetchLoveEnabled())
-                .map(tuple -> {
-                    LoveConfig config = tuple.getT1();
-                    boolean enabled = Boolean.TRUE.equals(tuple.getT2());
-                    Map<String, Object> result = new LinkedHashMap<>();
-                    result.put("enabled", enabled);
-                    if (config.getSpec() != null) {
-                        Map<?, ?> specMap = objectMapper.convertValue(
-                                config.getSpec(), Map.class);
-                        if (specMap != null) {
-                            specMap.forEach((key, value) ->
-                                    result.put(String.valueOf(key), value));
-                        }
-                    }
-                    return result;
-                })
-                .flatMap(body -> ServerResponse.ok().bodyValue(body));
+        return requireModuleAccess(request, "loveDiary",
+                Mono.zip(generalConfigService.get(), fetchLoveEnabled())
+                        .map(tuple -> {
+                            GeneralConfig config = tuple.getT1();
+                            boolean enabled = Boolean.TRUE.equals(tuple.getT2());
+                            Map<String, Object> result = new LinkedHashMap<>();
+                            result.put("enabled", enabled);
+                            GeneralConfig.LoveInfo info = config.getSpec() != null
+                                    && config.getSpec().getLove() != null
+                                    ? config.getSpec().getLove().getLoveInfo() : null;
+                            if (info != null) {
+                                result.put("loveDateTitle", info.getLoveDateTitle());
+                                result.put("loveDate", info.getLoveDate());
+                                Map<String, Object> loveInfo = new LinkedHashMap<>();
+                                loveInfo.put("boyNickname", info.getBoyNickname());
+                                loveInfo.put("boyAvatar", info.getBoyAvatar());
+                                loveInfo.put("girlNickname", info.getGirlNickname());
+                                loveInfo.put("girlAvatar", info.getGirlAvatar());
+                                result.put("loveInfo", loveInfo);
+                            }
+                            return result;
+                        })
+                        .flatMap(body -> ServerResponse.ok().bodyValue(body)));
     }
 
     /**
@@ -211,20 +209,24 @@ public class LovePublicEndpoint implements CustomEndpoint {
     /**
      * 恋爱模块入口解锁：校验模块存在且密码匹配后签发 HMAC 签名 token
      * （scope = 模块名，30 分钟有效；未设置密码的模块一律拒绝，不暴露是否已设置）。
+     * 验证码校验在密码校验之前，失败不暴露密码正确性（scope=loveModuleUnlock，
+     * 覆盖恋爱日记/恋爱故事/恋爱相册入口/恋爱清单等模块入口解锁）。
      */
     private Mono<ServerResponse> unlockLoveModule(ServerRequest request) {
-        return request.bodyToMono(LoveModuleUnlockRequest.class)
-                .flatMap(body -> generalConfigService
-                        .verifyLoveModulePassword(body.getModule(), body.getPassword())
-                        .flatMap(ok -> {
-                            if (!ok) {
-                                return ServerResponse.badRequest()
-                                        .bodyValue(Map.of("message", "密码不正确"));
-                            }
-                            return ServerResponse.ok()
-                                    .bodyValue(Map.of("token",
-                                            loveModuleTokenManager.issue(body.getModule())));
-                        }));
+        return captchaService.requireValid(request, CaptchaScope.LOVE_MODULE_UNLOCK)
+                .then(request.bodyToMono(LoveModuleUnlockRequest.class)
+                        .flatMap(body -> generalConfigService
+                                .verifyLoveModulePassword(body.getModule(), body.getPassword())
+                                .flatMap(ok -> {
+                                    if (!ok) {
+                                        return ServerResponse.badRequest()
+                                                .bodyValue(Map.of("message", "密码不正确"));
+                                    }
+                                    return ServerResponse.ok()
+                                            .bodyValue(Map.of("token",
+                                                    loveModuleTokenManager.issue(body.getModule())));
+                                })))
+                .onErrorResume(CaptchaValidationException.class, this::captchaForbidden);
     }
 
     /**
@@ -270,8 +272,8 @@ public class LovePublicEndpoint implements CustomEndpoint {
 
     /**
      * 恋爱总开关（/love-config enabled）派生：总开关 loveEnabled 已不再使用
-     * （入口展示由模块入口开关与 navList 统一管理），此处按「任一模块入口开启」派生，
-     * 兼容老客户端 /love-config 读取语义。
+     * （入口展示由模块入口开关与 navList 统一管理），此处按「恋爱日记入口或
+     * 任一模块入口开启」派生，兼容老客户端 /love-config 读取语义。
      */
     private Mono<Boolean> fetchLoveEnabled() {
         return generalConfigService.get()
@@ -281,7 +283,8 @@ public class LovePublicEndpoint implements CustomEndpoint {
                     if (love == null) {
                         return false;
                     }
-                    return isModuleEnabled(love.getOurStory())
+                    return isModuleEnabled(love.getLoveDiary())
+                            || isModuleEnabled(love.getOurStory())
                             || isModuleEnabled(love.getLovePhoto())
                             || isModuleEnabled(love.getLoveDaily());
                 })
@@ -314,7 +317,7 @@ public class LovePublicEndpoint implements CustomEndpoint {
     }
 
     /**
-     * 恋爱模块入口解锁请求体（module = ourStory/lovePhoto/loveDaily）
+     * 恋爱模块入口解锁请求体（module = loveDiary/ourStory/lovePhoto/loveDaily）
      */
     @Data
     public static class LoveModuleUnlockRequest {
