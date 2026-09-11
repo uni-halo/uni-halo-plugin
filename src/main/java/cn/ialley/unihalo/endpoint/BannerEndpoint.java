@@ -23,7 +23,7 @@ import run.halo.app.extension.ReactiveExtensionClient;
  *
  * <p>source 由服务端判定，不接受前端提交；/order、/candidates 必须注册在
  * /{name} 之前，避免 "order"/"candidates" 被当作 name 匹配。
- * custom 模式作者信息默认取当前登录用户（决策 D15），post 模式由服务端按文章快照。</p>
+ * custom 模式作者信息默认取当前登录用户，post 模式由服务端按文章快照。</p>
  *
  * @author 小莫唐尼
  */
@@ -124,7 +124,7 @@ public class BannerEndpoint implements CustomEndpoint {
     }
 
     /**
-     * custom 模式（postId 为空）作者信息默认取当前登录用户（决策 D15），覆盖前端传入值；
+     * custom 模式（postId 为空）作者信息默认取当前登录用户，覆盖前端传入值；
      * post 模式由服务端按文章快照覆盖，不在此处理。
      */
     private Mono<Banner> fillCustomAuthor(ServerRequest request, Banner banner) {

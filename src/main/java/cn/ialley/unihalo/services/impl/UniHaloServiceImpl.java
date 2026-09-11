@@ -97,8 +97,8 @@ public class UniHaloServiceImpl implements UniHaloService {
     /**
      * 内部专用原始读取（不经公开过滤）。
      *
-     * <p>动态小程序码/海报功能已下线（2026-09-02）：应用信息仅剩 名称/图标，
-     * 已随「基本配置」迁入通用配置模型（应用资料.appInfo）；此处读取该节点供
+     * <p>动态小程序码/海报功能已下线：应用信息仅剩 名称/图标，
+     * 已迁入通用配置模型（应用资料.appInfo）；此处读取该节点供
      * 历史海报流程兼容降级（凭证字段缺失时不再执行，见 getAccessToken / uploadMedia）。</p>
      */
     private Mono<JsonNode> rawAppConfig() {
@@ -193,7 +193,7 @@ public class UniHaloServiceImpl implements UniHaloService {
 
     private Mono<JsonNode> getAccessToken() {
         return rawAppConfig().flatMap(appInfo -> {
-            // 动态小程序码配置已下线（2026-09-02），字段缺失时静默降级（不再生成海报）
+            // 动态小程序码配置已下线，字段缺失时静默降级（不再生成海报）
             if (appInfo == null || !appInfo.hasNonNull("appId") || !appInfo.hasNonNull("appSecret")) {
                 return Mono.empty();
             }
@@ -208,7 +208,7 @@ public class UniHaloServiceImpl implements UniHaloService {
         FilePart filePart = new SimpleFilePart(postId + "." + MediaType.IMAGE_PNG.getSubtype(), byteArrayToFlux(mediaData), MediaType.IMAGE_PNG);
 
         return rawAppConfig().flatMap(appInfo -> {
-            // 动态小程序码配置已下线（2026-09-02），字段缺失时静默降级
+            // 动态小程序码配置已下线，字段缺失时静默降级
             if (appInfo == null || !appInfo.hasNonNull("policyName")
                     || !appInfo.hasNonNull("fileGroupName")) {
                 return Mono.empty();

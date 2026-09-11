@@ -6,10 +6,9 @@ import reactor.core.publisher.Mono;
 /**
  * 通用配置服务（单例，metadata.name 固定为 general-config）。
  *
- * <p>承载原 setting.yaml 迁出的站点内容与外观配置（authorConfig / pageConfig /
- * basicConfig 内容部分 / imagesConfig）。GET 不存在时返回「默认值 + 历史
- * ConfigMap 旧值合并」结构（不落库），保证升级后配置页回填旧值、小程序端
- * getConfigs 输出不回退。</p>
+ * <p>承载站点内容与外观配置（authorConfig / pageConfig / basicConfig 内容部分 /
+ * imagesConfig）。GET 不存在时返回「默认值 + 历史 ConfigMap 旧值合并」结构
+ * （不落库），保证配置页回填旧值、小程序端 getConfigs 输出不回退。</p>
  *
  * @author 小莫唐尼
  */

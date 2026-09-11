@@ -24,7 +24,7 @@ const saving = ref(false);
 
 const isUpdateMode = computed(() => !!props.item);
 
-// 纯自定义弹窗：作者信息由服务端默认取当前登录用户，不显示/编辑（决策 D15）
+// 纯自定义弹窗：作者信息由服务端默认取当前登录用户，不显示/编辑
 const formState = ref<Banner>({
   metadata: { name: "" },
   spec: {

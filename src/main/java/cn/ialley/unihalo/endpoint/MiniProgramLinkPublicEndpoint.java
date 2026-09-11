@@ -89,7 +89,7 @@ public class MiniProgramLinkPublicEndpoint implements CustomEndpoint {
 
     /**
      * 是否开放公开提交申请：通用配置-友链信息-基本配置 submissionEnabled
-     * （2026-09-11 起由 setting linkConfig 迁入；默认 true）。
+     * （默认 true）。
      */
     private Mono<Boolean> isSubmissionEnabled() {
         return generalConfigService.get()
@@ -123,7 +123,7 @@ public class MiniProgramLinkPublicEndpoint implements CustomEndpoint {
         int page = queryPage(request);
         int size = querySize(request);
         String group = request.queryParam("group").orElse("").trim();
-        // 公开读路径专用查询：visible=true 且排除删除中对象（决策 D7）
+        // 公开读路径专用查询：visible=true 且排除删除中对象
         return miniProgramLinkService.listPublic(blankToNull(group),
                         blankToNull(keyword), page, size)
                 .flatMap(result -> ServerResponse.ok().bodyValue(result));
@@ -132,7 +132,7 @@ public class MiniProgramLinkPublicEndpoint implements CustomEndpoint {
     private Mono<ServerResponse> getLink(ServerRequest request) {
         String name = request.pathVariable("name");
         return miniProgramLinkService.getByName(name)
-                // 公开详情：仅可见且非删除中（决策 D7）
+                // 公开详情：仅可见且非删除中
                 .filter(link -> (link.getMetadata() == null
                         || link.getMetadata().getDeletionTimestamp() == null)
                         && link.getSpec() != null

@@ -2,7 +2,7 @@ import type { InjectionKey, Ref } from "vue";
 import type { GeneralConfig } from "@/types";
 
 /**
- * 通用配置表单共享上下文（2026-09-10 组件化拆分后 provide/inject）：
+ * 通用配置表单共享上下文（组件化拆分后 provide/inject）：
  *
  * <p>formState 为单一数据源（父组件加载/保存），子组件（各 Section）直接修改其
  * 嵌套属性——Vue 3 深度响应式会触发父组件 {@code deep watch(formState)}，dirty

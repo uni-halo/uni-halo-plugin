@@ -9,10 +9,10 @@ import static cn.ialley.unihalo.constants.Constants.BASIC_DOMAIN_NAME;
 import static cn.ialley.unihalo.constants.Constants.PLUGIN_API_VERSION;
 
 /**
- * 公告类型（决策 D9）。
+ * 公告类型。
  *
  * <p>公告通过 spec.typeName 引用本模型的 metadata.name；删除类型不影响已关联公告
- * （公开接口中类型不存在时忽略标签展示，决策 D11）。</p>
+ * （公开接口中类型不存在时忽略标签展示）。</p>
  *
  * @author 小莫唐尼
  */

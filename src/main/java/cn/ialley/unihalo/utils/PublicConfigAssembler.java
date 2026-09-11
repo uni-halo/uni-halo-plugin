@@ -21,7 +21,7 @@ import tools.jackson.databind.node.ObjectNode;
  *       五个顶层键由 GeneralConfig 重建（不再依赖 ConfigMap 旧组）；</li>
  *   <li>剔除已下线/敏感字段：basicConfig.tokenConfig（个人令牌）、appConfig.startConfig
  *       （启动页已下线）、auditConfig.auditModeData（死字段）；</li>
- *   <li>maintenance（additive 顶层键，2026-09-04 新增）：按 GeneralConfig.spec.maintenance
+ *   <li>maintenance（additive 顶层键）：按 GeneralConfig.spec.maintenance
  *       时间窗口与当前时刻计算状态，仅 scheduled/active 时输出；</li>
  *   <li>其余设置组（captchaConfig / pluginConfig / linkConfig …）原样透传。</li>
  * </ul>
@@ -71,8 +71,8 @@ public class PublicConfigAssembler {
                 } else if ("auditConfig".equals(group)) {
                     root.set(group, withoutKeys(node, "auditModeData"));
                 } else if ("pluginConfig".equals(group)) {
-                    // 2026-09-10 起 votePlugin/linksPlugin 开关已下线（app 端改用插件启用
-                    // 检测判定），剔除旧 ConfigMap 残留避免继续透传；toolsPlugin 保留
+                    // votePlugin/linksPlugin 开关不再使用（app 端改用插件启用检测判定），
+                    // 剔除旧 ConfigMap 残留避免继续透传；toolsPlugin 保留
                     root.set(group, withoutKeys(node, "votePlugin", "linksPlugin"));
                 } else {
                     root.set(group, node);
@@ -91,13 +91,12 @@ public class PublicConfigAssembler {
             if (authorConfig.size() > 0) {
                 root.set("authorConfig", authorConfig);
             }
-            // 2026-09-10 起版权/免责/文章详情迁移至页面设置（pageConfig.aboutConfig 版权 /
+            // 版权/免责/文章详情位于页面设置（pageConfig.aboutConfig 版权 /
             // pageConfig.disclaimers / pageConfig.postDetailConfig），basicConfig 组不再输出；
             // 旧 ConfigMap 残留 basicConfig 由 isContentGroup 跳过透传
             JsonNode appInfo = profile.get("appInfo");
             if (appInfo != null && !appInfo.isNull()) {
-                // 应用信息（名称/图标）→ 旧 appConfig.appInfo 形态（覆盖历史遗留设置值，
-                // 如旧 ConfigMap 中 baseConfig/appConfig 组残留）
+                // 应用信息（名称/图标）→ 旧 appConfig.appInfo 形态（覆盖历史遗留设置值）
                 root.set("appConfig",
                         JsonNodeFactory.instance.objectNode().set("appInfo", appInfo));
             }
@@ -105,9 +104,9 @@ public class PublicConfigAssembler {
         JsonNode pages = spec.get("pages");
         if (pages != null && pages.isObject()) {
             ObjectNode pageConfig = JsonNodeFactory.instance.objectNode();
-            // 2026-09-10 起 postDetailConfig 文章详情页、disclaimers 免责声明页随行输出；
-            // 页脚版权 2026-09-10 迁回 profile.copyrightConfig，输出端映射回
-            // pageConfig.aboutConfig.copyrightConfig（app 端消费位置不变，客户端无感）
+            // postDetailConfig 文章详情页、disclaimers 免责声明页随行输出；
+            // 页脚版权取自 profile.copyrightConfig，输出端映射回
+            // pageConfig.aboutConfig.copyrightConfig（app 端消费位置不变）
             pick(pages, pageConfig, "homeConfig", "galleryConfig", "aboutConfig",
                     "categoryConfig", "momentConfig", "postDetailConfig", "disclaimers");
             // 页脚版权（来自 profile.copyrightConfig；app 端 about.vue 读
@@ -119,7 +118,7 @@ public class PublicConfigAssembler {
                     ((ObjectNode) about).set("copyrightConfig", copyright);
                 }
             }
-            // 我的页面功能入口（2026-09-10 新增，additive 键）：两组均为空时不输出，
+            // 我的页面功能入口（additive 键）：两组均为空时不输出，
             // app 端展示内置默认（语义同 linkInfo「全部留空不输出」）
             JsonNode myPage = pages.get("myPageConfig");
             if (myPage != null && myPage.isObject() && hasNonBlankText(myPage)) {
@@ -139,16 +138,15 @@ public class PublicConfigAssembler {
         if (preferences != null && !preferences.isNull()) {
             root.set("preferences", preferences);
         }
-        // 恋爱模块（2026-09-03 迁入）：spec.love → 旧顶层 loveConfig shape
-        // （pageImages/模块开关，客户端无感）。2026-09-08 起模块开关脱敏输出：
-        // 仅 enabled + passwordEnabled（是否已设置密码，客户端据此决定是否弹密码验证），
-        // 密码相关字段一律不下发小程序端；2026-09-10 起总开关 loveEnabled 已下线
-        // （入口展示由模块入口开关与 navList 统一管理）。
+        // 恋爱模块：spec.love → 旧顶层 loveConfig shape（pageImages/模块开关）。
+        // 模块开关脱敏输出：仅 enabled + passwordEnabled（是否已设置密码，
+        // 客户端据此决定是否弹密码验证），密码相关字段一律不下发小程序端；
+        // 入口展示由模块入口开关与 navList 统一管理。
         JsonNode love = spec.get("love");
         if (love != null && love.isObject()) {
             root.set("loveConfig", sanitizeLove(love));
         }
-        // 维护模式（additive 顶层键，2026-09-04 新增）：状态由时间窗口按 now 计算，
+        // 维护模式（additive 顶层键）：状态由时间窗口按 now 计算，
         // 仅 scheduled/active 输出；enabled=false 或已到点自动结束 → 键缺失（客户端视为未维护）
         JsonNode maintenance = spec.get("maintenance");
         if (maintenance != null && maintenance.isObject()) {
@@ -164,9 +162,8 @@ public class PublicConfigAssembler {
                 root.set("maintenance", maintenanceOut);
             }
         }
-        // 审核模式开关（2026-09-11 由 setting safetyConfig.auditConfig 迁入 spec.auditMode；
-        // 输出端重建回旧 auditConfig.auditModeEnabled 形态，覆盖旧 ConfigMap 残留透传，
-        // 客户端 shape 不变；auditModeData 死字段不随输出）
+        // 审核模式开关：输出端重建回旧 auditConfig.auditModeEnabled 形态，
+        // 覆盖旧 ConfigMap 残留透传，客户端 shape 不变；auditModeData 死字段不随输出
         JsonNode auditMode = spec.get("auditMode");
         if (auditMode != null && auditMode.isObject()) {
             JsonNode enabled = auditMode.get("enabled");
@@ -176,18 +173,16 @@ public class PublicConfigAssembler {
                 root.set("auditConfig", auditOut);
             }
         }
-        // 友链信息（2026-09-08 起去映射 + 拆分子结构；2026-09-10 起去作者信息；
-        // 2026-09-11 起新增基本配置 submissionEnabled，承接原 setting linkConfig 公开提交开关）：
-        // spec.linkInfo 直接下发到 pluginConfig.linkInfo，结构 = {submissionEnabled, miniInfo, siteInfo}：
+        // 友链信息：spec.linkInfo 直接下发到 pluginConfig.linkInfo，
+        // 结构 = {submissionEnabled, miniInfo, siteInfo}：
         // - submissionEnabled（基本配置）供小程序端「提交申请」入口显隐判断（默认 true）；
         // - miniInfo（小程序信息）供小程序端「申请信息」弹窗（uh-links-mini-info）读取；
         // - siteInfo（站点信息）字段对齐 Halo 官方 plugin-links 友链提交 API
-        //   （link-applications 请求体：displayName/url/logo/description/backlink/feedUrls，
-        //   2026-09-10 起不再维护联系邮箱 email）。
-        // 作者信息已下线：app 端作者区改用应用设置-博主资料（authorConfig.blogger）。
+        //   （link-applications 请求体：displayName/url/logo/description/backlink/feedUrls）。
+        // app 端作者区使用应用设置-博主资料（authorConfig.blogger）。
         // 输出判定：仅 submissionEnabled 显式配置 或 miniInfo/siteInfo 有非空内容时输出
         // （全部留空不输出，app 端展示「暂未配置」占位）。
-        // 旧 linksSubmitPlugin（blogName/blogLogo/blogUrl/blogDesc 等键）映射已移除，不再下发。
+        // 旧 linksSubmitPlugin（blogName/blogLogo/blogUrl/blogDesc 等键）不再下发。
         JsonNode linkInfo = spec.get("linkInfo");
         if (linkInfo != null && linkInfo.isObject()) {
             ObjectNode linkInfoOut = (ObjectNode) linkInfo.deepCopy();
@@ -211,11 +206,11 @@ public class PublicConfigAssembler {
     }
 
     /**
-     * 把方案 B 三域组与新「基本配置」组展开回「旧模块顶层键」形态（新旧结构二选一，
+     * 把三域组与新「基本配置」组展开回「旧模块顶层键」形态（新旧结构二选一，
      * 不会同时存在）：featureConfig → linkConfig；safetyConfig →
      * auditConfig / captchaConfig；integrationConfig → pluginConfig；
      * baseConfig.appInfo → 归并至 appConfig.appInfo（保持客户端旧 shape）。
-     * 旧结构原样保留。恋爱组（loveConfig）已随 2026-09-03 迁移由 spec.love 重建输出，
+     * 旧结构原样保留。恋爱组（loveConfig）由 spec.love 重建输出，
      * 不再从 featureConfig.loveConfig 展开透传（旧 ConfigMap 残留键在此被丢弃）。
      */
     private static Map<String, JsonNode> normalize(Map<String, JsonNode> settings) {
@@ -264,11 +259,11 @@ public class PublicConfigAssembler {
 
     /**
      * 恋爱配置公开输出脱敏（getConfigs loveConfig 组）：
-     * pageImages.bgImageUrl 原样保留；2026-09-10 起总开关 loveEnabled 已下线
-     * （入口展示由模块入口开关与 navList 统一管理，app 端按模块开关判定）；
+     * pageImages.bgImageUrl 原样保留；入口展示由模块入口开关与 navList
+     * 统一管理（app 端按模块开关判定）；
      * 模块开关仅输出 enabled + passwordEnabled（按 passwordHash 非空派生），
      * password / passwordHash / passwordRemoved 等密码字段一律不下发小程序端；
-     * 2026-09-10 起附 navList（入口列表：key/title/subTitle/priority/visible，
+     * navList（入口列表：key/title/subTitle/priority/visible，
      * 全部 visible=false 或列表为空时不输出，app 端回退内置默认）。
      */
     private static JsonNode sanitizeLove(JsonNode love) {

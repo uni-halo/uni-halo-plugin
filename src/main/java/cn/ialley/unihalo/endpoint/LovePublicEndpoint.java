@@ -36,11 +36,10 @@ import tools.jackson.databind.ObjectMapper;
 /**
  * 恋爱功能公开接口（小程序端，匿名可访问）。
  *
- * <p>聚合接口 GET /love-config 合并通用配置中的 loveEnabled（总开关 2026-09-03 起
- * 由 setting 迁入 {@link GeneralConfig} spec.love，控制小程序端"我的页面"入口显示）；
- * 相册接口按锁定状态脱敏。</p>
+ * <p>聚合接口 GET /love-config 合并通用配置中的 loveEnabled（控制小程序端
+ * "我的页面"入口显示）；相册接口按锁定状态脱敏。</p>
  *
- * <p>恋爱模块入口密码（2026-09-08）：恋爱故事/相册/清单三个入口可在通用配置
+ * <p>恋爱模块入口密码：恋爱故事/相册/清单三个入口可在通用配置
  * 「恋爱设置-模块入口」分别设置密码，设置后对应数据接口（love-stories /
  * love-albums / love-daily-items）要求携带 {@code ?token=}（经
  * {@code POST /love-modules/unlock} 校验密码换取，30 分钟有效），未带或无效返回
@@ -106,7 +105,7 @@ public class LovePublicEndpoint implements CustomEndpoint {
 
     /**
      * 恋爱配置：loveEnabled（来自通用配置总开关）+ LoveConfig 模型内容
-     * （纪念日 + 恋人信息）。恋爱页图片与模块开关 2026-09-03 起随通用配置
+     * （纪念日 + 恋人信息）。恋爱页图片与模块开关随通用配置
      * spec.love 下发（getConfigs loveConfig 组），不在本接口重复返回。
      */
     private Mono<ServerResponse> getLoveConfig(ServerRequest request) {
@@ -130,7 +129,7 @@ public class LovePublicEndpoint implements CustomEndpoint {
     }
 
     /**
-     * 故事列表（多条目，决策 D5；恋爱故事入口设置密码时要求携带模块 token）。
+     * 故事列表（多条目；恋爱故事入口设置密码时要求携带模块 token）。
      */
     private Mono<ServerResponse> listStories(ServerRequest request) {
         int page = queryPage(request);
@@ -168,7 +167,7 @@ public class LovePublicEndpoint implements CustomEndpoint {
         String token = request.queryParam("token").orElse("");
         return requireModuleAccess(request, "lovePhoto",
                 loveAlbumService.getByName(name)
-                        // 公开详情：删除中对象视为不存在（决策 D7）
+                        // 公开详情：删除中对象视为不存在
                         .filter(album -> album.getMetadata() == null
                                 || album.getMetadata().getDeletionTimestamp() == null)
                         .map(album -> LoveAlbumVo.from(album,
@@ -230,8 +229,7 @@ public class LovePublicEndpoint implements CustomEndpoint {
 
     /**
      * 恋爱模块入口访问控制：模块设置密码（锁定）时校验 {@code ?token=}，
-     * 未带或无效返回 401 {@code {reason: "locked"}}（语义决策见
-     * {@code .docs/module-lock-reminder-wechat-login-design.md} §3.4）；
+     * 未带或无效返回 401 {@code {reason: "locked"}}；
      * 未锁定直接放行（老客户端无感）。
      */
     private Mono<ServerResponse> requireModuleAccess(ServerRequest request, String module,
@@ -271,7 +269,7 @@ public class LovePublicEndpoint implements CustomEndpoint {
     }
 
     /**
-     * 恋爱总开关（/love-config enabled）派生：2026-09-10 起总开关 loveEnabled 已下线
+     * 恋爱总开关（/love-config enabled）派生：总开关 loveEnabled 已不再使用
      * （入口展示由模块入口开关与 navList 统一管理），此处按「任一模块入口开启」派生，
      * 兼容老客户端 /love-config 读取语义。
      */

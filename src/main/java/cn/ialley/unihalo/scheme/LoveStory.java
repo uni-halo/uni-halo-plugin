@@ -11,7 +11,7 @@ import static cn.ialley.unihalo.constants.Constants.BASIC_DOMAIN_NAME;
 import static cn.ialley.unihalo.constants.Constants.PLUGIN_API_VERSION;
 
 /**
- * 恋爱故事（多条目，决策 D5）。
+ * 恋爱故事（多条目）。
  *
  * <p>原设置中 ourStory.content 单条 HTML 升级为多条故事，每条含标题、内容、
  * 时间、图片（多图）；模块开关（enabled/iconUrl）仍由 settings 控制。</p>

@@ -10,10 +10,10 @@ import reactor.core.publisher.Mono;
 import run.halo.app.extension.ListResult;
 
 /**
- * 首页轮播图服务（归一化条目模型，设计见 .docs/banner-design.md）。
+ * 首页轮播图服务（归一化条目模型）。
  *
- * <p>source 由服务端按 postId 非空自动判定（决策 D2）；文章模式服务端拉取
- * Post/User 回填快照字段（决策 D3）；公开列表脱敏不含 content/remark（决策 D5）。</p>
+ * <p>source 由服务端按 postId 非空自动判定；文章模式服务端拉取
+ * Post/User 回填快照字段；公开列表脱敏不含 content/remark。</p>
  *
  * @author 小莫唐尼
  */

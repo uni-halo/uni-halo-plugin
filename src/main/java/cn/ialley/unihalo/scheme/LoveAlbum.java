@@ -96,7 +96,7 @@ public class LoveAlbum extends AbstractExtension {
         private String takenDate;
 
         /**
-         * 拍摄地点（决策 D6）
+         * 拍摄地点
          */
         private String location;
 

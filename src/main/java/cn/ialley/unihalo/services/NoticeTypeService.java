@@ -7,7 +7,7 @@ import reactor.core.publisher.Mono;
 import run.halo.app.extension.ListResult;
 
 /**
- * 公告类型服务（决策 D9/D11）。
+ * 公告类型服务。
  *
  * @author 小莫唐尼
  */

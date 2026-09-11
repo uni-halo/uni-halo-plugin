@@ -5,8 +5,8 @@ import type { GeneralConfigLove } from "@/types";
 import { GeneralConfigFormKey } from "../form-context";
 
 /**
- * 恋爱设置分区（2026-09-10 组件化拆分）：
- * 基本设置（背景图）/ 模块入口（开关 + 入口密码；2026-09-08 起无图标配置）。
+ * 恋爱设置分区：
+ * 基本设置（背景图）/ 模块入口（开关 + 入口密码）。
  */
 defineProps<{ subTab: string }>();
 
@@ -37,14 +37,13 @@ function cancelRemovalOnTyping(module: GeneralConfigLove["ourStory"]) {
 </script>
 
 <template>
-  <!-- 恋爱 → 基本设置（恋爱页背景图；2026-09-10 起去掉「启用恋爱日记」总开关，
-       入口展示由模块入口开关与 navList 统一管理） -->
+  <!-- 恋爱 → 基本设置（恋爱页背景图；入口展示由模块入口开关与 navList 统一管理） -->
   <template v-if="subTab === 'basic'">
     <p class=":uno: mb-3 text-xs text-gray-400">恋爱数据在「恋爱管理」菜单维护，此处配置恋爱页背景图；恋爱入口展示由「模块入口」开关统一管理。</p>
     <FormKit v-model="formState.spec.love.pageImages!.bgImageUrl" name="love_bg_image" label="背景图片" type="attachment" :accepts="['image/*']" />
   </template>
 
-  <!-- 恋爱 → 模块入口（开关 + 入口密码；2026-09-08 起无图标配置） -->
+  <!-- 恋爱 → 模块入口（开关 + 入口密码） -->
   <template v-if="subTab === 'modules'">
     <p class=":uno: mb-3 text-xs text-gray-400">
       以下为恋爱页各模块入口的展示开关与入口密码；模块数据分别在「恋爱管理-恋爱故事 / 恋爱相册 / 恋爱清单」维护。

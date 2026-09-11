@@ -35,6 +35,10 @@ export const styles = css`
     line-height: 1.4;
     transition: transform 0.3s ease;
   }
+  /* 允许拖拽（dragEnabled）时显示抓手光标 */
+  .uh-fmp-draggable {
+    cursor: grab;
+  }
 
   /* ===== 9 向锚点（配合 JS inline transform 偏移） ===== */
   .uh-fmp.uh-fmp-pos-top-left { top: 8px; left: 8px; }

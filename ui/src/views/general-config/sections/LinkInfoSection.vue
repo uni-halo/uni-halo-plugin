@@ -4,8 +4,8 @@ import { VSwitch } from "@halo-dev/components";
 import { GeneralConfigFormKey } from "../form-context";
 
 /**
- * 友链信息分区（2026-09-10 组件化拆分）：
- * 基本配置（公开提交申请开关，2026-09-11 迁入）/
+ * 友链信息分区：
+ * 基本配置（公开提交申请开关）/
  * 站点信息（本站站点名片，字段对齐 Halo 官方友链提交 API）/
  * 小程序信息（申请信息弹窗展示）。
  */
@@ -30,7 +30,7 @@ const feedUrlsText = computed({
 </script>
 
 <template>
-  <!-- 友链信息 → 基本配置（2026-09-11 新增：公开提交申请开关，原 setting 基本设置-友情链接） -->
+  <!-- 友链信息 → 基本配置（公开提交申请开关） -->
   <template v-if="subTab === 'basic'">
     <div class=":uno: flex items-center justify-between gap-4 border-b border-gray-100 pb-3">
       <div>

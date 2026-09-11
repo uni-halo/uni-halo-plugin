@@ -23,7 +23,7 @@ import run.halo.app.extension.ReactiveExtensionClient;
 import static run.halo.app.extension.index.query.Queries.equal;
 
 /**
- * 友情链接-小程序链接申请单服务实现（决策 D6/D7/D10）。
+ * 友情链接-小程序链接申请单服务实现。
  *
  * @author 小莫唐尼
  */
@@ -58,7 +58,7 @@ public class MiniProgramLinkSubmissionServiceImpl implements MiniProgramLinkSubm
     }
 
     /**
-     * sort 参数解析为内存排序比较器（决策：审核待办优先）：
+     * sort 参数解析为内存排序比较器（审核待办优先）：
      * <ul>
      *   <li>空/默认：待审核优先（PENDING 在前），其余按申请时间倒序</li>
      *   <li>submittedAt / reviewedAt / status：字段倒序（白名单，防止任意字段排序）</li>
@@ -145,7 +145,7 @@ public class MiniProgramLinkSubmissionServiceImpl implements MiniProgramLinkSubm
                     }
                     if (STATUS_APPROVED.equals(spec.getStatus())
                             && !isBlank(spec.getLinkName())) {
-                        // 幂等：已审核通过且已生成链接，仅同步分组后返回（D7）
+                        // 幂等：已审核通过且已生成链接，仅同步分组后返回
                         return client.update(existing);
                     }
                     return createLinkFrom(existing)
@@ -190,7 +190,7 @@ public class MiniProgramLinkSubmissionServiceImpl implements MiniProgramLinkSubm
     }
 
     /**
-     * 审核通过时自动生成链接（D7）：拷贝业务字段，visible=true、priority=0。
+     * 审核通过时自动生成链接：拷贝业务字段，visible=true、priority=0。
      */
     private Mono<MiniProgramLink> createLinkFrom(MiniProgramLinkSubmission submission) {
         MiniProgramLink link = new MiniProgramLink();
@@ -218,7 +218,7 @@ public class MiniProgramLinkSubmissionServiceImpl implements MiniProgramLinkSubm
     }
 
     /**
-     * 校验：displayName、miniProgramCode 必填；email 非空时校验格式（D5/D13）。
+     * 校验：displayName、miniProgramCode 必填；email 非空时校验格式。
      */
     private Mono<Void> validate(MiniProgramLinkSubmission submission) {
         var spec = submission.getSpec();

@@ -45,7 +45,7 @@ public class LoveConfigServiceImpl implements LoveConfigService {
     }
 
     /**
-     * 默认配置结构（不落库）：仅纪念日 + 恋人信息（决策 D4，图片与模块开关
+     * 默认配置结构（不落库）：仅纪念日 + 恋人信息（图片与模块开关
      * 仍由 setting.yaml 的 loveConfig 组配置）。
      */
     private LoveConfig defaultLoveConfig() {

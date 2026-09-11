@@ -60,7 +60,7 @@ public class NoticeServiceImpl implements NoticeService {
 
     @Override
     public Mono<ListResult<Notice>> listPublic(int page, int size) {
-        // 公开读路径：仅 published 且排除删除中对象（决策 D7）
+        // 公开读路径：仅 published 且排除删除中对象
         return client.listAll(Notice.class,
                         ListOptions.builder()
                                 .fieldQuery(and(
@@ -130,7 +130,7 @@ public class NoticeServiceImpl implements NoticeService {
 
     @Override
     public Mono<Notice> getLatestPublished() {
-        // 公开读路径：排除删除中对象（决策 D7）
+        // 公开读路径：排除删除中对象
         return client.listAll(Notice.class,
                         ListOptions.builder()
                                 .fieldQuery(and(
@@ -144,7 +144,7 @@ public class NoticeServiceImpl implements NoticeService {
 
     /**
      * 校验与规整：title 必填；status 合法（空则默认 draft）；summary 手填优先、
-     * 为空时从 content 剥离生成（决策 D12）；publishTime 在 published 时首次写入、
+     * 为空时从 content 剥离生成；publishTime 在 published 时首次写入、
      * 非 published 清空。
      *
      * @param oldPublishTime 已有记录的发布时间（update 时传入，create 传 null）
@@ -188,7 +188,7 @@ public class NoticeServiceImpl implements NoticeService {
     }
 
     /**
-     * HTML 剥离为纯文本并截断 200 字（决策 D3/D4 修订）。
+     * HTML 剥离为纯文本并截断 200 字。
      *
      * <p>优先用 jsoup（Halo 传递依赖）解析；异常时退化为正则剔除
      * script/style 与标签。</p>

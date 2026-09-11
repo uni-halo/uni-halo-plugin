@@ -199,6 +199,9 @@ export class FloatMiniProfileElement extends LitElement {
     const c = this.config;
     const pos = c.position || "bottom-right";
     card.classList.add("uh-fmp-pos-" + pos);
+    if (c.dragEnabled) {
+      card.classList.add("uh-fmp-draggable"); // 允许拖拽时显示抓手光标
+    }
 
     const x = Number(c.offsetX) || 0;
     const y = Number(c.offsetY) || 0;
@@ -215,6 +218,9 @@ export class FloatMiniProfileElement extends LitElement {
 
   // ===== 拖拽（Pointer Events）+ 贴边隐藏 =====
   private onPointerDown(e: PointerEvent): void {
+    if (!this.config.dragEnabled) {
+      return; // 后台未开启拖拽：不响应拖拽
+    }
     const target = e.target as HTMLElement | null;
     // 操作按钮（关闭/最小化/申请/友链/恢复/贴边把手）不触发拖拽：
     // 否则 setPointerCapture + preventDefault 会干扰 click 合成事件
@@ -373,7 +379,10 @@ export class FloatMiniProfileElement extends LitElement {
     this.edgeSide = "";
     this.edgeTriggerStyle = "";
     if (card) {
-      card.style.transform = ""; // 清除贴边内联位移，回到锚点/拖拽位置
+      // 仅在实际贴边时才清除内联位移，避免误清锚点 transform 导致首次点击位置跳动
+      if (card.classList.contains("uh-fmp-edge")) {
+        card.style.transform = "";
+      }
       card.classList.remove(
         "uh-fmp-edge",
         "uh-fmp-edge-hover",
@@ -397,7 +406,9 @@ export class FloatMiniProfileElement extends LitElement {
     this.minimized = true;
     this.edgeTrigger = false; // 最小化后隐藏贴边触发把手
     // 最小化后不再贴边（小图保持原位）
-    card.style.transform = ""; // 清除贴边内联位移，恢复后卡片正常显示
+    if (card.classList.contains("uh-fmp-edge")) {
+      card.style.transform = ""; // 仅贴边时清除内联位移，恢复后卡片正常显示
+    }
     card.classList.remove(
       "uh-fmp-edge",
       "uh-fmp-edge-left",

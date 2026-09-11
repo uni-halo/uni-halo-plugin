@@ -28,7 +28,7 @@ import static run.halo.app.extension.index.query.Queries.equal;
 import static run.halo.app.extension.index.query.Queries.isNull;
 
 /**
- * 友情链接-小程序链接服务实现（决策 D2/D5/D8）。
+ * 友情链接-小程序链接服务实现。
  *
  * @author 小莫唐尼
  */
@@ -56,7 +56,7 @@ public class MiniProgramLinkServiceImpl implements MiniProgramLinkService {
     @Override
     public Mono<ListResult<MiniProgramLink>> listPublic(String group, String keyword,
             int page, int size) {
-        // 公开读路径：visible=true 且排除删除中对象（决策 D7）
+        // 公开读路径：visible=true 且排除删除中对象
         return client.listAll(MiniProgramLink.class,
                         ListOptions.builder()
                                 .fieldQuery(and(
@@ -80,7 +80,7 @@ public class MiniProgramLinkServiceImpl implements MiniProgramLinkService {
         return validate(link)
                 .then(Mono.defer(() -> {
                     if (link.getSpec().getSource() == null) {
-                        // 手动添加（D26）：来源由操作自动设置，不手动填写
+                        // 手动添加：来源由操作自动设置，不手动填写
                         link.getSpec().setSource("manual");
                     }
                     Metadata metadata = new Metadata();
@@ -128,7 +128,7 @@ public class MiniProgramLinkServiceImpl implements MiniProgramLinkService {
         return listAllFiltered(visible, keyword)
                 .collectList()
                 .flatMap(links -> client.listAll(MiniProgramLinkGroup.class,
-                                // 公开读路径：排除删除中对象（决策 D7）
+                                // 公开读路径：排除删除中对象
                                 ListOptions.builder()
                                         .fieldQuery(isNull("metadata.deletionTimestamp"))
                                         .build(),
@@ -140,7 +140,7 @@ public class MiniProgramLinkServiceImpl implements MiniProgramLinkService {
 
     /**
      * 按可见性与关键字过滤后的全量流（组内/组间排序在分组阶段完成）。
-     * 供公开 listGroups/listGrouped 聚合使用：排除删除中对象（决策 D7）。
+     * 供公开 listGroups/listGrouped 聚合使用：排除删除中对象。
      */
     private Flux<MiniProgramLink> listAllFiltered(Boolean visible, String keyword) {
         var builder = ListOptions.builder();

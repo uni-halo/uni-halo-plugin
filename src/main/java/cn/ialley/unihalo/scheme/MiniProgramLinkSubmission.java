@@ -11,12 +11,12 @@ import static cn.ialley.unihalo.constants.Constants.BASIC_DOMAIN_NAME;
 import static cn.ialley.unihalo.constants.Constants.PLUGIN_API_VERSION;
 
 /**
- * 友情链接-小程序链接申请单（设计决策 D1/D6/D7/D10）。
+ * 友情链接-小程序链接申请单。
  *
  * <p>公开提交的自助申请：业务字段与 {@link MiniProgramLink} 对齐，另含 email
  * （非必填，填写则审核结果邮件通知）、status 三态（PENDING/APPROVED/REJECTED）、
  * reason（拒绝时必填）、submittedAt/reviewedAt（服务端自动记录）。审核通过后
- * 自动生成 MiniProgramLink 并以 spec.linkName 关联（幂等，D7）。</p>
+ * 自动生成 MiniProgramLink 并以 spec.linkName 关联（幂等）。</p>
  *
  * @author 小莫唐尼
  */

@@ -19,7 +19,7 @@ import tools.jackson.databind.node.JsonNodeFactory;
 import tools.jackson.databind.node.ObjectNode;
 
 /**
- * 审核结果邮件通知（决策 D11）。
+ * 审核结果邮件通知。
  *
  * <p>复用 Halo 内置邮件通知器的 SMTP 配置：读取 Secret
  * {@code notifier-setting-secret} 的 {@code default-email-notifier.json}
@@ -55,7 +55,7 @@ public class EmailService {
 
     /**
      * 发送审核结果邮件（通过/拒绝）。开关关闭或申请人未填邮箱时静默跳过；
-     * SMTP 配置缺失/发送异常仅记日志（D11）。
+     * SMTP 配置缺失/发送异常仅记日志。
      */
     public Mono<Void> sendAuditEmail(MiniProgramLinkSubmission submission) {
         var spec = submission.getSpec();
@@ -80,7 +80,7 @@ public class EmailService {
     }
 
     /**
-     * 读取 Halo 内置邮件通知器 SMTP 配置并发送；配置缺失或发送失败不抛出（D11）。
+     * 读取 Halo 内置邮件通知器 SMTP 配置并发送；配置缺失或发送失败不抛出。
      */
     private Mono<Void> sendEmail(String to, String subject, String content) {
         return client.fetch(Secret.class, NOTIFIER_SECRET_NAME)

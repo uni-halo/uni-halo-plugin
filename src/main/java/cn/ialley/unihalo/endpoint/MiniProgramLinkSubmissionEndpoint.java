@@ -19,7 +19,7 @@ import run.halo.app.extension.GroupVersion;
 /**
  * 友情链接-小程序链接申请单接口（控制台，需登录）。
  *
- * <p>审核通过/拒绝后触发邮件通知（若开关开启且申请人填了邮箱，D11）。</p>
+ * <p>审核通过/拒绝后触发邮件通知（若开关开启且申请人填了邮箱）。</p>
  *
  * @author 小莫唐尼
  */
@@ -117,7 +117,7 @@ public class MiniProgramLinkSubmissionEndpoint implements CustomEndpoint {
 
     /**
      * 审核请求体：reason 为审核说明（拒绝时必填）；groupName 非 null 时调整分组
-     * （null 保持不变，"" 表示未分组，D23）。
+     * （null 保持不变，"" 表示未分组）。
      */
     public record ReviewRequest(String reason, String groupName) {
     }

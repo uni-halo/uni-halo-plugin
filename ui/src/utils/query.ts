@@ -1,7 +1,7 @@
 import type { Metadata } from "@halo-dev/api-client";
 
 /**
- * 列表 useQuery 条件轮询函数（设计见 .docs/deletion-finalizer-design.md 决策 D8）。
+ * 列表 useQuery 条件轮询函数。
  *
  * 存在「删除中」对象（metadata.deletionTimestamp 非空）时每 1000ms 自动重取列表，
  * 所有删除中对象消失后返回 false 自动停止轮询。对齐 plugin-vote 管理列表删除体验：

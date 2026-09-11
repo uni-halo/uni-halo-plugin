@@ -59,7 +59,7 @@ import tools.jackson.databind.node.ObjectNode;
 public class GeneralConfigServiceImpl implements GeneralConfigService {
 
     /**
-     * 参与历史导入的旧设置组（🟦 迁出组）
+     * 参与历史导入的旧设置组
      */
     private static final String[] LEGACY_GROUPS =
         {"basicConfig", "pageConfig", "authorConfig", "imagesConfig"};
@@ -193,7 +193,7 @@ public class GeneralConfigServiceImpl implements GeneralConfigService {
                     JsonNode basic = values.get("basicConfig");
                     ObjectNode profile = JsonNodeFactory.instance.objectNode();
                     pick(author, profile, "blogger");
-                    // 社交信息（2026-09-10 起动态列表）：旧 authorConfig.social 固定字段
+                    // 社交信息（动态列表）：旧 authorConfig.social 固定字段
                     // （enabled/qq/wechat/...）迁移为 items 列表（key=字段名、content=值）
                     JsonNode oldSocial = author != null ? author.get("social") : null;
                     if (oldSocial != null && oldSocial.isObject()) {
@@ -204,17 +204,16 @@ public class GeneralConfigServiceImpl implements GeneralConfigService {
                             profile.set("social", socialOut);
                         }
                     }
-                    // 页脚版权（旧 basicConfig.copyrightConfig；2026-09-10 由页面设置-关于页
-                    // 迁回应用资料 profile.copyrightConfig）
+                    // 页脚版权（旧 basicConfig.copyrightConfig → profile.copyrightConfig）
                     JsonNode basicCopyright = basic != null ? basic.get("copyrightConfig") : null;
                     if (basicCopyright != null && !basicCopyright.isNull()) {
                         profile.set("copyrightConfig", basicCopyright);
                     }
-                    // 2026-09-10 起 showAboutSystem/disclaimers/postDetailConfig
-                    // 不再属于 profile：免责/文章详情迁入页面设置，
-                    // showAboutSystem 下线（开关入口统一管理），此处仅保留博主/社交历史值
+                    // showAboutSystem/disclaimers/postDetailConfig 不再属于 profile：
+                    // 免责/文章详情位于页面设置，showAboutSystem 由开关入口统一管理，
+                    // 此处仅保留博主/社交历史值
                     // 应用信息（名称/图标）：优先取「基本配置」baseConfig.appInfo，
-                    // 回退旧 appConfig.appInfo（历史组已从 setting.yaml 移除）
+                    // 回退旧 appConfig.appInfo
                     JsonNode appInfo = null;
                     JsonNode baseCfg = values.get("baseConfig");
                     if (baseCfg != null && baseCfg.isObject() && baseCfg.has("appInfo")) {
@@ -235,7 +234,7 @@ public class GeneralConfigServiceImpl implements GeneralConfigService {
                     ObjectNode pages = JsonNodeFactory.instance.objectNode();
                     pick(page, pages, "homeConfig", "galleryConfig");
                     // 关于页：旧 pageConfig.aboutConfig（标题/背景/波浪）；
-                    // 页脚版权 2026-09-10 迁回应用资料 profile.copyrightConfig（见上），
+                    // 页脚版权由应用资料 profile.copyrightConfig 承担（见上），
                     // 此处不再合并旧 basicConfig.copyrightConfig
                     ObjectNode aboutOut = JsonNodeFactory.instance.objectNode();
                     JsonNode aboutOld = page != null ? page.get("aboutConfig") : null;
@@ -243,7 +242,7 @@ public class GeneralConfigServiceImpl implements GeneralConfigService {
                     if (aboutOut.size() > 0) {
                         pages.set("aboutConfig", aboutOut);
                     }
-                    // 免责声明/文章详情（2026-09-10 由 basicConfig 迁入页面设置）
+                    // 免责声明/文章详情（basicConfig → 页面设置）
                     pick(basic, pages, "disclaimers", "postDetailConfig");
                     if (pages.size() > 0) {
                         overlay.set("pages", pages);
@@ -252,13 +251,11 @@ public class GeneralConfigServiceImpl implements GeneralConfigService {
                     if (images != null && images.isObject() && images.size() > 0) {
                         overlay.set("assets", images);
                     }
-                    // 恋爱模块（2026-09-03 迁入）：旧 loveConfig 剩余字段
-                    // （loveEnabled/pageImages/模块开关）从 ConfigMap 导入 spec.love。
-                    // 兼容两种旧结构：方案 B 域组 featureConfig.loveConfig 与旧顶层键 loveConfig；
-                    // 已模型化内容字段（loveDate/loveInfo 等）随本次迁移不再输出（详见
-                    // .docs/config-system-v2-redesign.md 实施记录）。
-                    // 2026-09-08 起仅显式挑选仍有效的字段（loveEnabled/pageImages.bgImageUrl/
-                    // 模块 enabled），旧 iconUrl/waveImageUrl/heartImageUrl 等已下线字段不再导入。
+                    // 恋爱模块：旧 loveConfig 字段（loveEnabled/pageImages/模块开关）
+                    // 从 ConfigMap 导入 spec.love，兼容 featureConfig.loveConfig
+                    // 与旧顶层键 loveConfig 两种旧结构；仅显式挑选仍有效的字段
+                    // （loveEnabled/pageImages.bgImageUrl/模块 enabled），
+                    // 旧 iconUrl/waveImageUrl/heartImageUrl 等字段不再导入。
                     JsonNode love = values.get("loveConfig");
                     if (love == null || !love.isObject()) {
                         JsonNode feature = values.get("featureConfig");
@@ -268,8 +265,7 @@ public class GeneralConfigServiceImpl implements GeneralConfigService {
                     }
                     if (love != null && love.isObject() && love.size() > 0) {
                         ObjectNode loveOut = JsonNodeFactory.instance.objectNode();
-                        // 2026-09-10 起总开关 loveEnabled 已下线（入口展示由模块入口
-                        // 开关与 navList 统一管理），不再导入该历史键
+                        // 入口展示由模块入口开关与 navList 统一管理，loveEnabled 不导入
                         JsonNode pageImages = love.get("pageImages");
                         if (pageImages != null && pageImages.isObject()) {
                             ObjectNode pageImagesOut = JsonNodeFactory.instance.objectNode();
@@ -292,9 +288,9 @@ public class GeneralConfigServiceImpl implements GeneralConfigService {
                             overlay.set("love", loveOut);
                         }
                     }
-                    // 友链信息基本配置（2026-09-11 迁入）：旧 featureConfig.linkConfig.submissionEnabled
-                    // （是否开放公开提交申请）导入 spec.linkInfo.submissionEnabled，避免老用户
-                    // 升级后该开关丢失回默认（曾关闭提交的老配置应保持关闭）。
+                    // 友链信息基本配置：旧 featureConfig.linkConfig.submissionEnabled
+                    // （是否开放公开提交申请）导入 spec.linkInfo.submissionEnabled，
+                    // 曾关闭提交的老配置应保持关闭。
                     JsonNode linkConfig = values.get("linkConfig");
                     if (linkConfig == null || !linkConfig.isObject()) {
                         JsonNode feature = values.get("featureConfig");
@@ -310,9 +306,8 @@ public class GeneralConfigServiceImpl implements GeneralConfigService {
                             overlay.set("linkInfo", linkInfoOut);
                         }
                     }
-                    // 审核模式开关（2026-09-11 由 setting safetyConfig.auditConfig 迁入）：
-                    // 旧 auditConfig.auditModeEnabled 导入 spec.auditMode.enabled，避免老用户
-                    // 升级后曾开启的审核模式回退默认关闭。
+                    // 审核模式开关：旧 auditConfig.auditModeEnabled 导入
+                    // spec.auditMode.enabled，曾开启的审核模式不回退默认关闭。
                     JsonNode auditConfig = values.get("auditConfig");
                     if (auditConfig == null || !auditConfig.isObject()) {
                         JsonNode safety = values.get("safetyConfig");
@@ -387,7 +382,7 @@ public class GeneralConfigServiceImpl implements GeneralConfigService {
         spec.setLove(buildDefaultLove());
         spec.setLinkInfo(buildDefaultLinkInfo());
         spec.setMaintenance(buildDefaultMaintenance());
-        // 审核模式（2026-09-11 由 setting safetyConfig.auditConfig 迁入；默认关闭）
+        // 审核模式（默认关闭）
         AuditMode auditMode = new AuditMode();
         auditMode.setEnabled(false);
         spec.setAuditMode(auditMode);
@@ -395,11 +390,9 @@ public class GeneralConfigServiceImpl implements GeneralConfigService {
     }
 
     /**
-     * 默认友链信息：基本配置（submissionEnabled 默认 true，原 setting linkConfig
-     * submissionEnabled 2026-09-11 迁入）+ 两个子配置（miniInfo/siteInfo）全部留空
-     * （2026-09-08 拆分子结构；2026-09-10 起去掉 authorInfo 作者信息，由应用设置-博主资料
-     * 承担；站长配置后经 getConfigs 直接下发 {@code pluginConfig.linkInfo}，不再使用
-     * linksSubmitPlugin）。
+     * 默认友链信息：基本配置（submissionEnabled 默认 true）+ 两个子配置
+     * （miniInfo/siteInfo）全部留空；站长配置后经 getConfigs 直接下发
+     * {@code pluginConfig.linkInfo}，不再使用 linksSubmitPlugin。
      */
     private static LinkInfo buildDefaultLinkInfo() {
         LinkInfo linkInfo = new LinkInfo();
@@ -410,9 +403,8 @@ public class GeneralConfigServiceImpl implements GeneralConfigService {
     }
 
     private static GeneralConfig.Preferences buildDefaultPreferences() {
-        // 2026-09-08 起与客户端内置默认（hermes/preferences.md §3.3）对齐：
-        // 首页/归档 single + image_bottom，文章列表 double + image_bottom；
-        // 卡片样式统一组件 layout 值（image_*），旧 lr_*/tb_* 值体系废弃
+        // 与客户端内置默认对齐：首页/归档 single + image_bottom，
+        // 文章列表 double + image_bottom；卡片样式统一组件 layout 值（image_*）
         GeneralConfig.Preferences preferences = new GeneralConfig.Preferences();
         preferences.setHomeListLayout("single");
         preferences.setHomeCardType("image_bottom");
@@ -438,7 +430,7 @@ public class GeneralConfigServiceImpl implements GeneralConfigService {
         blogger.setAvatar("");
         blogger.setEmail("");
         blogger.setDescription("");
-        // 主页（2026-09-10 新增；友链信息-作者信息下线后由博主资料承担，原「官网地址」改名）
+        // 主页
         blogger.setWebsite("");
         profile.setBlogger(blogger);
 
@@ -446,7 +438,7 @@ public class GeneralConfigServiceImpl implements GeneralConfigService {
         social.setItems(defaultSocialItems());
         profile.setSocial(social);
 
-        // 页脚版权（显示于【关于】页面页脚；2026-09-10 由页面设置-关于页迁回应用资料）
+        // 页脚版权（显示于【关于】页面页脚）
         Copyright copyright = new Copyright();
         copyright.setEnabled(true);
         copyright.setContent("「 2022 uni-halo 丨 开源项目@小莫唐尼 」");
@@ -455,9 +447,8 @@ public class GeneralConfigServiceImpl implements GeneralConfigService {
     }
 
     /**
-     * 默认社交项（2026-09-10 起社交信息改为动态列表：qq/wechat/email/github 四项，
-     * 颜色/背景色 16 进制、priority 排序、visible 展示；app 端联系博主页按序渲染；
-     * 2026-09-11 起去掉 key 平台标识）。
+     * 默认社交项（社交信息为动态列表：qq/wechat/email/github 四项，
+     * 颜色/背景色 16 进制、priority 排序、visible 展示；app 端联系博主页按序渲染）。
      */
     private static List<SocialItem> defaultSocialItems() {
         return List.of(
@@ -482,8 +473,7 @@ public class GeneralConfigServiceImpl implements GeneralConfigService {
     /**
      * 旧社交固定字段（authorConfig.social：enabled/qq/wechat/weibo/email/blog/bilibili/
      * juejin/csdn/gitee/github）迁移为 items 列表：仅取非空值的字段，name=平台中文名、
-     * content=原值，颜色沿用默认社交项同款色板；enabled 忽略。
-     * 2026-09-11 起去掉 key 平台标识（迁移后不再携带）。
+     * content=原值，颜色沿用默认社交项同款色板；enabled 忽略，不携带 key 平台标识。
      */
     private static JsonNode migrateLegacySocialItems(JsonNode oldSocial) {
         Map<String, String> names = Map.of(
@@ -520,8 +510,8 @@ public class GeneralConfigServiceImpl implements GeneralConfigService {
         Home home = new Home();
         home.setPageTitle("首页");
         home.setUseQuickNavigation(true);
-        // 快捷导航默认 5 项（对齐客户端 uh-home-quick-nav 默认 navList，2026-09-08 起
-        // 迁入控制台逐项可配置；bgColor 原 bgGlass、visible 原 show）
+        // 快捷导航默认 5 项（对齐客户端 uh-home-quick-nav 默认 navList，
+        // 控制台可逐项配置）
         home.setQuickNavigation(defaultQuickNavigation());
         home.setUseCategory(true);
         // 首页分类栏选中引用：默认空（未选择时客户端回退内置行为），由站长挑选（固定 3 个）
@@ -532,7 +522,7 @@ public class GeneralConfigServiceImpl implements GeneralConfigService {
         gallery.setPageTitle("图库");
         pages.setGalleryConfig(gallery);
 
-        // 分类页/瞬间页标题（2026-09-08 新增：默认留空，客户端回退内置标题）
+        // 分类页/瞬间页标题（默认留空，客户端回退内置标题）
         CategoryPage categoryPage = new CategoryPage();
         categoryPage.setPageTitle("");
         pages.setCategoryConfig(categoryPage);
@@ -545,15 +535,15 @@ public class GeneralConfigServiceImpl implements GeneralConfigService {
         about.setPageTitle("关于博主");
         about.setBgImageUrl("/plugins/plugin-uni-halo/assets/static/uni_halo_profile_bg.jpg");
         about.setWaveImageUrl("/plugins/plugin-uni-halo/assets/static/uni_halo_about_wave.gif");
-        // 页脚版权 2026-09-10 迁回应用资料 profile.copyrightConfig（见 buildDefaultProfile）
+        // 页脚版权由应用资料 profile.copyrightConfig 承担（见 buildDefaultProfile）
         pages.setAboutConfig(about);
 
-        // 免责声明页（2026-09-10 由应用资料迁入：不再需要启用开关，仅内容，默认留空）
+        // 免责声明页（不再需要启用开关，仅内容，默认留空）
         Disclaimer disclaimer = new Disclaimer();
         disclaimer.setContent("");
         pages.setDisclaimers(disclaimer);
 
-        // 文章详情页内容与版权文案（2026-09-10 由应用资料迁入，原 profile.postDetailConfig）
+        // 文章详情页内容与版权文案
         PostDetail postDetail = new PostDetail();
         postDetail.setShowComment(true);
         postDetail.setCopyrightEnabled(true);
@@ -564,10 +554,8 @@ public class GeneralConfigServiceImpl implements GeneralConfigService {
                 + "邮箱：xxxx@xx.com");
         pages.setPostDetailConfig(postDetail);
 
-        // 我的页面功能入口（2026-09-10 新增）：默认填充注册表条目——
-        // 常用功能=home 组 5 项（与快捷导航默认一致）、其他功能=other 组 2 项，
-        // 与前端 ui/src/constant/feature-entries.ts 注册表对齐（设计见 .docs/feature-entry-unified-design.md）
-        // 2026-09-11 起对齐 app 端 about.vue navList：常用 7 项 / 其他 3 项
+        // 我的页面功能入口：默认填充注册表条目——常用功能=home 组、其他功能=other 组，
+        // 与前端 ui/src/constant/feature-entries.ts 注册表对齐（常用 7 项 / 其他 3 项）
         MyPage myPage = new MyPage();
         myPage.setCommonFeatures(defaultMyPageCommonFeatures());
         myPage.setOtherFeatures(defaultMyPageOtherFeatures());
@@ -576,7 +564,7 @@ public class GeneralConfigServiceImpl implements GeneralConfigService {
     }
 
     /**
-     * 我的页面-常用功能默认 7 项（2026-09-11 对齐 app 端 about.vue navList：
+     * 我的页面-常用功能默认 7 项（对齐 app 端 about.vue navList：
      * 联系博主/我的收藏/恋爱日记/友情链接/文章归档/投票中心/数据看板，顺序即展示顺序；
      * bgColor 用品牌深色 hex8（app 端 about.vue 经 toLightBg 渲染为浅底）；
      * subTitle 对齐 app 端本地默认 rightText（favorites 无副标题）。
@@ -613,7 +601,7 @@ public class GeneralConfigServiceImpl implements GeneralConfigService {
     }
 
     /**
-     * 我的页面-其他功能默认 3 项（2026-09-11 对齐 app 端 about.vue navList：
+     * 我的页面-其他功能默认 3 项（对齐 app 端 about.vue navList：
      * 偏好设置/免责声明/关于项目，顺序即展示顺序；subTitle 对齐 app 端本地默认 rightText）。
      */
     private static List<QuickNavigationItem> defaultMyPageOtherFeatures() {
@@ -634,12 +622,12 @@ public class GeneralConfigServiceImpl implements GeneralConfigService {
     }
 
     /**
-     * 默认快捷导航 5 项（对齐客户端 uh-home-quick-nav 默认 navList；2026-09-08 起
-     * 迁入控制台可配置，visible 默认全部显示，站长可逐项隐藏）。
+     * 默认快捷导航 5 项（对齐客户端 uh-home-quick-nav 默认 navList；
+     * 控制台可配置，visible 默认全部显示，站长可逐项隐藏）。
      */
     private static List<QuickNavigationItem> defaultQuickNavigation() {
         List<QuickNavigationItem> items = new ArrayList<>();
-        // 文章归档带副标题「全部文章」（对标 app 端 rightText，2026-09-10 新增）
+        // 文章归档带副标题「全部文章」（对标 app 端 rightText）
         QuickNavigationItem archives = navItem("archives", "文章归档", "#03A9F4",
                 "#03A9F424", "uhemoji2-icon", "-mask",
                 "/pages-blog/archives/archives");
@@ -671,9 +659,9 @@ public class GeneralConfigServiceImpl implements GeneralConfigService {
     }
 
     /**
-     * 默认 assets：加载占位图（2026-09-08 起默认图片/空图片配置已下线，客户端内置
-     * 回退兜底）；唯一内置默认 = 加载动图（插件静态资源
-     * /plugins/plugin-uni-halo/assets/static/…），error 图留空走客户端回退。
+     * 默认 assets：加载占位图（客户端内置回退兜底）；唯一内置默认 = 加载动图
+     * （插件静态资源 /plugins/plugin-uni-halo/assets/static/…），
+     * error 图留空走客户端回退。
      */
     private static Assets buildDefaultAssets() {
         Assets assets = new Assets();
@@ -683,11 +671,9 @@ public class GeneralConfigServiceImpl implements GeneralConfigService {
     }
 
     /**
-     * 默认 love（对齐旧 setting.yaml 的 value 缺省；2026-09-03 由
-     * featureConfig.loveConfig 迁入）：2026-09-10 起去掉总开关 loveEnabled
-     * （入口展示由模块入口开关与 navList 统一管理）；恋爱页背景图默认留空
-     * （原 925i.cn 外链默认图依赖已清除，由站长配置或客户端内置回退）；
-     * 2026-09-08 起 pageImages 仅保留背景图、模块入口仅开关+密码（均默认未设置）。
+     * 默认 love（对齐旧 setting.yaml 的 value 缺省）：入口展示由模块入口开关
+     * 与 navList 统一管理；恋爱页背景图默认留空（由站长配置或客户端内置回退）；
+     * pageImages 仅背景图、模块入口仅开关+密码（均默认未设置）。
      */
     private static Love buildDefaultLove() {
         Love love = new Love();
@@ -696,7 +682,7 @@ public class GeneralConfigServiceImpl implements GeneralConfigService {
         pageImages.setBgImageUrl("");
         love.setPageImages(pageImages);
 
-        // 恋爱故事模块默认开启（原 loveConfig.ourStory value：enabled=true）
+        // 恋爱故事模块默认开启（enabled=true）
         ModuleSwitch ourStory = new ModuleSwitch();
         ourStory.setEnabled(true);
         ourStory.setPasswordEnabled(false);
@@ -712,7 +698,7 @@ public class GeneralConfigServiceImpl implements GeneralConfigService {
         loveDaily.setPasswordEnabled(false);
         love.setLoveDaily(loveDaily);
 
-        // 恋爱页入口列表（2026-09-10 新增：固定 3 项，key 对应模块；文案对齐 app 端
+        // 恋爱页入口列表（固定 3 项，key 对应模块；文案对齐 app 端
         // love.vue 现有硬编码，priority 默认 1/2/3、visible 默认 true）
         love.setNavList(defaultLoveNavList());
         return love;
@@ -720,7 +706,7 @@ public class GeneralConfigServiceImpl implements GeneralConfigService {
 
     /**
      * 恋爱页入口默认 3 项（对齐 app 端 love.vue 的硬编码 navList：
-     * stories/album/list，desc 文案改名 subTitle）。
+     * stories/album/list）。
      */
     private static List<LoveNavItem> defaultLoveNavList() {
         return List.of(
@@ -742,8 +728,7 @@ public class GeneralConfigServiceImpl implements GeneralConfigService {
 
     /**
      * 维护模式默认：关闭；标题默认「站点维护中」；说明与排期窗口留空
-     * （对齐 .docs/maintenance-config-design.md §5；getConfigs 在 enabled=false
-     * 时不输出 maintenance 键，客户端视为未维护）。
+     * （getConfigs 在 enabled=false 时不输出 maintenance 键，客户端视为未维护）。
      */
     private static Maintenance buildDefaultMaintenance() {
         Maintenance maintenance = new Maintenance();

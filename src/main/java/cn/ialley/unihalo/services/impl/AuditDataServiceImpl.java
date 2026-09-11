@@ -146,7 +146,7 @@ public class AuditDataServiceImpl implements AuditDataService {
         }
         return Flux.fromIterable(refs)
                 .concatMap(ref -> client.fetch(type, ref.getName())
-                        // 删除中对象视为失效引用（决策 D7）
+                        // 删除中对象视为失效引用
                         .filter(found -> found.getMetadata() == null
                                 || found.getMetadata().getDeletionTimestamp() == null)
                         .map(found -> ref)
@@ -177,7 +177,7 @@ public class AuditDataServiceImpl implements AuditDataService {
     /**
      * 全量拉取某类型候选（按创建时间倒序），供内存关键字过滤 + 手动分页。
      * 数据量级：文章/分组/瞬间/链接分组，审核配置为低频操作，全量可接受。
-     * 候选读路径：排除删除中对象（决策 D7）。
+     * 候选读路径：排除删除中对象。
      */
     private Flux<Extension> listAllRef(CandidateType type) {
         return client.listAll(resolveRefClass(type),

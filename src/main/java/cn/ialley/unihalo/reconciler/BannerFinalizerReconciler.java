@@ -5,7 +5,7 @@ import org.springframework.stereotype.Component;
 import run.halo.app.extension.ExtensionClient;
 
 /**
- * {@link Banner} 统一删除语义 Reconciler（试点，设计见 .docs/deletion-finalizer-design.md）。
+ * {@link Banner} 统一删除语义 Reconciler。
  *
  * <p>删除轮播图条目时：管理端 DELETE 打 {@code deletionTimestamp} → 本 Reconciler 等待
  * {@link #deletionDelay()}（默认 1s，前端 1s 条件轮询可见「删除中」）→ 移除 finalizer →

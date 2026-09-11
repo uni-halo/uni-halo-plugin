@@ -17,7 +17,7 @@ import static run.halo.app.extension.ExtensionUtil.addFinalizers;
 import static run.halo.app.extension.ExtensionUtil.removeFinalizers;
 
 /**
- * 统一删除语义的 finalizer Reconciler 抽象基类（设计见 .docs/deletion-finalizer-design.md）。
+ * 统一删除语义的 finalizer Reconciler 抽象基类。
  *
  * <p>目标 Scheme 删除流程统一为：管理端 DELETE 打上 {@code metadata.deletionTimestamp}
  * （软标记，不物理删除）→ 本 Reconciler 在删除分支等待 {@link #deletionDelay()}（默认 1s，
@@ -35,7 +35,7 @@ public abstract class AbstractFinalizerReconciler<T extends AbstractExtension>
         implements Reconciler<Reconciler.Request> {
 
     /**
-     * 统一的 finalizer 名（决策 D3，所有纳入 Scheme 共用；finalizer 属于对象自身 metadata）。
+     * 统一的 finalizer 名（所有纳入 Scheme 共用；finalizer 属于对象自身 metadata）。
      */
     public static final String FINALIZER_NAME = "unihalo.ialley.cn/finalizer";
 
@@ -68,7 +68,7 @@ public abstract class AbstractFinalizerReconciler<T extends AbstractExtension>
     }
 
     /**
-     * 删除过渡时长：默认 1s（决策 D5）；覆写为 {@link Duration#ZERO} 可立即清除。
+     * 删除过渡时长：默认 1s；覆写为 {@link Duration#ZERO} 可立即清除。
      */
     protected Duration deletionDelay() {
         return Duration.ofSeconds(1);

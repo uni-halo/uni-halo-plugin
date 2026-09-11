@@ -3,8 +3,8 @@ import { inject } from "vue";
 import { GeneralConfigFormKey } from "../form-context";
 
 /**
- * 资源设置分区（2026-09-10 组件化拆分）：
- * 加载占位（加载中/加载失败两图；2026-09-08 起默认图片/空图片配置已下线）。
+ * 资源设置分区：
+ * 加载占位（加载中/加载失败两图）。
  */
 defineProps<{ subTab: string }>();
 

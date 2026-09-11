@@ -79,7 +79,7 @@ export interface LoveInfo {
   girlAvatar?: string;
 }
 
-// 决策 D4：pageImages（图片配置）与模块开关（loveAlbum/loveDaily/ourStory 的
+// pageImages（图片配置）与模块开关（loveAlbum/loveDaily/ourStory 的
 // enabled/iconUrl）不进入模型，继续由 setting.yaml 的 loveConfig 组配置
 
 export interface LoveConfigSpec {
@@ -100,7 +100,7 @@ export interface LoveAlbumPhoto {
   title?: string;
   description?: string;
   takenDate?: string;
-  /** 拍摄地点（决策 D6） */
+  /** 拍摄地点 */
   location?: string;
   priority?: number;
 }
@@ -543,34 +543,28 @@ export interface GeneralConfigSpec {
   pages: GeneralConfigPages;
   assets: GeneralConfigAssets;
   preferences: GeneralConfigPreferences;
-  /** 恋爱模块（2026-09-03 由 setting.featureConfig.loveConfig 迁入；经 getConfigs
-   * loveConfig 组下发，结构与旧 loveConfig 一致；2026-09-10 起总开关 loveEnabled 已下线，
-   * 入口展示由模块入口开关与 navList 统一管理） */
+  /** 恋爱模块（经 getConfigs loveConfig 组下发；入口展示由模块入口开关与
+   * navList 统一管理） */
   love: GeneralConfigLove;
-  /** 友链信息（2026-09-08 新增）：站长小程序展示信息，经 getConfigs 覆盖
-   * pluginConfig.linksSubmitPlugin 对应键下发，供小程序端「申请信息」弹窗展示；
-   * 2026-09-10 起去掉作者信息与站点联系邮箱 */
+  /** 友链信息：站长小程序展示信息，经 getConfigs 覆盖
+   * pluginConfig.linksSubmitPlugin 对应键下发，供小程序端「申请信息」弹窗展示 */
   linkInfo: GeneralConfigLinkInfo;
-  /** 维护模式（2026-09-04 新增，见 .docs/maintenance-config-design.md） */
+  /** 维护模式 */
   maintenance: GeneralConfigMaintenance;
-  /** 审核模式（2026-09-11 由 setting safetyConfig.auditConfig 迁入：开启后关闭
-   * 小程序部分数据展示，小程序提交审核时建议开启；经 getConfigs 重建回旧
-   * auditConfig.auditModeEnabled 形态下发，客户端无感） */
+  /** 审核模式：开启后关闭小程序部分数据展示，小程序提交审核时建议开启；
+   * 经 getConfigs 重建回旧 auditConfig.auditModeEnabled 形态下发 */
   auditMode: { enabled?: boolean };
 }
 
 /**
- * 友链信息（2026-09-08 拆分子结构；2026-09-10 起去作者信息，作者区改用
- * 应用设置-博主资料；2026-09-11 起新增基本配置 submissionEnabled）：
- * 基本配置（公开提交申请开关）/ miniInfo 小程序信息 / siteInfo 站点信息
+ * 友链信息：基本配置（公开提交申请开关）/ miniInfo 小程序信息 / siteInfo 站点信息
  * （字段对齐 Halo 官方 plugin-links 友链提交 API）；
- * 经 getConfigs 直接下发 pluginConfig.linkInfo（字段名无映射）
+ * 经 getConfigs 直接下发 pluginConfig.linkInfo
  */
 export interface GeneralConfigLinkInfo {
-  /** 是否开放公开提交申请（原 setting featureConfig.linkConfig.submissionEnabled，
-   * 2026-09-11 迁入；默认 true，关闭后公开提交接口返回「暂未开放提交申请」） */
+  /** 是否开放公开提交申请（默认 true，关闭后公开提交接口返回「暂未开放提交申请」） */
   submissionEnabled?: boolean;
-  /** 小程序信息（原 linkInfo 主体：小程序名称/太阳码/跳转地址/描述/申请说明） */
+  /** 小程序信息（小程序名称/太阳码/跳转地址/描述/申请说明） */
   miniInfo?: GeneralConfigMiniInfo;
   /** 站点信息（本站站点名片，对齐 Halo 官方友链提交 API 字段） */
   siteInfo?: GeneralConfigSiteInfo;
@@ -590,8 +584,7 @@ export interface GeneralConfigMiniInfo {
   applyRemark?: string;
 }
 
-/** 站点信息（字段对齐 Halo 官方 plugin-links 友链提交 API：link-applications 请求体；
- * 2026-09-10 起不再维护联系邮箱 email） */
+/** 站点信息（字段对齐 Halo 官方 plugin-links 友链提交 API：link-applications 请求体） */
 export interface GeneralConfigSiteInfo {
   /** 网站名称（官方 displayName） */
   displayName?: string;
@@ -617,24 +610,24 @@ export interface GeneralConfigProfile {
     avatar?: string;
     email?: string;
     description?: string;
-    /** 主页（2026-09-10 新增；友链信息-作者信息下线后由博主资料承担，原「官网地址」改名） */
+    /** 主页 */
     website?: string;
-    /** 介绍（2026-09-10 新增；富文本 HTML，app 端联系博主页 mp-html 渲染） */
+    /** 介绍（富文本 HTML，app 端联系博主页 mp-html 渲染） */
     intro?: string;
   };
   social: {
-    /** 社交项列表（2026-09-10 起动态列表，app 端联系博主页按序渲染；去 enabled 开关） */
+    /** 社交项列表（app 端联系博主页按序渲染） */
     items?: GeneralConfigSocialItem[];
   };
-  /** 页脚版权（2026-09-10 由页面设置-关于页迁回应用资料，显示于关于页页脚） */
+  /** 页脚版权（显示于关于页页脚） */
   copyrightConfig?: {
     enabled?: boolean;
     content?: string;
   };
 }
 
-/** 社交项（app 端联系博主页展示/复制；2026-09-11 起去掉 key 平台标识，
- * 图标由 app 端按 color/bgColor 色块渲染；仅名称/内容/颜色/背景色/排序/显隐） */
+/** 社交项（app 端联系博主页展示/复制；图标由 app 端按 color/bgColor 色块渲染；
+ * 仅名称/内容/颜色/背景色/排序/显隐） */
 export interface GeneralConfigSocialItem {
   /** 名称（如「企鹅号」「微信号」） */
   name?: string;
@@ -652,45 +645,45 @@ export interface GeneralConfigSocialItem {
 
 export interface GeneralConfigPages {
   homeConfig: {
-    /** 首页标题（2026-09-08 起控制台不再提供配置项，保留字段由客户端读取默认） */
+    /** 首页标题（控制台不再提供配置项，保留字段由客户端读取默认） */
     pageTitle?: string;
     useQuickNavigation?: boolean;
-    /** 快捷导航项列表（2026-09-08 新增：每项可配置名称/排序/显示隐藏，排序=数组顺序） */
+    /** 快捷导航项列表（每项可配置名称/排序/显示隐藏，排序=数组顺序） */
     quickNavigation?: GeneralConfigQuickNavigationItem[];
     useCategory?: boolean;
-    /** 首页分类栏展示的分类引用（2026-09-08 新增：固定 3 个，数据在「分类管理」维护） */
+    /** 首页分类栏展示的分类引用（固定 3 个，数据在「分类管理」维护） */
     categories?: GeneralConfigCategoryItem[];
   };
   galleryConfig: {
-    /** 图库页标题（2026-09-08 起瀑布流配置下线） */
+    /** 图库页标题 */
     pageTitle?: string;
   };
   aboutConfig: {
     pageTitle?: string;
     bgImageUrl?: string;
     waveImageUrl?: string;
-    /** 页脚版权（2026-09-10 由应用设置迁入，显示于关于页页脚） */
+    /** 页脚版权（显示于关于页页脚） */
     copyrightConfig?: {
       enabled?: boolean;
       content?: string;
     };
   };
-  /** 分类页（2026-09-08 新增：分类页标题，客户端 pageConfig.categoryConfig） */
+  /** 分类页（分类页标题，客户端 pageConfig.categoryConfig） */
   categoryConfig?: {
     pageTitle?: string;
   };
-  /** 瞬间页（2026-09-08 新增：瞬间页标题，客户端 pageConfig.momentConfig） */
+  /** 瞬间页（瞬间页标题，客户端 pageConfig.momentConfig） */
   momentConfig?: {
     pageTitle?: string;
   };
-  /** 我的页面功能入口（2026-09-10 新增：常用功能/其他功能两组，配置并入「关于页」tab，
-   * 经 getConfigs 下发 pageConfig.myPageConfig；设计见 .docs/feature-entry-unified-design.md） */
+  /** 我的页面功能入口（常用功能/其他功能两组，配置并入「关于页」tab，
+   * 经 getConfigs 下发 pageConfig.myPageConfig） */
   myPageConfig?: GeneralConfigMyPage;
-  /** 免责声明页（2026-09-10 由应用设置迁入：不再需要启用开关，仅内容） */
+  /** 免责声明页（不再需要启用开关，仅内容） */
   disclaimers?: {
     content?: string;
   };
-  /** 文章详情页内容与版权文案（2026-09-10 由应用设置迁入，原 basicConfig.postDetailConfig） */
+  /** 文章详情页内容与版权文案 */
   postDetailConfig?: {
     showComment?: boolean;
     copyrightEnabled?: boolean;
@@ -700,16 +693,15 @@ export interface GeneralConfigPages {
   };
 }
 
-/** 快捷导航项（2026-09-08 新增；字段与客户端 uh-home-quick-nav 对齐，
- * bgColor 原 bgGlass、visible 原 show） */
+/** 快捷导航项（字段与客户端 uh-home-quick-nav 对齐） */
 export interface GeneralConfigQuickNavigationItem {
   key?: string;
   title?: string;
-  /** 副标题（对标 app 端 rightText，如「全部文章」，2026-09-10 新增，可空） */
+  /** 副标题（对标 app 端 rightText，如「全部文章」，可空） */
   subTitle?: string;
   /** 图标颜色（十六进制色值，如 #03A9F4） */
   color?: string;
-  /** 背景色（原 bgGlass，rgba 半透明值） */
+  /** 背景色（rgba 半透明值） */
   bgColor?: string;
   /** 图标字体前缀（如 uhemoji2-icon） */
   iconPrefix?: string;
@@ -717,14 +709,14 @@ export interface GeneralConfigQuickNavigationItem {
   icon?: string;
   /** 跳转路径（小程序页面路径） */
   path?: string;
-  /** 是否显示（原 show） */
+  /** 是否显示 */
   visible?: boolean;
 }
 
-/** 我的页面功能入口（2026-09-10 新增：常用功能/其他功能两组，条目复用快捷导航项结构，
- * app 端 about 页按组渲染；设计见 .docs/feature-entry-unified-design.md） */
+/** 我的页面功能入口（常用功能/其他功能两组，条目复用快捷导航项结构，
+ * app 端 about 页按组渲染） */
 export interface GeneralConfigMyPage {
-  /** 常用功能（原「博客功能」改名） */
+  /** 常用功能 */
   commonFeatures?: GeneralConfigQuickNavigationItem[];
   /** 其他功能 */
   otherFeatures?: GeneralConfigQuickNavigationItem[];
@@ -758,7 +750,7 @@ export interface GeneralConfigPreferences {
   homeCardType?: "image_top" | "image_right" | "image_bottom" | "image_left";
   /** 文章列表页列表布局（L0 默认，客户端 layout.articles.listLayout）：single / double */
   articlesListLayout?: "single" | "double";
-  /** 文章列表页卡片样式（L0 默认，客户端 layout.articles.cardType，沿用旧字段名） */
+  /** 文章列表页卡片样式（L0 默认，客户端 layout.articles.cardType） */
   articleCardType?: "image_top" | "image_right" | "image_bottom" | "image_left";
   /** 文章归档页列表布局（L0 默认，客户端 layout.archives.listLayout）：single / double */
   archivesListLayout?: "single" | "double";
@@ -768,10 +760,9 @@ export interface GeneralConfigPreferences {
   avatarRadius?: boolean;
 }
 
-/** 恋爱模块（原 setting.featureConfig.loveConfig 剩余字段，2026-09-03 迁入通用配置；
- * 2026-09-10 起总开关 loveEnabled 已下线，入口展示由模块入口开关与 navList 统一管理） */
+/** 恋爱模块（入口展示由模块入口开关与 navList 统一管理） */
 export interface GeneralConfigLove {
-  /** 恋爱页图片（2026-09-08 起仅保留背景图，波浪/爱心图配置已下线） */
+  /** 恋爱页图片（仅背景图） */
   pageImages?: {
     /** 背景图片 */
     bgImageUrl?: string;
@@ -785,7 +776,7 @@ export interface GeneralConfigLove {
 }
 
 /**
- * 恋爱模块入口开关（2026-09-08 起无图标配置）。
+ * 恋爱模块入口开关（无图标配置）。
  * 密码语义与恋爱相册一致：passwordEnabled 为「已设置密码」视图状态（由后端按哈希
  * 派生，保存时忽略）；password 为新密码（留空 = 保持原密码）；passwordRemoved=true
  * = 清除该入口密码。后端一律不回显哈希，故无 passwordHash 字段。
@@ -800,7 +791,7 @@ export interface GeneralConfigLoveModule {
   passwordRemoved?: boolean;
 }
 
-/** 维护模式（2026-09-04 新增）：维护页标题/富文本说明与排期窗口；实际状态由服务端
+/** 维护模式：维护页标题/富文本说明与排期窗口；实际状态由服务端
  * 按 enabled + startTime/endTime 与当前时间计算（scheduled/active 时 getConfigs
  * 顶层下发 maintenance 键，enabled=false 或到点自动结束则不输出，键缺失即未维护） */
 export interface GeneralConfigMaintenance {

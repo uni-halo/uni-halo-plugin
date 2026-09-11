@@ -25,9 +25,9 @@ import cn.ialley.unihalo.utils.SettingGroupResolver;
  * （9 向定位/偏移/拖拽/关闭/贴边隐藏/页面显示范围）由前端 {@code float-mini-profile.js} 完成，服务端
  * 只负责读取设置并按开关 fail closed（关闭/配置异常/未选太阳码均不注入，页面零残留）。</p>
  *
- * <p>配置存放：setting.yaml 新增 {@code themeConfig} 域（Tab「主题展示」）下的
+ * <p>配置存放：setting.yaml 的 {@code themeConfig} 域（Tab「主题展示」）下的
  * {@code floatingWindow} 组，经 {@link SettingGroupResolver#group} 读取（域路径优先、
- * 旧顶层键回退）。设计见 {@code .docs/floating-window-design.md}。</p>
+ * 旧顶层键回退）。</p>
  *
  * @author 小莫唐尼
  */

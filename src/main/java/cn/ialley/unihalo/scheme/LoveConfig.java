@@ -11,7 +11,7 @@ import static cn.ialley.unihalo.constants.Constants.PLUGIN_API_VERSION;
 /**
  * 恋爱配置（单例，metadata.name 固定为 love-config）。
  *
- * <p>仅承载内容型数据：纪念日 + 恋人信息（决策 D4）。图片配置（pageImages）与
+ * <p>仅承载内容型数据：纪念日 + 恋人信息。图片配置（pageImages）与
  * 模块开关（恋爱相册/恋爱清单/恋爱故事的 enabled/iconUrl）继续保留在
  * setting.yaml 的 loveConfig 组中，由插件设置页维护，不进入模型。</p>
  *

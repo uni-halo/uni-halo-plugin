@@ -107,8 +107,7 @@ function defaultSpec(): GeneralConfigSpec {
     profile: {
       appInfo: {name: "uni-halo", logo: "/plugins/plugin-uni-halo/assets/static/logo.png"},
       blogger: {nickname: "uni-halo", avatar: "", email: "", description: "", website: "", intro: ""},
-      // 社交信息（2026-09-10 起动态列表：qq/wechat/email/github 四项默认，去 enabled 开关；
-      // 2026-09-11 起去掉 key 平台标识，图标由 app 端按颜色/背景色色块渲染）
+      // 社交信息（动态列表：qq/wechat/email/github 四项默认；图标由 app 端按颜色/背景色色块渲染）
       social: {
         items: [
           {name: "企鹅号", content: "", color: "#12b7f5", bgColor: "#12b7f51A", priority: 1, visible: true},
@@ -136,9 +135,8 @@ function defaultSpec(): GeneralConfigSpec {
         waveImageUrl: "/plugins/plugin-uni-halo/assets/static/uni_halo_about_wave.gif",
         copyrightConfig: {enabled: true, content: "「 2022 uni-halo 丨 开源项目@小莫唐尼 」"},
       },
-      // 我的页面功能入口（2026-09-10 新增：默认填充注册表条目；
-      // 2026-09-11 起对齐 app 端 about.vue navList：常用 7 项 / 其他 3 项，
-      // 与后端 GeneralConfigServiceImpl 默认一致）
+      // 我的页面功能入口：默认填充注册表条目，对齐 app 端 about.vue navList
+      // （常用 7 项 / 其他 3 项，与后端 GeneralConfigServiceImpl 默认一致）
       myPageConfig: {
         commonFeatures: featureEntriesByKeys(DEFAULT_MY_PAGE_COMMON_KEYS).map(toQuickNavigationItem),
         otherFeatures: featureEntriesByKeys(DEFAULT_MY_PAGE_OTHER_KEYS).map(toQuickNavigationItem),
@@ -168,8 +166,8 @@ function defaultSpec(): GeneralConfigSpec {
       avatarRadius: true,
     },
     love: {
-      // 恋爱模块默认：背景图留空（原外链默认图依赖已清除，由站长配置或客户端内置回退）；
-      // 模块入口仅开关 + 密码（2026-09-08 起无图标）；总开关 loveEnabled 2026-09-10 起下线
+      // 恋爱模块默认：背景图留空（由站长配置或客户端内置回退）；
+      // 模块入口仅开关 + 密码；总开关 loveEnabled 已下线
       // （入口展示由模块入口开关与 navList 统一管理）
       pageImages: {
         bgImageUrl: "",
@@ -179,9 +177,8 @@ function defaultSpec(): GeneralConfigSpec {
       loveDaily: {enabled: false, passwordEnabled: false, password: "", passwordRemoved: false},
     },
     linkInfo: {
-      // 友链信息默认：基本配置开放公开提交申请（原 setting linkConfig.submissionEnabled，
-      // 2026-09-11 迁入）；miniInfo/siteInfo 留空（站长配置后经 getConfigs 直接下发
-      // pluginConfig.linkInfo；2026-09-10 起去掉作者信息与站点联系邮箱）
+      // 友链信息默认：基本配置开放公开提交申请；miniInfo/siteInfo 留空
+      // （站长配置后经 getConfigs 直接下发 pluginConfig.linkInfo）
       submissionEnabled: true,
       miniInfo: {
         displayName: "",
@@ -205,8 +202,7 @@ function defaultSpec(): GeneralConfigSpec {
       notice: "",
       description: "",
     },
-    // 审核模式（2026-09-11 由设置页 safetyConfig.auditConfig 迁入：默认关闭，
-    // 开启后关闭小程序部分数据展示，小程序提交审核时建议开启）
+    // 审核模式（默认关闭，开启后关闭小程序部分数据展示，小程序提交审核时建议开启）
     auditMode: {
       enabled: false,
     },
@@ -338,7 +334,7 @@ provide(GeneralConfigFormKey, {formState, save: handleSave});
       </VCard>
     </aside>
 
-    <!-- 右侧：VTabbar 子切换 + 分区组件（2026-09-10 组件化拆分：各分区独立组件） -->
+    <!-- 右侧：VTabbar 子切换 + 分区组件（各分区独立组件） -->
     <div class=":uno: min-w-0 flex-1">
       <VCard :loading="isLoading">
         <template #header>

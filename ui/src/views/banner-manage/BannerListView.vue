@@ -76,7 +76,7 @@ const { data: banners, isLoading, isFetching, refetch } = useQuery({
     total.value = result.total;
     return result;
   },
-  // 删除中对象存在时每 1s 自动重取，直到对象消失（设计见 .docs/deletion-finalizer-design.md）
+  // 删除中对象存在时每 1s 自动重取，直到对象消失
   refetchInterval: (data) => deletingRefetchInterval(data),
 });
 

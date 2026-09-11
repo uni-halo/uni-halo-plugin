@@ -27,9 +27,9 @@ import tools.jackson.databind.ObjectMapper;
 /**
  * 通知公告公开接口（app 端，匿名可访问）。
  *
- * <p>只暴露已发布（published）公告；列表脱敏不返回 content 正文（决策 D5），
- * 详情才返回完整 HTML；列表/详情/latest 均内嵌类型信息 typeDisplayName/typeColor
- * （决策 D10）；latest 无数据返回 200 + null（决策 D6）。</p>
+ * <p>只暴露已发布（published）公告；列表脱敏不返回 content 正文，
+ * 详情才返回完整 HTML（含内嵌类型标签 typeDisplayName/typeColor）
+ * ；latest 无数据返回 200 + null。</p>
  *
  * @author 小莫唐尼
  */
@@ -68,7 +68,7 @@ public class NoticePublicEndpoint implements CustomEndpoint {
 
     /**
      * 已发布公告分页列表（脱敏：不含 content，默认排序）。
-     * 走公开专用查询：仅 published 且排除删除中对象（决策 D7）。
+     * 走公开专用查询：仅 published 且排除删除中对象。
      */
     private Mono<ServerResponse> listNotices(ServerRequest request) {
         int page = queryPage(request);
@@ -83,9 +83,9 @@ public class NoticePublicEndpoint implements CustomEndpoint {
     }
 
     /**
-     * 最新一条已发布公告；无则 200 + JSON null（决策 D6）。
+     * 最新一条已发布公告；无则 200 + JSON null。
      * 注意：不能 bodyValue(null)（WebFlux 不允许 null body 会抛错成 500），
-     * 空数据以 JsonNode.nullNode() 序列化为 JSON null（2026-09-03 修复）。
+     * 空数据以 JsonNode.nullNode() 序列化为 JSON null。
      */
     private Mono<ServerResponse> getLatestNotice(ServerRequest request) {
         return noticeService.getLatestPublished()
@@ -99,12 +99,12 @@ public class NoticePublicEndpoint implements CustomEndpoint {
 
     /**
      * 公告详情（含 content 富文本正文，内嵌类型信息）；不存在返回 404。
-     * 删除中对象视为不存在（决策 D7）。
+     * 删除中对象视为不存在。
      */
     private Mono<ServerResponse> getNotice(ServerRequest request) {
         String name = request.pathVariable("name");
         return noticeService.getByName(name)
-                // 公开详情：删除中对象视为不存在（决策 D7）
+                // 公开详情：删除中对象视为不存在
                 .filter(notice -> notice.getMetadata() == null
                         || notice.getMetadata().getDeletionTimestamp() == null)
                 .flatMap(this::toDetailMap)

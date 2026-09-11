@@ -9,7 +9,7 @@ import reactor.core.publisher.Mono;
 import run.halo.app.extension.ListResult;
 
 /**
- * 友情链接-小程序链接服务（决策 D1/D2/D8）。
+ * 友情链接-小程序链接服务。
  *
  * @author 小莫唐尼
  */
@@ -18,13 +18,13 @@ public interface MiniProgramLinkService {
     /**
      * 分页列表；group/visible/keyword 非空时分别过滤，keyword 模糊匹配
      * 名称/描述/作者/分组，排序 spec.priority 倒序 + 创建时间倒序。
-     * 管理端使用，保留删除中对象（决策 D7）。
+     * 管理端使用，保留删除中对象。
      */
     Mono<ListResult<MiniProgramLink>> list(String group, Boolean visible,
             String keyword, int page, int size);
 
     /**
-     * 公开列表（visible=true 固定，排除删除中对象，决策 D7）。公开读路径专用。
+     * 公开列表（visible=true 固定，排除删除中对象）。公开读路径专用。
      */
     Mono<ListResult<MiniProgramLink>> listPublic(String group, String keyword,
             int page, int size);

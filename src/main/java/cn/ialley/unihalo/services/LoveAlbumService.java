@@ -15,12 +15,12 @@ public interface LoveAlbumService {
 
     /**
      * 分页列表（含 photoCount 计算；passwordHash 一律置空不回显）。
-     * 管理端使用，保留删除中对象（决策 D7）。
+     * 管理端使用，保留删除中对象。
      */
     Mono<ListResult<LoveAlbum>> list(String keyword, int page, int size);
 
     /**
-     * 公开列表（keyword 恒空，排除删除中对象，决策 D7）。公开读路径专用。
+     * 公开列表（keyword 恒空，排除删除中对象）。公开读路径专用。
      */
     Mono<ListResult<LoveAlbum>> listPublic(int page, int size);
 

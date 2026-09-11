@@ -2,7 +2,7 @@ import { Dialog, Toast } from "@halo-dev/components";
 import { useQueryClient } from "@tanstack/vue-query";
 
 /**
- * 统一删除流程收口（设计见 .docs/deletion-finalizer-design.md 决策 D8）。
+ * 统一删除流程收口。
  *
  * 将各列表页重复的「Dialog.warning 确认 → 调删除接口 → Toast → 失效刷新」样板
  * 收敛为一处：Dialog.warning 确认后并发调用 doDelete，成功 Toast「删除成功」，

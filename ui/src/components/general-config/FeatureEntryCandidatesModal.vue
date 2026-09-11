@@ -7,7 +7,7 @@ import {
 } from "@/constant/feature-entries";
 
 /**
- * 功能入口候选弹窗（2026-09-10 新增，设计见 .docs/feature-entry-unified-design.md）。
+ * 功能入口候选弹窗。
  *
  * <p>数据源为前端静态注册表 {@link FEATURE_ENTRY_REGISTRY}（统一清单，**不按 group 分组**
  * 展示全部条目；与审核配置候选的后端跨插件查询范式不同）。语义为「追加选择」：

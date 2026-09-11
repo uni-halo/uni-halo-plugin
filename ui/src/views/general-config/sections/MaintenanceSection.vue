@@ -5,7 +5,7 @@ import RichTextEditorField from "@/components/common/RichTextEditorField.vue";
 import { GeneralConfigFormKey } from "../form-context";
 
 /**
- * 维护设置分区（2026-09-10 组件化拆分，设计见 .docs/maintenance-config-design.md）：
+ * 维护设置分区：
  * 维护时间（四态状态卡 + 走秒倒计时 + 开启开关 + 时间窗口）/ 维护内容（标题/说明/详情）。
  * 前端展示态规则与后端 MaintenanceResolver 一致；状态判定权威在服务端输出端。
  */

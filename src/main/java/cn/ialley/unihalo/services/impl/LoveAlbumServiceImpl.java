@@ -48,7 +48,7 @@ public class LoveAlbumServiceImpl implements LoveAlbumService {
 
     @Override
     public Mono<ListResult<LoveAlbum>> listPublic(int page, int size) {
-        // 公开读路径：排除删除中对象（决策 D7）
+        // 公开读路径：排除删除中对象
         return client.listAll(LoveAlbum.class,
                         ListOptions.builder()
                                 .fieldQuery(isNull("metadata.deletionTimestamp"))

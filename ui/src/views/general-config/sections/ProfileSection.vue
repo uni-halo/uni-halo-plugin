@@ -9,7 +9,7 @@ import type { GeneralConfigSocialItem } from "@/types";
 import { GeneralConfigFormKey } from "../form-context";
 
 /**
- * 应用设置分区（2026-09-10 组件化拆分）：
+ * 应用设置分区：
  * 应用信息 / 博主资料 / 社交信息 / 页脚版权 子 tab 表单。
  * 数据经 provide/inject 共享 formState，直接改嵌套属性触发父级 deep watch → dirty。
  */
@@ -17,7 +17,7 @@ defineProps<{ subTab: string }>();
 
 const { formState } = inject(GeneralConfigFormKey)!;
 
-/** 社交项列表（2026-09-10 起动态列表；写回 formState，VueDraggable 需要非 undefined 数组） */
+/** 社交项列表（写回 formState，VueDraggable 需要非 undefined 数组） */
 const socialItems = computed({
   get: () => formState.value.spec.profile.social?.items || [],
   set: (value: GeneralConfigSocialItem[]) => {
@@ -81,14 +81,14 @@ function onSocialBgColor(item: GeneralConfigSocialItem, value: unknown) {
     <FormKit v-model="formState.spec.profile.blogger.website" name="blogger_website" label="主页" type="text" placeholder="如 https://your-site.com" />
     <FormKit v-model="formState.spec.profile.blogger.avatar" name="blogger_avatar" label="头像" type="attachment" :accepts="['image/*']" />
     <FormKit v-model="formState.spec.profile.blogger.description" name="blogger_description" label="简介" type="textarea" />
-    <!-- 介绍（2026-09-10 新增：富文本 HTML，app 端联系博主页 mp-html 渲染） -->
+    <!-- 介绍（富文本 HTML，app 端联系博主页 mp-html 渲染） -->
     <div class=":uno: mt-4">
       <div class=":uno: mb-2 text-sm text-gray-700">介绍</div>
       <RichTextEditorField v-model="formState.spec.profile.blogger.intro" placeholder="博主介绍，支持图文混排……app 端「联系博主」页面展示，留空不展示" />
     </div>
   </template>
 
-  <!-- 应用资料 → 社交信息（2026-09-10 起动态列表，去 enabled 开关） -->
+  <!-- 应用资料 → 社交信息（动态列表） -->
   <template v-if="subTab === 'social'">
     <div class=":uno: flex items-center justify-between gap-4 pb-3">
       <div>
@@ -176,7 +176,7 @@ function onSocialBgColor(item: GeneralConfigSocialItem, value: unknown) {
     />
   </template>
 
-  <!-- 应用资料 → 审核模式（2026-09-11 由设置页 safetyConfig.auditConfig 迁入） -->
+  <!-- 应用资料 → 审核模式 -->
   <template v-if="subTab === 'auditMode'">
     <div class=":uno: flex items-center justify-between gap-4 border-b border-gray-100 pb-3">
       <div>
@@ -187,7 +187,7 @@ function onSocialBgColor(item: GeneralConfigSocialItem, value: unknown) {
     </div>
   </template>
 
-  <!-- 应用资料 → 页脚版权（2026-09-10 由页面设置-关于页迁回；显示于【关于】页面页脚） -->
+  <!-- 应用资料 → 页脚版权（显示于【关于】页面页脚） -->
   <template v-if="subTab === 'copyright'">
     <p class=":uno: mb-3 text-xs text-gray-400">
       小程序「关于」页面页脚展示的版权文案。

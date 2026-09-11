@@ -3,14 +3,14 @@ import { inject } from "vue";
 import { GeneralConfigFormKey } from "../form-context";
 
 /**
- * 偏好设置分区（2026-09-10 组件化拆分）：
+ * 偏好设置分区：
  * 首页 / 文章页面 / 归档页面 三个子 tab（L0 站点默认偏好，用户可在小程序端覆盖）。
  */
 defineProps<{ subTab: string }>();
 
 const { formState } = inject(GeneralConfigFormKey)!;
 
-/** 卡片样式选项（与客户端 hermes/preferences.md §3.2 组件 layout 值对齐，旧 lr_ 与 tb_ 值体系废弃） */
+/** 卡片样式选项（组件 layout 值） */
 const CARD_STYLE_OPTIONS = [
   {label: "上图下文", value: "image_top"},
   {label: "左文右图", value: "image_right"},

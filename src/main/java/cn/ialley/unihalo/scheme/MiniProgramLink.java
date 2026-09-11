@@ -11,12 +11,12 @@ import static cn.ialley.unihalo.constants.Constants.BASIC_DOMAIN_NAME;
 import static cn.ialley.unihalo.constants.Constants.PLUGIN_API_VERSION;
 
 /**
- * 友情链接-小程序链接（设计决策 D1/D3/D4/D5/D13）。
+ * 友情链接-小程序链接。
  *
  * <p>用于展示管理小程序入口：太阳码为小程序码图片（必填），小程序地址与作者网站
- * 非必填；类型为自由文本（公开列表分组依据，D3），标签为自由多标签（D4）；
- * visible 为可见性开关（默认 true，公开接口仅返回可见项，D2/D8）；website 归属
- * 作者信息（D13）。</p>
+ * 非必填；类型为自由文本（公开列表分组依据），标签为自由多标签；
+ * visible 为可见性开关（默认 true，公开接口仅返回可见项）；website 归属
+ * 作者信息。</p>
  *
  * @author 小莫唐尼
  */
@@ -57,7 +57,7 @@ public class MiniProgramLink extends AbstractExtension {
         private String avatar;
 
         /**
-         * 作者网站（归属作者信息，非必填，D13）
+         * 作者网站（归属作者信息，非必填）
          */
         private String website;
 
@@ -82,7 +82,7 @@ public class MiniProgramLink extends AbstractExtension {
         private Boolean visible;
 
         /**
-         * 来源（根据操作自动设置，不手动填写，D26）：manual 手动添加 /
+         * 来源（根据操作自动设置，不手动填写）：manual 手动添加 /
          * submitted 自助申请审核通过
          */
         private String source;

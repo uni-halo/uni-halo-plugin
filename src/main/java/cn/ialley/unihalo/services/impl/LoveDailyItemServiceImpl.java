@@ -51,7 +51,7 @@ public class LoveDailyItemServiceImpl implements LoveDailyItemService {
 
     @Override
     public Mono<ListResult<LoveDailyItem>> listPublic(String status, int page, int size) {
-        // 公开读路径：排除删除中对象（决策 D7）
+        // 公开读路径：排除删除中对象
         var builder = ListOptions.builder().fieldQuery(isNull("metadata.deletionTimestamp"));
         if (!isBlank(status)) {
             builder.fieldQuery(equal("spec.status", status));

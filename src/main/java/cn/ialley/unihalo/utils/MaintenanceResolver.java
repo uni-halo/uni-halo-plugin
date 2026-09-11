@@ -17,8 +17,7 @@ import java.time.format.DateTimeParseException;
  * </ul>
  *
  * <p>边界语义：到 {@code startTime} 整点即视为开始、到 {@code endTime} 整点即视为结束（含等号）。
- * 时间字符串非法（非 RFC3339）时按未设置处理，公开输出不因脏数据抛错。
- * 设计见 {@code .docs/maintenance-config-design.md} §4。</p>
+ * 时间字符串非法（非 RFC3339）时按未设置处理，公开输出不因脏数据抛错。</p>
  *
  * @author 小莫唐尼
  */

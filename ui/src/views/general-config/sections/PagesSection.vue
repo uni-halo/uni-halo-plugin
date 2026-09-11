@@ -34,7 +34,7 @@ defineProps<{ subTab: string }>();
 const { formState } = inject(GeneralConfigFormKey)!;
 
 /**
- * 快捷导航默认 5 项（2026-09-11 起由注册表显式 key 列表派生——
+ * 快捷导航默认 5 项（由注册表显式 key 列表派生——
  * archives/vote/disclaimers/love/contact-blogger，与 app 端 uh-home-quick-nav 默认一致）
  */
 const DEFAULT_QUICK_NAVIGATION: GeneralConfigQuickNavigationItem[] =
@@ -153,7 +153,7 @@ function onNavBgColor(item: GeneralConfigQuickNavigationItem, value: unknown) {
   }
 }
 
-// ===== 我的页面功能入口（2026-09-10 新增：常用功能/其他功能两组） =====
+// ===== 我的页面功能入口（常用功能/其他功能两组） =====
 
 /** 我的页面 myPageConfig 安全访问（defaultSpec 已含两组默认，旧数据可能缺失） */
 const myPageConfig = computed<GeneralConfigMyPage>(
@@ -206,7 +206,7 @@ const removeMyPageFeature = (group: "common" | "other", item: GeneralConfigQuick
 };
 
 /** 恢复默认：恢复为注册表对应组的默认配置（全部快照字段、排序/visible 一并恢复；
- * 2026-09-11 起对齐 app 端 about.vue navList：常用 7 项 / 其他 3 项，由显式 key 列表派生） */
+ * 对齐 app 端 about.vue navList：常用 7 项 / 其他 3 项，由显式 key 列表派生） */
 function restoreMyPageDefaults(group: "common" | "other") {
   const label = group === "common" ? "常用功能" : "其他功能";
   Dialog.warning({
@@ -386,12 +386,12 @@ function restoreMyPageDefaults(group: "common" | "other") {
     </div>
   </template>
 
-  <!-- 页面与排版 → 图库页（2026-09-08：瀑布流配置下线，app 端默认） -->
+  <!-- 页面与排版 → 图库页（瀑布流由 app 端默认） -->
   <template v-if="subTab === 'gallery'">
     <FormKit v-model="formState.spec.pages.galleryConfig.pageTitle" name="gallery_page_title" label="页面标题" type="text" help="图库页展示标题，留空使用默认" />
   </template>
 
-  <!-- 页面与排版 → 分类页（2026-09-08 新增） -->
+  <!-- 页面与排版 → 分类页 -->
   <template v-if="subTab === 'categoryPage'">
     <FormKit v-model="formState.spec.pages.categoryConfig!.pageTitle" name="category_page_title" label="页面标题" type="text" help="分类页展示标题，留空使用默认" />
   </template>
@@ -439,7 +439,7 @@ function restoreMyPageDefaults(group: "common" | "other") {
               <span class=":uno: nav-drag-handle cursor-move shrink-0 text-gray-400 hover:text-gray-600">
                 <RiDragMove2Line class=":uno: h-4 w-4" />
               </span>
-              <!-- 名称（2026-09-11 起去掉标识 key 列） -->
+              <!-- 名称 -->
               <div class=":uno: flex min-w-0 flex-1 items-center gap-2">
                 <span class=":uno: w-10 shrink-0 text-xs text-gray-700">名称</span>
                 <FormKit
@@ -461,7 +461,7 @@ function restoreMyPageDefaults(group: "common" | "other") {
                   outer-class=":uno: min-w-0 flex-1 !pt-0"
                 />
               </div>
-              <!-- 文字颜色 + 图标背景色（2026-09-11：背景色改名图标背景色，新增文字颜色列） -->
+              <!-- 文字颜色 + 图标背景色 -->
               <div class=":uno: flex shrink-0 items-center gap-2 pr-24">
                 <span class=":uno: w-14 shrink-0 text-xs text-gray-700">文字颜色</span>
                 <FormKit
@@ -524,7 +524,7 @@ function restoreMyPageDefaults(group: "common" | "other") {
               <span class=":uno: nav-drag-handle cursor-move shrink-0 text-gray-400 hover:text-gray-600">
                 <RiDragMove2Line class=":uno: h-4 w-4" />
               </span>
-              <!-- 名称（2026-09-11 起去掉标识 key 列） -->
+              <!-- 名称 -->
               <div class=":uno: flex min-w-0 flex-1 items-center gap-2">
                 <span class=":uno: w-10 shrink-0 text-xs text-gray-700">名称</span>
                 <FormKit
@@ -546,7 +546,7 @@ function restoreMyPageDefaults(group: "common" | "other") {
                   outer-class=":uno: min-w-0 flex-1 !pt-0"
                 />
               </div>
-              <!-- 文字颜色 + 图标背景色（2026-09-11：背景色改名图标背景色，新增文字颜色列） -->
+              <!-- 文字颜色 + 图标背景色 -->
               <div class=":uno: flex shrink-0 items-center gap-2 pr-24">
                 <span class=":uno: w-14 shrink-0 text-xs text-gray-700">文字颜色</span>
                 <FormKit
@@ -615,7 +615,7 @@ function restoreMyPageDefaults(group: "common" | "other") {
     </div>
   </template>
 
-  <!-- 页面与排版 → 免责声明页（2026-09-10 由应用设置迁入：不再需要启用开关，仅内容） -->
+  <!-- 页面与排版 → 免责声明页（不再需要启用开关，仅内容） -->
   <template v-if="subTab === 'disclaimersPage'">
     <p class=":uno: mb-3 text-xs text-gray-400">
       小程序端「免责声明」页面展示的内容（支持图文混排）；留空则不展示该页面。

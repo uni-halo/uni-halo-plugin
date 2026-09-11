@@ -9,12 +9,12 @@ import static cn.ialley.unihalo.constants.Constants.BASIC_DOMAIN_NAME;
 import static cn.ialley.unihalo.constants.Constants.PLUGIN_API_VERSION;
 
 /**
- * 首页轮播图（多条，归一化条目模型，设计见 .docs/banner-design.md 决策 D1/D2）。
+ * 首页轮播图（多条，归一化条目模型）。
  *
  * <p>所有条目统一数据格式：来源 {@code source} 由服务端按 {@code postId} 非空自动
- * 判定（post=文章快照 / custom=自定义），保存时强制覆盖、不手动设置（决策 D2）。
- * 文章模式仅快照 title/cover/date/authorName/authorAvatar/postId，content 恒为空
- * （决策 D3），点击直接跳转文章详情；自定义模式 content 为富文本 HTML（决策 D4）。</p>
+ * 判定（post=文章快照 / custom=自定义），保存时强制覆盖、不手动设置。
+ * 文章模式仅快照 title/cover/date/authorName/authorAvatar/postId，content 恒为空，
+ * 点击直接跳转文章详情；自定义模式 content 为富文本 HTML。</p>
  *
  * @author 小莫唐尼
  */
@@ -55,12 +55,12 @@ public class Banner extends AbstractExtension {
         private String authorAvatar;
 
         /**
-         * 来源：post / custom，由服务端按 postId 非空自动判定（决策 D2）
+         * 来源：post / custom，由服务端按 postId 非空自动判定
          */
         private String source;
 
         /**
-         * 内容（富文本 HTML；仅自定义模式，文章模式恒为空，决策 D3/D4）
+         * 内容（富文本 HTML；仅自定义模式，文章模式恒为空）
          */
         private String content;
 

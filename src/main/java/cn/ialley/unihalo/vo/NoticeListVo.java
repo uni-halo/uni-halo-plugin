@@ -5,7 +5,7 @@ import cn.ialley.unihalo.scheme.Notice;
 import cn.ialley.unihalo.scheme.NoticeType;
 
 /**
- * 通知公告公开列表视图（脱敏，决策 D5/D10）。
+ * 通知公告公开列表视图（脱敏）。
  *
  * <p>不返回 content 富文本正文，仅返回标题 + 摘要 + 封面 + 类型信息等，
  * 控制 app 端流量；详情接口才返回完整 HTML。类型信息内嵌（typeDisplayName/
