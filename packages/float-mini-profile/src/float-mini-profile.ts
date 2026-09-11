@@ -173,6 +173,22 @@ export class FloatMiniProfileElement extends LitElement {
 
   protected firstUpdated(): void {
     this.applyPosition();
+    this.applyDefaultState();
+  }
+
+  /** 默认状态：default（无操作）/ minimized（初始最小化）/ edge（初始贴边，未开启贴边隐藏时回退默认） */
+  private applyDefaultState(): void {
+    if (this.config.defaultState === "minimized") {
+      const card = this.cardEl;
+      if (card) {
+        const rect = card.getBoundingClientRect();
+        this.miniDotStyle = `left:${Math.round(rect.left)}px;top:${Math.round(rect.top)}px;`;
+        this.minimized = true;
+      }
+    } else if (this.config.defaultState === "edge" && this.config.edgeHideEnabled) {
+      // 仅在开启贴边隐藏时生效；未开启时回退默认（保持正常显示）
+      this.maybeEdgeHide();
+    }
   }
 
   private isClosed(): boolean {
@@ -706,7 +722,7 @@ export class FloatMiniProfileElement extends LitElement {
   // ===== 渲染 =====
   override render() {
     const c = this.config;
-    const size = Number(c.imageSize) || 100;
+    const size = Number(c.cardWidth) || 100;
     return html`
       ${this.applyOpen ? this.renderApplyModal() : ""}
       ${this.linksOpen ? this.renderLinksModal() : ""}

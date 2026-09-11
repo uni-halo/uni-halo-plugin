@@ -95,8 +95,9 @@ public class FloatingWindowHeadProcessor implements TemplateHeadProcessor {
         config.put("descSize", node.path("descSize").asInt(12));
         config.put("descColor", node.path("descColor").asText("#999999"));
         config.put("imageUrl", node.path("imageUrl").asText(""));
-        config.put("imageSize", node.path("imageSize").asInt(100));
+        config.put("cardWidth", node.path("cardWidth").asInt(100));
         config.put("dragEnabled", node.path("dragEnabled").asBoolean(true));
+        config.put("defaultState", node.path("defaultState").asText("default"));
         config.put("closeEnabled", node.path("closeEnabled").asBoolean(true));
         config.put("edgeHideEnabled", node.path("edgeHideEnabled").asBoolean(true));
         config.put("edgeHideDistance", node.path("edgeHideDistance").asInt(24));
