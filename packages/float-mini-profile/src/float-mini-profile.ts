@@ -178,7 +178,7 @@ export class FloatMiniProfileElement extends LitElement {
     requestAnimationFrame(() => this.applyDefaultState());
   }
 
-  /** 默认状态：default（无操作）/ minimized（初始最小化）/ edge（初始贴边，未开启贴边隐藏时回退默认） */
+  /** 默认状态：default（无操作）/ minimized（初始最小化） */
   private applyDefaultState(): void {
     if (this.config.defaultState === "minimized") {
       const card = this.cardEl;
@@ -187,9 +187,6 @@ export class FloatMiniProfileElement extends LitElement {
         this.miniDotStyle = `left:${Math.round(rect.left)}px;top:${Math.round(rect.top)}px;`;
         this.minimized = true;
       }
-    } else if (this.config.defaultState === "edge" && this.config.edgeHideEnabled) {
-      // 仅在开启贴边隐藏时生效；未开启时回退默认（保持正常显示）
-      this.maybeEdgeHide();
     }
   }
 

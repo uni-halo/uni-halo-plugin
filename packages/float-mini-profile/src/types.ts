@@ -19,7 +19,7 @@ export interface FloatMiniProfileConfig {
   imageUrl: string;
   cardWidth: number;
   dragEnabled: boolean;
-  defaultState: "default" | "minimized" | "edge";
+  defaultState: "default" | "minimized";
   closeEnabled: boolean;
   edgeHideEnabled: boolean;
   edgeHideDistance: number;
