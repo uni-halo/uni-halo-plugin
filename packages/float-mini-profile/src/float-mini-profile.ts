@@ -441,7 +441,36 @@ export class FloatMiniProfileElement extends LitElement {
       this.miniDotDragged = false;
       return; // 刚拖拽过，忽略本次 click（防拖拽松手误触发恢复）
     }
+    // 恢复：把卡片移动到小球当前位置（小球可被拖到任意位置，卡片应跟随出现，
+    // 而不是回到最小化前的位置）
+    const dot = this.renderRoot.querySelector(".uh-fmp-mini-dot") as HTMLElement | null;
+    const card = this.cardEl;
+    if (dot && card) {
+      const rect = dot.getBoundingClientRect();
+      card.style.left = Math.round(rect.left) + "px";
+      card.style.top = Math.round(rect.top) + "px";
+      card.style.right = "auto";
+      card.style.bottom = "auto";
+      card.style.transform = ""; // 清除锚点 transform（center 等 -50% 偏移），定位精确
+    }
     this.minimized = false;
+    // 卡片显示后按实际尺寸约束到视口内（小球贴近屏幕底部/右侧时，卡片不超出屏幕）
+    this.updateComplete.then(() => {
+      const shown = this.cardEl;
+      if (!shown) {
+        return;
+      }
+      const curLeft = Number.parseInt(shown.style.left, 10) || 0;
+      const curTop = Number.parseInt(shown.style.top, 10) || 0;
+      const maxLeft = Math.max(0, window.innerWidth - shown.offsetWidth);
+      const maxTop = Math.max(0, window.innerHeight - shown.offsetHeight);
+      if (curLeft > maxLeft) {
+        shown.style.left = maxLeft + "px";
+      }
+      if (curTop > maxTop) {
+        shown.style.top = maxTop + "px";
+      }
+    });
   }
 
   // ===== 最小化小图拖拽（独立 fixed 元素，不受 dragEnabled 约束，无条件可拖） =====
