@@ -306,8 +306,8 @@ spec:
               name: cardWidth
               id: floatingWindowCardWidth
               label: 卡片宽度(px)
-              value: 100
-              help: 悬浮卡片的宽度；太阳码图片按卡片宽度 100% 等比显示（aspect-ratio 1:1），名称/描述在卡片内自动换行。
+              value: 220
+              help: 悬浮卡片的宽度；
               validation: required
             - $formkit: switch
               name: dragEnabled

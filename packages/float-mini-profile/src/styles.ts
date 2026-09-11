@@ -144,7 +144,7 @@ export const styles = css`
     border-radius: 50%;
     overflow: hidden;
     position: fixed;
-    z-index: 9999;
+    z-index: 2147482999; /* 与贴边把手一致：浮在最上层，避免被页面元素遮挡无法点击 */
     cursor: pointer;
     background: rgba(255, 255, 255, 0.95);
     box-shadow: 0 0 16px rgba(0, 0, 0, 0.25);

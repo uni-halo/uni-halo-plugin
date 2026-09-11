@@ -173,7 +173,9 @@ export class FloatMiniProfileElement extends LitElement {
 
   protected firstUpdated(): void {
     this.applyPosition();
-    this.applyDefaultState();
+    // 默认状态依赖 getBoundingClientRect 的最终布局位置：
+    // 延迟到下一帧再取，避免自定义元素刚 upgrade 时布局未稳定导致小球位置错（左上角）
+    requestAnimationFrame(() => this.applyDefaultState());
   }
 
   /** 默认状态：default（无操作）/ minimized（初始最小化）/ edge（初始贴边，未开启贴边隐藏时回退默认） */
