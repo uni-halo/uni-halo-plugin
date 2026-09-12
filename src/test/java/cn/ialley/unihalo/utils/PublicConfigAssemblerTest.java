@@ -340,6 +340,35 @@ class PublicConfigAssemblerTest {
         assertFalse(root.get("loveConfig").has("loveInfo"));
     }
 
+    @Test
+    void shouldDerivePasswordEnabledFromMaskedInput() throws Exception {
+        // 生产链路回归（2026-09-12）：getConfigs 入参为 generalConfigService.get()
+        // 的脱敏结果（maskLovePasswords 已把 passwordHash 置空、passwordEnabled 按
+        // 原始哈希派生），sanitizeLove 不得再依赖已置空的哈希（否则恒 false）。
+        GeneralConfig config = config("""
+                {"spec":{"love":{
+                  "loveDiary":{"enabled":true,"passwordEnabled":true,
+                    "passwordHash":null,"password":null,"passwordRemoved":null},
+                  "ourStory":{"enabled":true,"passwordEnabled":false,
+                    "passwordHash":null},
+                  "lovePhoto":{"enabled":false,"passwordEnabled":false,
+                    "passwordHash":null},
+                  "loveDaily":{"enabled":false,"passwordEnabled":false,
+                    "passwordHash":null}
+                }}}
+                """);
+
+        ObjectNode root = assembler.assemble(legacySettings(), config);
+
+        assertTrue(root.get("loveConfig").get("loveDiary").get("passwordEnabled").asBoolean(),
+                "脱敏输入下 passwordEnabled 应透传已派生布尔（true）");
+        assertFalse(root.get("loveConfig").get("ourStory").get("passwordEnabled").asBoolean());
+        assertFalse(root.get("loveConfig").get("loveDiary").has("passwordHash"),
+                "密码哈希一律不下发");
+        assertFalse(root.get("loveConfig").get("loveDiary").has("password"),
+                "密码一律不下发");
+    }
+
     // ===== 维护模式（2026-09-04 新增，additive 顶层键）=====
 
     private static final Instant NOW = Instant.parse("2026-09-04T12:00:00Z");

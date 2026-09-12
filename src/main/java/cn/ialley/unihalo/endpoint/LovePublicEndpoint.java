@@ -15,8 +15,6 @@ import cn.ialley.unihalo.captcha.CaptchaScope;
 import cn.ialley.unihalo.captcha.CaptchaService;
 import cn.ialley.unihalo.captcha.CaptchaValidationException;
 import cn.ialley.unihalo.constants.Constants;
-import cn.ialley.unihalo.scheme.GeneralConfig;
-import cn.ialley.unihalo.scheme.GeneralConfig.ModuleSwitch;
 import cn.ialley.unihalo.scheme.LoveAlbum;
 import cn.ialley.unihalo.services.GeneralConfigService;
 import cn.ialley.unihalo.services.LoveAlbumService;
@@ -33,8 +31,9 @@ import run.halo.app.extension.ListResult;
 /**
  * 恋爱功能公开接口（小程序端，匿名可访问）。
  *
- * <p>聚合接口 GET /love-config 合并通用配置中的 loveEnabled（控制小程序端
- * "我的页面"入口显示）；相册接口按锁定状态脱敏。</p>
+ * <p>恋爱配置已统一经公开 getConfigs 的 loveConfig 组下发（模块开关含
+ * enabled/passwordEnabled、navList、loveInfo），不再提供独立的 /love-config
+ * 聚合接口；本端点仅保留恋爱数据接口，相册接口按锁定状态脱敏。</p>
  *
  * <p>恋爱模块入口密码：恋爱故事/相册/清单三个入口可在通用配置
  * 「恋爱设置-模块入口」分别设置密码，设置后对应数据接口（love-stories /
@@ -80,7 +79,6 @@ public class LovePublicEndpoint implements CustomEndpoint {
     @Override
     public RouterFunction<ServerResponse> endpoint() {
         return RouterFunctions.route()
-                .GET(Constants.END_POINT_API_BASE_PATH + "/love-config", this::getLoveConfig)
                 .GET(Constants.END_POINT_API_BASE_PATH + "/love-stories", this::listStories)
                 .GET(Constants.END_POINT_API_BASE_PATH + "/love-albums", this::listAlbums)
                 .GET(Constants.END_POINT_API_BASE_PATH + "/love-albums/{name}", this::getAlbum)
@@ -90,40 +88,6 @@ public class LovePublicEndpoint implements CustomEndpoint {
                         this::unlockLoveModule)
                 .GET(Constants.END_POINT_API_BASE_PATH + "/love-daily-items", this::listDailyItems)
                 .build();
-    }
-
-    /**
-     * 恋爱配置：loveEnabled（来自通用配置总开关）+ 恋爱信息
-     * （纪念日 + 恋人信息，2026-09-11 起数据源为 GeneralConfig.spec.love.loveInfo，
-     * 原「恋爱管理-恋爱配置」LoveConfig 单例模型内容迁入；输出 shape 不变，
-     * 客户端无感）。恋爱页图片与模块开关随通用配置 spec.love 下发
-     * （getConfigs loveConfig 组），不在本接口重复返回。
-     * 恋爱日记入口（love 页本身）设置密码时要求携带模块 token。
-     */
-    private Mono<ServerResponse> getLoveConfig(ServerRequest request) {
-        return requireModuleAccess(request, "loveDiary",
-                Mono.zip(generalConfigService.get(), fetchLoveEnabled())
-                        .map(tuple -> {
-                            GeneralConfig config = tuple.getT1();
-                            boolean enabled = Boolean.TRUE.equals(tuple.getT2());
-                            Map<String, Object> result = new LinkedHashMap<>();
-                            result.put("enabled", enabled);
-                            GeneralConfig.LoveInfo info = config.getSpec() != null
-                                    && config.getSpec().getLove() != null
-                                    ? config.getSpec().getLove().getLoveInfo() : null;
-                            if (info != null) {
-                                result.put("loveDateTitle", info.getLoveDateTitle());
-                                result.put("loveDate", info.getLoveDate());
-                                Map<String, Object> loveInfo = new LinkedHashMap<>();
-                                loveInfo.put("boyNickname", info.getBoyNickname());
-                                loveInfo.put("boyAvatar", info.getBoyAvatar());
-                                loveInfo.put("girlNickname", info.getGirlNickname());
-                                loveInfo.put("girlAvatar", info.getGirlAvatar());
-                                result.put("loveInfo", loveInfo);
-                            }
-                            return result;
-                        })
-                        .flatMap(body -> ServerResponse.ok().bodyValue(body)));
     }
 
     /**
@@ -268,31 +232,6 @@ public class LovePublicEndpoint implements CustomEndpoint {
         String status = request.queryParam("status").orElse("").trim();
         return loveDailyItemService.listPublic(status, page, size)
                 .flatMap(body -> ServerResponse.ok().bodyValue(body));
-    }
-
-    /**
-     * 恋爱总开关（/love-config enabled）派生：总开关 loveEnabled 已不再使用
-     * （入口展示由模块入口开关与 navList 统一管理），此处按「恋爱日记入口或
-     * 任一模块入口开启」派生，兼容老客户端 /love-config 读取语义。
-     */
-    private Mono<Boolean> fetchLoveEnabled() {
-        return generalConfigService.get()
-                .map(config -> {
-                    GeneralConfig.Love love = config.getSpec() != null
-                            ? config.getSpec().getLove() : null;
-                    if (love == null) {
-                        return false;
-                    }
-                    return isModuleEnabled(love.getLoveDiary())
-                            || isModuleEnabled(love.getOurStory())
-                            || isModuleEnabled(love.getLovePhoto())
-                            || isModuleEnabled(love.getLoveDaily());
-                })
-                .defaultIfEmpty(false);
-    }
-
-    private static boolean isModuleEnabled(ModuleSwitch module) {
-        return module != null && Boolean.TRUE.equals(module.getEnabled());
     }
 
     private static boolean isLocked(LoveAlbum album) {

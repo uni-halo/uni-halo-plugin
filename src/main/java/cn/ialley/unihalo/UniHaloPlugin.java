@@ -6,7 +6,6 @@ import cn.ialley.unihalo.scheme.AuditDataConfig;
 import cn.ialley.unihalo.scheme.Banner;
 import cn.ialley.unihalo.scheme.GeneralConfig;
 import cn.ialley.unihalo.scheme.LoveAlbum;
-import cn.ialley.unihalo.scheme.LoveConfig;
 import cn.ialley.unihalo.scheme.LoveDailyItem;
 import cn.ialley.unihalo.scheme.LoveStory;
 import cn.ialley.unihalo.scheme.MiniProgramLink;
@@ -67,10 +66,6 @@ public class UniHaloPlugin extends BasePlugin {
                     .indexFunc(appVersion -> appVersion.getSpec().getTitle()));
             indexSpecs.add(IndexSpecs.<AppVersion, String>single("spec.version", String.class)
                     .indexFunc(appVersion -> appVersion.getSpec().getVersion()));
-        });
-
-        schemeManager.register(LoveConfig.class, indexSpecs -> {
-            // 单例模型，无需额外索引
         });
 
         schemeManager.register(AuditDataConfig.class, indexSpecs -> {
@@ -180,7 +175,6 @@ public class UniHaloPlugin extends BasePlugin {
         schemeManager.unregister(schemeManager.get(QRCodeInfo.class));
         schemeManager.unregister(schemeManager.get(AppInfo.class));
         schemeManager.unregister(schemeManager.get(AppVersion.class));
-        schemeManager.unregister(schemeManager.get(LoveConfig.class));
         schemeManager.unregister(schemeManager.get(AuditDataConfig.class));
         schemeManager.unregister(schemeManager.get(GeneralConfig.class));
         schemeManager.unregister(schemeManager.get(LoveAlbum.class));

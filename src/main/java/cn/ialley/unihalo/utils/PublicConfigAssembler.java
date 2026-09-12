@@ -109,7 +109,7 @@ public class PublicConfigAssembler {
             // pageConfig.aboutConfig.copyrightConfig（app 端消费位置不变）
             pick(pages, pageConfig, "homeConfig", "galleryConfig", "aboutConfig",
                     "categoryConfig", "momentConfig", "postDetailConfig", "disclaimers",
-                    // 其余功能页面标题（2026-09-11 起新增，均含 pageTitle）
+                    // 其余功能页面标题（均含 pageTitle）
                     "loveDiaryConfig", "contactConfig", "favoritesConfig",
                     "friendLinksConfig", "archivesConfig", "voteConfig", "dataVisualConfig",
                     "settingConfig", "aboutProjectConfig", "noticeConfig", "searchConfig");
@@ -264,13 +264,15 @@ public class PublicConfigAssembler {
     /**
      * 恋爱配置公开输出脱敏（getConfigs loveConfig 组）：
      * 入口展示由模块入口开关与 navList 统一管理（app 端按模块开关判定）；
-     * 模块开关仅输出 enabled + passwordEnabled（按 passwordHash 非空派生），
+     * 模块开关仅输出 enabled + passwordEnabled（优先透传输入中已派生的
+     * passwordEnabled 布尔——getConfigs 入参经 generalConfigService.get()
+     * 脱敏，哈希已置空；直接传入原始 spec 时回退按 passwordHash 非空派生），
      * password / passwordHash / passwordRemoved 等密码字段一律不下发小程序端；
      * navList（入口列表：key/title/subTitle/priority/visible，
      * 全部 visible=false 或列表为空时不输出，app 端回退内置默认）；
-     * loveInfo（纪念日 + 恋人信息，2026-09-11 起迁入）：含任意非空字段时输出，
+     * loveInfo（纪念日 + 恋人信息）：含任意非空字段时输出，
      * 全空不输出（app 端回退内置默认标题）。
-     * 恋爱页背景图不再经 loveConfig 下发（2026-09-11 起由 pageConfig.loveDiaryConfig.bgImageUrl 承担）。
+     * 恋爱页背景图由 pageConfig.loveDiaryConfig.bgImageUrl 承担，不再经 loveConfig 下发。
      */
     private static JsonNode sanitizeLove(JsonNode love) {
         ObjectNode out = JsonNodeFactory.instance.objectNode();
@@ -279,9 +281,17 @@ public class PublicConfigAssembler {
             if (module != null && module.isObject()) {
                 ObjectNode moduleOut = JsonNodeFactory.instance.objectNode();
                 pick(module, moduleOut, "enabled");
+                // passwordEnabled 派生：优先读已派生的布尔（getConfigs 入参经
+                // maskLovePasswords 脱敏，passwordHash 恒置空，但 passwordEnabled
+                // 已按原始哈希正确派生）；回退按 passwordHash 非空判定
+                // （兼容直接传入未脱敏原始 spec 的调用方）
+                JsonNode passwordEnabled = module.get("passwordEnabled");
                 JsonNode hash = module.get("passwordHash");
                 moduleOut.put("passwordEnabled",
-                        hash != null && !hash.isNull() && !hash.asText().isBlank());
+                        (passwordEnabled != null && passwordEnabled.isBoolean()
+                                && passwordEnabled.asBoolean())
+                                || (hash != null && !hash.isNull()
+                                        && !hash.asText().isBlank()));
                 if (moduleOut.size() > 0) {
                     out.set(moduleKey, moduleOut);
                 }

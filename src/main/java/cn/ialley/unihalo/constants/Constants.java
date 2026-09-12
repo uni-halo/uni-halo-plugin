@@ -32,11 +32,6 @@ public class Constants {
     public static final String APP_VERSION_API_BASE_PATH = "plugins/plugin-uni-halo/app-versions";
 
     /**
-     * 恋爱配置（console）接口基础路径
-     */
-    public static final String LOVE_CONFIG_API_BASE_PATH = "plugins/plugin-uni-halo/love-config";
-
-    /**
      * 恋爱相册（console）接口基础路径
      */
     public static final String LOVE_ALBUM_API_BASE_PATH = "plugins/plugin-uni-halo/love-albums";
@@ -93,11 +88,6 @@ public class Constants {
      */
     public static final String MINI_PROGRAM_LINK_GROUP_API_BASE_PATH =
         "plugins/plugin-uni-halo/mini-program-link-groups";
-
-    /**
-     * 恋爱配置单例名称（metadata.name 固定值）
-     */
-    public static final String LOVE_CONFIG_SINGLETON_NAME = "love-config";
 
     /**
      * 审核模式单例名称（metadata.name 固定值）

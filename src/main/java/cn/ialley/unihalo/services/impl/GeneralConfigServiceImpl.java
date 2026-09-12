@@ -267,8 +267,7 @@ public class GeneralConfigServiceImpl implements GeneralConfigService {
                     // spec.love，兼容 featureConfig.loveConfig 与旧顶层键 loveConfig
                     // 两种旧结构；仅显式挑选仍有效的字段（模块 enabled），
                     // 旧 iconUrl/waveImageUrl/heartImageUrl/loveEnabled/pageImages
-                    // 等字段不再导入（背景图 2026-09-11 起由
-                    // pages.loveDiaryConfig.bgImageUrl 承担）。
+                    // 等字段不再导入（背景图由 pages.loveDiaryConfig.bgImageUrl 承担）。
                     JsonNode love = values.get("loveConfig");
                     if (love == null || !love.isObject()) {
                         JsonNode feature = values.get("featureConfig");
@@ -536,10 +535,10 @@ public class GeneralConfigServiceImpl implements GeneralConfigService {
         momentPage.setPageTitle("");
         pages.setMomentConfig(momentPage);
 
-        // 其余功能页面标题（2026-09-11 起新增，默认留空，客户端回退内置标题）
+        // 其余功能页面标题（默认留空，客户端回退内置标题）
         LoveDiaryPage loveDiaryPage = new LoveDiaryPage();
         loveDiaryPage.setPageTitle("");
-        // 恋爱页背景图（2026-09-11 起由恋爱设置-基本设置迁入，默认留空客户端内置回退）
+        // 恋爱页背景图（默认留空客户端内置回退）
         loveDiaryPage.setBgImageUrl("");
         pages.setLoveDiaryConfig(loveDiaryPage);
 

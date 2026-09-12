@@ -13,7 +13,6 @@ metadata:
 rules:
   - apiGroups: [ "console.api.unihalo.ialley.cn" ]
     resources:
-      - "plugins/plugin-uni-halo/love-config"
       - "plugins/plugin-uni-halo/love-stories"
       - "plugins/plugin-uni-halo/love-stories/*"
       - "plugins/plugin-uni-halo/love-albums"
@@ -41,7 +40,6 @@ metadata:
 rules:
   - apiGroups: [ "console.api.unihalo.ialley.cn" ]
     resources:
-      - "plugins/plugin-uni-halo/love-config"
       - "plugins/plugin-uni-halo/love-stories"
       - "plugins/plugin-uni-halo/love-stories/*"
       - "plugins/plugin-uni-halo/love-albums"

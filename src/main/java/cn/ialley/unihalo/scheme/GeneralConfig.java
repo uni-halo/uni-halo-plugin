@@ -285,7 +285,7 @@ public class GeneralConfig extends AbstractExtension {
     public static class LoveDiaryPage {
         /** 页面标题 */
         private String pageTitle;
-        /** 恋爱页背景图（2026-09-11 起由恋爱设置-基本设置迁入，客户端内置回退） */
+        /** 恋爱页背景图（客户端内置回退） */
         private String bgImageUrl;
     }
 
@@ -405,8 +405,7 @@ public class GeneralConfig extends AbstractExtension {
         private ModuleSwitch lovePhoto;
         /** 恋爱清单模块入口开关（数据在「恋爱管理-恋爱清单」维护） */
         private ModuleSwitch loveDaily;
-        /** 恋爱信息（原「恋爱管理-恋爱配置」内容：纪念日 + 恋人信息，
-         * 2026-09-11 迁入通用配置-恋爱设置-恋爱信息 tab） */
+        /** 恋爱信息（纪念日 + 恋人信息，配置在通用配置-恋爱设置-恋爱信息 tab） */
         private LoveInfo loveInfo;
         /** 恋爱页入口列表（固定 3 项，key 对应模块；
          * 仅 title/subTitle 可编辑 + priority 排序 + visible 开关，不可增删；
@@ -414,7 +413,7 @@ public class GeneralConfig extends AbstractExtension {
         private List<LoveNavItem> navList;
     }
 
-    /** 恋爱信息（纪念日 + 恋人信息；原 LoveConfig 单例模型内容迁入） */
+    /** 恋爱信息（纪念日 + 恋人信息） */
     @Data
     public static class LoveInfo {
         /** 纪念日标题，默认「这是我们一起走过的」 */
