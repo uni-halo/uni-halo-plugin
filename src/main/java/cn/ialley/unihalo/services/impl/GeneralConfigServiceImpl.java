@@ -29,7 +29,6 @@ import cn.ialley.unihalo.scheme.GeneralConfig.LinkInfo;
 import cn.ialley.unihalo.scheme.GeneralConfig.Love;
 import cn.ialley.unihalo.scheme.GeneralConfig.LoveDiaryPage;
 import cn.ialley.unihalo.scheme.GeneralConfig.LoveInfo;
-import cn.ialley.unihalo.scheme.GeneralConfig.LoveNavItem;
 import cn.ialley.unihalo.scheme.GeneralConfig.Maintenance;
 import cn.ialley.unihalo.scheme.GeneralConfig.MomentPage;
 import cn.ialley.unihalo.scheme.GeneralConfig.ModuleSwitch;
@@ -722,38 +721,33 @@ public class GeneralConfigServiceImpl implements GeneralConfigService {
     }
 
     /**
-     * 默认 love（对齐旧 setting.yaml 的 value 缺省）：入口展示由模块入口开关
-     * 与 navList 统一管理；恋爱页背景图由 pages.loveDiaryConfig.bgImageUrl 承担
-     * （默认留空，站长配置或客户端内置回退）；模块入口仅开关+密码（均默认未设置）。
+     * 默认 love：恋爱日记入口仅密码（无 enabled 开关，入口显隐由页面设置-
+     * 快捷导航/关于页功能入口注册表控制）；三模块入口默认值对齐 app 端 love.vue
+     * 硬编码（title/subTitle 文案 + 颜色/图标背景色/跳转路径，priority 1/2/3）。
+     * 恋爱页背景图由 pages.loveDiaryConfig.bgImageUrl 承担（默认留空）。
      */
     private static Love buildDefaultLove() {
         Love love = new Love();
 
-        // 恋爱日记入口（恋爱页本身）默认开启（enabled=true）
+        // 恋爱日记入口（恋爱页本身）：无开关，仅密码（默认未设置）
         ModuleSwitch loveDiary = new ModuleSwitch();
-        loveDiary.setEnabled(true);
         loveDiary.setPasswordEnabled(false);
         love.setLoveDiary(loveDiary);
 
         // 恋爱故事模块默认开启（enabled=true）
-        ModuleSwitch ourStory = new ModuleSwitch();
-        ourStory.setEnabled(true);
-        ourStory.setPasswordEnabled(false);
-        love.setOurStory(ourStory);
+        love.setOurStory(defaultLoveModule(true, "恋爱故事", "我们一起度过的那些经历",
+                "#f83856", "#f8385699", "#fce7f3", "uhlove-icon", "gushi",
+                "/pages-blog/love/stories", 1));
 
-        ModuleSwitch lovePhoto = new ModuleSwitch();
-        lovePhoto.setEnabled(false);
-        lovePhoto.setPasswordEnabled(false);
-        love.setLovePhoto(lovePhoto);
+        // 恋爱相册模块默认关闭（enabled=false）
+        love.setLovePhoto(defaultLoveModule(false, "恋爱相册", "定格了我们的那些小美好",
+                "#60a5fa", "#93c5fd", "#dbeafe", "uhlove-icon", "xiangce",
+                "/pages-blog/love/album", 2));
 
-        ModuleSwitch loveDaily = new ModuleSwitch();
-        loveDaily.setEnabled(false);
-        loveDaily.setPasswordEnabled(false);
-        love.setLoveDaily(loveDaily);
-
-        // 恋爱页入口列表（固定 3 项，key 对应模块；文案对齐 app 端
-        // love.vue 现有硬编码，priority 默认 1/2/3、visible 默认 true）
-        love.setNavList(defaultLoveNavList());
+        // 恋爱清单模块默认关闭（enabled=false）
+        love.setLoveDaily(defaultLoveModule(false, "恋爱清单", "你我之间的约定我们都在努力实现",
+                "#f83856", "#f8385699", "#fce7f3", "uhlove-icon", "liebiao",
+                "/pages-blog/love/list", 3));
 
         // 恋爱信息（纪念日 + 恋人信息）：默认留空（前端/输出端回退默认标题）
         love.setLoveInfo(new LoveInfo());
@@ -761,25 +755,25 @@ public class GeneralConfigServiceImpl implements GeneralConfigService {
     }
 
     /**
-     * 恋爱页入口默认 3 项（对齐 app 端 love.vue 的硬编码 navList：
-     * stories/album/list）。
+     * 三模块入口默认值（对齐 app 端 love.vue 现有硬编码：名称/副标题文案、
+     * title/subTitle 颜色（hex8）、图标背景色、图标字体前缀与图标名、跳转路径与排序）。
      */
-    private static List<LoveNavItem> defaultLoveNavList() {
-        return List.of(
-                loveNavItem("stories", "恋爱故事", "我们一起度过的那些经历", 1),
-                loveNavItem("album", "恋爱相册", "定格了我们的那些小美好", 2),
-                loveNavItem("list", "恋爱清单", "你我之间的约定我们都在努力实现", 3));
-    }
-
-    private static LoveNavItem loveNavItem(String key, String title, String subTitle,
-            int priority) {
-        LoveNavItem item = new LoveNavItem();
-        item.setKey(key);
-        item.setTitle(title);
-        item.setSubTitle(subTitle);
-        item.setPriority(priority);
-        item.setVisible(true);
-        return item;
+    private static ModuleSwitch defaultLoveModule(boolean enabled, String title,
+            String subTitle, String titleColor, String subTitleColor, String iconBgColor,
+            String iconPrefix, String icon, String path, int priority) {
+        ModuleSwitch module = new ModuleSwitch();
+        module.setEnabled(enabled);
+        module.setTitle(title);
+        module.setSubTitle(subTitle);
+        module.setTitleColor(titleColor);
+        module.setSubTitleColor(subTitleColor);
+        module.setIconBgColor(iconBgColor);
+        module.setIconPrefix(iconPrefix);
+        module.setIcon(icon);
+        module.setPath(path);
+        module.setPriority(priority);
+        module.setPasswordEnabled(false);
+        return module;
     }
 
     /**

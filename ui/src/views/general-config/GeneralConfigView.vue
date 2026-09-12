@@ -74,6 +74,7 @@ const SUB_TABS: Record<BigGroup, Array<{id: string; label: string}>> = {
   ],
   love: [
     {id: "info", label: "恋爱信息"},
+    {id: "pageEntry", label: "页面入口"},
     {id: "modules", label: "模块入口"},
   ],
   linkInfo: [
@@ -190,15 +191,31 @@ function defaultSpec(): GeneralConfigSpec {
     },
     love: {
       // 恋爱模块默认：背景图留空（由站长配置或客户端内置回退）；
-      // 模块入口仅开关 + 密码；总开关 loveEnabled 已下线
-      // （入口展示由模块入口开关与 navList 统一管理）
+      // 恋爱日记入口仅密码（无开关，入口显隐由快捷导航/功能入口注册表控制）；
+      // 三模块入口默认值对齐 app 端 love.vue 硬编码
+      // （title/subTitle/颜色（hex8）/iconBgColor/path/priority）
       pageImages: {
         bgImageUrl: "",
       },
-      loveDiary: {enabled: true, passwordEnabled: false, password: "", passwordRemoved: false},
-      ourStory: {enabled: true, passwordEnabled: false, password: "", passwordRemoved: false},
-      lovePhoto: {enabled: false, passwordEnabled: false, password: "", passwordRemoved: false},
-      loveDaily: {enabled: false, passwordEnabled: false, password: "", passwordRemoved: false},
+      loveDiary: {passwordEnabled: false, password: "", passwordRemoved: false},
+      ourStory: {
+        enabled: true, title: "恋爱故事", subTitle: "我们一起度过的那些经历",
+        titleColor: "#f83856", subTitleColor: "#f8385699", iconBgColor: "#fce7f3",
+        path: "/pages-blog/love/stories", priority: 1,
+        passwordEnabled: false, password: "", passwordRemoved: false,
+      },
+      lovePhoto: {
+        enabled: false, title: "恋爱相册", subTitle: "定格了我们的那些小美好",
+        titleColor: "#60a5fa", subTitleColor: "#93c5fd", iconBgColor: "#dbeafe",
+        path: "/pages-blog/love/album", priority: 2,
+        passwordEnabled: false, password: "", passwordRemoved: false,
+      },
+      loveDaily: {
+        enabled: false, title: "恋爱清单", subTitle: "你我之间的约定我们都在努力实现",
+        titleColor: "#f83856", subTitleColor: "#f8385699", iconBgColor: "#fce7f3",
+        path: "/pages-blog/love/list", priority: 3,
+        passwordEnabled: false, password: "", passwordRemoved: false,
+      },
       // 恋爱信息（纪念日 + 恋人信息，2026-09-11 起由「恋爱管理-恋爱配置」迁入；
       // 默认留空，前端回退默认标题）
       loveInfo: {

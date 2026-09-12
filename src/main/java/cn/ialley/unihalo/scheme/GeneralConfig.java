@@ -393,24 +393,23 @@ public class GeneralConfig extends AbstractExtension {
     }
 
     /** 恋爱模块（getConfigs 输出由装配器映射回旧顶层 loveConfig shape；
-     * 入口展示由模块入口开关与 navList 统一管理） */
+     * 恋爱日记入口密码在「页面入口」tab 配置、无 enabled 开关（入口显隐由
+     * 页面设置-快捷导航/关于页功能入口注册表控制）；
+     * 三模块入口（故事/相册/清单）在「模块入口」tab 配置，自身即 app 端
+     * 入口列表数据（title/subTitle/颜色/图标背景色/path/priority）） */
     @Data
     public static class Love {
-        /** 恋爱日记入口开关（恋爱页本身，即 app 端 love 页；
-         * 设置密码后进入恋爱页前需先验证密码） */
+        /** 恋爱日记入口密码（恋爱页本身，即 app 端 love 页；
+         * 设置密码后进入恋爱页前需先验证密码；无 enabled 开关） */
         private ModuleSwitch loveDiary;
-        /** 恋爱故事模块入口开关（数据在「恋爱管理-恋爱故事」维护） */
+        /** 恋爱故事模块入口（数据在「恋爱管理-恋爱故事」维护） */
         private ModuleSwitch ourStory;
-        /** 恋爱相册模块入口开关（数据在「恋爱管理-恋爱相册」维护） */
+        /** 恋爱相册模块入口（数据在「恋爱管理-恋爱相册」维护） */
         private ModuleSwitch lovePhoto;
-        /** 恋爱清单模块入口开关（数据在「恋爱管理-恋爱清单」维护） */
+        /** 恋爱清单模块入口（数据在「恋爱管理-恋爱清单」维护） */
         private ModuleSwitch loveDaily;
         /** 恋爱信息（纪念日 + 恋人信息，配置在通用配置-恋爱设置-恋爱信息 tab） */
         private LoveInfo loveInfo;
-        /** 恋爱页入口列表（固定 3 项，key 对应模块；
-         * 仅 title/subTitle 可编辑 + priority 排序 + visible 开关，不可增删；
-         * 经 getConfigs 下发 loveConfig.navList） */
-        private List<LoveNavItem> navList;
     }
 
     /** 恋爱信息（纪念日 + 恋人信息） */
@@ -430,32 +429,38 @@ public class GeneralConfig extends AbstractExtension {
         private String girlAvatar;
     }
 
-    /** 恋爱页入口项（固定 3 项，key 对应 ourStory/lovePhoto/loveDaily 模块，
-     * app 端按 key 映射 uhlove-icon 图标与跳转路径） */
-    @Data
-    public static class LoveNavItem {
-        /** 固定：stories/album/list（对应 ourStory/lovePhoto/loveDaily 模块） */
-        private String key;
-        /** 可编辑名称 */
-        private String title;
-        /** 可编辑副标题 */
-        private String subTitle;
-        /** 排序字段（越大越靠前，与 CategoryItem/Banner.priority 同语义） */
-        private Integer priority;
-        /** 是否展示（不可删除，仅禁用/启用开关；与模块开关 enabled 均 true 才展示） */
-        private Boolean visible;
-    }
-
     /**
-     * 恋爱模块入口开关（enabled 是否在恋爱页展示入口；passwordEnabled/password/
-     * passwordHash/passwordRemoved 为入口密码，与恋爱相册密码同一套 BCrypt 语义：
-     * 管理端设置后，小程序端访问对应模块数据前需先经 {@code POST /love-modules/unlock}
-     * 验证密码换取 HMAC token）。
+     * 恋爱模块入口（三模块共用；loveDiary 仅使用密码相关字段）：
+     * enabled 是否在恋爱页展示入口；passwordEnabled/password/passwordHash/
+     * passwordRemoved 为入口密码，与恋爱相册密码同一套 BCrypt 语义：管理端设置后，
+     * 小程序端访问对应模块数据前需先经 {@code POST /love-modules/unlock}
+     * 验证密码换取 HMAC token。
+     * 三模块（ourStory/lovePhoto/loveDaily）另承载 app 端入口列表数据：
+     * title/subTitle/titleColor/subTitleColor/iconBgColor/path/priority
+     * （app 端直接按模块 key 渲染入口，无需本地硬编码）。
      */
     @Data
     public static class ModuleSwitch {
-        /** 是否在恋爱页展示该模块入口 */
+        /** 是否在恋爱页展示该模块入口（loveDiary 不使用：入口显隐由快捷导航/功能入口注册表控制） */
         private Boolean enabled;
+        /** 入口名称（app 端入口列表标题） */
+        private String title;
+        /** 入口副标题（app 端入口列表副标题） */
+        private String subTitle;
+        /** 标题颜色（hex8 #rrggbbaa） */
+        private String titleColor;
+        /** 副标题颜色（hex8 #rrggbbaa） */
+        private String subTitleColor;
+        /** 图标背景色（hex8 #rrggbbaa） */
+        private String iconBgColor;
+        /** 图标字体前缀（如 uhlove-icon，app 端渲染入口图标） */
+        private String iconPrefix;
+        /** 图标名（app 端渲染入口图标） */
+        private String icon;
+        /** app 端跳转路径 */
+        private String path;
+        /** 排序字段（越大越靠前，与 CategoryItem/Banner.priority 同语义） */
+        private Integer priority;
         /** 是否已设置密码（视图字段：控制台 GET 返回，由后端按 passwordHash 计算，保存时忽略） */
         private Boolean passwordEnabled;
         /** 新密码（仅管理端写请求携带；非空 = 重设并启用；GET 一律置空不回显） */

@@ -31,9 +31,9 @@ import run.halo.app.extension.ListResult;
 /**
  * 恋爱功能公开接口（小程序端，匿名可访问）。
  *
- * <p>恋爱配置已统一经公开 getConfigs 的 loveConfig 组下发（模块开关含
- * enabled/passwordEnabled、navList、loveInfo），不再提供独立的 /love-config
- * 聚合接口；本端点仅保留恋爱数据接口，相册接口按锁定状态脱敏。</p>
+ * <p>恋爱配置已统一经公开 getConfigs 的 loveConfig 组下发（恋爱日记仅密码状态、
+ * 三模块入口含 enabled/passwordEnabled/入口列表数据、loveInfo），不再提供独立的
+ * /love-config 聚合接口；本端点仅保留恋爱数据接口，相册接口按锁定状态脱敏。</p>
  *
  * <p>恋爱模块入口密码：恋爱故事/相册/清单三个入口可在通用配置
  * 「恋爱设置-模块入口」分别设置密码，设置后对应数据接口（love-stories /

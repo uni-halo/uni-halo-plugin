@@ -1,7 +1,10 @@
 package cn.ialley.unihalo.utils;
 
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 import cn.ialley.unihalo.scheme.GeneralConfig;
@@ -263,45 +266,45 @@ public class PublicConfigAssembler {
 
     /**
      * 恋爱配置公开输出脱敏（getConfigs loveConfig 组）：
-     * 入口展示由模块入口开关与 navList 统一管理（app 端按模块开关判定）；
-     * 模块开关仅输出 enabled + passwordEnabled（优先透传输入中已派生的
-     * passwordEnabled 布尔——getConfigs 入参经 generalConfigService.get()
-     * 脱敏，哈希已置空；直接传入原始 spec 时回退按 passwordHash 非空派生），
-     * password / passwordHash / passwordRemoved 等密码字段一律不下发小程序端；
-     * navList（入口列表：key/title/subTitle/priority/visible，
-     * 全部 visible=false 或列表为空时不输出，app 端回退内置默认）；
+     * 恋爱日记入口（页面入口）：仅输出 passwordEnabled（无 enabled 开关，
+     * 入口显隐由页面设置-快捷导航/功能入口注册表控制，不在恋爱配置下发）；
+     * 三模块入口（ourStory/lovePhoto/loveDaily）：enabled + passwordEnabled +
+     * 入口列表数据（title/subTitle/titleColor/subTitleColor/iconBgColor/path/
+     * priority，app 端直接按模块 key 渲染入口列表），按 priority 降序输出；
+     * passwordEnabled 优先透传输入中已派生的布尔（getConfigs 入参经
+     * generalConfigService.get() 脱敏，哈希已置空；直接传入原始 spec 时回退
+     * 按 passwordHash 非空派生），password / passwordHash / passwordRemoved
+     * 等密码字段一律不下发小程序端；
      * loveInfo（纪念日 + 恋人信息）：含任意非空字段时输出，
      * 全空不输出（app 端回退内置默认标题）。
      * 恋爱页背景图由 pageConfig.loveDiaryConfig.bgImageUrl 承担，不再经 loveConfig 下发。
      */
     private static JsonNode sanitizeLove(JsonNode love) {
         ObjectNode out = JsonNodeFactory.instance.objectNode();
-        for (String moduleKey : new String[]{"loveDiary", "ourStory", "lovePhoto", "loveDaily"}) {
+        // 恋爱日记入口（页面入口）：仅密码状态，无开关
+        JsonNode loveDiary = love.get("loveDiary");
+        if (loveDiary != null && loveDiary.isObject()) {
+            ObjectNode loveDiaryOut = JsonNodeFactory.instance.objectNode();
+            loveDiaryOut.put("passwordEnabled", hasModulePassword(loveDiary));
+            if (loveDiaryOut.size() > 0) {
+                out.set("loveDiary", loveDiaryOut);
+            }
+        }
+        // 三模块入口：全字段输出，按 priority 降序（app 端按序渲染入口列表）
+        List<String> moduleKeys = new ArrayList<>(List.of("ourStory", "lovePhoto", "loveDaily"));
+        moduleKeys.sort(Comparator
+                .comparingInt((String key) -> modulePriority(love.get(key))).reversed());
+        for (String moduleKey : moduleKeys) {
             JsonNode module = love.get(moduleKey);
             if (module != null && module.isObject()) {
                 ObjectNode moduleOut = JsonNodeFactory.instance.objectNode();
-                pick(module, moduleOut, "enabled");
-                // passwordEnabled 派生：优先读已派生的布尔（getConfigs 入参经
-                // maskLovePasswords 脱敏，passwordHash 恒置空，但 passwordEnabled
-                // 已按原始哈希正确派生）；回退按 passwordHash 非空判定
-                // （兼容直接传入未脱敏原始 spec 的调用方）
-                JsonNode passwordEnabled = module.get("passwordEnabled");
-                JsonNode hash = module.get("passwordHash");
-                moduleOut.put("passwordEnabled",
-                        (passwordEnabled != null && passwordEnabled.isBoolean()
-                                && passwordEnabled.asBoolean())
-                                || (hash != null && !hash.isNull()
-                                        && !hash.asText().isBlank()));
+                pick(module, moduleOut, "enabled", "title", "subTitle", "titleColor",
+                        "subTitleColor", "iconBgColor", "iconPrefix", "icon", "path", "priority");
+                moduleOut.put("passwordEnabled", hasModulePassword(module));
                 if (moduleOut.size() > 0) {
                     out.set(moduleKey, moduleOut);
                 }
             }
-        }
-        // 恋爱页入口列表（additive：全部 visible=false 或列表为空时不输出）
-        JsonNode navList = love.get("navList");
-        if (navList != null && navList.isArray() && navList.size() > 0
-                && hasVisibleTrue(navList)) {
-            out.set("navList", navList);
         }
         // 恋爱信息（additive：无内容不输出，app 端回退内置默认）
         JsonNode loveInfo = love.get("loveInfo");
@@ -311,15 +314,27 @@ public class PublicConfigAssembler {
         return out;
     }
 
-    /** 数组中是否存在至少一个 visible=true 的条目（判断 navList 是否值得输出） */
-    private static boolean hasVisibleTrue(JsonNode array) {
-        for (JsonNode item : array) {
-            JsonNode visible = item.get("visible");
-            if (visible != null && visible.isBoolean() && visible.asBoolean()) {
-                return true;
-            }
+    /** 模块 priority（缺失/非法按 0 处理，排序时垫底） */
+    private static int modulePriority(JsonNode module) {
+        if (module == null) {
+            return 0;
         }
-        return false;
+        JsonNode priority = module.get("priority");
+        return priority != null && priority.isNumber() ? priority.asInt() : 0;
+    }
+
+    /**
+     * passwordEnabled 派生：优先读已派生的布尔（getConfigs 入参经
+     * maskLovePasswords 脱敏，passwordHash 恒置空，但 passwordEnabled
+     * 已按原始哈希正确派生）；回退按 passwordHash 非空判定
+     * （兼容直接传入未脱敏原始 spec 的调用方）。
+     */
+    private static boolean hasModulePassword(JsonNode module) {
+        JsonNode passwordEnabled = module.get("passwordEnabled");
+        JsonNode hash = module.get("passwordHash");
+        return (passwordEnabled != null && passwordEnabled.isBoolean()
+                && passwordEnabled.asBoolean())
+                || (hash != null && !hash.isNull() && !hash.asText().isBlank());
     }
 
     private static boolean isContentGroup(String group) {

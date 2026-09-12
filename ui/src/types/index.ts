@@ -522,8 +522,8 @@ export interface GeneralConfigSpec {
   pages: GeneralConfigPages;
   assets: GeneralConfigAssets;
   preferences: GeneralConfigPreferences;
-  /** 恋爱模块（经 getConfigs loveConfig 组下发；入口展示由模块入口开关与
-   * navList 统一管理） */
+  /** 恋爱模块（经 getConfigs loveConfig 组下发；恋爱日记仅密码状态，三模块入口
+   * 自身承载 app 端入口列表数据：title/subTitle/颜色/iconBgColor/path/priority） */
   love: GeneralConfigLove;
   /** 友链信息：站长小程序展示信息，经 getConfigs 覆盖
    * pluginConfig.linksSubmitPlugin 对应键下发，供小程序端「申请信息」弹窗展示 */
@@ -785,20 +785,21 @@ export interface GeneralConfigPreferences {
   avatarRadius?: boolean;
 }
 
-/** 恋爱模块（入口展示由模块入口开关与 navList 统一管理） */
+/** 恋爱模块（恋爱日记入口仅密码状态无开关；三模块入口自身即 app 端入口列表数据） */
 export interface GeneralConfigLove {
   /** 恋爱页图片（仅背景图） */
   pageImages?: {
     /** 背景图片 */
     bgImageUrl?: string;
   };
-  /** 恋爱日记入口开关（恋爱页本身，设置密码后进入恋爱页前需先验证密码） */
+  /** 恋爱日记入口（恋爱页本身，仅密码设置无 enabled 开关；入口显隐由
+   * 页面设置-快捷导航/关于页功能入口注册表控制） */
   loveDiary?: GeneralConfigLoveModule;
-  /** 恋爱故事模块入口开关（数据在「恋爱管理-恋爱故事」维护） */
+  /** 恋爱故事模块入口（数据在「恋爱管理-恋爱故事」维护） */
   ourStory?: GeneralConfigLoveModule;
-  /** 恋爱相册模块入口开关（数据在「恋爱管理-恋爱相册」维护） */
+  /** 恋爱相册模块入口（数据在「恋爱管理-恋爱相册」维护） */
   lovePhoto?: GeneralConfigLoveModule;
-  /** 恋爱清单模块入口开关（数据在「恋爱管理-恋爱清单」维护） */
+  /** 恋爱清单模块入口（数据在「恋爱管理-恋爱清单」维护） */
   loveDaily?: GeneralConfigLoveModule;
   /** 恋爱信息（纪念日 + 恋人信息，2026-09-11 起由「恋爱管理-恋爱配置」迁入，
    * 配置在恋爱设置-恋爱信息 tab，经 getConfigs 下发 loveConfig.loveInfo） */
@@ -819,13 +820,31 @@ export interface GeneralConfigLove {
 }
 
 /**
- * 恋爱模块入口开关（无图标配置）。
+ * 恋爱模块入口（三模块共用；loveDiary 仅使用密码相关字段）。
  * 密码语义与恋爱相册一致：passwordEnabled 为「已设置密码」视图状态（由后端按哈希
  * 派生，保存时忽略）；password 为新密码（留空 = 保持原密码）；passwordRemoved=true
  * = 清除该入口密码。后端一律不回显哈希，故无 passwordHash 字段。
+ * 三模块（ourStory/lovePhoto/loveDaily）另承载 app 端入口列表数据：
+ * title/subTitle/titleColor/subTitleColor/iconBgColor/path/priority
+ * （app 端直接按模块 key 渲染入口，无需本地硬编码）。
  */
 export interface GeneralConfigLoveModule {
+  /** 是否在恋爱页展示该模块入口（loveDiary 不使用：入口显隐由快捷导航/功能入口注册表控制） */
   enabled?: boolean;
+  /** 入口名称（app 端入口列表标题） */
+  title?: string;
+  /** 入口副标题（app 端入口列表副标题） */
+  subTitle?: string;
+  /** 标题颜色（hex8 #rrggbbaa） */
+  titleColor?: string;
+  /** 副标题颜色（hex8 #rrggbbaa） */
+  subTitleColor?: string;
+  /** 图标背景色（hex8 #rrggbbaa） */
+  iconBgColor?: string;
+  /** app 端跳转路径 */
+  path?: string;
+  /** 排序字段（越大越靠前） */
+  priority?: number;
   /** 是否已设置密码（控制台 GET 返回，由后端派生；保存时忽略） */
   passwordEnabled?: boolean;
   /** 新密码（仅写请求；留空表示保持原密码不变） */

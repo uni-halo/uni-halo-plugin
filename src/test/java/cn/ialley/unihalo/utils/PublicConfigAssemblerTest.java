@@ -1,7 +1,9 @@
 package cn.ialley.unihalo.utils;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.junit.jupiter.api.Test;
@@ -309,33 +311,62 @@ class PublicConfigAssemblerTest {
     void shouldRebuildLoveConfigFromSpecLove() throws Exception {
         GeneralConfig config = config("""
                 {"spec":{"love":{
-                  "ourStory":{"enabled":true,"iconUrl":"https://img/our-story.png",
+                  "loveDiary":{"enabled":true,"passwordHash":"$2a$10$fakehash",
+                    "passwordEnabled":true},
+                  "ourStory":{"enabled":true,"title":"恋爱故事","subTitle":"我们一起度过的那些经历",
+                    "titleColor":"#f83856","subTitleColor":"#f8385699","iconBgColor":"#fce7f3",
+                    "path":"/pages-blog/love/stories","priority":2,
                     "passwordHash":"$2a$10$fakehash","passwordEnabled":true},
-                  "lovePhoto":{"enabled":false,"iconUrl":""},
-                  "loveDaily":{"enabled":true,"iconUrl":"https://img/love-daily.png",
-                    "passwordHash":""}
+                  "lovePhoto":{"enabled":false,"title":"恋爱相册","subTitle":"定格了我们的那些小美好",
+                    "titleColor":"#60a5fa","subTitleColor":"#93c5fd","iconBgColor":"#dbeafe",
+                    "path":"/pages-blog/love/album","priority":1},
+                  "loveDaily":{"enabled":true,"title":"恋爱清单","subTitle":"你我之间的约定我们都在努力实现",
+                    "titleColor":"#f83856","subTitleColor":"#f8385699","iconBgColor":"#fce7f3",
+                    "path":"/pages-blog/love/list","priority":3,
+                    "passwordHash":"","passwordEnabled":false}
                 }}}
                 """);
 
         ObjectNode root = assembler.assemble(legacySettings(), config);
 
-        // spec.love → 旧顶层 loveConfig shape；2026-09-08 起脱敏输出：
-        // 模块仅 enabled + passwordEnabled（密码字段不下发）；
-        // 2026-09-10 起总开关 loveEnabled 已下线；
-        // pageImages 已迁移至 pageConfig.loveDiaryConfig.bgImageUrl 不再输出
+        // spec.love → 旧顶层 loveConfig shape；脱敏输出：
+        // 2026-09-10 起总开关 loveEnabled 已下线；pageImages 已迁移不输出
         assertFalse(root.get("loveConfig").has("loveEnabled"),
                 "总开关 loveEnabled 已下线不应输出");
         assertFalse(root.get("loveConfig").has("pageImages"),
                 "pageImages 已迁移至 pageConfig.loveDiaryConfig.bgImageUrl 不应输出");
+        assertFalse(root.get("loveConfig").has("navList"),
+                "navList 已下线（三模块自身承载入口列表数据）不应输出");
+        // 恋爱日记入口（页面入口）：仅 passwordEnabled，无 enabled 开关
+        assertTrue(root.get("loveConfig").get("loveDiary").get("passwordEnabled").asBoolean(),
+                "loveDiary 有密码哈希 → passwordEnabled=true");
+        assertFalse(root.get("loveConfig").get("loveDiary").has("enabled"),
+                "loveDiary 无 enabled 开关（入口显隐由快捷导航/功能入口注册表控制）");
+        assertFalse(root.get("loveConfig").get("loveDiary").has("passwordHash"),
+                "密码哈希一律不下发");
+        // 三模块入口：enabled + passwordEnabled + 入口列表数据，按 priority 降序输出
         assertTrue(root.get("loveConfig").get("loveDaily").get("enabled").asBoolean());
-        // passwordEnabled 按哈希非空派生：ourStory 有哈希 → true；loveDaily 哈希为空 → false
-        assertTrue(root.get("loveConfig").get("ourStory").get("passwordEnabled").asBoolean());
-        assertFalse(root.get("loveConfig").get("loveDaily").get("passwordEnabled").asBoolean());
+        assertTrue(root.get("loveConfig").get("ourStory").get("passwordEnabled").asBoolean(),
+                "ourStory 有哈希 → passwordEnabled=true");
+        assertFalse(root.get("loveConfig").get("loveDaily").get("passwordEnabled").asBoolean(),
+                "loveDaily 哈希为空 → passwordEnabled=false");
+        assertEquals("恋爱故事", root.get("loveConfig").get("ourStory").get("title").asText());
+        assertEquals("#f8385699",
+                root.get("loveConfig").get("ourStory").get("subTitleColor").asText());
+        assertEquals("#dbeafe",
+                root.get("loveConfig").get("lovePhoto").get("iconBgColor").asText());
+        assertEquals("/pages-blog/love/list",
+                root.get("loveConfig").get("loveDaily").get("path").asText());
         assertFalse(root.get("loveConfig").get("ourStory").has("passwordHash"),
                 "密码哈希一律不下发");
-        assertFalse(root.get("loveConfig").get("ourStory").has("iconUrl"));
+        assertFalse(root.get("loveConfig").get("ourStory").has("iconUrl"),
+                "已下线 iconUrl 不应输出");
+        // 三模块按 priority 降序输出（app 端按序渲染入口列表）
+        List<String> loveKeys = new ArrayList<>();
+        root.get("loveConfig").properties().forEach(entry -> loveKeys.add(entry.getKey()));
+        assertEquals(List.of("loveDiary", "loveDaily", "ourStory", "lovePhoto"), loveKeys,
+                "loveDiary 在前，三模块按 priority 降序（loveDaily 3 > ourStory 2 > lovePhoto 1）");
         // legacySettings 顶层 loveConfig 旧值（loveEnabled=true）不再透传输出
-        // 已模型化内容字段不随 typed 输出
         assertFalse(root.get("loveConfig").has("loveDate"));
         assertFalse(root.get("loveConfig").has("loveInfo"));
     }
@@ -362,6 +393,8 @@ class PublicConfigAssemblerTest {
 
         assertTrue(root.get("loveConfig").get("loveDiary").get("passwordEnabled").asBoolean(),
                 "脱敏输入下 passwordEnabled 应透传已派生布尔（true）");
+        assertFalse(root.get("loveConfig").get("loveDiary").has("enabled"),
+                "loveDiary 无 enabled 开关（脱敏输入下亦不输出）");
         assertFalse(root.get("loveConfig").get("ourStory").get("passwordEnabled").asBoolean());
         assertFalse(root.get("loveConfig").get("loveDiary").has("passwordHash"),
                 "密码哈希一律不下发");
