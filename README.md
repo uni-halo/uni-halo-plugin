@@ -2,7 +2,8 @@
 
 > 为免费开源的 `uni-halo v3.x` 微信小程序提供配套的配置插件。
 
-* 官方文档：https://uni-halo.ialley.cn/
+* 官网主页：https://uni-halo.ialley.cn/
+* 官方文档：https://uni-halo-doc.ialley.cn/
 * 作者主页：https://www.xiaoxiaomo.cn/
 * 作者博客：https://blog.xiaoxiaomo.cn/
 * 源码仓库：https://github.com/uni-halo/uni-halo
@@ -16,7 +17,7 @@
 
 |                                                 支付宝                                                 |                                                微信                                                 |                                                QQ                                                 |
 |:---------------------------------------------------------------------------------------------------:|:-------------------------------------------------------------------------------------------------:|:-------------------------------------------------------------------------------------------------:|
-| ![支付宝赞助](https://gcore.jsdelivr.net/gh/uni-halo/uni-halo-static/author/ZFBRewardCode.png) | ![微信赞助](https://gcore.jsdelivr.net/gh/uni-halo/uni-halo-static/author/WXRewardCode.png) | ![QQ赞助](https://gcore.jsdelivr.net/gh/uni-halo/uni-halo-static/author/QQRewardCode.png) |
+| ![支付宝赞助](https://gcore.jsdelivr.net/gh/uni-halo/uni-halo-static/author/rewards/ZFBRewardCode.png) | ![微信赞助](https://gcore.jsdelivr.net/gh/uni-halo/uni-halo-static/author/rewards/WXRewardCode.png) | ![QQ赞助](https://gcore.jsdelivr.net/gh/uni-halo/uni-halo-static/author/rewards/QQRewardCode.png) |
 
 
 ### 交流群
@@ -40,14 +41,14 @@
 
 |首页|分类|我的|
 |:--:|:--:|:--:|
-|![首页](https://gcore.jsdelivr.net/gh/uni-halo/uni-halo-static/screenshots/v2/首页.png)|![分类](https://gcore.jsdelivr.net/gh/uni-halo/uni-halo-static/screenshots/v2/分类.jpg)|![我的](https://gcore.jsdelivr.net/gh/uni-halo/uni-halo-static/screenshots/v2/关于.jpg)|
+|![首页](https://gcore.jsdelivr.net/gh/uni-halo/uni-halo-static/screenshots/v2.x/首页.png)|![分类](https://gcore.jsdelivr.net/gh/uni-halo/uni-halo-static/screenshots/v2.x/分类.jpg)|![我的](https://gcore.jsdelivr.net/gh/uni-halo/uni-halo-static/screenshots/v2.x/关于.jpg)|
 
 
 ### 恋爱日记
 
 - 在 uni-halo 中，我们为您准备了一个恋爱日记的模块，您可以在其中记录您的恋爱故事，分享给您的朋友们，请扫示例小程序，在线体验恋爱日记的功能。
 
-![恋爱日记](https://gcore.jsdelivr.net/gh/uni-halo/uni-halo-static/screenshots/v2/恋爱日记.jpg)
+![恋爱日记](https://gcore.jsdelivr.net/gh/uni-halo/uni-halo-static/screenshots/v2.x/恋爱日记.jpg)
 
 <br/>
 
@@ -69,7 +70,6 @@
 - 1、下载 `uni-halo v3.x` 小程序源码，参考：https://uni-halo.925i.cn/payload/introduction.html 部署指南将项目在本地运行起来。
 - 2、在 Halo 插件市场搜索 `UniHalo 配置` 插件下载安装，或者通过 `github` 仓库 [点这里](https://github.com/uni-halo/uni-halo-plugin/releases) 找到发布包下载安装。
 - 3、安装完成并且启动插件，进入插件配置页面，配置相关参数即可。
-
 
 ---
 
