@@ -117,7 +117,7 @@ function defaultConfig(): GeneralConfig {
 function defaultSpec(): GeneralConfigSpec {
   return {
     profile: {
-      appInfo: {name: "uni-halo", logo: "/plugins/uni-halo-plugin/assets/static/logo.png"},
+      appInfo: {name: "uni-halo", logo: "/plugins/uni-halo/assets/static/logo.png"},
       blogger: {nickname: "uni-halo", avatar: "", email: "", description: "", website: "", intro: ""},
       // 社交信息（动态列表：qq/wechat/email/github 四项默认；图标由 app 端按颜色/背景色色块渲染）
       social: {
@@ -143,8 +143,8 @@ function defaultSpec(): GeneralConfigSpec {
       momentConfig: {pageTitle: ""},
       aboutConfig: {
         pageTitle: "关于博主",
-        bgImageUrl: "/plugins/uni-halo-plugin/assets/static/uni_halo_profile_bg.jpg",
-        waveImageUrl: "/plugins/uni-halo-plugin/assets/static/uni_halo_about_wave.gif",
+        bgImageUrl: "/plugins/uni-halo/assets/static/uni_halo_profile_bg.jpg",
+        waveImageUrl: "/plugins/uni-halo/assets/static/uni_halo_about_wave.gif",
         copyrightConfig: {enabled: true, content: "「 2022 uni-halo 丨 开源项目@小莫唐尼 」"},
       },
       // 我的页面功能入口：默认填充注册表条目，对齐 app 端 about.vue navList
@@ -177,7 +177,7 @@ function defaultSpec(): GeneralConfigSpec {
       searchConfig: {pageTitle: ""},
     },
     assets: {
-      loadingGifUrl: "/plugins/uni-halo-plugin/assets/static/uni_halo_img_lazyload.gif",
+      loadingGifUrl: "/plugins/uni-halo/assets/static/uni_halo_img_lazyload.gif",
       loadingErrUrl: "",
     },
     preferences: {

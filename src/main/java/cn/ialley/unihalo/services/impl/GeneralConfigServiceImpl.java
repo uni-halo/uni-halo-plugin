@@ -424,8 +424,8 @@ public class GeneralConfigServiceImpl implements GeneralConfigService {
 
         GeneralConfig.AppInfo appInfo = new GeneralConfig.AppInfo();
         appInfo.setName("uni-halo");
-        // 应用图标默认引用插件内置静态资源（ReverseProxy：/plugins/uni-halo-plugin/assets/static/**）
-        appInfo.setLogo("/plugins/uni-halo-plugin/assets/static/logo.png");
+        // 应用图标默认引用插件内置静态资源（ReverseProxy：/plugins/uni-halo/assets/static/**）
+        appInfo.setLogo("/plugins/uni-halo/assets/static/logo.png");
         profile.setAppInfo(appInfo);
 
         Blogger blogger = new Blogger();
@@ -583,8 +583,8 @@ public class GeneralConfigServiceImpl implements GeneralConfigService {
 
         About about = new About();
         about.setPageTitle("关于博主");
-        about.setBgImageUrl("/plugins/uni-halo-plugin/assets/static/uni_halo_profile_bg.jpg");
-        about.setWaveImageUrl("/plugins/uni-halo-plugin/assets/static/uni_halo_about_wave.gif");
+        about.setBgImageUrl("/plugins/uni-halo/assets/static/uni_halo_profile_bg.jpg");
+        about.setWaveImageUrl("/plugins/uni-halo/assets/static/uni_halo_about_wave.gif");
         // 页脚版权由应用资料 profile.copyrightConfig 承担（见 buildDefaultProfile）
         pages.setAboutConfig(about);
 
@@ -710,12 +710,12 @@ public class GeneralConfigServiceImpl implements GeneralConfigService {
 
     /**
      * 默认 assets：加载占位图（客户端内置回退兜底）；唯一内置默认 = 加载动图
-     * （插件静态资源 /plugins/uni-halo-plugin/assets/static/…），
+     * （插件静态资源 /plugins/uni-halo/assets/static/…），
      * error 图留空走客户端回退。
      */
     private static Assets buildDefaultAssets() {
         Assets assets = new Assets();
-        assets.setLoadingGifUrl("/plugins/uni-halo-plugin/assets/static/uni_halo_img_lazyload.gif");
+        assets.setLoadingGifUrl("/plugins/uni-halo/assets/static/uni_halo_img_lazyload.gif");
         assets.setLoadingErrUrl("");
         return assets;
     }

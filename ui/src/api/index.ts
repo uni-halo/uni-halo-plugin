@@ -29,8 +29,8 @@ import type {
 
 const CONSOLE_API_GROUP = "console.api.unihalo.ialley.cn/v1alpha1";
 const PUBLIC_API_GROUP = "api.unihalo.ialley.cn/v1alpha1";
-const PLUGIN_BASE = `/apis/${CONSOLE_API_GROUP}/plugins/uni-halo-plugin`;
-const PUBLIC_BASE = `/apis/${PUBLIC_API_GROUP}/plugins/uni-halo-plugin`;
+const PLUGIN_BASE = `/apis/${CONSOLE_API_GROUP}/plugins/uni-halo`;
+const PUBLIC_BASE = `/apis/${PUBLIC_API_GROUP}/plugins/uni-halo`;
 
 export const appsApi = {
   list: (query: ListQuery = {}) => http.get<PageResult<AppInfo>>(`${PLUGIN_BASE}/apps`, query),

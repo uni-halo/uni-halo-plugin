@@ -1,7 +1,7 @@
 apiVersion: v1alpha1
 kind: Role
 metadata:
-  name: uni-halo-plugin-anonymous-role-view-config
+  name: uni-halo-anonymous-role-view-config
   labels:
     halo.run/role-template: "true"
     rbac.authorization.halo.run/aggregate-to-anonymous: "true"

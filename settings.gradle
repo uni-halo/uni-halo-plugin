@@ -3,6 +3,6 @@ pluginManagement {
         gradlePluginPortal()
     }
 }
-rootProject.name = 'uni-halo-plugin'
+rootProject.name = 'uni-halo'
 include 'ui'
 include ':packages:float-mini-profile'

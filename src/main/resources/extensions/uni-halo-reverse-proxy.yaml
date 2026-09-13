@@ -1,7 +1,7 @@
 apiVersion: plugin.halo.run/v1alpha1
 kind: ReverseProxy
 metadata:
-  name: uni-halo-plugin-reverse-proxy
+  name: uni-halo-reverse-proxy
 rules:
   - path: /static/**
     file:

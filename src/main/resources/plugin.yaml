@@ -1,7 +1,7 @@
 apiVersion: plugin.halo.run/v1alpha1
 kind: Plugin
 metadata:
-  name: uni-halo-plugin
+  name: uni-halo
 spec:
   enabled: true
   requires: ">=2.26.0"

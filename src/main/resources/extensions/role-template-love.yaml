@@ -1,7 +1,7 @@
 apiVersion: v1alpha1
 kind: "Role"
 metadata:
-  name: uni-halo-plugin-role-template-view-love
+  name: uni-halo-role-template-view-love
   labels:
     halo.run/role-template: "true"
     rbac.authorization.halo.run/aggregate-to-admin: "true"
@@ -13,12 +13,12 @@ metadata:
 rules:
   - apiGroups: [ "console.api.unihalo.ialley.cn" ]
     resources:
-      - "plugins/uni-halo-plugin/love-stories"
-      - "plugins/uni-halo-plugin/love-stories/*"
-      - "plugins/uni-halo-plugin/love-albums"
-      - "plugins/uni-halo-plugin/love-albums/*"
-      - "plugins/uni-halo-plugin/love-daily-items"
-      - "plugins/uni-halo-plugin/love-daily-items/*"
+      - "plugins/uni-halo/love-stories"
+      - "plugins/uni-halo/love-stories/*"
+      - "plugins/uni-halo/love-albums"
+      - "plugins/uni-halo/love-albums/*"
+      - "plugins/uni-halo/love-daily-items"
+      - "plugins/uni-halo/love-daily-items/*"
     verbs: [ "get", "list" ]
 
 ---
@@ -26,13 +26,13 @@ rules:
 apiVersion: v1alpha1
 kind: "Role"
 metadata:
-  name: uni-halo-plugin-role-template-manage-love
+  name: uni-halo-role-template-manage-love
   labels:
     halo.run/role-template: "true"
     rbac.authorization.halo.run/aggregate-to-admin: "true"
   annotations:
     rbac.authorization.halo.run/dependencies: |
-      [ "uni-halo-plugin-role-template-view-love" ]
+      [ "uni-halo-role-template-view-love" ]
     rbac.authorization.halo.run/module: "UniHalo 恋爱管理"
     rbac.authorization.halo.run/display-name: "恋爱管理"
     rbac.authorization.halo.run/ui-permissions: |
@@ -40,10 +40,10 @@ metadata:
 rules:
   - apiGroups: [ "console.api.unihalo.ialley.cn" ]
     resources:
-      - "plugins/uni-halo-plugin/love-stories"
-      - "plugins/uni-halo-plugin/love-stories/*"
-      - "plugins/uni-halo-plugin/love-albums"
-      - "plugins/uni-halo-plugin/love-albums/*"
-      - "plugins/uni-halo-plugin/love-daily-items"
-      - "plugins/uni-halo-plugin/love-daily-items/*"
+      - "plugins/uni-halo/love-stories"
+      - "plugins/uni-halo/love-stories/*"
+      - "plugins/uni-halo/love-albums"
+      - "plugins/uni-halo/love-albums/*"
+      - "plugins/uni-halo/love-daily-items"
+      - "plugins/uni-halo/love-daily-items/*"
     verbs: [ "create", "patch", "update", "delete", "deletecollection" ]

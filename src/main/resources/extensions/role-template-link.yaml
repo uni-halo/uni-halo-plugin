@@ -1,7 +1,7 @@
 apiVersion: v1alpha1
 kind: "Role"
 metadata:
-  name: uni-halo-plugin-role-template-view-link
+  name: uni-halo-role-template-view-link
   labels:
     halo.run/role-template: "true"
     rbac.authorization.halo.run/aggregate-to-admin: "true"
@@ -13,12 +13,12 @@ metadata:
 rules:
   - apiGroups: [ "console.api.unihalo.ialley.cn" ]
     resources:
-      - "plugins/uni-halo-plugin/mini-program-links"
-      - "plugins/uni-halo-plugin/mini-program-links/*"
-      - "plugins/uni-halo-plugin/mini-program-link-submissions"
-      - "plugins/uni-halo-plugin/mini-program-link-submissions/*"
-      - "plugins/uni-halo-plugin/mini-program-link-groups"
-      - "plugins/uni-halo-plugin/mini-program-link-groups/*"
+      - "plugins/uni-halo/mini-program-links"
+      - "plugins/uni-halo/mini-program-links/*"
+      - "plugins/uni-halo/mini-program-link-submissions"
+      - "plugins/uni-halo/mini-program-link-submissions/*"
+      - "plugins/uni-halo/mini-program-link-groups"
+      - "plugins/uni-halo/mini-program-link-groups/*"
     verbs: [ "get", "list" ]
 
 ---
@@ -26,13 +26,13 @@ rules:
 apiVersion: v1alpha1
 kind: "Role"
 metadata:
-  name: uni-halo-plugin-role-template-manage-link
+  name: uni-halo-role-template-manage-link
   labels:
     halo.run/role-template: "true"
     rbac.authorization.halo.run/aggregate-to-admin: "true"
   annotations:
     rbac.authorization.halo.run/dependencies: |
-      [ "uni-halo-plugin-role-template-view-link" ]
+      [ "uni-halo-role-template-view-link" ]
     rbac.authorization.halo.run/module: "UniHalo 链接管理"
     rbac.authorization.halo.run/display-name: "链接管理"
     rbac.authorization.halo.run/ui-permissions: |
@@ -40,10 +40,10 @@ metadata:
 rules:
   - apiGroups: [ "console.api.unihalo.ialley.cn" ]
     resources:
-      - "plugins/uni-halo-plugin/mini-program-links"
-      - "plugins/uni-halo-plugin/mini-program-links/*"
-      - "plugins/uni-halo-plugin/mini-program-link-submissions"
-      - "plugins/uni-halo-plugin/mini-program-link-submissions/*"
-      - "plugins/uni-halo-plugin/mini-program-link-groups"
-      - "plugins/uni-halo-plugin/mini-program-link-groups/*"
+      - "plugins/uni-halo/mini-program-links"
+      - "plugins/uni-halo/mini-program-links/*"
+      - "plugins/uni-halo/mini-program-link-submissions"
+      - "plugins/uni-halo/mini-program-link-submissions/*"
+      - "plugins/uni-halo/mini-program-link-groups"
+      - "plugins/uni-halo/mini-program-link-groups/*"
     verbs: [ "create", "patch", "update", "delete", "deletecollection" ]
