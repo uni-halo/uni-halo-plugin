@@ -43,6 +43,9 @@ tasks.register('processUiResources', Copy) {
 
 tasks.named('classes') {
     dependsOn tasks.named('processUiResources')
+    // float-mini-profile 产物经 vite copyToStatic 直拷 src/main/resources/static，
+    // 打 JAR 时需先完成该子工程构建
+    dependsOn project(':packages:float-mini-profile').tasks.named('assemble')
 }
 
 tasks.named('generatePluginComponentsIdx') {

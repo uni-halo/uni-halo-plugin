@@ -5,3 +5,4 @@ pluginManagement {
 }
 rootProject.name = 'uni-halo-plugin'
 include 'ui'
+include ':packages:float-mini-profile'

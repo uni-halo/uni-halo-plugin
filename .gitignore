@@ -85,3 +85,4 @@ application-local.properties
 /src/main/resources/ui/
 .docs/
 .design/
+.atomcode/
