@@ -17,7 +17,7 @@ function baseRoutePath(path: string) {
   return `/uni-halo${path}`
 }
 
-const GROUP_NAME = 'UniHalo v3.x'
+const GROUP_NAME = 'Uni Halo'
 
 export default definePlugin({
   components: {},

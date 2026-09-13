@@ -14,7 +14,7 @@ import { GeneralConfigFormKey } from "../form-context";
  * 入口显隐由页面设置-快捷导航/关于页功能入口注册表控制）/ 模块入口
  * （恋爱故事/相册/清单：开关 + 入口密码 + 入口列表数据
  * title/subTitle/颜色/iconBgColor/path + 拖拽排序，app 端直接消费）。
- * 恋爱页背景图已迁至「页面设置-恋爱日记」。
+ * 恋爱页背景图配置于「页面设置-恋爱日记」。
  */
 defineProps<{ subTab: string }>();
 
@@ -108,10 +108,10 @@ function cancelRemovalOnTyping(module: GeneralConfigLoveModule) {
 </script>
 
 <template>
-  <!-- 恋爱 → 恋爱信息（纪念日 + 恋人信息；2026-09-11 起由「恋爱管理-恋爱配置」迁入） -->
+  <!-- 恋爱 → 恋爱信息（纪念日 + 恋人信息） -->
   <template v-if="subTab === 'info'">
     <p class=":uno: mb-3 text-xs text-gray-400">
-      恋爱纪念日与恋人信息展示在恋爱页顶部，数据迁移自原「恋爱管理-恋爱配置」。
+      恋爱纪念日与恋人信息展示在恋爱页顶部。
     </p>
     <div class=":uno: mb-4">
       <div class=":uno: mb-2 text-sm font-semibold text-gray-700">纪念日</div>
@@ -171,7 +171,7 @@ function cancelRemovalOnTyping(module: GeneralConfigLoveModule) {
   </template>
 
   <!-- 恋爱 → 页面入口（恋爱日记入口密码，无开关；入口显隐由页面设置
-       快捷导航/关于页功能入口注册表控制，2026-09-12 起由「模块入口」迁入） -->
+       快捷导航/关于页功能入口注册表控制） -->
   <template v-if="subTab === 'pageEntry'">
     <p class=":uno: mb-3 text-xs text-gray-400">
       恋爱日记页（app 端恋爱页）本身的入口密码；设置密码后，进入恋爱页前需先验证密码。

@@ -125,7 +125,7 @@ public class AppVersionEndpoint implements CustomEndpoint {
                 .flatMap(filePart -> {
                     var simpleFilePart = new SimpleFilePart(filePart.filename(),
                             filePart.content(), filePart.headers().getContentType());
-                    return attachmentService.upload("admin", "local", "plugin-uni-halo",
+                    return attachmentService.upload("admin", "local", "uni-halo-plugin",
                             simpleFilePart, null);
                 })
                 .flatMap(attachment -> attachmentService.getPermalink(attachment)

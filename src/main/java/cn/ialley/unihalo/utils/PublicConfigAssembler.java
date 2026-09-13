@@ -22,8 +22,8 @@ import tools.jackson.databind.node.ObjectNode;
  * <ul>
  *   <li>authorConfig / pageConfig / basicConfig（内容部分）/ imagesConfig / loveConfig
  *       五个顶层键由 GeneralConfig 重建（不再依赖 ConfigMap 旧组）；</li>
- *   <li>剔除已下线/敏感字段：basicConfig.tokenConfig（个人令牌）、appConfig.startConfig
- *       （启动页已下线）、auditConfig.auditModeData（死字段）；</li>
+ *   <li>剔除敏感/无效字段：basicConfig.tokenConfig（个人令牌）、appConfig.startConfig
+ *       （启动页配置）、auditConfig.auditModeData（死字段）；</li>
  *   <li>maintenance（additive 顶层键）：按 GeneralConfig.spec.maintenance
  *       时间窗口与当前时刻计算状态，仅 scheduled/active 时输出；</li>
  *   <li>其余设置组（captchaConfig / pluginConfig / linkConfig …）原样透传。</li>
@@ -96,10 +96,10 @@ public class PublicConfigAssembler {
             }
             // 版权/免责/文章详情位于页面设置（pageConfig.aboutConfig 版权 /
             // pageConfig.disclaimers / pageConfig.postDetailConfig），basicConfig 组不再输出；
-            // 旧 ConfigMap 残留 basicConfig 由 isContentGroup 跳过透传
+            // 存量 basicConfig 由 isContentGroup 跳过透传
             JsonNode appInfo = profile.get("appInfo");
             if (appInfo != null && !appInfo.isNull()) {
-                // 应用信息（名称/图标）→ 旧 appConfig.appInfo 形态（覆盖历史遗留设置值）
+                // 应用信息（名称/图标）→ appConfig.appInfo 形态（覆盖存量设置值）
                 root.set("appConfig",
                         JsonNodeFactory.instance.objectNode().set("appInfo", appInfo));
             }
@@ -225,7 +225,7 @@ public class PublicConfigAssembler {
         expand(out, "featureConfig", "linkConfig");
         expand(out, "safetyConfig", "auditConfig", "captchaConfig");
         expand(out, "integrationConfig", "pluginConfig");
-        // 基本配置（应用信息：名称/图标）→ 输出为旧 appConfig.appInfo 形态
+        // 基本配置（应用信息：名称/图标）→ 输出为 appConfig.appInfo 形态
         JsonNode base = out.remove("baseConfig");
         if (base != null && base.isObject()) {
             JsonNode appInfo = base.get("appInfo");

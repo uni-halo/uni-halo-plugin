@@ -673,7 +673,7 @@ export interface GeneralConfigPages {
   /** 恋爱日记页（页面标题 + 恋爱页背景图，客户端 pageConfig.loveDiaryConfig） */
   loveDiaryConfig?: {
     pageTitle?: string;
-    /** 恋爱页背景图（2026-09-11 起由恋爱设置-基本设置迁入） */
+    /** 恋爱页背景图（配置于页面设置-恋爱日记） */
     bgImageUrl?: string;
   };
   /** 联系博主页（页面标题，客户端 pageConfig.contactConfig） */
@@ -801,8 +801,8 @@ export interface GeneralConfigLove {
   lovePhoto?: GeneralConfigLoveModule;
   /** 恋爱清单模块入口（数据在「恋爱管理-恋爱清单」维护） */
   loveDaily?: GeneralConfigLoveModule;
-  /** 恋爱信息（纪念日 + 恋人信息，2026-09-11 起由「恋爱管理-恋爱配置」迁入，
-   * 配置在恋爱设置-恋爱信息 tab，经 getConfigs 下发 loveConfig.loveInfo） */
+  /** 恋爱信息（纪念日 + 恋人信息，配置于恋爱设置-恋爱信息 tab，
+   * 经 getConfigs 下发 loveConfig.loveInfo） */
   loveInfo?: {
     /** 纪念日标题（默认「这是我们一起走过的」） */
     loveDateTitle?: string;

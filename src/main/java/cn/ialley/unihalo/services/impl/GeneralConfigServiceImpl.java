@@ -58,9 +58,9 @@ import tools.jackson.databind.node.ObjectNode;
 /**
  * 通用配置服务实现（单例）。
  *
- * <p>默认值对齐旧 setting.yaml 的 value 缺省；历史 ConfigMap 旧组
+ * <p>默认值对齐 setting.yaml 的 value 缺省；存量配置组
  * （basicConfig/pageConfig/authorConfig/imagesConfig）在单例尚未创建时合并进
- * 默认结构，作为升级期的一次性导入兜底。</p>
+ * 默认结构，作为配置导入兜底。</p>
  *
  * @author 小莫唐尼
  */
@@ -69,7 +69,7 @@ import tools.jackson.databind.node.ObjectNode;
 public class GeneralConfigServiceImpl implements GeneralConfigService {
 
     /**
-     * 参与历史导入的旧设置组
+     * 参与导入的存量设置组
      */
     private static final String[] LEGACY_GROUPS =
         {"basicConfig", "pageConfig", "authorConfig", "imagesConfig"};
@@ -100,7 +100,7 @@ public class GeneralConfigServiceImpl implements GeneralConfigService {
     @Override
     public Mono<GeneralConfig> save(GeneralConfig config) {
         GeneralConfig body = config == null ? new GeneralConfig() : config;
-        // 写入前合并：默认值 → 历史 ConfigMap 旧值 → 请求体非空字段，防丢字段/防空写。
+        // 写入前合并：默认值 → 存量配置值 → 请求体非空字段，防丢字段/防空写。
         // 先取现有单例（可能不存在）以保留恋爱模块入口密码哈希。
         return client.fetch(GeneralConfig.class, Constants.GENERAL_CONFIG_SINGLETON_NAME)
                 .defaultIfEmpty(new GeneralConfig())
@@ -174,10 +174,10 @@ public class GeneralConfigServiceImpl implements GeneralConfigService {
         };
     }
 
-    // ---------- 默认结构与历史导入 ----------
+    // ---------- 默认结构与存量导入 ----------
 
     /**
-     * 默认结构（不落库）：默认值 + 历史 ConfigMap 旧值合并。
+     * 默认结构（不落库）：默认值 + 存量配置值合并。
      */
     private Mono<GeneralConfig> defaultWithLegacy() {
         return legacyOverlay().map(overlay -> {
@@ -191,9 +191,9 @@ public class GeneralConfigServiceImpl implements GeneralConfigService {
     }
 
     /**
-     * 读取历史旧设置组并整理成 spec 形态的覆盖树
+     * 读取存量设置组并整理成 spec 形态的覆盖树
      * （{@code profile: {...}} / {@code pages: {...}} / {@code assets: {...}}）。
-     * 旧组不存在时返回空对象。
+     * 组不存在时返回空对象。
      */
     private Mono<ObjectNode> legacyOverlay() {
         return settingFetcher.getSettingValues()
@@ -204,8 +204,8 @@ public class GeneralConfigServiceImpl implements GeneralConfigService {
                     JsonNode basic = values.get("basicConfig");
                     ObjectNode profile = JsonNodeFactory.instance.objectNode();
                     pick(author, profile, "blogger");
-                    // 社交信息（动态列表）：旧 authorConfig.social 固定字段
-                    // （enabled/qq/wechat/...）迁移为 items 列表（key=字段名、content=值）
+                    // 社交信息（动态列表）：authorConfig.social 固定字段
+                    // （enabled/qq/wechat/...）转为 items 列表（key=字段名、content=值）
                     JsonNode oldSocial = author != null ? author.get("social") : null;
                     if (oldSocial != null && oldSocial.isObject()) {
                         JsonNode items = migrateLegacySocialItems(oldSocial);
@@ -215,16 +215,16 @@ public class GeneralConfigServiceImpl implements GeneralConfigService {
                             profile.set("social", socialOut);
                         }
                     }
-                    // 页脚版权（旧 basicConfig.copyrightConfig → profile.copyrightConfig）
+                    // 页脚版权（basicConfig.copyrightConfig → profile.copyrightConfig）
                     JsonNode basicCopyright = basic != null ? basic.get("copyrightConfig") : null;
                     if (basicCopyright != null && !basicCopyright.isNull()) {
                         profile.set("copyrightConfig", basicCopyright);
                     }
-                    // showAboutSystem/disclaimers/postDetailConfig 不再属于 profile：
+                    // showAboutSystem/disclaimers/postDetailConfig 不属于 profile：
                     // 免责/文章详情位于页面设置，showAboutSystem 由开关入口统一管理，
-                    // 此处仅保留博主/社交历史值
+                    // 此处仅保留博主/社交值
                     // 应用信息（名称/图标）：优先取「基本配置」baseConfig.appInfo，
-                    // 回退旧 appConfig.appInfo
+                    // 回退 appConfig.appInfo
                     JsonNode appInfo = null;
                     JsonNode baseCfg = values.get("baseConfig");
                     if (baseCfg != null && baseCfg.isObject() && baseCfg.has("appInfo")) {
@@ -244,9 +244,9 @@ public class GeneralConfigServiceImpl implements GeneralConfigService {
                     JsonNode page = values.get("pageConfig");
                     ObjectNode pages = JsonNodeFactory.instance.objectNode();
                     pick(page, pages, "homeConfig", "galleryConfig");
-                    // 关于页：旧 pageConfig.aboutConfig（标题/背景/波浪）；
+                    // 关于页：pageConfig.aboutConfig（标题/背景/波浪）；
                     // 页脚版权由应用资料 profile.copyrightConfig 承担（见上），
-                    // 此处不再合并旧 basicConfig.copyrightConfig
+                    // 此处不再合并 basicConfig.copyrightConfig
                     ObjectNode aboutOut = JsonNodeFactory.instance.objectNode();
                     JsonNode aboutOld = page != null ? page.get("aboutConfig") : null;
                     pick(aboutOld, aboutOut, "pageTitle", "bgImageUrl", "waveImageUrl");
@@ -424,8 +424,8 @@ public class GeneralConfigServiceImpl implements GeneralConfigService {
 
         GeneralConfig.AppInfo appInfo = new GeneralConfig.AppInfo();
         appInfo.setName("uni-halo");
-        // 应用图标默认引用插件内置静态资源（ReverseProxy：/plugins/plugin-uni-halo/assets/static/**）
-        appInfo.setLogo("/plugins/plugin-uni-halo/assets/static/logo.png");
+        // 应用图标默认引用插件内置静态资源（ReverseProxy：/plugins/uni-halo-plugin/assets/static/**）
+        appInfo.setLogo("/plugins/uni-halo-plugin/assets/static/logo.png");
         profile.setAppInfo(appInfo);
 
         Blogger blogger = new Blogger();
@@ -474,8 +474,8 @@ public class GeneralConfigServiceImpl implements GeneralConfigService {
     }
 
     /**
-     * 旧社交固定字段（authorConfig.social：enabled/qq/wechat/weibo/email/blog/bilibili/
-     * juejin/csdn/gitee/github）迁移为 items 列表：仅取非空值的字段，name=平台中文名、
+     * 社交固定字段（authorConfig.social：enabled/qq/wechat/weibo/email/blog/bilibili/
+     * juejin/csdn/gitee/github）转为 items 列表：仅取非空值的字段，name=平台中文名、
      * content=原值，颜色沿用默认社交项同款色板；enabled 忽略，不携带 key 平台标识。
      */
     private static JsonNode migrateLegacySocialItems(JsonNode oldSocial) {
@@ -583,8 +583,8 @@ public class GeneralConfigServiceImpl implements GeneralConfigService {
 
         About about = new About();
         about.setPageTitle("关于博主");
-        about.setBgImageUrl("/plugins/plugin-uni-halo/assets/static/uni_halo_profile_bg.jpg");
-        about.setWaveImageUrl("/plugins/plugin-uni-halo/assets/static/uni_halo_about_wave.gif");
+        about.setBgImageUrl("/plugins/uni-halo-plugin/assets/static/uni_halo_profile_bg.jpg");
+        about.setWaveImageUrl("/plugins/uni-halo-plugin/assets/static/uni_halo_about_wave.gif");
         // 页脚版权由应用资料 profile.copyrightConfig 承担（见 buildDefaultProfile）
         pages.setAboutConfig(about);
 
@@ -710,12 +710,12 @@ public class GeneralConfigServiceImpl implements GeneralConfigService {
 
     /**
      * 默认 assets：加载占位图（客户端内置回退兜底）；唯一内置默认 = 加载动图
-     * （插件静态资源 /plugins/plugin-uni-halo/assets/static/…），
+     * （插件静态资源 /plugins/uni-halo-plugin/assets/static/…），
      * error 图留空走客户端回退。
      */
     private static Assets buildDefaultAssets() {
         Assets assets = new Assets();
-        assets.setLoadingGifUrl("/plugins/plugin-uni-halo/assets/static/uni_halo_img_lazyload.gif");
+        assets.setLoadingGifUrl("/plugins/uni-halo-plugin/assets/static/uni_halo_img_lazyload.gif");
         assets.setLoadingErrUrl("");
         return assets;
     }

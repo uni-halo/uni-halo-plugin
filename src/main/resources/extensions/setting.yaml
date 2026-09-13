@@ -1,7 +1,7 @@
 apiVersion: v1alpha1
 kind: Setting
 metadata:
-  name: plugin-uni-halo-settings
+  name: uni-halo-plugin-settings
 spec:
   forms:
     - group: featureConfig

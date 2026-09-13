@@ -1,7 +1,7 @@
 apiVersion: v1alpha1
 kind: "Role"
 metadata:
-  name: plugin-uni-halo-role-template-view-audit-data
+  name: uni-halo-plugin-role-template-view-audit-data
   labels:
     halo.run/role-template: "true"
     rbac.authorization.halo.run/aggregate-to-admin: "true"
@@ -13,8 +13,8 @@ metadata:
 rules:
   - apiGroups: [ "console.api.unihalo.ialley.cn" ]
     resources:
-      - "plugins/plugin-uni-halo/audit-data"
-      - "plugins/plugin-uni-halo/audit-data/*"
+      - "plugins/uni-halo-plugin/audit-data"
+      - "plugins/uni-halo-plugin/audit-data/*"
     verbs: [ "get", "list" ]
 
 ---
@@ -22,13 +22,13 @@ rules:
 apiVersion: v1alpha1
 kind: "Role"
 metadata:
-  name: plugin-uni-halo-role-template-manage-audit-data
+  name: uni-halo-plugin-role-template-manage-audit-data
   labels:
     halo.run/role-template: "true"
     rbac.authorization.halo.run/aggregate-to-admin: "true"
   annotations:
     rbac.authorization.halo.run/dependencies: |
-      [ "plugin-uni-halo-role-template-view-audit-data" ]
+      [ "uni-halo-plugin-role-template-view-audit-data" ]
     rbac.authorization.halo.run/module: "UniHalo 审核模式"
     rbac.authorization.halo.run/display-name: "审核模式管理"
     rbac.authorization.halo.run/ui-permissions: |
@@ -36,6 +36,6 @@ metadata:
 rules:
   - apiGroups: [ "console.api.unihalo.ialley.cn" ]
     resources:
-      - "plugins/plugin-uni-halo/audit-data"
-      - "plugins/plugin-uni-halo/audit-data/*"
+      - "plugins/uni-halo-plugin/audit-data"
+      - "plugins/uni-halo-plugin/audit-data/*"
     verbs: [ "create", "patch", "update", "delete", "deletecollection" ]

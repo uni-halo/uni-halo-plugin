@@ -67,7 +67,7 @@
 ### 2、使用方式
 
 - 1、下载 `uni-halo v3.x` 小程序源码，参考：https://uni-halo.925i.cn/payload/introduction.html 部署指南将项目在本地运行起来。
-- 2、在 Halo 插件市场搜索 `UniHalo 配置` 插件下载安装，或者通过 `github` 仓库 [点这里](https://github.com/ialley-workshop-open/plugin-uni-halo/releases) 找到发布包下载安装。
+- 2、在 Halo 插件市场搜索 `UniHalo 配置` 插件下载安装，或者通过 `github` 仓库 [点这里](https://github.com/uni-halo/uni-halo-plugin/releases) 找到发布包下载安装。
 - 3、安装完成并且启动插件，进入插件配置页面，配置相关参数即可。
 
 

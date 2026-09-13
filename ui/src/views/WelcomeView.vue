@@ -269,7 +269,7 @@ const contacts = [
             <span>官方文档</span>
           </a>
           <a
-            href="https://github.com/ialley-workshop-open/plugin-uni-halo"
+            href="https://github.com/uni-halo/uni-halo-plugin"
             class="inline-flex items-center gap-2 bg-slate-800 hover:bg-slate-900 text-white font-semibold px-7 py-3.5 rounded-xl transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5"
             target="_blank"
           >
@@ -522,7 +522,7 @@ const contacts = [
           </a>
 
           <a
-            href="https://github.com/ialley-workshop-open/plugin-uni-halo"
+            href="https://github.com/uni-halo/uni-halo-plugin"
             class="flex items-center gap-4 bg-white rounded-xl p-4 border border-slate-100 hover:shadow-md transition-all duration-200"
             target="_blank"
           >

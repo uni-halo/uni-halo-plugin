@@ -1,7 +1,7 @@
 apiVersion: v1alpha1
 kind: "Role"
 metadata:
-  name: plugin-uni-halo-role-template-view-banner
+  name: uni-halo-plugin-role-template-view-banner
   labels:
     halo.run/role-template: "true"
     rbac.authorization.halo.run/aggregate-to-admin: "true"
@@ -13,8 +13,8 @@ metadata:
 rules:
   - apiGroups: [ "console.api.unihalo.ialley.cn" ]
     resources:
-      - "plugins/plugin-uni-halo/banners"
-      - "plugins/plugin-uni-halo/banners/*"
+      - "plugins/uni-halo-plugin/banners"
+      - "plugins/uni-halo-plugin/banners/*"
     verbs: [ "get", "list" ]
 
 ---
@@ -22,13 +22,13 @@ rules:
 apiVersion: v1alpha1
 kind: "Role"
 metadata:
-  name: plugin-uni-halo-role-template-manage-banner
+  name: uni-halo-plugin-role-template-manage-banner
   labels:
     halo.run/role-template: "true"
     rbac.authorization.halo.run/aggregate-to-admin: "true"
   annotations:
     rbac.authorization.halo.run/dependencies: |
-      [ "plugin-uni-halo-role-template-view-banner" ]
+      [ "uni-halo-plugin-role-template-view-banner" ]
     rbac.authorization.halo.run/module: "UniHalo 轮播管理"
     rbac.authorization.halo.run/display-name: "轮播管理"
     rbac.authorization.halo.run/ui-permissions: |
@@ -36,6 +36,6 @@ metadata:
 rules:
   - apiGroups: [ "console.api.unihalo.ialley.cn" ]
     resources:
-      - "plugins/plugin-uni-halo/banners"
-      - "plugins/plugin-uni-halo/banners/*"
+      - "plugins/uni-halo-plugin/banners"
+      - "plugins/uni-halo-plugin/banners/*"
     verbs: [ "create", "patch", "update", "delete", "deletecollection" ]

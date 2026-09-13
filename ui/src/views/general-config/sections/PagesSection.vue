@@ -623,7 +623,7 @@ function restoreMyPageDefaults(group: "common" | "other") {
     <RichTextEditorField v-model="formState.spec.pages.disclaimers!.content" placeholder="输入免责声明内容，支持图文混排……留空则不展示免责声明页" />
   </template>
 
-  <!-- 页面与排版 → 恋爱日记页（页面标题 + 恋爱页背景图；背景图 2026-09-11 起由恋爱设置-基本设置迁入） -->
+  <!-- 页面与排版 → 恋爱日记页（页面标题 + 恋爱页背景图） -->
   <template v-if="subTab === 'loveDiary'">
     <FormKit v-model="formState.spec.pages.loveDiaryConfig!.pageTitle" name="love_diary_page_title" label="页面标题" type="text" help="恋爱日记页展示标题，留空使用默认" />
     <FormKit v-model="formState.spec.pages.loveDiaryConfig!.bgImageUrl" name="love_diary_bg_image" label="恋爱页背景图" type="attachment" :accepts="['image/*']" help="恋爱页（恋爱日记）顶部背景图，留空使用内置回退" />

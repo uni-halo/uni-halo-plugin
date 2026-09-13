@@ -39,7 +39,7 @@ public class FloatingWindowHeadProcessor implements TemplateHeadProcessor {
     private static final String MODULE = "floatingWindow";
 
     private static final String JS_URL_TEMPLATE =
-            "/plugins/plugin-uni-halo/assets/static/floating-window/float-mini-profile.js?version=%s";
+            "/plugins/uni-halo-plugin/assets/static/floating-window/float-mini-profile.js?version=%s";
 
     private final ReactiveSettingFetcher settingFetcher;
     private final PluginWrapper pluginWrapper;

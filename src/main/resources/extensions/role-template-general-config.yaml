@@ -1,7 +1,7 @@
 apiVersion: v1alpha1
 kind: "Role"
 metadata:
-  name: plugin-uni-halo-role-template-view-general-config
+  name: uni-halo-plugin-role-template-view-general-config
   labels:
     halo.run/role-template: "true"
     rbac.authorization.halo.run/aggregate-to-admin: "true"
@@ -13,8 +13,8 @@ metadata:
 rules:
   - apiGroups: [ "console.api.unihalo.ialley.cn" ]
     resources:
-      - "plugins/plugin-uni-halo/general-config"
-      - "plugins/plugin-uni-halo/general-config/*"
+      - "plugins/uni-halo-plugin/general-config"
+      - "plugins/uni-halo-plugin/general-config/*"
     verbs: [ "get", "list" ]
 
 ---
@@ -22,13 +22,13 @@ rules:
 apiVersion: v1alpha1
 kind: "Role"
 metadata:
-  name: plugin-uni-halo-role-template-manage-general-config
+  name: uni-halo-plugin-role-template-manage-general-config
   labels:
     halo.run/role-template: "true"
     rbac.authorization.halo.run/aggregate-to-admin: "true"
   annotations:
     rbac.authorization.halo.run/dependencies: |
-      [ "plugin-uni-halo-role-template-view-general-config" ]
+      [ "uni-halo-plugin-role-template-view-general-config" ]
     rbac.authorization.halo.run/module: "UniHalo 通用配置"
     rbac.authorization.halo.run/display-name: "通用配置管理"
     rbac.authorization.halo.run/ui-permissions: |
@@ -36,6 +36,6 @@ metadata:
 rules:
   - apiGroups: [ "console.api.unihalo.ialley.cn" ]
     resources:
-      - "plugins/plugin-uni-halo/general-config"
-      - "plugins/plugin-uni-halo/general-config/*"
+      - "plugins/uni-halo-plugin/general-config"
+      - "plugins/uni-halo-plugin/general-config/*"
     verbs: [ "create", "patch", "update", "delete", "deletecollection" ]

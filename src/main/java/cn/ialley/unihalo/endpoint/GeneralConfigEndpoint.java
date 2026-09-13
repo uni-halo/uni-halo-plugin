@@ -17,7 +17,7 @@ import run.halo.app.extension.GroupVersion;
 /**
  * 通用配置接口（控制台，需登录）。
  *
- * <p>单例读写：GET 不存在时返回默认结构（含历史 ConfigMap 旧值合并），
+ * <p>单例读写：GET 不存在时返回默认结构（默认值与存量配置合并），
  * PUT 写入前做非空合并并保存（见 {@link GeneralConfigService}）。</p>
  *
  * @author 小莫唐尼
