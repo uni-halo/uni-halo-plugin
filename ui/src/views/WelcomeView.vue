@@ -213,40 +213,39 @@ const contacts = [
 </script>
 
 <template>
-  <div
-    class="min-h-screen bg-slate-50 transition-opacity duration-500"
-    :class="isLoaded ? 'opacity-100' : 'opacity-0'"
-  >
+  <div class="min-h-screen bg-slate-50 transition-opacity duration-500" :class="isLoaded ? 'opacity-100' : 'opacity-0'">
     <!-- Hero Section -->
     <section class="relative h-screen flex items-center justify-center overflow-hidden">
       <!-- Background Decorations - 仅使用主题色 #B9E424 淡化 -->
       <div class="absolute inset-0 overflow-hidden pointer-events-none">
-        <div
-          class="absolute -top-40 -right-40 w-[500px] h-[500px] rounded-full blur-3xl animate-float"
-          style="background: radial-gradient(circle, rgb(185 228 36 / 0.33) 0%, rgba(54,143,239,0) 70%)"
-        ></div>
-        <div
-          class="absolute -bottom-40 -left-40 w-[500px] h-[500px] rounded-full blur-3xl animate-float-delayed"
-          style="background: radial-gradient(circle, rgb(185 228 36 / 0.33) 0%, rgba(54,143,239,0) 70%)"
-        ></div>
+        <div class="absolute -top-40 -right-40 w-[500px] h-[500px] rounded-full blur-3xl animate-float"
+          style="background: radial-gradient(circle, rgb(185 228 36 / 0.33) 0%, rgba(54,143,239,0) 70%)"></div>
+        <div class="absolute -bottom-40 -left-40 w-[500px] h-[500px] rounded-full blur-3xl animate-float-delayed"
+          style="background: radial-gradient(circle, rgb(185 228 36 / 0.33) 0%, rgba(54,143,239,0) 70%)"></div>
         <div
           class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full blur-3xl animate-pulse-slow"
-          style="background: radial-gradient(circle, rgb(185 228 36 / 0.33) 0%, rgba(54,143,239,0) 70%)"
-        ></div>
+          style="background: radial-gradient(circle, rgb(185 228 36 / 0.33) 0%, rgba(54,143,239,0) 70%)"></div>
         <!-- Floating Shapes -->
-        <div class="absolute top-20 left-[10%] w-3 h-3 rounded-full animate-bounce-slow" style="background: rgb(185 228 36 / 0.47)"></div>
-        <div class="absolute top-[30%] right-[15%] w-4 h-4 rounded-lg rotate-45 animate-bounce-slow-delayed" style="background: rgb(185 228 36 / 0.33)"></div>
-        <div class="absolute bottom-[25%] left-[20%] w-2.5 h-2.5 rounded-full animate-bounce-slow" style="background: rgb(185 228 36 / 0.47)"></div>
-        <div class="absolute top-[40%] right-[25%] w-2 h-2 rounded-full animate-bounce-slow-delayed" style="background: rgb(185 228 36 / 0.33)"></div>
-        <div class="absolute bottom-[15%] right-[10%] w-3.5 h-3.5 rounded-full animate-bounce-slow" style="background: rgb(185 228 36 / 0.33)"></div>
+        <div class="absolute top-20 left-[10%] w-3 h-3 rounded-full animate-bounce-slow"
+          style="background: rgb(185 228 36 / 0.47)"></div>
+        <div class="absolute top-[30%] right-[15%] w-4 h-4 rounded-lg rotate-45 animate-bounce-slow-delayed"
+          style="background: rgb(185 228 36 / 0.33)"></div>
+        <div class="absolute bottom-[25%] left-[20%] w-2.5 h-2.5 rounded-full animate-bounce-slow"
+          style="background: rgb(185 228 36 / 0.47)"></div>
+        <div class="absolute top-[40%] right-[25%] w-2 h-2 rounded-full animate-bounce-slow-delayed"
+          style="background: rgb(185 228 36 / 0.33)"></div>
+        <div class="absolute bottom-[15%] right-[10%] w-3.5 h-3.5 rounded-full animate-bounce-slow"
+          style="background: rgb(185 228 36 / 0.33)"></div>
       </div>
 
       <div class="relative z-10 max-w-5xl mx-auto px-4 text-center">
         <img :src="logoPng" alt="UniHalo Logo" class="w-20 h-20 mx-auto mb-6 drop-shadow-lg" />
 
-        <div class="inline-flex items-center gap-2 bg-white/80 backdrop-blur-sm border rounded-full px-4 py-2 mb-8 shadow-sm" style="border-color: rgb(185 228 36 / 0.47)">
+        <div
+          class="inline-flex items-center gap-2 bg-white/80 backdrop-blur-sm border rounded-full px-4 py-2 mb-8 shadow-sm"
+          style="border-color: rgb(185 228 36 / 0.47)">
           <RiSparklingLine class="w-4 h-4 text-[#B9E424]" />
-          <span class="text-sm font-medium text-[#B9E424]" >v3.x AGPL3.0</span>
+          <span class="text-sm font-medium text-[#B9E424]">v3.x AGPL3.0</span>
         </div>
 
         <h1 class="text-5xl sm:text-6xl lg:text-7xl font-extrabold mb-6">
@@ -259,36 +258,27 @@ const contacts = [
         </p>
 
         <div class="flex flex-wrap justify-center gap-4 mb-10">
-          <a
-            href="https://uni-halo.925i.cn/"
+          <a href="https://uni-halo.925i.cn/"
             class="inline-flex items-center gap-2 text-white font-semibold px-7 py-3.5 rounded-xl transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5"
-            style="background-color: #B9E424"
-            target="_blank"
-          >
+            style="background-color: #B9E424" target="_blank">
             <RiBookOpenLine class="w-5 h-5" />
             <span>官方文档</span>
           </a>
-          <a
-            href="https://github.com/uni-halo/uni-halo-plugin"
+          <a href="https://github.com/uni-halo/uni-halo"
             class="inline-flex items-center gap-2 bg-slate-800 hover:bg-slate-900 text-white font-semibold px-7 py-3.5 rounded-xl transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5"
-            target="_blank"
-          >
+            target="_blank">
             <RiGithubLine class="w-5 h-5" />
             <span>GitHub</span>
           </a>
-          <a
-            href="https://www.halo.run/store/apps/app-ryemX"
+          <a href="https://www.halo.run/store/apps/app-ryemX"
             class="inline-flex items-center gap-2 border-slate-300 bg-white hover:bg-slate-50 text-slate-700 font-semibold px-7 py-3.5 rounded-xl border  transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5"
-            target="_blank"
-          >
+            target="_blank">
             <RiStoreLine class="w-5 h-5" />
             <span>插件市场</span>
           </a>
-          <a
-            href="https://github.com/ialley-workshop-open/uni-halo/issues/23"
+          <a href="https://github.com/ialley-workshop-open/uni-halo/issues/23"
             class="inline-flex items-center gap-2 text-[#b9e424] border-[#b9e424]/50 bg-white hover:bg-slate-50 font-semibold px-7 py-3.5 rounded-xl border transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5"
-            target="_blank"
-          >
+            target="_blank">
             <RiLightbulbLine class="w-5 h-5" />
             <span>提交案例</span>
           </a>
@@ -312,10 +302,12 @@ const contacts = [
 
         <!-- 三个横向截图占位 -->
         <div class="grid grid-cols-2 gap-4 max-w-2xl mx-auto">
-          <div class="box-border p-2 rounded-2xl overflow-hidden bg-white shadow-sm border border-slate-100 flex items-center justify-center">
+          <div
+            class="box-border p-2 rounded-2xl overflow-hidden bg-white shadow-sm border border-slate-100 flex items-center justify-center">
             <img :src="mpPng" alt="小程序二维码" class="w-full h-full object-contain rounded-lg" />
           </div>
-          <div class="box-border p-2 rounded-2xl overflow-hidden bg-white shadow-sm border border-slate-100 flex items-center justify-center">
+          <div
+            class="box-border p-2 rounded-2xl overflow-hidden bg-white shadow-sm border border-slate-100 flex items-center justify-center">
             <img :src="qqqunPng" alt="QQ 交流群" class="w-full h-full object-contain rounded-lg" />
           </div>
         </div>
@@ -340,9 +332,7 @@ const contacts = [
 
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 max-w-5xl mx-auto">
           <div class="bg-slate-50 rounded-2xl p-6 text-center hover:shadow-md transition-all duration-300">
-            <div
-              class="bg-green-500 w-14 h-14 rounded-full flex items-center justify-center text-white mx-auto mb-4"
-            >
+            <div class="bg-green-500 w-14 h-14 rounded-full flex items-center justify-center text-white mx-auto mb-4">
               <RiWechatPayLine class="w-7 h-7" />
             </div>
             <h4 class="font-semibold text-slate-800 mb-3">微信赞助</h4>
@@ -353,9 +343,7 @@ const contacts = [
           </div>
 
           <div class="bg-slate-50 rounded-2xl p-6 text-center hover:shadow-md transition-all duration-300">
-            <div
-              class="bg-blue-500 w-14 h-14 rounded-full flex items-center justify-center text-white mx-auto mb-4"
-            >
+            <div class="bg-blue-500 w-14 h-14 rounded-full flex items-center justify-center text-white mx-auto mb-4">
               <RiAlipayLine class="w-7 h-7" />
             </div>
             <h4 class="font-semibold text-slate-800 mb-3">支付宝赞助</h4>
@@ -366,9 +354,7 @@ const contacts = [
           </div>
 
           <div class="bg-slate-50 rounded-2xl p-6 text-center hover:shadow-md transition-all duration-300">
-            <div
-              class="bg-yellow w-14 h-14 rounded-full flex items-center justify-center text-white mx-auto mb-4"
-            >
+            <div class="bg-yellow w-14 h-14 rounded-full flex items-center justify-center text-white mx-auto mb-4">
               <RiQqLine class="w-7 h-7" />
             </div>
             <h4 class="font-semibold text-slate-800 mb-3">QQ 赞助</h4>
@@ -397,21 +383,17 @@ const contacts = [
         <!-- 分段器 -->
         <div class="flex justify-center mb-10">
           <div class="inline-flex bg-slate-100 rounded-xl p-1">
-            <button
-              class="px-6 py-2.5 rounded-lg text-sm font-medium transition-all duration-200"
+            <button class="px-6 py-2.5 rounded-lg text-sm font-medium transition-all duration-200"
               :class="activeFeatureTab === 'console' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-700'"
-              @click="activeFeatureTab = 'console'"
-            >
+              @click="activeFeatureTab = 'console'">
               <div class="flex items-center gap-2">
                 <RiSettingsLine class="w-4 h-4" />
                 <span>管理模块</span>
               </div>
             </button>
-            <button
-              class="px-6 py-2.5 rounded-lg text-sm font-medium transition-all duration-200"
+            <button class="px-6 py-2.5 rounded-lg text-sm font-medium transition-all duration-200"
               :class="activeFeatureTab === 'mobile' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-700'"
-              @click="activeFeatureTab = 'mobile'"
-            >
+              @click="activeFeatureTab = 'mobile'">
               <div class="flex items-center gap-2">
                 <RiSmartphoneLine class="w-4 h-4" />
                 <span>移动端模块</span>
@@ -422,15 +404,11 @@ const contacts = [
 
         <!-- 管理模块 -->
         <div v-if="activeFeatureTab === 'console'" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-          <div
-            v-for="feature in consoleFeatures"
-            :key="feature.title"
-            class="group bg-white rounded-2xl p-6 shadow-sm border border-slate-100 hover:shadow-md transition-all duration-300 cursor-pointer"
-          >
+          <div v-for="feature in consoleFeatures" :key="feature.title"
+            class="group bg-white rounded-2xl p-6 shadow-sm border border-slate-100 hover:shadow-md transition-all duration-300 cursor-pointer">
             <div
               class="w-11 h-11 rounded-xl flex items-center justify-center text-white mb-4 group-hover:scale-110 transition-transform duration-300"
-              :style="{ background: `linear-gradient(135deg, ${feature.color} 0%, ${feature.color}cc 100%)` }"
-            >
+              :style="{ background: `linear-gradient(135deg, ${feature.color} 0%, ${feature.color}cc 100%)` }">
               <component :is="feature.icon" class="w-5.5 h-5.5" />
             </div>
             <h3 class="text-lg font-semibold text-slate-800 mb-2">{{ feature.title }}</h3>
@@ -440,22 +418,15 @@ const contacts = [
 
         <!-- 移动端模块 -->
         <div v-else class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-          <div
-            v-for="feature in mobileFeatures"
-            :key="feature.title"
-            class="group bg-white rounded-2xl p-5 shadow-sm border border-slate-100 hover:shadow-md transition-all duration-300 cursor-pointer relative"
-          >
-            <div
-              v-if="feature.tab"
-              class="absolute top-3 right-3 px-2 py-0.5 text-xs font-medium rounded-full"
-              :style="{ background: `${feature.color}20`, color: feature.color }"
-            >
+          <div v-for="feature in mobileFeatures" :key="feature.title"
+            class="group bg-white rounded-2xl p-5 shadow-sm border border-slate-100 hover:shadow-md transition-all duration-300 cursor-pointer relative">
+            <div v-if="feature.tab" class="absolute top-3 right-3 px-2 py-0.5 text-xs font-medium rounded-full"
+              :style="{ background: `${feature.color}20`, color: feature.color }">
               Tab
             </div>
             <div
               class="w-10 h-10 rounded-xl flex items-center justify-center text-white mb-3 group-hover:scale-110 transition-transform duration-300"
-              :style="{ background: `linear-gradient(135deg, ${feature.color} 0%, ${feature.color}cc 100%)` }"
-            >
+              :style="{ background: `linear-gradient(135deg, ${feature.color} 0%, ${feature.color}cc 100%)` }">
               <component :is="feature.icon" class="w-5 h-5" />
             </div>
             <h3 class="text-base font-semibold text-slate-800 mb-1.5">{{ feature.title }}</h3>
@@ -474,15 +445,11 @@ const contacts = [
         </div>
 
         <div class="space-y-4">
-          <div
-            v-for="(step, index) in steps"
-            :key="index"
-            class="flex items-start gap-5 bg-slate-50 rounded-2xl p-6 hover:bg-white hover:shadow-md transition-all duration-300"
-          >
+          <div v-for="(step, index) in steps" :key="index"
+            class="flex items-start gap-5 bg-slate-50 rounded-2xl p-6 hover:bg-white hover:shadow-md transition-all duration-300">
             <div
               class="flex-shrink-0 w-12 h-12 rounded-xl flex items-center justify-center text-white font-bold text-lg"
-              :style="{ background: index === 0 ? 'linear-gradient(135deg, #B9E424 0%, #2D7AD6 100%)' : index === 1 ? 'linear-gradient(135deg, #8B5CF6 0%, #7C3AED 100%)' : index === 2 ? 'linear-gradient(135deg, #10B981 0%, #059669 100%)' : 'linear-gradient(135deg, #F59E0B 0%, #D97706 100%)' }"
-            >
+              :style="{ background: index === 0 ? 'linear-gradient(135deg, #B9E424 0%, #2D7AD6 100%)' : index === 1 ? 'linear-gradient(135deg, #8B5CF6 0%, #7C3AED 100%)' : index === 2 ? 'linear-gradient(135deg, #10B981 0%, #059669 100%)' : 'linear-gradient(135deg, #F59E0B 0%, #D97706 100%)' }">
               {{ index + 1 }}
             </div>
             <div class="flex-1 min-w-0">
@@ -503,15 +470,11 @@ const contacts = [
         </div>
 
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          <a
-            href="https://uni-halo.925i.cn/"
+          <a href="https://uni-halo.925i.cn/"
             class="flex items-center gap-4 bg-white rounded-xl p-4 border border-slate-100 hover:shadow-md transition-all duration-200"
-            target="_blank"
-          >
-            <div
-              class="w-10 h-10 rounded-lg flex items-center justify-center text-white flex-shrink-0"
-              style="background: linear-gradient(135deg, #B9E424 0%, #2D7AD6 100%)"
-            >
+            target="_blank">
+            <div class="w-10 h-10 rounded-lg flex items-center justify-center text-white flex-shrink-0"
+              style="background: linear-gradient(135deg, #B9E424 0%, #2D7AD6 100%)">
               <RiBookOpenLine class="w-5 h-5" />
             </div>
             <div class="flex-1 min-w-0">
@@ -521,12 +484,11 @@ const contacts = [
             <RiArrowRightSLine class="w-4 h-4 text-slate-300 flex-shrink-0" />
           </a>
 
-          <a
-            href="https://github.com/uni-halo/uni-halo-plugin"
+          <a href="https://github.com/uni-halo/uni-halo-plugin"
             class="flex items-center gap-4 bg-white rounded-xl p-4 border border-slate-100 hover:shadow-md transition-all duration-200"
-            target="_blank"
-          >
-            <div class="w-10 h-10 rounded-lg flex items-center justify-center text-white flex-shrink-0" style="background: linear-gradient(135deg, #8B5CF6 0%, #7C3AED 100%)">
+            target="_blank">
+            <div class="w-10 h-10 rounded-lg flex items-center justify-center text-white flex-shrink-0"
+              style="background: linear-gradient(135deg, #8B5CF6 0%, #7C3AED 100%)">
               <RiGithubLine class="w-5 h-5" />
             </div>
             <div class="flex-1 min-w-0">
@@ -536,15 +498,11 @@ const contacts = [
             <RiArrowRightSLine class="w-4 h-4 text-slate-300 flex-shrink-0" />
           </a>
 
-          <a
-            href="https://github.com/ialley-workshop-open/uni-halo"
+          <a href="https://github.com/ialley-workshop-open/uni-halo"
             class="flex items-center gap-4 bg-white rounded-xl p-4 border border-slate-100 hover:shadow-md transition-all duration-200"
-            target="_blank"
-          >
-            <div
-              class="w-10 h-10 rounded-lg flex items-center justify-center text-white flex-shrink-0"
-              style="background: linear-gradient(135deg, #06B6D4 0%, #0891B2 100%)"
-            >
+            target="_blank">
+            <div class="w-10 h-10 rounded-lg flex items-center justify-center text-white flex-shrink-0"
+              style="background: linear-gradient(135deg, #06B6D4 0%, #0891B2 100%)">
               <RiCodeBoxLine class="w-5 h-5" />
             </div>
             <div class="flex-1 min-w-0">
@@ -554,15 +512,11 @@ const contacts = [
             <RiArrowRightSLine class="w-4 h-4 text-slate-300 flex-shrink-0" />
           </a>
 
-          <a
-            href="https://www.halo.run/store/apps/app-ryemX"
+          <a href="https://www.halo.run/store/apps/app-ryemX"
             class="flex items-center gap-4 bg-white rounded-xl p-4 border border-slate-100 hover:shadow-md transition-all duration-200"
-            target="_blank"
-          >
-            <div
-              class="w-10 h-10 rounded-lg flex items-center justify-center text-white flex-shrink-0"
-              style="background: linear-gradient(135deg, #10B981 0%, #059669 100%)"
-            >
+            target="_blank">
+            <div class="w-10 h-10 rounded-lg flex items-center justify-center text-white flex-shrink-0"
+              style="background: linear-gradient(135deg, #10B981 0%, #059669 100%)">
               <RiStoreLine class="w-5 h-5" />
             </div>
             <div class="flex-1 min-w-0">
@@ -572,12 +526,11 @@ const contacts = [
             <RiArrowRightSLine class="w-4 h-4 text-slate-300 flex-shrink-0" />
           </a>
 
-          <a
-            href="https://docs.halo.run/developer-guide/plugin/introduction"
+          <a href="https://docs.halo.run/developer-guide/plugin/introduction"
             class="flex items-center gap-4 bg-white rounded-xl p-4 border border-slate-100 hover:shadow-md transition-all duration-200"
-            target="_blank"
-          >
-            <div class="w-10 h-10 rounded-lg flex items-center justify-center text-white flex-shrink-0" style="background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%)">
+            target="_blank">
+            <div class="w-10 h-10 rounded-lg flex items-center justify-center text-white flex-shrink-0"
+              style="background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%)">
               <RiFileCodeLine class="w-5 h-5" />
             </div>
             <div class="flex-1 min-w-0">
@@ -587,15 +540,11 @@ const contacts = [
             <RiArrowRightSLine class="w-4 h-4 text-slate-300 flex-shrink-0" />
           </a>
 
-          <a
-            href="https://blog.xiaoxiaomo.cn/"
+          <a href="https://blog.xiaoxiaomo.cn/"
             class="flex items-center gap-4 bg-white rounded-xl p-4 border border-slate-100 hover:shadow-md transition-all duration-200"
-            target="_blank"
-          >
-            <div
-              class="w-10 h-10 rounded-lg flex items-center justify-center text-white flex-shrink-0"
-              style="background: linear-gradient(135deg, #EC4899 0%, #DB2777 100%)"
-            >
+            target="_blank">
+            <div class="w-10 h-10 rounded-lg flex items-center justify-center text-white flex-shrink-0"
+              style="background: linear-gradient(135deg, #EC4899 0%, #DB2777 100%)">
               <RiLinksLine class="w-5 h-5" />
             </div>
             <div class="flex-1 min-w-0">
@@ -620,11 +569,7 @@ const contacts = [
           <div class="flex flex-col sm:flex-row items-center gap-8">
             <!-- 头像 -->
             <div class="flex-shrink-0">
-              <img
-                src="https://www.xiaoxiaomo.cn/logo.jpg"
-                alt="小莫唐尼"
-                class="w-28 h-28 rounded-full object-cover"
-              />
+              <img src="https://www.xiaoxiaomo.cn/logo.jpg" alt="小莫唐尼" class="w-28 h-28 rounded-full object-cover" />
             </div>
 
             <!-- 信息 -->
@@ -636,34 +581,26 @@ const contacts = [
 
             <!-- 按钮 -->
             <div class="flex gap-3">
-              <a
-                href="https://www.xiaoxiaomo.cn/"
+              <a href="https://www.xiaoxiaomo.cn/"
                 class="inline-flex items-center gap-1.5 text-[#B9E424] bg-slate-100 text-sm font-medium px-3 py-1.5 rounded-lg transition-colors"
-                target="_blank"
-              >
+                target="_blank">
                 <RiHomeLine class="w-3.5 h-3.5" />
                 <span>主页</span>
               </a>
-              <a
-                href="https://blog.xiaoxiaomo.cn/"
+              <a href="https://blog.xiaoxiaomo.cn/"
                 class="inline-flex items-center gap-1.5 text-[#B9E424] bg-slate-100 text-sm font-medium px-3 py-1.5 rounded-lg transition-colors"
-                target="_blank"
-              >
+                target="_blank">
                 <RiBookOpenLine class="w-3.5 h-3.5" />
                 <span>博客</span>
               </a>
-              <a
-                href="https://github.com/okay-xiaomo"
+              <a href="https://github.com/okay-xiaomo"
                 class="inline-flex items-center gap-1.5 text-sm font-medium px-3 py-1.5 rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors"
-                target="_blank"
-              >
+                target="_blank">
                 <RiGithubLine class="w-3.5 h-3.5" />
                 <span>GitHub</span>
               </a>
-              <a
-                href="mailto:1431128779@qq.com"
-                class="inline-flex items-center gap-1.5 text-sm font-medium px-3 py-1.5 rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors"
-              >
+              <a href="mailto:1431128779@qq.com"
+                class="inline-flex items-center gap-1.5 text-sm font-medium px-3 py-1.5 rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors">
                 <RiMailLine class="w-3.5 h-3.5" />
                 <span>邮箱</span>
               </a>
@@ -673,13 +610,9 @@ const contacts = [
           <!-- 联系方式网格 -->
           <div class="mt-8 pt-8 border-t border-slate-100">
             <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
-              <a
-                v-for="item in contacts"
-                :key="item.label"
-                :href="item.href"
+              <a v-for="item in contacts" :key="item.label" :href="item.href"
                 class="flex flex-col items-center gap-2 p-4 rounded-xl bg-slate-50 border border-slate-100 hover:border-slate-200 hover:shadow-sm transition-all duration-200"
-                :target="item.href.startsWith('http') ? '_blank' : undefined"
-              >
+                :target="item.href.startsWith('http') ? '_blank' : undefined">
                 <component :is="item.icon" class="w-5 h-5" style="color: #B9E424" />
                 <span class="text-xs text-slate-400">{{ item.label }}</span>
                 <span class="text-xs font-medium text-slate-600 text-center leading-tight">{{ item.value }}</span>
@@ -694,31 +627,37 @@ const contacts = [
 
 <style scoped>
 @keyframes float {
+
   0%,
   100% {
     transform: translateY(0) rotate(0deg);
   }
+
   50% {
     transform: translateY(-20px) rotate(5deg);
   }
 }
 
 @keyframes float-delayed {
+
   0%,
   100% {
     transform: translateY(0) rotate(0deg);
   }
+
   50% {
     transform: translateY(-30px) rotate(-5deg);
   }
 }
 
 @keyframes pulse-slow {
+
   0%,
   100% {
     opacity: 0.3;
     transform: scale(1);
   }
+
   50% {
     opacity: 0.5;
     transform: scale(1.05);
@@ -726,20 +665,24 @@ const contacts = [
 }
 
 @keyframes bounce-slow {
+
   0%,
   100% {
-    transform: translate(-50%,0);
+    transform: translate(-50%, 0);
   }
+
   50% {
-    transform: translate(-50%,-10px);
+    transform: translate(-50%, -10px);
   }
 }
 
 @keyframes bounce-slow-delayed {
+
   0%,
   100% {
     transform: translateY(0) rotate(45deg);
   }
+
   50% {
     transform: translateY(-15px) rotate(45deg);
   }
