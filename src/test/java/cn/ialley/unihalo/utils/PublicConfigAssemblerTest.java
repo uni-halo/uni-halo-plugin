@@ -278,7 +278,7 @@ class PublicConfigAssemblerTest {
         ObjectNode baseConfig = JsonNodeFactory.instance.objectNode();
         ObjectNode appInfo = JsonNodeFactory.instance.objectNode();
         appInfo.put("name", "uni-halo");
-        appInfo.put("logo", "https://uni-halo.925i.cn/uni_halo/uni_halo_logo.png");
+        appInfo.put("logo", "https://uni-halo.ialley.cn/uni_halo/uni_halo_logo.png");
         baseConfig.set("appInfo", appInfo);
         settings.put("baseConfig", baseConfig);
 

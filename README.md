@@ -2,28 +2,25 @@
 
 > 为免费开源的 `uni-halo v3.x` 微信小程序提供配套的配置插件。
 
-* 官网主页：https://uni-halo.ialley.cn/
-* 官方文档：https://uni-halo-doc.ialley.cn/
-* 作者主页：https://www.xiaoxiaomo.cn/
-* 作者博客：https://blog.xiaoxiaomo.cn/
-* 源码仓库：https://github.com/uni-halo/uni-halo
-* 插件源码：https://github.com/uni-halo/uni-halo-plugin
-* 插件市场：https://www.halo.run/store/apps/app-ryemX
-
+- 官网主页：https://uni-halo.ialley.cn/
+- 官方文档：https://uni-halo.ialley.cn/docs/
+- 作者主页：https://www.xiaoxiaomo.cn/
+- 作者博客：https://blog.xiaoxiaomo.cn/
+- 源码仓库：https://github.com/uni-halo/uni-halo
+- 插件源码：https://github.com/uni-halo/uni-halo-plugin
+- 插件市场：https://www.halo.run/store/apps/app-ryemX
 
 ### 支持我
 
 如果您觉得这个项目对您有帮助，可以帮作者买杯饮料鼓励鼓励，同时为了项目能够持续发展，可以根据您的喜好支持一下本项目哦，非常感谢您的支持，作者也会更有动力持续维护和更新新的功能哦~
 
 |                                                 支付宝                                                 |                                                微信                                                 |                                                QQ                                                 |
-|:---------------------------------------------------------------------------------------------------:|:-------------------------------------------------------------------------------------------------:|:-------------------------------------------------------------------------------------------------:|
+| :----------------------------------------------------------------------------------------------------: | :-------------------------------------------------------------------------------------------------: | :-----------------------------------------------------------------------------------------------: |
 | ![支付宝赞助](https://gcore.jsdelivr.net/gh/uni-halo/uni-halo-static/author/rewards/ZFBRewardCode.png) | ![微信赞助](https://gcore.jsdelivr.net/gh/uni-halo/uni-halo-static/author/rewards/WXRewardCode.png) | ![QQ赞助](https://gcore.jsdelivr.net/gh/uni-halo/uni-halo-static/author/rewards/QQRewardCode.png) |
-
 
 ### 交流群
 
 ![QQ交流群](https://blog.xiaoxiaomo.cn/upload/qun.png)
-
 
 ## 一、uni-halo 小程序
 
@@ -39,22 +36,22 @@
 
 ### 2、页面截图
 
-|首页|分类|我的|
-|:--:|:--:|:--:|
-|![首页](https://gcore.jsdelivr.net/gh/uni-halo/uni-halo-static/screenshots/v2.x/首页.png)|![分类](https://gcore.jsdelivr.net/gh/uni-halo/uni-halo-static/screenshots/v2.x/分类.jpg)|![我的](https://gcore.jsdelivr.net/gh/uni-halo/uni-halo-static/screenshots/v2.x/关于.jpg)|
-
+|                                             首页                                              |                                             分类                                              |                                             我的                                              |
+| :-------------------------------------------------------------------------------------------: | :-------------------------------------------------------------------------------------------: | :-------------------------------------------------------------------------------------------: |
+| ![首页](https://gcore.jsdelivr.net/gh/uni-halo/uni-halo-static/screenshots/app/v3.x/首页.png) | ![分类](https://gcore.jsdelivr.net/gh/uni-halo/uni-halo-static/screenshots/app/v3.x/分类.jpg) | ![我的](https://gcore.jsdelivr.net/gh/uni-halo/uni-halo-static/screenshots/app/v3.x/关于.jpg) |
 
 ### 恋爱日记
 
 - 在 uni-halo 中，我们为您准备了一个恋爱日记的模块，您可以在其中记录您的恋爱故事，分享给您的朋友们，请扫示例小程序，在线体验恋爱日记的功能。
 
-![恋爱日记](https://gcore.jsdelivr.net/gh/uni-halo/uni-halo-static/screenshots/v2.x/恋爱日记.jpg)
+![恋爱日记](https://gcore.jsdelivr.net/gh/uni-halo/uni-halo-static/screenshots/app/v3.x/恋爱日记.jpg)
 
 <br/>
 
 ## 二、uni-halo 配置插件
 
-###  1、关于插件
+### 1、关于插件
+
 该插件仅为 `uni-halo v3.x` 提供配套的配置，目前支持以下配置：
 
 - 基本配置：文章详情版权、评论开关、页面显示、免责声明
@@ -64,10 +61,10 @@
 - 图片配置：配置默认的图片地址
 - 恋爱配置：恋人信息、恋爱清单、恋爱相册、我们的故事
 - 插件配置：一些独立支持的插件配置
- 
+
 ### 2、使用方式
 
-- 1、下载 `uni-halo v3.x` 小程序源码，参考：https://uni-halo.925i.cn/payload/introduction.html 部署指南将项目在本地运行起来。
+- 1、下载 `uni-halo v3.x` 小程序源码，参考：https://uni-halo.ialley.cn/docs/payload/introduction.html 部署指南将项目在本地运行起来。
 - 2、在 Halo 插件市场搜索 `UniHalo 配置` 插件下载安装，或者通过 `github` 仓库 [点这里](https://github.com/uni-halo/uni-halo-plugin/releases) 找到发布包下载安装。
 - 3、安装完成并且启动插件，进入插件配置页面，配置相关参数即可。
 

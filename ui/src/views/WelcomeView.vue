@@ -258,7 +258,7 @@ const contacts = [
         </p>
 
         <div class="flex flex-wrap justify-center gap-4 mb-10">
-          <a href="https://uni-halo.925i.cn/"
+          <a href="https://uni-halo.ialley.cn/"
             class="inline-flex items-center gap-2 text-white font-semibold px-7 py-3.5 rounded-xl transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5"
             style="background-color: #B9E424" target="_blank">
             <RiBookOpenLine class="w-5 h-5" />
@@ -470,7 +470,7 @@ const contacts = [
         </div>
 
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          <a href="https://uni-halo.925i.cn/"
+          <a href="https://uni-halo.ialley.cn/"
             class="flex items-center gap-4 bg-white rounded-xl p-4 border border-slate-100 hover:shadow-md transition-all duration-200"
             target="_blank">
             <div class="w-10 h-10 rounded-lg flex items-center justify-center text-white flex-shrink-0"
