@@ -3,7 +3,7 @@
 > 为免费开源的 `uni-halo v3.x` 微信小程序提供配套的配置插件。
 
 - 官网主页：https://uni-halo.ialley.cn/
-- 官方文档：https://uni-halo.ialley.cn/docs/
+- 官方文档：https://uni-halo-doc.ialley.cn/
 - 作者主页：https://www.xiaoxiaomo.cn/
 - 作者博客：https://blog.xiaoxiaomo.cn/
 - 源码仓库：https://github.com/uni-halo/uni-halo
@@ -64,7 +64,7 @@
 
 ### 2、使用方式
 
-- 1、下载 `uni-halo v3.x` 小程序源码，参考：https://uni-halo.ialley.cn/docs/payload/introduction.html 部署指南将项目在本地运行起来。
+- 1、下载 `uni-halo v3.x` 小程序源码，参考：https://uni-halo-doc.ialley.cn/payload/introduction.html 部署指南将项目在本地运行起来。
 - 2、在 Halo 插件市场搜索 `UniHalo 配置` 插件下载安装，或者通过 `github` 仓库 [点这里](https://github.com/uni-halo/uni-halo-plugin/releases) 找到发布包下载安装。
 - 3、安装完成并且启动插件，进入插件配置页面，配置相关参数即可。
 
