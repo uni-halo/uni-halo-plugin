@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<!--
+  恋爱日记 · 首页正文（亲密区 / 恋爱计时 / 模块入口 / 最新摘要）
+  ------------------------------------------------------------------
+  只读 model：loveConfig、overview、moduleLocks、routes、pageKey、showOverview
+  锁定态由上层 fragments/love-page 拦掉，本片段只在「未锁定」时渲染。
+-->
+<th:block th:fragment="body"
+          th:with="boyName=${!#strings.isEmpty(loveConfig.boyNickname) ? loveConfig.boyNickname : '他'},
+                   girlName=${!#strings.isEmpty(loveConfig.girlNickname) ? loveConfig.girlNickname : '她'}">
+
+  <!-- ── 恋爱功能未开启 ── -->
+  <th:block th:if="${loveConfig == null or !loveConfig.enabled}">
+    <div class="uh-love-empty">
+      <svg class="uh-love-icon"><use href="#ri-information-line" /></svg>
+      <p>恋爱功能暂未开启</p>
+      <p class="uh-love-note">站长在 Halo 控制台「通用设置 → 恋爱设置」中开启后，此处会展示恋爱日记。</p>
+    </div>
+  </th:block>
+
+  <th:block th:if="${loveConfig != null and loveConfig.enabled}">
+
+    <!-- ── 亲密区：双人头像 + 心跳（页面级背景图已全屏铺满，此处仅磨砂玻璃层） ── -->
+    <section class="uh-love-hero">
+      <div class="uh-love-hero-row">
+        <div class="uh-love-person">
+          <span class="uh-love-avatar is-boy">
+            <img th:if="${!#strings.isEmpty(loveConfig.boyAvatar)}"
+                 th:src="${loveConfig.boyAvatar}" alt="" loading="lazy" referrerpolicy="no-referrer" />
+            <th:block th:unless="${!#strings.isEmpty(loveConfig.boyAvatar)}"
+                      th:text="${#strings.substring(boyName, 0, 1)}">他</th:block>
+          </span>
+          <div class="uh-love-nick is-boy" th:text="${boyName}">他</div>
+        </div>
+
+        <span class="uh-love-heart" aria-hidden="true">
+          <i class="uhlove-icon uhlove-icon-aixin"></i>
+        </span>
+
+        <div class="uh-love-person">
+          <span class="uh-love-avatar is-girl">
+            <img th:if="${!#strings.isEmpty(loveConfig.girlAvatar)}"
+                 th:src="${loveConfig.girlAvatar}" alt="" loading="lazy" referrerpolicy="no-referrer" />
+            <th:block th:unless="${!#strings.isEmpty(loveConfig.girlAvatar)}"
+                      th:text="${#strings.substring(girlName, 0, 1)}">她</th:block>
+          </span>
+          <div class="uh-love-nick is-girl" th:text="${girlName}">她</div>
+        </div>
+      </div>
+      <div class="uh-love-hero-fade" aria-hidden="true"></div>
+    </section>
+
+    <!-- ── 恋爱计时：SSR 出「第 N 天」，JS 接管并每秒刷新时/分/秒 ── -->
+    <section class="uh-love-timer" th:if="${loveConfig.loveDays != null}">
+      <p class="uh-love-timer-hint"
+         th:text="${!#strings.isEmpty(loveConfig.loveDateTitle) ? loveConfig.loveDateTitle : '这是我们一起走过的'}">这是我们一起走过的</p>
+      <p class="uh-love-timer-days">
+        第 <b data-love-days th:text="${loveConfig.loveDays}">1</b> 天
+      </p>
+      <div class="uh-love-timer-cells" data-love-timer th:attr="data-love-date=${loveConfig.loveDate}">
+        <div class="uh-love-timer-cell">
+          <div class="uh-love-timer-num" data-love-h>--</div>
+          <div class="uh-love-timer-label">小时</div>
+        </div>
+        <div class="uh-love-timer-cell is-alt">
+          <div class="uh-love-timer-num" data-love-m>--</div>
+          <div class="uh-love-timer-label">分钟</div>
+        </div>
+        <div class="uh-love-timer-cell">
+          <div class="uh-love-timer-num" data-love-s>--</div>
+          <div class="uh-love-timer-label">秒</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── 模块入口：只列出「已启用 + 路由已注册」的模块（Finder 已过滤） ── -->
+    <div class="uh-love-mods" th:if="${!#lists.isEmpty(loveConfig.modules)}">
+      <a class="uh-love-mod" th:each="m : ${loveConfig.modules}" th:href="@{${m.url}}">
+        <span class="uh-love-mod-icon"
+              th:attr="style=${!#strings.isEmpty(m.iconBgColor) ? 'background:' + m.iconBgColor : ''}">
+          <i class="uhlove-icon" th:classappend="${m.iconClass}" aria-hidden="true"></i>
+        </span>
+        <span>
+          <span class="uh-love-mod-title"
+                th:attr="style=${!#strings.isEmpty(m.titleColor) ? 'color:' + m.titleColor : ''}"
+                th:text="${m.title}">恋爱故事</span>
+          <span class="uh-love-mod-sub"
+                th:attr="style=${!#strings.isEmpty(m.subTitleColor) ? 'color:' + m.subTitleColor : ''}"
+                th:text="${m.subTitle}">记录我们的点点滴滴</span>
+        </span>
+        <span class="uh-love-mod-go" aria-hidden="true">
+          <svg class="uh-love-icon is-locked" th:if="${m.locked}"><use href="#ri-lock-2-line" /></svg>
+          <svg class="uh-love-icon" th:unless="${m.locked}"><use href="#ri-arrow-right-s-line" /></svg>
+        </span>
+      </a>
+    </div>
+
+    <p class="uh-love-note" th:if="${#lists.isEmpty(loveConfig.modules)}">
+      <svg class="uh-love-icon"><use href="#ri-information-line" /></svg>
+      还没有启用任何恋爱模块。请到「通用设置 → 恋爱设置」开启模块，并在「恋爱日记主题页」配置对应页面路径。
+    </p>
+
+    <!-- ── 最新摘要：锁定模块给「已加密」占位（空列表 ≠ 没有内容） ── -->
+    <th:block th:if="${showOverview and overview != null}">
+      <div class="uh-love-sec-title">
+        <svg class="uh-love-icon"><use href="#ri-time-line" /></svg>
+        <span>最近更新</span>
+      </div>
+
+      <div class="uh-love-overview">
+        <!-- 恋爱故事 -->
+        <div class="uh-love-ov" th:if="${moduleLocks['ourStory'] != null}">
+          <div class="uh-love-ov-head">
+            <i class="uhlove-icon uhlove-icon-gushi" aria-hidden="true"></i>
+            <span>恋爱故事</span>
+            <a class="uh-love-sec-more" th:if="${routes != null and routes['stories'] != null}"
+               th:href="@{${routes['stories']}}">
+              全部<svg class="uh-love-icon"><use href="#ri-arrow-right-s-line" /></svg>
+            </a>
+          </div>
+          <ul class="uh-love-ov-list">
+            <li class="is-locked" th:if="${moduleLocks['ourStory']}">
+              <svg class="uh-love-icon"><use href="#ri-lock-2-line" /></svg><span>该模块已加密</span>
+            </li>
+            <li th:if="${!moduleLocks['ourStory']}"
+                th:each="s : ${overview.stories}"
+                th:title="${s.title}" th:text="${s.title}">故事标题</li>
+            <li th:if="${!moduleLocks['ourStory'] and #lists.isEmpty(overview.stories)}">暂无内容</li>
+          </ul>
+        </div>
+
+        <!-- 恋爱相册 -->
+        <div class="uh-love-ov" th:if="${moduleLocks['lovePhoto'] != null}">
+          <div class="uh-love-ov-head">
+            <i class="uhlove-icon uhlove-icon-xiangce" aria-hidden="true"></i>
+            <span>恋爱相册</span>
+            <a class="uh-love-sec-more" th:if="${routes != null and routes['albums'] != null}"
+               th:href="@{${routes['albums']}}">
+              全部<svg class="uh-love-icon"><use href="#ri-arrow-right-s-line" /></svg>
+            </a>
+          </div>
+          <ul class="uh-love-ov-list">
+            <li class="is-locked" th:if="${moduleLocks['lovePhoto']}">
+              <svg class="uh-love-icon"><use href="#ri-lock-2-line" /></svg><span>该模块已加密</span>
+            </li>
+            <li th:if="${!moduleLocks['lovePhoto']}"
+                th:each="a : ${overview.albums}"
+                th:title="${a.displayName}"
+                th:text="|${a.displayName}（${a.photoCount} 张）|">相册</li>
+            <li th:if="${!moduleLocks['lovePhoto'] and #lists.isEmpty(overview.albums)}">暂无内容</li>
+          </ul>
+        </div>
+
+        <!-- 恋爱清单 -->
+        <div class="uh-love-ov" th:if="${moduleLocks['loveDaily'] != null}">
+          <div class="uh-love-ov-head">
+            <i class="uhlove-icon uhlove-icon-liebiao" aria-hidden="true"></i>
+            <span>恋爱清单</span>
+            <a class="uh-love-sec-more" th:if="${routes != null and routes['daily'] != null}"
+               th:href="@{${routes['daily']}}">
+              全部<svg class="uh-love-icon"><use href="#ri-arrow-right-s-line" /></svg>
+            </a>
+          </div>
+          <ul class="uh-love-ov-list">
+            <li class="is-locked" th:if="${moduleLocks['loveDaily']}">
+              <svg class="uh-love-icon"><use href="#ri-lock-2-line" /></svg><span>该模块已加密</span>
+            </li>
+            <li th:if="${!moduleLocks['loveDaily']}"
+                th:each="i : ${overview.items}"
+                th:title="${i.title}" th:text="${i.title}">清单条目</li>
+            <li th:if="${!moduleLocks['loveDaily'] and #lists.isEmpty(overview.items)}">暂无内容</li>
+          </ul>
+        </div>
+      </div>
+    </th:block>
+
+  </th:block>
+</th:block>
+</body>
+</html>

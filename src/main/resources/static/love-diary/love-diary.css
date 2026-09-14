@@ -83,16 +83,6 @@
   }
 }
 
-/* 全屏背景已铺整页时，hero 区不再重复叠同一张图，只留自身渐变 */
-.uh-love-wrap.has-bg .uh-love-hero {
-  background-image: linear-gradient(160deg, rgba(253, 232, 239, .8), rgba(232, 240, 255, .8) 70%);
-}
-
-:is(html[data-theme="dark"], html[data-color-scheme="dark"], html.color-scheme-dark, html.dark) .uh-love-wrap.has-bg .uh-love-hero,
-.uh-love-wrap.has-bg[data-uh-color-scheme="dark"] .uh-love-hero {
-  background-image: linear-gradient(160deg, rgba(58, 28, 40, .8), rgba(27, 36, 64, .8) 70%);
-}
-
 /* 深色标记要认全：主题自己的 data-theme（cosolar 等）+ Halo 的 data-color-scheme
    + color-scheme-dark / dark class。少了 data-theme，第三方主题切深色时插件区域不变。 */
 :is(html[data-theme="dark"], html[data-color-scheme="dark"], html.color-scheme-dark, html.dark) .uh-love-wrap,
@@ -270,24 +260,35 @@
   transform: translate(-50%, 0);
 }
 
-/* ── 首页整页居中 ──
+/* ── 自定义页面统一约定 ──
+   本插件四页（首页/故事/相册/清单）共用同一套布局样式，唯一差异是外壳
+   （auto = 有主题顶部导航与页脚；standalone = 无）。正文样式不允许按页分裂。
+   auto 外壳下 body 归主题管，但本插件页面统一把 body margin 归 0，
+   避免 tema 主题给正文留白导致全屏背景四周漏边（:has 限定，不影响其它页面）。 */
+body:has(.uh-love-wrap) {
+  margin: 0;
+}
+
+/* ── 全部页面整页居中（统一） ──
    flex 列 + 首尾子节点 margin:auto：内容不足一屏时水平垂直居中；
    内容超高时 auto margin 自动归零，回落顶部对齐 —— 不用 justify-content:center，
    那样溢出会被裁掉顶部且滚不回去。浮层（fixed）脱离流，不受影响。 */
-.uh-love-wrap[data-love-page="home"] {
+.uh-love-wrap {
   display: flex;
   flex-direction: column;
 }
 
-.uh-love-wrap[data-love-page="home"] > :first-child {
+.uh-love-wrap > :first-child {
   margin-top: auto;
 }
 
-.uh-love-wrap[data-love-page="home"] > :last-child {
+.uh-love-wrap > :last-child {
   margin-bottom: auto;
 }
 
-/* ── 首页：亲密区 ── */
+/* ── 首页：亲密区 ──
+   背景图 v1.6 起由页面级 .has-bg 全屏承担，hero 不再重复叠图：
+   改为磨砂玻璃层（半透明 + backdrop-blur），透出下方全屏背景。 */
 .uh-love-hero {
   position: relative;
   overflow: hidden;
@@ -295,17 +296,14 @@
   padding: 40px 20px 50px;
   border: none;
   border-radius: 0;
-  /* 站长配了背景图时用 --uh-love-hero-img（内联注入）盖在渐变之上；
-     没配就只剩渐变 —— 不额外发一次请求，也不会露出空白块。 */
-  background-image: var(--uh-love-hero-img, none), linear-gradient(160deg, #fde8ef, #e8f0ff 70%);
-  background-size: cover, auto;
-  background-position: center, 0 0;
-  background-repeat: no-repeat, no-repeat;
+  background: rgba(255, 255, 255, .38);
+  backdrop-filter: blur(16px) saturate(1.2);
+  -webkit-backdrop-filter: blur(16px) saturate(1.2);
 }
 
-.uh-love-wrap[data-uh-color-scheme="dark"] .uh-love-hero,
-:is(html[data-theme="dark"], html[data-color-scheme="dark"], html.color-scheme-dark, html.dark) .uh-love-hero {
-  background-image: var(--uh-love-hero-img, none), linear-gradient(160deg, #3a1c28, #1b2440 70%);
+:is(html[data-theme="dark"], html[data-color-scheme="dark"], html.color-scheme-dark, html.dark) .uh-love-hero,
+.uh-love-wrap[data-uh-color-scheme="dark"] .uh-love-hero {
+  background: rgba(30, 33, 42, .42);
 }
 
 .uh-love-hero-row {
@@ -1155,34 +1153,43 @@
   pointer-events: auto;
 }
 
+/* 故事详情弹窗（从顶部弹入，停在页面中间）：
+   可见态 = top:50% + translate(-50%,-50%) 水平垂直居中；
+   隐藏态整体再上移 100vh 完全退出视口顶部 → 打开时从顶部滑入到中间。
+   高度封顶 85vh，超出由 .uh-love-sheet-body 内部滚动。 */
 .uh-love-sheet {
   position: fixed;
-  top: 0;
-  right: 0;
-  bottom: 0;
+  top: 50%;
+  left: 50%;
   z-index: 80;
   display: flex;
   flex-direction: column;
-  width: min(620px, 94vw);
-  border-left: 1px solid rgba(255, 255, 255, .2);
-  background: rgba(255, 255, 255, .85);
+  width: min(640px, calc(100vw - 32px));
+  max-height: 85vh;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, .3);
+  border-radius: var(--uh-love-radius);
+  box-shadow: 0 12px 48px rgba(16, 24, 40, .18);
+  background: rgba(255, 255, 255, .88);
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
-  transform: translateX(102%);
-  transition: transform .24s;
+  transform: translate(-50%, calc(-50% - 100vh));
+  transition: transform .28s cubic-bezier(.22, 1, .36, 1);
 }
 
 :is(html[data-theme="dark"], html[data-color-scheme="dark"], html.color-scheme-dark, html.dark) .uh-love-sheet,
 .uh-love-wrap[data-uh-color-scheme="dark"] .uh-love-sheet {
-  border-left-color: rgba(255, 255, 255, .1);
-  background: rgba(24, 27, 34, .85);
+  border-color: rgba(255, 255, 255, .1);
+  background: rgba(24, 27, 34, .88);
+  box-shadow: 0 12px 48px rgba(0, 0, 0, .45);
 }
 
 .uh-love-sheet.is-show {
-  transform: none;
+  transform: translate(-50%, -50%);
 }
 
 .uh-love-sheet-head {
+  flex: none;
   display: flex;
   align-items: center;
   gap: 10px;
@@ -1360,17 +1367,12 @@ body.uh-love-standalone[data-uh-color-scheme="dark"] {
   padding: 24px 20px 60px;
 }
 
-/* standalone 首页同样整页居中：shell 吃满视口，仅首页 wrap 垂直居中，
-   列表页仍顶部对齐（:has 现代浏览器全支持，不支持时仅退化不居中） */
+/* standalone 外壳吃满视口；四页居中由 .uh-love-wrap 统一承担（见上方统一约定） */
 body.uh-love-standalone .uh-love-shell {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
   box-sizing: border-box;
-}
-
-body.uh-love-standalone .uh-love-shell > .uh-love-wrap[data-love-page="home"] {
-  margin: auto 0;
 }
 
 /* ── 全屏背景图（standalone 外壳）──
