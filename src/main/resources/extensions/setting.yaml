@@ -364,3 +364,47 @@ spec:
               label: 小程序申请
               value: false
               help: 开启后悬浮卡片底部显示「申请」「友链信息」两个按钮，点击分别弹出小程序申请表单与友链信息展示。
+    - group: loginConfig
+      label: 移动端登录
+      formSchema:
+        - $formkit: group
+          name: loginConfig
+          label: 登录方式
+          children:
+            - $formkit: switch
+              name: passwordLoginEnabled
+              id: passwordLoginEnabled
+              label: 账号密码登录
+              value: true
+              help: 使用 Halo 账号密码登录。开启二次验证（2FA）的用户会被拒绝，需改用微信登录或先在网页端登录。
+            - $formkit: switch
+              name: wechatLoginEnabled
+              id: wechatLoginEnabled
+              label: 微信小程序一键登录
+              value: false
+              help: 需要先在下方配置小程序密钥。首次登录的微信用户能否自动注册、注册为什么角色，由 Halo 系统设置-用户设置的「允许注册」与「默认角色」决定。
+            - $formkit: secret
+              if: "$get(wechatLoginEnabled).value === true"
+              name: wechatSecretName
+              label: 微信小程序密钥
+              descriptionPreset: 微信小程序
+              requiredKeys:
+                - key: appId
+                  help: 小程序 AppID
+                - key: appSecret
+                  help: 小程序 AppSecret
+              help: 只保存 Secret 资源名称，密钥内容由服务端按名称读取，不会下发到小程序端。
+            - $formkit: text
+              if: "$get(wechatLoginEnabled).value === true"
+              name: wechatUsernamePrefix
+              id: wechatUsernamePrefix
+              label: 自动注册用户名前缀
+              value: unihalo
+              validation: required
+              help: 首次登录的微信用户会自动创建账号，用户名 = 前缀 + 两位递增序号，如 unihalo01、unihalo02。只允许小写字母、数字和连字符，不能以连字符开头或结尾；前缀加两位序号后总长度需在 4-63 之间。Halo 的用户名不可修改，请谨慎设置。自动注册的初始密码为随机强密码，不对外提供，这类用户通过微信登录即可。
+            - $formkit: number
+              name: tokenTtlDays
+              label: 令牌有效期（天）
+              value: 30
+              validation: required
+              help: 登录令牌的有效天数，过期只由令牌自身的 exp 声明保证，到期后需重新登录。

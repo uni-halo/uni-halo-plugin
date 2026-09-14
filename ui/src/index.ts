@@ -11,6 +11,7 @@ import RiFileList3Line from '~icons/ri/file-list-3-line'
 import RiShieldCheckLine from '~icons/ri/shield-check-line'
 import RiSlideshowLine from '~icons/ri/slideshow-line'
 import RiSettings3Line from '~icons/ri/settings-3-line'
+import WechatBindingTab from '@/components/WechatBindingTab.vue'
 import WelcomeView from './views/WelcomeView.vue'
 
 function baseRoutePath(path: string) {
@@ -304,5 +305,18 @@ export default definePlugin({
       },
     },
   ],
-  extensionPoints: {},
+  extensionPoints: {
+    // 挂进 Halo 原生「用户详情」页：站长在管用户时顺手就能看到微信绑定状态并解绑，
+    // 不新增菜单、不重复实现用户管理。
+    'user:detail:tabs:create': () => {
+      return [
+        {
+          id: 'uni-halo-wechat-binding',
+          label: '微信绑定',
+          component: markRaw(WechatBindingTab),
+          priority: 30,
+        },
+      ]
+    },
+  },
 })

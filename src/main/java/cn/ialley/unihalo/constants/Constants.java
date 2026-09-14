@@ -72,6 +72,54 @@ public class Constants {
     public static final String CAPTCHA_API_BASE_PATH = "plugins/uni-halo/captcha/generate";
 
     /**
+     * 移动端登录认证（公开）接口基础路径
+     */
+    public static final String AUTH_API_BASE_PATH = "plugins/uni-halo/auth";
+
+    /**
+     * 微信绑定关系（console）接口基础路径
+     */
+    public static final String WECHAT_USER_API_BASE_PATH = "plugins/uni-halo/wechat-users";
+
+    /**
+     * 微信绑定使用的 registrationId（UserConnection.spec.registrationId）
+     */
+    public static final String WECHAT_REGISTRATION_ID = "wechat-miniprogram";
+
+    /**
+     * 微信自动注册用户名的默认前缀。最终用户名 = 前缀 + 两位序号，如 {@code unihalo01}。
+     */
+    public static final String DEFAULT_WECHAT_USERNAME_PREFIX = "unihalo";
+
+    /**
+     * 用户名前缀合法性与 {@code ValidationUtils.NAME_REGEX} 一致（小写字母数字 + 连字符）。
+     * 前缀非法时回落到 {@link #DEFAULT_WECHAT_USERNAME_PREFIX}，避免注册直接失败。
+     */
+    public static final String USERNAME_PREFIX_REGEX = "^[a-z0-9]([-a-z0-9]*[a-z0-9])?$";
+
+    /**
+     * Halo 用户名最短长度（{@code SignUpData.username} 的 {@code @Size(min = 4)}）。
+     */
+    public static final int USERNAME_MIN_LENGTH = 4;
+
+    /**
+     * Halo 用户名最长长度（{@code SignUpData.username} 的 {@code @Size(max = 63)}）。
+     */
+    public static final int USERNAME_MAX_LENGTH = 63;
+
+    /**
+     * 登录令牌归属标签键：值固定为 {@link #PAT_MANAGED_BY_VALUE}。
+     * 用于区分本插件签发的令牌与用户在「个人中心 → 个人令牌」手动创建的令牌，
+     * 过期清理只回收带该标签的令牌，绝不碰用户自己创建的。
+     */
+    public static final String PAT_MANAGED_BY_LABEL = "unihalo.ialley.cn/managed-by";
+
+    /**
+     * 登录令牌归属标签值（插件名）
+     */
+    public static final String PAT_MANAGED_BY_VALUE = "uni-halo";
+
+    /**
      * 友情链接-小程序链接（console/公开）接口基础路径
      */
     public static final String MINI_PROGRAM_LINK_API_BASE_PATH =

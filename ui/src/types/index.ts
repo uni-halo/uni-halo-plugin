@@ -871,6 +871,18 @@ export interface GeneralConfigMaintenance {
   endTime?: string;
 }
 
+/** 用户详情「微信绑定」选项卡数据 */
+export interface WechatBinding {
+  /** Halo 用户名 */
+  username: string;
+  /** 是否已绑定微信 */
+  bound: boolean;
+  /** 绑定的微信标识（openid 或 unionid），未绑定为 undefined */
+  providerUserId?: string;
+  /** 绑定关系最近一次更新时间（RFC3339），未绑定为 undefined */
+  boundAt?: string;
+}
+
 /** getConfigs 顶层 maintenance 键（additive，仅 scheduled/active 时由服务端输出；
  * status 判定权威在服务端，客户端只算倒计时差值） */
 export interface PublicMaintenance {

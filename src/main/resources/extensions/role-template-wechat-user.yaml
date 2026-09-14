@@ -1,0 +1,41 @@
+apiVersion: v1alpha1
+kind: "Role"
+metadata:
+  name: uni-halo-role-template-view-wechat-user
+  labels:
+    halo.run/role-template: "true"
+    rbac.authorization.halo.run/aggregate-to-admin: "true"
+  annotations:
+    rbac.authorization.halo.run/module: "UniHalo 微信用户"
+    rbac.authorization.halo.run/display-name: "微信绑定查看"
+    rbac.authorization.halo.run/ui-permissions: |
+      ["plugin:uni-halo:wechat-user:view"]
+rules:
+  - apiGroups: [ "console.api.unihalo.ialley.cn" ]
+    resources:
+      - "plugins/uni-halo/wechat-users"
+      - "plugins/uni-halo/wechat-users/*"
+    verbs: [ "get", "list" ]
+
+---
+
+apiVersion: v1alpha1
+kind: "Role"
+metadata:
+  name: uni-halo-role-template-manage-wechat-user
+  labels:
+    halo.run/role-template: "true"
+    rbac.authorization.halo.run/aggregate-to-admin: "true"
+  annotations:
+    rbac.authorization.halo.run/dependencies: |
+      [ "uni-halo-role-template-view-wechat-user" ]
+    rbac.authorization.halo.run/module: "UniHalo 微信用户"
+    rbac.authorization.halo.run/display-name: "微信绑定管理"
+    rbac.authorization.halo.run/ui-permissions: |
+      ["plugin:uni-halo:wechat-user:manage"]
+rules:
+  - apiGroups: [ "console.api.unihalo.ialley.cn" ]
+    resources:
+      - "plugins/uni-halo/wechat-users"
+      - "plugins/uni-halo/wechat-users/*"
+    verbs: [ "create", "patch", "update", "delete", "deletecollection" ]

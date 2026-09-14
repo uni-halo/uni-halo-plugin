@@ -25,6 +25,7 @@ import type {
   Banner,
   BannerCandidate,
   GeneralConfig,
+  WechatBinding,
 } from "@/types";
 
 const CONSOLE_API_GROUP = "console.api.unihalo.ialley.cn/v1alpha1";
@@ -301,4 +302,15 @@ export const bannerApi = {
   /** 文章候选（文章选择器数据源，仅已发布文章） */
   candidates: (query: { keyword?: string; page?: number; size?: number } = {}) =>
     http.get<PageResult<BannerCandidate>>(`${PLUGIN_BASE}/banners/candidates`, query),
+};
+
+// ===== 微信绑定（用户详情选项卡） =====
+
+export const wechatUserApi = {
+  /** 查询某个用户的微信绑定状态；未绑定时返回 bound=false */
+  getBinding: (username: string) =>
+    http.get<WechatBinding>(`${PLUGIN_BASE}/wechat-users/${username}/binding`),
+  /** 解绑：只删绑定关系，不删除 Halo 用户 */
+  unbind: (username: string) =>
+    http.delete<{ success: boolean }>(`${PLUGIN_BASE}/wechat-users/${username}/binding`),
 };

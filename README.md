@@ -60,6 +60,7 @@
 - 我的配置：配置博主信息、社交信息
 - 图片配置：配置默认的图片地址
 - 恋爱配置：恋人信息、恋爱清单、恋爱相册、我们的故事
+- 移动端登录：账号密码登录、微信小程序一键登录，登录后下发 Halo 原生令牌
 - 插件配置：一些独立支持的插件配置
 
 ### 2、使用方式
@@ -67,6 +68,12 @@
 - 1、下载 `uni-halo v3.x` 小程序源码，参考：https://uni-halo-doc.ialley.cn/payload/introduction.html 部署指南将项目在本地运行起来。
 - 2、在 Halo 插件市场搜索 `UniHalo 配置` 插件下载安装，或者通过 `github` 仓库 [点这里](https://github.com/uni-halo/uni-halo-plugin/releases) 找到发布包下载安装。
 - 3、安装完成并且启动插件，进入插件配置页面，配置相关参数即可。
+
+### 3、相关文档
+
+- [移动端登录 · 使用与配置文档](.docs/mobile-login-setup.md)：站点管理员如何开通与配置登录能力
+- [移动端登录 · 接口文档](.docs/mobile-login-api.md)：App / 小程序端如何对接
+- [登录认证调研报告](.docs/login-auth-research.md)：技术选型与 Halo 内部机制分析
 
 ---
 

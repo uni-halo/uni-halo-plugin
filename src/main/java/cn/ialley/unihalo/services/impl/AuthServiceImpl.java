@@ -1,0 +1,469 @@
+package cn.ialley.unihalo.services.impl;
+
+import java.time.Duration;
+import java.time.Instant;
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
+import java.util.UUID;
+import java.util.stream.Collectors;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import org.springframework.web.server.ServerWebInputException;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+import cn.ialley.unihalo.constants.Constants;
+import cn.ialley.unihalo.exception.AuthException;
+import cn.ialley.unihalo.services.AuthService;
+import cn.ialley.unihalo.services.PatIssuer;
+import cn.ialley.unihalo.services.WechatService;
+import cn.ialley.unihalo.utils.LoginAttemptGuard;
+import cn.ialley.unihalo.utils.LoginConfigResolver;
+import cn.ialley.unihalo.vo.LoginConfig;
+import cn.ialley.unihalo.vo.LoginResult;
+import cn.ialley.unihalo.vo.ProfileVo;
+import run.halo.app.core.extension.User;
+import run.halo.app.core.extension.UserConnection;
+import run.halo.app.core.extension.Role;
+import run.halo.app.core.user.service.RoleService;
+import run.halo.app.core.user.service.SignUpData;
+import run.halo.app.core.user.service.UserService;
+import run.halo.app.extension.Metadata;
+import run.halo.app.extension.ReactiveExtensionClient;
+
+/**
+ * 移动端登录实现。
+ *
+ * <p>三种登录方式（密码 / 微信 / 已登录绑定微信）最终都收敛到
+ * {@link #issueFor(User, LoginConfig)}：以用户在 Halo 已有的角色签发一枚 Halo 原生 PAT，
+ * 最后把角色模板展开成 RBAC 规则一并返回。注册开关与默认角色沿用 Halo 系统设置。</p>
+ *
+ * <p>两点安全约束：</p>
+ * <ol>
+ *   <li><b>防提权</b>：{@code intersect} 模式下只授予「配置角色 ∩ 用户已有角色」，
+ *       Halo 官方 PAT 也是这个语义（{@code PatServiceImpl#hasSufficientRoles}）；</li>
+ *   <li><b>不绕过二次验证</b>：开启 2FA 的账号拒绝密码登录，否则等于绕过第二因子。</li>
+ * </ol>
+ *
+ * @author 小莫唐尼
+ */
+@Slf4j
+@Service
+@RequiredArgsConstructor
+public class AuthServiceImpl implements AuthService {
+
+    /** 用户名序号格式：至少两位，超过 99 自然升到三位（unihalo100）。 */
+    private static final String SEQUENCE_FORMAT = "%02d";
+
+    /** 自动注册时最多连续尝试多少个序号（并发抢号 + 已存在时的兜底次数）。 */
+    private static final int MAX_USERNAME_ATTEMPTS = 5;
+
+    private final UserService userService;
+    private final RoleService roleService;
+    private final PatIssuer patIssuer;
+    private final LoginConfigResolver configResolver;
+    private final WechatService wechatService;
+    private final ReactiveExtensionClient client;
+    private final LoginAttemptGuard attemptGuard;
+
+    @Override
+    public Mono<LoginResult> loginByPassword(String username, String rawPassword, String clientIp) {
+        return configResolver.config()
+                .filter(LoginConfig::passwordLoginEnabled)
+                .switchIfEmpty(Mono.error(
+                        new AuthException("PASSWORD_LOGIN_DISABLED", "账号密码登录未开启")))
+                .flatMap(config -> requireNotLocked(username, clientIp)
+                        .then(Mono.defer(() -> authenticate(username, rawPassword)
+                                .doOnSuccess(user -> attemptGuard.resetUsername(username))
+                                .doOnError(AuthException.class,
+                                        e -> attemptGuard.recordFailure(username, clientIp))))
+                        .flatMap(user -> issueFor(user, config)));
+    }
+
+    @Override
+    public Mono<LoginResult> loginByWechat(String code) {
+        return configResolver.config()
+                .filter(LoginConfig::wechatLoginEnabled)
+                .switchIfEmpty(Mono.error(
+                        new AuthException("WECHAT_LOGIN_DISABLED", "微信登录未开启")))
+                .flatMap(config -> configResolver.wechatCredential(config.wechatSecretName())
+                        .flatMap(credential -> wechatService.code2Session(
+                                credential.appId(), credential.appSecret(), code))
+                        .flatMap(session -> resolveWechatUser(session, config))
+                        .onErrorMap(e -> !(e instanceof AuthException),
+                                this::unexpectedWechatFailure));
+    }
+
+    @Override
+    public Mono<Void> bindWechat(String username, String code) {
+        return configResolver.config()
+                .filter(LoginConfig::wechatLoginEnabled)
+                .switchIfEmpty(Mono.error(
+                        new AuthException("WECHAT_LOGIN_DISABLED", "微信登录未开启")))
+                .flatMap(config -> configResolver.wechatCredential(config.wechatSecretName())
+                        .flatMap(credential -> wechatService.code2Session(
+                                credential.appId(), credential.appSecret(), code)))
+                .flatMap(session -> connect(username, identity(session)))
+                .onErrorMap(e -> !(e instanceof AuthException),
+                        this::unexpectedWechatFailure)
+                .then();
+    }
+
+    @Override
+    public Mono<Void> logout(String patName, String username) {
+        return patIssuer.revoke(patName, username);
+    }
+
+    @Override
+    public Mono<ProfileVo> profile(String username) {
+        return configResolver.config()
+                .flatMap(config -> userService.getUser(username)
+                        .flatMap(this::requireEnabledUser)
+                        .flatMap(user -> resolveRoles(username)
+                                .flatMap(roles -> permissions(roles)
+                                        .map(rules -> new ProfileVo(
+                                                loginUserOf(user), roles, rules)))));
+    }
+
+    // ---------- 内部实现 ----------
+
+    /**
+     * 限流闸门：用户名维度或来源 IP 维度任一处于锁定窗口内即拒绝。
+     *
+     * <p>用 429 而非 401 —— 凭据错与太频繁是两种语义，客户端应当区分：前者不该重试，
+     * 后者应当退避后再试。</p>
+     */
+    private Mono<Void> requireNotLocked(String username, String clientIp) {
+        var remaining = attemptGuard.usernameLockRemaining(username);
+        if (remaining == null) {
+            remaining = attemptGuard.ipLockRemaining(clientIp);
+        }
+        if (remaining == null) {
+            return Mono.empty();
+        }
+        long minutes = Math.max(1, remaining.toMinutes() + 1);
+        return Mono.error(new AuthException("TOO_MANY_ATTEMPTS",
+                "登录尝试次数过多，请 %d 分钟后再试".formatted(minutes),
+                AuthException.STATUS_TOO_MANY_REQUESTS));
+    }
+
+    private Mono<User> authenticate(String username, String rawPassword) {
+        if (username == null || username.isBlank() || rawPassword == null
+                || rawPassword.isBlank()) {
+            return Mono.error(new AuthException("BAD_CREDENTIALS", "请输入用户名和密码"));
+        }
+        return userService.getUser(username)
+                .onErrorMap(e -> new AuthException("BAD_CREDENTIALS", "用户名或密码错误"))
+                .flatMap(user -> {
+                    if (Boolean.TRUE.equals(user.getSpec().getDisabled())) {
+                        return Mono.error(new AuthException("USER_DISABLED", "账号已被禁用"));
+                    }
+                    if (Boolean.TRUE.equals(user.getSpec().getTwoFactorAuthEnabled())) {
+                        return Mono.error(new AuthException("TWO_FACTOR_REQUIRED",
+                                "该账号已开启二次验证，请使用微信登录"));
+                    }
+                    return userService.confirmPassword(username, rawPassword)
+                            .filter(Boolean::booleanValue)
+                            .switchIfEmpty(Mono.error(
+                                    new AuthException("BAD_CREDENTIALS", "用户名或密码错误")))
+                            .thenReturn(user);
+                });
+    }
+
+    /** 按 openid/unionid 找到已绑定的用户，否则自动注册并绑定。 */
+    private Mono<LoginResult> resolveWechatUser(WechatService.WechatSession session,
+            LoginConfig config) {
+        var identity = identity(session);
+        return findConnection(session)
+                .flatMap(this::loadBoundUser)
+                .flatMap(user -> issueFor(user, config))
+                .switchIfEmpty(Mono.defer(() -> registerWechatUser(config)
+                        .flatMap(user -> connect(user.getMetadata().getName(), identity)
+                                .thenReturn(user))
+                        .flatMap(user -> issueFor(user, config))));
+    }
+
+    /**
+     * 取绑定关系指向的用户。
+     *
+     * <p><b>孤儿绑定自愈</b>：{@code UserConnection} 存在但 Halo 用户已被删除时（站长清理用户、
+     * 早期版本残留等），如果直接抛 404，这个微信就会<strong>永久卡死</strong> —— 既登不进来，
+     * 也走不到注册分支。这里改为清掉脏绑定、返回空，让上层按新用户重新注册。
+     * 由于 {@code nextSequence} 会复用已释放的序号，用户一般能拿回原来的用户名。</p>
+     *
+     * <p>用 {@code client.fetch} 而非 {@code userService.getUser}：前者「查不到」返回空 Mono，
+     * 后者抛异常 —— 这里需要的正是「可选」语义。</p>
+     */
+    private Mono<User> loadBoundUser(UserConnection connection) {
+        var username = connection.getSpec().getUsername();
+        return client.fetch(User.class, username)
+                .flatMap(this::requireEnabledUser)
+                .switchIfEmpty(Mono.defer(() -> {
+                    log.warn("【UniHalo】微信绑定指向的用户 {} 已不存在，清理该孤儿绑定后重新注册",
+                            username);
+                    return discardConnection(connection).then(Mono.empty());
+                }));
+    }
+
+    /** 删除脏绑定关系；失败只记日志，不阻断登录（下次登录会再试）。 */
+    private Mono<Void> discardConnection(UserConnection connection) {
+        return client.delete(connection)
+                .onErrorResume(e -> {
+                    log.warn("【UniHalo】清理孤儿绑定失败，将在下次登录时重试", e);
+                    return Mono.empty();
+                })
+                .then();
+    }
+
+    /**
+     * 禁用账号不得登录（P0）。
+     *
+     * <p>与 {@link #authenticate} 保持一致的语义：少了这一步，站长在后台禁用某个微信用户后，
+     * 对方仍能一键登录进来，禁用功能对移动端形同虚设。</p>
+     */
+    private Mono<User> requireEnabledUser(User user) {
+        if (Boolean.TRUE.equals(user.getSpec().getDisabled())) {
+            return Mono.error(new AuthException("USER_DISABLED", "账号已被禁用"));
+        }
+        return Mono.just(user);
+    }
+
+    /**
+     * 自动注册：用户名 = {@code 前缀 + 两位递增序号}（如 {@code unihalo01}），
+     * 昵称 = {@code 微信用户 + 同序号}，便于在用户列表里区分。
+     */
+    private Mono<User> registerWechatUser(LoginConfig config) {
+        var prefix = config.usernamePrefix();
+        return nextSequence(prefix)
+                .flatMap(start -> Flux.range(start, MAX_USERNAME_ATTEMPTS)
+                        .concatMap(seq -> tryCreate(prefix, seq, config))
+                        .next()
+                        .switchIfEmpty(Mono.error(new AuthException("REGISTER_FAILED",
+                                "自动注册失败，请稍后重试"))));
+    }
+
+    /** 已占用则跳过（交给下一个序号），未占用则创建。 */
+    private Mono<User> tryCreate(String prefix, int seq, LoginConfig config) {
+        var username = prefix + String.format(SEQUENCE_FORMAT, seq);
+        // 用 client.fetch 而非 userService.getUser：后者查不到会抛 UserNotFoundException，
+        // 会让首次登录的自动注册路径整体失败（详见 loadBoundUser 的说明）。
+        return client.fetch(User.class, username)
+                .hasElement()
+                .flatMap(occupied -> Boolean.TRUE.equals(occupied)
+                        ? Mono.<User>empty()
+                        : signUp(username, seq, config));
+    }
+
+    private Mono<User> signUp(String username, int seq, LoginConfig config) {
+        var data = new SignUpData();
+        data.setUsername(username);
+        data.setDisplayName("微信用户" + String.format(SEQUENCE_FORMAT, seq));
+        data.setPassword(randomPassword());
+        data.setConfirmPassword(data.getPassword());
+        return userService.signUp(data)
+                .onErrorResume(e -> {
+                    // 并发抢号（用户名已被占用）时吞掉本次，让调用方继续试下一个序号；
+                    // 连试 MAX_USERNAME_ATTEMPTS 次都失败才向上抛业务错误。
+                    // 其余失败（站点未开放注册、默认角色未配置等配置问题）必须透出：
+                    // 换序号重试没有意义，吞掉只会把明确的配置问题变成含糊的 REGISTER_FAILED。
+                    // DuplicateNameException 在 Halo application 模块、api 依赖里没有，
+                    // 只能按类名识别（父类 ResponseStatusException 400 与「注册未开放」共用，无法按类型区分）。
+                    if (isDuplicateName(e)) {
+                        log.info("【UniHalo】微信自动注册用户名 {} 已被占用，尝试下一个序号", username);
+                        return Mono.empty();
+                    }
+                    // 注册失败的配置类原因（未开放注册 / 默认角色未配置）转成明确的业务错误，
+                    // 提示站长去 Halo 系统设置修复；AuthException 会穿过 unexpectedWechatFailure 兜底。
+                    if (e instanceof ServerWebInputException inputException) {
+                        var reason = String.valueOf(inputException.getReason());
+                        var message = reason.contains("registration")
+                                ? "站点未开放用户注册，请在 Halo 系统设置中开启「允许注册」后再试"
+                                : reason.contains("default role")
+                                        ? "站点未配置新用户默认角色，请在 Halo 系统设置中选择默认角色"
+                                        : "自动注册失败：" + reason;
+                        return Mono.error(new AuthException("REGISTER_FORBIDDEN", message,
+                                AuthException.STATUS_FORBIDDEN));
+                    }
+                    log.warn("【UniHalo】微信自动注册用户名 {} 创建失败", username, e);
+                    return Mono.error(e);
+                });
+    }
+
+    private static boolean isDuplicateName(Throwable e) {
+        return "run.halo.app.infra.exception.DuplicateNameException"
+                .equals(e.getClass().getName());
+    }
+
+    /**
+     * 扫描现有「前缀 + 纯数字」的用户名取最大序号，返回下一个可用的起始序号。
+     *
+     * <p>只做一次探测是不够的（并发下两个请求可能拿到同一序号），因此结果仅作为起点，
+     * 真正防重由 {@link #tryCreate} 的占用探测 + 多序号重试兜底。</p>
+     */
+    private Mono<Integer> nextSequence(String prefix) {
+        return client.list(User.class,
+                        user -> user.getMetadata() != null
+                                && user.getMetadata().getName() != null
+                                && user.getMetadata().getName().startsWith(prefix),
+                        null)
+                .map(user -> sequenceOf(user.getMetadata().getName(), prefix))
+                .reduce(0, Math::max)
+                .map(max -> max + 1)
+                .defaultIfEmpty(1);
+    }
+
+    private static int sequenceOf(String username, String prefix) {
+        var tail = username.substring(prefix.length());
+        if (tail.isEmpty() || tail.length() > 9 || !tail.chars().allMatch(Character::isDigit)) {
+            return 0;
+        }
+        return Integer.parseInt(tail);
+    }
+
+    private Mono<UserConnection> connect(String username, String identity) {
+        return findConnection(identity)
+                .flatMap(existing -> {
+                    existing.getSpec().setUsername(username);
+                    return client.update(existing);
+                })
+                .switchIfEmpty(Mono.defer(() -> {
+                    var connection = new UserConnection();
+                    connection.setMetadata(new Metadata());
+                    connection.getMetadata().setGenerateName("wechat-");
+                    var spec = new UserConnection.UserConnectionSpec();
+                    spec.setRegistrationId(Constants.WECHAT_REGISTRATION_ID);
+                    spec.setUsername(username);
+                    spec.setProviderUserId(identity);
+                    connection.setSpec(spec);
+                    return client.create(connection);
+                }));
+    }
+
+    /**
+     * 按微信身份查绑定关系：优先 unionid，未命中再回落 openid。
+     *
+     * <p>回落是必需的：站点早期未绑定开放平台时只拿得到 openid，老用户存的是 openid；
+     * 后期绑定开放平台后 code2Session 开始返回 unionid，只按 unionid 查会漏掉这批老用户，
+     * 把他们当成新用户再注册一个号。</p>
+     */
+    private Mono<UserConnection> findConnection(WechatService.WechatSession session) {
+        var unionid = session.unionid();
+        var openid = session.openid();
+        boolean hasBoth = unionid != null && !unionid.isBlank()
+                && openid != null && !openid.isBlank();
+        if (!hasBoth) {
+            return findConnection(identity(session));
+        }
+        return findConnection(unionid)
+                .switchIfEmpty(Mono.defer(() -> findConnection(openid)));
+    }
+
+    private Mono<UserConnection> findConnection(String identity) {
+        return client.list(UserConnection.class,
+                        connection -> connection.getSpec() != null
+                                && Constants.WECHAT_REGISTRATION_ID.equals(
+                                        connection.getSpec().getRegistrationId())
+                                && identity.equals(connection.getSpec().getProviderUserId()),
+                        null)
+                .next();
+    }
+
+    /**
+     * 微信侧失败：code 无效/已用过（{@link IllegalArgumentException}）、
+     * 密钥未配置或缺少字段（{@link IllegalStateException}）。两者都要收敛成业务错误，
+     * 否则会以 500 暴露给客户端，掩盖「站长还没配密钥」这类可自助修复的问题。
+     */
+    private boolean isWechatFailure(Throwable e) {
+        return e instanceof IllegalArgumentException || e instanceof IllegalStateException;
+    }
+
+    /**
+     * 微信登录路径的兜底映射：除 {@link AuthException} 外一律收敛为业务错误。
+     *
+     * <p>不做兜底会让 Halo 内部异常以原始 problem detail 漏给客户端 —— 例如
+     * {@code {"detail":"User unihalo01 was not found","status":404}}，既暴露内部用户名，
+     * 又不符合本接口 {@code {code,message}} 的契约。</p>
+     *
+     * <p>已知的微信侧失败保留原始消息（code 无效、密钥未配置），站长据此可自助排查；
+     * 其余只记日志、对外给通用提示，避免把内部细节透出去。</p>
+     */
+    private AuthException unexpectedWechatFailure(Throwable e) {
+        if (isWechatFailure(e)) {
+            return new AuthException("WECHAT_LOGIN_FAILED", e.getMessage());
+        }
+        log.warn("【UniHalo】微信登录出现未预期的错误", e);
+        return new AuthException("WECHAT_LOGIN_FAILED", "微信登录失败，请稍后重试");
+    }
+
+    private static String identity(WechatService.WechatSession session) {
+        return session.unionid() == null || session.unionid().isBlank()
+                ? session.openid() : session.unionid();
+    }
+
+    private Mono<LoginResult> issueFor(User user, LoginConfig config) {
+        String username = user.getMetadata().getName();
+        return resolveRoles(username)
+                .flatMap(roles -> patIssuer.issue(username, roles,
+                        Instant.now().plus(Duration.ofDays(config.tokenTtlDays()))))
+                .flatMap(token -> permissions(token.roles())
+                        .map(rules -> new LoginResult(
+                                token.token(),
+                                "Bearer",
+                                token.expiresAt(),
+                                token.patName(),
+                                loginUserOf(user),
+                                token.roles(),
+                                rules)));
+    }
+
+    /** 用户摘要（不含任何敏感字段）。token 与 profile 两个出口共用，避免字段漂移。 */
+    private static LoginResult.LoginUser loginUserOf(User user) {
+        return new LoginResult.LoginUser(
+                user.getMetadata().getName(),
+                user.getSpec().getDisplayName(),
+                user.getSpec().getAvatar(),
+                user.getSpec().getEmail());
+    }
+
+    /**
+     * 令牌角色恒等于用户在 Halo 已有的角色（不提权也不裁剪）：
+     * 新用户注册为什么角色由 Halo 系统设置-用户设置的「默认角色」决定。
+     */
+    private Mono<Set<String>> resolveRoles(String username) {
+        return roleService.getRolesByUsername(username)
+                .collect(Collectors.toSet());
+    }
+
+    private Mono<List<LoginResult.PermissionRule>> permissions(Set<String> roles) {
+        if (roles == null || roles.isEmpty()) {
+            return Mono.just(List.of());
+        }
+        return roleService.listPermissions(roles)
+                .flatMap(this::rulesOf)
+                .distinct()
+                .collect(Collectors.toList());
+    }
+
+    private Flux<LoginResult.PermissionRule> rulesOf(Role role) {
+        var rules = role.getRules();
+        if (rules == null || rules.isEmpty()) {
+            return Flux.empty();
+        }
+        return Flux.fromIterable(rules)
+                .filter(Objects::nonNull)
+                .map(rule -> new LoginResult.PermissionRule(
+                        List.of(nullToEmpty(rule.getApiGroups())),
+                        List.of(nullToEmpty(rule.getResources())),
+                        List.of(nullToEmpty(rule.getVerbs()))));
+    }
+
+    private static String[] nullToEmpty(String[] values) {
+        return values == null ? new String[0] : values;
+    }
+
+    private static String randomPassword() {
+        return "Wx" + UUID.randomUUID().toString().replace("-", "") + "a1!";
+    }
+}

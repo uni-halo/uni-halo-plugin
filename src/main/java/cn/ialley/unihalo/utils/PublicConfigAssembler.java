@@ -23,7 +23,8 @@ import tools.jackson.databind.node.ObjectNode;
  *   <li>authorConfig / pageConfig / basicConfig（内容部分）/ imagesConfig / loveConfig
  *       五个顶层键由 GeneralConfig 重建（不再依赖 ConfigMap 旧组）；</li>
  *   <li>剔除敏感/无效字段：basicConfig.tokenConfig（个人令牌）、appConfig.startConfig
- *       （启动页配置）、auditConfig.auditModeData（死字段）；</li>
+ *       （启动页配置）、auditConfig.auditModeData（死字段）；loginConfig 组只输出
+ *       三个登录开关，Secret 名称与权限策略不外发；</li>
  *   <li>maintenance（additive 顶层键）：按 GeneralConfig.spec.maintenance
  *       时间窗口与当前时刻计算状态，仅 scheduled/active 时输出；</li>
  *   <li>其余设置组（captchaConfig / pluginConfig / linkConfig …）原样透传。</li>
@@ -73,6 +74,11 @@ public class PublicConfigAssembler {
                     root.set(group, withoutKeys(node, "startConfig"));
                 } else if ("auditConfig".equals(group)) {
                     root.set(group, withoutKeys(node, "auditModeData"));
+                } else if ("loginConfig".equals(group)) {
+                    // 登录组：只下发「支持哪些登录方式」两个开关。
+                    // wechatSecretName（Secret 资源名）、令牌有效期与注册策略
+                    // 一律不外发——Secret 内容只能由服务端按名称读取。
+                    root.set(group, sanitizeLogin(node));
                 } else if ("pluginConfig".equals(group)) {
                     // votePlugin/linksPlugin 开关不再使用（app 端改用插件启用检测判定），
                     // 剔除旧 ConfigMap 残留避免继续透传；toolsPlugin 保留
@@ -310,6 +316,26 @@ public class PublicConfigAssembler {
         JsonNode loveInfo = love.get("loveInfo");
         if (loveInfo != null && loveInfo.isObject() && hasNonBlankText(loveInfo)) {
             out.set("loveInfo", loveInfo);
+        }
+        return out;
+    }
+
+    /**
+     * 登录配置公开输出脱敏（getConfigs loginConfig 组）：
+     * 仅输出 passwordLoginEnabled / wechatLoginEnabled 两个开关，
+     * 供小程序端决定登录页展示哪些入口；wechatSecretName（Secret 资源名）、
+     * 令牌有效期与注册策略（Halo 系统设置的「允许注册」「默认角色」）
+     * 属于服务端决策，全部不下发。
+     */
+    private static JsonNode sanitizeLogin(JsonNode node) {
+        ObjectNode out = JsonNodeFactory.instance.objectNode();
+        JsonNode login = node.get("loginConfig");
+        if (login != null && login.isObject()) {
+            ObjectNode loginOut = JsonNodeFactory.instance.objectNode();
+            pick(login, loginOut, "passwordLoginEnabled", "wechatLoginEnabled");
+            if (loginOut.size() > 0) {
+                out.set("loginConfig", loginOut);
+            }
         }
         return out;
     }
