@@ -1,0 +1,1414 @@
+/*!
+ * love-diary.css — 恋爱日记主题模板 · 布局/组件层
+ *
+ * 设计约束（与设计报告 §3.5 的 v1.4 修订一致）：
+ *   ① 不用 preflight、不用 `*{}` / `body{}` 等全局选择器 —— 基础重置全部限定在 `.uh-love-wrap` 内；
+ *   ② 全部类名 `uh-love-` 前缀，彻底避开与主题/其它插件撞名；
+ *   ③ 采用**语义化类名**（`.uh-love-album` 这类）而非 utility class —— 于是
+ *      「Tailwind 构建期扫不到 Thymeleaf 动态 class」这条坑天然不存在；
+ *   ④ 明暗模式只认 Halo 公开标记 + 本插件 JS 打上去的 `data-uh-color-scheme`。
+ *
+ * 设计 token 的默认值放在 `:root`：HeadProcessor 注入的 `<style>` 在 `<link>` 之后，
+ * 因此站长配的 `primaryColor` 能覆盖这里的默认值。
+ */
+
+:root {
+  --uh-love-primary: #f83856;
+  --uh-love-primary-soft: #fce7f3;
+  --uh-love-boy: #3b82f6;
+  --uh-love-girl: #f83856;
+  --uh-love-status-wait: #fde047;
+  --uh-love-status-doing: rgba(248, 56, 86, .3);
+  --uh-love-status-done: #93c5fd;
+  --uh-love-radius: 12px;
+}
+
+/* ── 基础重置（严格限定在 .uh-love-wrap 作用域内） ── */
+.uh-love-wrap {
+  --uh-love-surface: #ffffff;
+  --uh-love-card: rgba(255, 255, 255, .86);
+  --uh-love-text: inherit;
+  --uh-love-strong: #1f2230;
+  --uh-love-muted: #6b7280;
+  --uh-love-border: rgba(0, 0, 0, .09);
+  --uh-love-code-bg: #f6f8fa;
+  --uh-love-shadow: 0 1px 2px rgba(16, 24, 40, .05), 0 8px 24px -8px rgba(16, 24, 40, .12);
+  --uh-love-warn: #b45309;
+
+  position: relative;
+  min-height: calc(100vh - 120px);
+  padding: 0 0 40px;
+  background: rgba(255, 255, 255, .55);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border-radius: 0;
+  color: var(--uh-love-text);
+  font-size: 14px;
+  line-height: 1.6;
+  word-wrap: break-word;
+  -webkit-text-size-adjust: 100%;
+}
+
+/* 深色模式下 backdrop-blur 使用深色半透明 */
+:is(html[data-theme="dark"], html[data-color-scheme="dark"], html.color-scheme-dark, html.dark) .uh-love-wrap,
+.uh-love-wrap[data-uh-color-scheme="dark"] {
+  background: rgba(24, 27, 34, .6);
+}
+
+/* ── 全屏背景图（auto 外壳） ──
+   站长在通用配置-页面-恋爱日记配了 bgImageUrl 时，模板给 wrap 加 .has-bg 并
+   内联注入 --uh-love-bg-img。背景 attachment:fixed 钉住视口 → 整页全屏铺满，
+   滚动时视差不动；白纱/深纱用 linear-gradient 叠在图上保证正文可读
+   （不用 ::before —— 定位伪元素会盖住未定位的正文节点，渐变叠层零层叠负担）。 */
+.uh-love-wrap.has-bg {
+  background-image: linear-gradient(rgba(255, 255, 255, .62), rgba(255, 255, 255, .62)),
+      var(--uh-love-bg-img);
+  background-size: auto, cover;
+  background-position: 0 0, center;
+  background-repeat: repeat, no-repeat;
+  background-attachment: fixed, fixed;
+}
+
+:is(html[data-theme="dark"], html[data-color-scheme="dark"], html.color-scheme-dark, html.dark) .uh-love-wrap.has-bg,
+.uh-love-wrap.has-bg[data-uh-color-scheme="dark"] {
+  background-image: linear-gradient(rgba(24, 27, 34, .66), rgba(24, 27, 34, .66)),
+      var(--uh-love-bg-img);
+}
+
+/* 移动端不支持 attachment:fixed（iOS 会退化成 scroll + 拉伸），回落普通铺满 */
+@media (max-width: 700px) {
+  .uh-love-wrap.has-bg {
+    background-attachment: scroll, scroll;
+    min-height: 100vh;
+  }
+}
+
+/* 全屏背景已铺整页时，hero 区不再重复叠同一张图，只留自身渐变 */
+.uh-love-wrap.has-bg .uh-love-hero {
+  background-image: linear-gradient(160deg, rgba(253, 232, 239, .8), rgba(232, 240, 255, .8) 70%);
+}
+
+:is(html[data-theme="dark"], html[data-color-scheme="dark"], html.color-scheme-dark, html.dark) .uh-love-wrap.has-bg .uh-love-hero,
+.uh-love-wrap.has-bg[data-uh-color-scheme="dark"] .uh-love-hero {
+  background-image: linear-gradient(160deg, rgba(58, 28, 40, .8), rgba(27, 36, 64, .8) 70%);
+}
+
+/* 深色标记要认全：主题自己的 data-theme（cosolar 等）+ Halo 的 data-color-scheme
+   + color-scheme-dark / dark class。少了 data-theme，第三方主题切深色时插件区域不变。 */
+:is(html[data-theme="dark"], html[data-color-scheme="dark"], html.color-scheme-dark, html.dark) .uh-love-wrap,
+.uh-love-wrap[data-uh-color-scheme="dark"] {
+  --uh-love-surface: #181b22;
+  --uh-love-card: rgba(30, 33, 42, .84);
+  --uh-love-strong: #e7e9ef;
+  --uh-love-muted: #98a1b2;
+  --uh-love-border: rgba(255, 255, 255, .11);
+  --uh-love-code-bg: #0e1116;
+  --uh-love-shadow: 0 1px 2px rgba(0, 0, 0, .4), 0 8px 24px -8px rgba(0, 0, 0, .6);
+  --uh-love-warn: #fcd34d;
+}
+
+.uh-love-wrap *,
+.uh-love-wrap *::before,
+.uh-love-wrap *::after {
+  box-sizing: border-box;
+}
+
+.uh-love-wrap img,
+.uh-love-wrap svg {
+  max-width: 100%;
+}
+
+.uh-love-wrap :is(h1, h2, h3, h4) {
+  color: var(--uh-love-strong);
+}
+
+.uh-love-icon {
+  width: 1em;
+  height: 1em;
+  fill: currentColor;
+  vertical-align: -.125em;
+  flex: none;
+}
+
+/* 品牌彩色图标是「字体」，自身 CSS 写死了 16px；容器想让它多大就多大 */
+.uh-love-wrap .uhlove-icon {
+  font-size: inherit;
+  line-height: 1;
+}
+
+.uh-love-spin {
+  animation: uh-love-spin 1s linear infinite;
+}
+
+@keyframes uh-love-spin {
+  to { transform: rotate(360deg); }
+}
+
+.uh-love-hide {
+  display: none !important;
+}
+
+/* ── 通用小件 ── */
+.uh-love-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 11px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, .3);
+  background: rgba(255, 255, 255, .5);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  color: inherit;
+  font: inherit;
+  font-size: 13px;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+:is(html[data-theme="dark"], html[data-color-scheme="dark"], html.color-scheme-dark, html.dark) .uh-love-btn,
+.uh-love-wrap[data-uh-color-scheme="dark"] .uh-love-btn {
+  border-color: rgba(255, 255, 255, .12);
+  background: rgba(30, 33, 42, .5);
+}
+
+.uh-love-btn:hover {
+  border-color: var(--uh-love-primary);
+  color: var(--uh-love-primary);
+}
+
+.uh-love-btn[aria-pressed="true"] {
+  background: var(--uh-love-primary);
+  border-color: var(--uh-love-primary);
+  color: #fff;
+}
+
+.uh-love-pill {
+  display: inline-block;
+  padding: 1px 7px;
+  border-radius: 999px;
+  border: 1px solid var(--uh-love-border);
+  color: var(--uh-love-muted);
+  font-size: 11px;
+}
+
+.uh-love-pill.is-ok {
+  color: #15803d;
+  border-color: rgba(34, 197, 94, .4);
+  background: rgba(34, 197, 94, .08);
+}
+
+.uh-love-pill.is-locked {
+  color: #b91c1c;
+  border-color: rgba(220, 38, 38, .4);
+  background: rgba(220, 38, 38, .08);
+}
+
+.uh-love-note {
+  display: block;
+  margin: 0 0 14px;
+  color: var(--uh-love-muted);
+  font-size: 12px;
+  line-height: 1.7;
+}
+
+.uh-love-note .uh-love-icon {
+  width: 1em;
+  height: 1em;
+  vertical-align: -.15em;
+}
+
+.uh-love-empty {
+  padding: 34px 0;
+  text-align: center;
+  color: var(--uh-love-muted);
+}
+
+.uh-love-empty .uh-love-icon {
+  display: block;
+  width: 38px;
+  height: 38px;
+  margin: 0 auto 10px;
+  opacity: .6;
+}
+
+.uh-love-pager {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 18px;
+}
+
+.uh-love-pager-tip {
+  margin: 10px 0 0;
+  color: var(--uh-love-muted);
+  font-size: 11.5px;
+  text-align: center;
+}
+
+.uh-love-toast {
+  position: fixed;
+  left: 50%;
+  bottom: 26px;
+  z-index: 120;
+  max-width: 90vw;
+  padding: 9px 16px;
+  border-radius: 999px;
+  background: #111;
+  color: #fff;
+  font-size: 13px;
+  text-align: center;
+  opacity: 0;
+  transform: translate(-50%, 20px);
+  transition: opacity .2s, transform .2s;
+  pointer-events: none;
+}
+
+.uh-love-toast.is-show {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+/* ── 首页整页居中 ──
+   flex 列 + 首尾子节点 margin:auto：内容不足一屏时水平垂直居中；
+   内容超高时 auto margin 自动归零，回落顶部对齐 —— 不用 justify-content:center，
+   那样溢出会被裁掉顶部且滚不回去。浮层（fixed）脱离流，不受影响。 */
+.uh-love-wrap[data-love-page="home"] {
+  display: flex;
+  flex-direction: column;
+}
+
+.uh-love-wrap[data-love-page="home"] > :first-child {
+  margin-top: auto;
+}
+
+.uh-love-wrap[data-love-page="home"] > :last-child {
+  margin-bottom: auto;
+}
+
+/* ── 首页：亲密区 ── */
+.uh-love-hero {
+  position: relative;
+  overflow: hidden;
+  margin: 0 -20px;
+  padding: 40px 20px 50px;
+  border: none;
+  border-radius: 0;
+  /* 站长配了背景图时用 --uh-love-hero-img（内联注入）盖在渐变之上；
+     没配就只剩渐变 —— 不额外发一次请求，也不会露出空白块。 */
+  background-image: var(--uh-love-hero-img, none), linear-gradient(160deg, #fde8ef, #e8f0ff 70%);
+  background-size: cover, auto;
+  background-position: center, 0 0;
+  background-repeat: no-repeat, no-repeat;
+}
+
+.uh-love-wrap[data-uh-color-scheme="dark"] .uh-love-hero,
+:is(html[data-theme="dark"], html[data-color-scheme="dark"], html.color-scheme-dark, html.dark) .uh-love-hero {
+  background-image: var(--uh-love-hero-img, none), linear-gradient(160deg, #3a1c28, #1b2440 70%);
+}
+
+.uh-love-hero-row {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+}
+
+.uh-love-person {
+  text-align: center;
+}
+
+.uh-love-avatar {
+  display: grid;
+  place-items: center;
+  width: 64px;
+  height: 64px;
+  overflow: hidden;
+  border: 3px solid #fff;
+  border-radius: 50%;
+  box-shadow: var(--uh-love-shadow);
+  color: #fff;
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.uh-love-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.uh-love-avatar.is-boy {
+  background: var(--uh-love-boy);
+}
+
+.uh-love-avatar.is-girl {
+  background: var(--uh-love-girl);
+}
+
+.uh-love-nick {
+  margin-top: 6px;
+  font-weight: 600;
+}
+
+.uh-love-nick.is-boy {
+  color: var(--uh-love-boy);
+}
+
+.uh-love-nick.is-girl {
+  color: var(--uh-love-girl);
+}
+
+.uh-love-heart {
+  color: var(--uh-love-primary);
+  font-size: 30px;
+  animation: uh-love-beat 2.4s ease-in-out infinite;
+}
+
+@keyframes uh-love-beat {
+  0%, 100% { transform: scale(1); }
+  12% { transform: scale(1.22); }
+  24% { transform: scale(1); }
+  36% { transform: scale(1.14); }
+  48% { transform: scale(1); }
+}
+
+.uh-love-hero-fade {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 64px;
+  background: linear-gradient(to top, rgba(255, 255, 255, .85), transparent);
+  opacity: 1;
+  pointer-events: none;
+}
+
+:is(html[data-theme="dark"], html[data-color-scheme="dark"], html.color-scheme-dark, html.dark) .uh-love-hero-fade,
+.uh-love-wrap[data-uh-color-scheme="dark"] .uh-love-hero-fade {
+  background: linear-gradient(to top, rgba(24, 27, 34, .85), transparent);
+}
+
+/* ── 首页：恋爱计时 ── */
+.uh-love-timer {
+  margin-top: 18px;
+  text-align: center;
+}
+
+.uh-love-timer-hint {
+  color: var(--uh-love-muted);
+  font-size: 13px;
+}
+
+.uh-love-timer-days {
+  margin: 4px 0 10px;
+  font-size: 15px;
+}
+
+.uh-love-timer-days b {
+  color: var(--uh-love-primary);
+  font-size: 18px;
+}
+
+.uh-love-timer-cells {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+}
+
+.uh-love-timer-cell {
+  min-width: 62px;
+  padding: 8px 6px;
+  border: 1px solid rgba(255, 255, 255, .25);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, .4);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+:is(html[data-theme="dark"], html[data-color-scheme="dark"], html.color-scheme-dark, html.dark) .uh-love-timer-cell,
+.uh-love-wrap[data-uh-color-scheme="dark"] .uh-love-timer-cell {
+  border-color: rgba(255, 255, 255, .1);
+  background: rgba(30, 33, 42, .4);
+}
+
+.uh-love-timer-num {
+  color: var(--uh-love-primary);
+  font-size: 22px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.uh-love-timer-cell.is-alt .uh-love-timer-num {
+  color: var(--uh-love-boy);
+}
+
+.uh-love-timer-label {
+  color: var(--uh-love-muted);
+  font-size: 11px;
+}
+
+/* ── 首页：模块入口 ── */
+.uh-love-mods {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.uh-love-mod {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid rgba(255, 255, 255, .25);
+  border-radius: var(--uh-love-radius);
+  background: rgba(255, 255, 255, .45);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, .06);
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+  animation: uh-love-rise .5s both;
+}
+
+:is(html[data-theme="dark"], html[data-color-scheme="dark"], html.color-scheme-dark, html.dark) .uh-love-mod,
+.uh-love-wrap[data-uh-color-scheme="dark"] .uh-love-mod {
+  border-color: rgba(255, 255, 255, .1);
+  background: rgba(30, 33, 42, .45);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, .2);
+}
+
+.uh-love-mod:nth-child(2) { animation-delay: .12s; }
+.uh-love-mod:nth-child(3) { animation-delay: .24s; }
+
+@keyframes uh-love-rise {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: none; }
+}
+
+.uh-love-mod-icon {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: var(--uh-love-primary-soft);
+  font-size: 22px;
+}
+
+.uh-love-mod-title {
+  display: block;
+  color: var(--uh-love-primary);
+  font-weight: 600;
+}
+
+.uh-love-mod-sub {
+  display: block;
+  color: var(--uh-love-muted);
+  font-size: 12px;
+}
+
+.uh-love-mod-go {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+  color: var(--uh-love-muted);
+  font-size: 16px;
+}
+
+.uh-love-mod-go .is-locked {
+  color: #f59e0b;
+}
+
+/* ── 首页：摘要 ── */
+.uh-love-sec-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 26px 0 12px;
+  font-weight: 700;
+}
+
+.uh-love-sec-title > .uh-love-icon {
+  color: var(--uh-love-primary);
+}
+
+.uh-love-sec-more {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  color: var(--uh-love-primary);
+  font-size: 12px;
+  font-weight: 400;
+  text-decoration: none;
+}
+
+.uh-love-overview {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+.uh-love-ov {
+  padding: 12px;
+  border: 1px solid rgba(255, 255, 255, .25);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, .4);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+:is(html[data-theme="dark"], html[data-color-scheme="dark"], html.color-scheme-dark, html.dark) .uh-love-ov,
+.uh-love-wrap[data-uh-color-scheme="dark"] .uh-love-ov {
+  border-color: rgba(255, 255, 255, .1);
+  background: rgba(30, 33, 42, .4);
+}
+
+.uh-love-ov-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 0 8px;
+  font-size: 13px;
+}
+
+.uh-love-ov-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.uh-love-ov-list li {
+  overflow: hidden;
+  padding: 3px 0;
+  color: var(--uh-love-muted);
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.uh-love-ov-list li.is-locked {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--uh-love-warn);
+}
+
+/* ── 故事列表 ── */
+.uh-love-story-item {
+  display: flex;
+  gap: 14px;
+  margin-bottom: 14px;
+}
+
+.uh-love-story-date {
+  flex: none;
+  width: 56px;
+  padding-right: 10px;
+  border-right: 2px solid var(--uh-love-primary-soft);
+  text-align: center;
+}
+
+.uh-love-story-day {
+  color: var(--uh-love-primary);
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+.uh-love-story-ym,
+.uh-love-story-week {
+  color: var(--uh-love-muted);
+  font-size: 11px;
+}
+
+.uh-love-story-card {
+  flex: 1;
+  min-width: 0;
+  padding: 13px 14px;
+  border: 1px solid rgba(255, 255, 255, .25);
+  border-radius: var(--uh-love-radius);
+  background: rgba(255, 255, 255, .45);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, .06);
+}
+
+:is(html[data-theme="dark"], html[data-color-scheme="dark"], html.color-scheme-dark, html.dark) .uh-love-story-card,
+.uh-love-wrap[data-uh-color-scheme="dark"] .uh-love-story-card {
+  border-color: rgba(255, 255, 255, .1);
+  background: rgba(30, 33, 42, .45);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, .2);
+}
+
+.uh-love-story-title {
+  margin: 0 0 6px;
+  font-size: 15px;
+}
+
+.uh-love-story-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+  color: var(--uh-love-muted);
+  font-size: 12px;
+}
+
+.uh-love-story-meta span {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.uh-love-story-thumbs {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.uh-love-thumb {
+  position: relative;
+  width: 64px;
+  height: 64px;
+  overflow: hidden;
+  border-radius: 8px;
+  background: var(--uh-love-code-bg);
+}
+
+.uh-love-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.uh-love-thumb-more {
+  display: grid;
+  place-items: center;
+  background: rgba(0, 0, 0, .45);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  inset: 0;
+  position: absolute;
+}
+
+.uh-love-linkbtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--uh-love-primary);
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+/* ── 相册 ── */
+.uh-love-albums {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+.uh-love-album {
+  display: block;
+  width: 100%;
+  overflow: hidden;
+  padding: 0;
+  border: 1px solid rgba(255, 255, 255, .25);
+  border-radius: var(--uh-love-radius);
+  background: rgba(255, 255, 255, .45);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, .06);
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+:is(html[data-theme="dark"], html[data-color-scheme="dark"], html.color-scheme-dark, html.dark) .uh-love-album,
+.uh-love-wrap[data-uh-color-scheme="dark"] .uh-love-album {
+  border-color: rgba(255, 255, 255, .1);
+  background: rgba(30, 33, 42, .45);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, .2);
+}
+
+.uh-love-album-cover {
+  position: relative;
+  display: block;
+  aspect-ratio: 1 / 1;
+  background: var(--uh-love-code-bg);
+}
+
+.uh-love-album-cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.uh-love-album-lock {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: flex;
+  padding: 3px 6px;
+  border-radius: 6px;
+  background: rgba(0, 0, 0, .55);
+  color: #fff;
+  font-size: 13px;
+}
+
+.uh-love-album-body {
+  display: block;
+  padding: 10px 12px;
+}
+
+.uh-love-album-name {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.uh-love-album-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-top: 3px;
+  color: var(--uh-love-muted);
+  font-size: 11px;
+}
+
+.uh-love-album-meta span {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+
+/* ── 清单 ── */
+/* 展开用原生 <details>/<summary>：无 JS 可用；折叠态靠作者样式显式关掉，
+   不去赌各浏览器 UA 里「details 内容怎么隐藏」的实现差异。 */
+.uh-love-daily > summary {
+  list-style: none;
+}
+
+.uh-love-daily > summary::-webkit-details-marker {
+  display: none;
+}
+
+.uh-love-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.uh-love-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 12px;
+  border: 1px solid rgba(255, 255, 255, .25);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, .4);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  color: var(--uh-love-muted);
+  font: inherit;
+  font-size: 12px;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+:is(html[data-theme="dark"], html[data-color-scheme="dark"], html.color-scheme-dark, html.dark) .uh-love-chip,
+.uh-love-wrap[data-uh-color-scheme="dark"] .uh-love-chip {
+  border-color: rgba(255, 255, 255, .1);
+  background: rgba(30, 33, 42, .4);
+}
+
+.uh-love-chip[aria-pressed="true"],
+.uh-love-chip.is-active {
+  border-color: var(--uh-love-primary);
+  background: var(--uh-love-primary-soft);
+  color: var(--uh-love-primary);
+}
+
+.uh-love-daily {
+  overflow: hidden;
+  margin-bottom: 10px;
+  border: 1px solid rgba(255, 255, 255, .25);
+  border-radius: var(--uh-love-radius);
+  background: rgba(255, 255, 255, .45);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, .06);
+}
+
+:is(html[data-theme="dark"], html[data-color-scheme="dark"], html.color-scheme-dark, html.dark) .uh-love-daily,
+.uh-love-wrap[data-uh-color-scheme="dark"] .uh-love-daily {
+  border-color: rgba(255, 255, 255, .1);
+  background: rgba(30, 33, 42, .45);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, .2);
+}
+
+.uh-love-daily-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  cursor: pointer;
+}
+
+.uh-love-daily-no {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  font-size: 13px;
+  font-weight: 700;
+  color: #4a3b00;
+}
+
+.uh-love-daily-no.is-wait { background: var(--uh-love-status-wait); }
+.uh-love-daily-no.is-doing { background: var(--uh-love-status-doing); color: #7a1030; }
+.uh-love-daily-no.is-complete { background: var(--uh-love-status-done); color: #123a6b; }
+
+.uh-love-daily-title {
+  flex: 1;
+  font-weight: 600;
+}
+
+.uh-love-daily-caret {
+  display: flex;
+  color: var(--uh-love-muted);
+  transition: transform .2s;
+}
+
+.uh-love-daily.is-open .uh-love-daily-caret,
+.uh-love-daily[open] .uh-love-daily-caret {
+  transform: rotate(180deg);
+}
+
+.uh-love-daily-body {
+  padding: 0 14px 14px;
+  border-top: 1px dashed var(--uh-love-border);
+}
+
+.uh-love-daily:not([open]):not(.is-open) .uh-love-daily-body {
+  display: none;
+}
+
+.uh-love-kv {
+  display: grid;
+  grid-template-columns: 74px 1fr;
+  gap: 6px 10px;
+  margin: 10px 0;
+  font-size: 13px;
+}
+
+.uh-love-kv dt {
+  color: var(--uh-love-muted);
+}
+
+.uh-love-kv dd {
+  margin: 0;
+}
+
+.uh-love-pics {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.uh-love-pic {
+  overflow: hidden;
+  aspect-ratio: 4 / 3;
+  border-radius: 8px;
+  background: var(--uh-love-code-bg);
+  cursor: zoom-in;
+}
+
+.uh-love-pic img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* ── 页内解锁表单（核心：内容区的一部分，不是弹窗/遮罩） ── */
+.uh-love-lockwrap {
+  display: grid;
+  place-items: center;
+  min-height: 440px;
+  padding: 20px 0;
+}
+
+.uh-love-lockcard {
+  width: 100%;
+  max-width: 400px;
+  padding: 30px 26px;
+  border: 1px solid rgba(255, 255, 255, .3);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, .6);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, .08);
+  text-align: center;
+}
+
+:is(html[data-theme="dark"], html[data-color-scheme="dark"], html.color-scheme-dark, html.dark) .uh-love-lockcard,
+.uh-love-wrap[data-uh-color-scheme="dark"] .uh-love-lockcard {
+  border-color: rgba(255, 255, 255, .12);
+  background: rgba(30, 33, 42, .6);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, .3);
+}
+
+.uh-love-lock-icon {
+  width: 56px;
+  height: 56px;
+  margin-bottom: 12px;
+  color: var(--uh-love-primary);
+}
+
+.uh-love-lockcard h2 {
+  margin: 0 0 6px;
+  font-size: 18px;
+}
+
+.uh-love-lock-sub {
+  margin-bottom: 20px;
+  color: var(--uh-love-muted);
+  font-size: 13px;
+}
+
+.uh-love-field {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  padding: 0 12px;
+  border: 1px solid rgba(255, 255, 255, .3);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, .5);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  text-align: left;
+}
+
+:is(html[data-theme="dark"], html[data-color-scheme="dark"], html.color-scheme-dark, html.dark) .uh-love-field,
+.uh-love-wrap[data-uh-color-scheme="dark"] .uh-love-field {
+  border-color: rgba(255, 255, 255, .12);
+  background: rgba(30, 33, 42, .5);
+}
+
+.uh-love-field:focus-within {
+  border-color: var(--uh-love-primary);
+}
+
+.uh-love-field input {
+  flex: 1;
+  min-width: 0;
+  padding: 11px 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  font-size: 14px;
+  outline: none;
+}
+
+.uh-love-field-lead {
+  display: flex;
+  color: var(--uh-love-muted);
+  font-size: 17px;
+}
+
+.uh-love-field-btn {
+  display: flex;
+  padding: 4px;
+  border: 0;
+  background: none;
+  color: var(--uh-love-muted);
+  font-size: 17px;
+  cursor: pointer;
+}
+
+.uh-love-captcha {
+  display: flex;
+  gap: 8px;
+}
+
+.uh-love-captcha .uh-love-field {
+  flex: 1;
+}
+
+.uh-love-captcha-img {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 96px;
+  border: 1px solid var(--uh-love-border);
+  border-radius: 10px;
+  background: repeating-linear-gradient(45deg, #e5e7eb 0 6px, #f3f4f6 6px 12px);
+  color: #6b7280;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 3px;
+  cursor: pointer;
+}
+
+.uh-love-captcha-img img {
+  width: 100%;
+  height: 100%;
+  border-radius: 10px;
+  object-fit: contain;
+}
+
+.uh-love-captcha-hint {
+  margin: -4px 0 12px;
+  color: var(--uh-love-muted);
+  font-size: 11px;
+  text-align: left;
+}
+
+.uh-love-submit {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  padding: 11px;
+  border: 0;
+  border-radius: 10px;
+  background: var(--uh-love-primary);
+  color: #fff;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.uh-love-submit:hover {
+  filter: brightness(1.06);
+}
+
+.uh-love-submit[disabled] {
+  opacity: .6;
+  cursor: not-allowed;
+}
+
+/* 提交中：锁图标转起来（JS 设 aria-busy） */
+.uh-love-submit[aria-busy="true"] .uh-love-icon {
+  animation: uh-love-spin 1s linear infinite;
+}
+
+.uh-love-err {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  min-height: 18px;
+  margin-bottom: 6px;
+  color: #dc2626;
+  font-size: 12px;
+}
+
+.uh-love-lock-hint {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px dashed var(--uh-love-border);
+  color: var(--uh-love-muted);
+  font-size: 11px;
+}
+
+/* ── 故事详情抽屉 ── */
+.uh-love-mask {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  background: rgba(0, 0, 0, .42);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .2s;
+}
+
+.uh-love-mask.is-show {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.uh-love-sheet {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 80;
+  display: flex;
+  flex-direction: column;
+  width: min(620px, 94vw);
+  border-left: 1px solid rgba(255, 255, 255, .2);
+  background: rgba(255, 255, 255, .85);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  transform: translateX(102%);
+  transition: transform .24s;
+}
+
+:is(html[data-theme="dark"], html[data-color-scheme="dark"], html.color-scheme-dark, html.dark) .uh-love-sheet,
+.uh-love-wrap[data-uh-color-scheme="dark"] .uh-love-sheet {
+  border-left-color: rgba(255, 255, 255, .1);
+  background: rgba(24, 27, 34, .85);
+}
+
+.uh-love-sheet.is-show {
+  transform: none;
+}
+
+.uh-love-sheet-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--uh-love-border);
+  font-weight: 700;
+}
+
+.uh-love-sheet-head .uh-love-sheet-title {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.uh-love-sheet-close {
+  display: flex;
+  padding: 4px;
+  border: 0;
+  background: none;
+  color: var(--uh-love-muted);
+  font-size: 18px;
+  cursor: pointer;
+}
+
+.uh-love-sheet-body {
+  flex: 1;
+  overflow: auto;
+  padding: 16px;
+}
+
+.uh-love-sheet-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+  color: var(--uh-love-muted);
+  font-size: 12px;
+}
+
+.uh-love-sheet-meta span {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.uh-love-sheet-caption {
+  color: var(--uh-love-muted);
+  font-size: 12px;
+  text-align: center;
+}
+
+/* ── 灯箱 / 相册查看器（共用一套） ── */
+.uh-love-viewer {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  display: none;
+  flex-direction: column;
+  background: rgba(0, 0, 0, .88);
+}
+
+.uh-love-viewer.is-show {
+  display: flex;
+}
+
+.uh-love-viewer-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  color: #fff;
+  font-size: 14px;
+}
+
+.uh-love-viewer-bar .uh-love-viewer-title {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.uh-love-viewer-bar button {
+  display: flex;
+  padding: 4px;
+  border: 0;
+  background: none;
+  color: #fff;
+  font-size: 22px;
+  cursor: pointer;
+}
+
+.uh-love-viewer-stage {
+  flex: 1;
+  display: grid;
+  place-items: center;
+  overflow: auto;
+  padding: 0 70px 30px;
+}
+
+/* 相册锁定时解锁表单就渲染在查看器里（作用域在查看器内，不弹第二个层） */
+.uh-love-viewer-stage .uh-love-lockwrap {
+  width: 100%;
+  color: #1f2230;
+}
+
+.uh-love-viewer-photo {
+  width: min(900px, 100%);
+  max-height: 100%;
+  border-radius: 12px;
+  object-fit: contain;
+}
+
+.uh-love-viewer-info {
+  padding: 0 16px 16px;
+  color: #d1d5db;
+  font-size: 12.5px;
+  text-align: center;
+}
+
+.uh-love-viewer-nav {
+  position: absolute;
+  top: 50%;
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, .16);
+  color: #fff;
+  font-size: 20px;
+  cursor: pointer;
+  transform: translateY(-50%);
+}
+
+.uh-love-viewer-nav.is-prev { left: 14px; }
+.uh-love-viewer-nav.is-next { right: 14px; }
+
+.uh-love-viewer-count {
+  color: #9ca3af;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── 正文层（.prose 补充 / 兜底）已全部移到 rich-text.css ──
+   v1.5 起本文件只管「布局与组件」；正文排版与编辑器独有节点只有一份实现，
+   见 static/love-diary/rich-text.css。此前这里有一套重复的 data-type 样式，
+   与 rich-text.css 形成两个事实源，已删除。 */
+
+/* ── 独立外壳（layoutMode=standalone） ── */
+body.uh-love-standalone {
+  margin: 0;
+  background: linear-gradient(135deg, #fce4ec 0%, #e3f2fd 50%, #f3e5f5 100%);
+  color: #1f2230;
+  font: 14px/1.6 -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+    "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+}
+
+html[data-color-scheme="dark"] body.uh-love-standalone,
+html.color-scheme-dark body.uh-love-standalone,
+html.dark body.uh-love-standalone,
+html[data-theme="dark"] body.uh-love-standalone,
+body.uh-love-standalone[data-uh-color-scheme="dark"] {
+  background: linear-gradient(135deg, #1a1c24 0%, #1b2440 50%, #2a1c28 100%);
+  color: #e7e9ef;
+}
+
+.uh-love-shell {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 24px 20px 60px;
+}
+
+/* standalone 首页同样整页居中：shell 吃满视口，仅首页 wrap 垂直居中，
+   列表页仍顶部对齐（:has 现代浏览器全支持，不支持时仅退化不居中） */
+body.uh-love-standalone .uh-love-shell {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  box-sizing: border-box;
+}
+
+body.uh-love-standalone .uh-love-shell > .uh-love-wrap[data-love-page="home"] {
+  margin: auto 0;
+}
+
+/* ── 全屏背景图（standalone 外壳）──
+   挂 <body> 天然全视口；wrap 的半透明毛玻璃直接透出背景，无需额外纱层。 */
+body.uh-love-standalone.has-love-bg {
+  background-image: var(--uh-love-bg-img);
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+}
+
+@media (max-width: 700px) {
+  body.uh-love-standalone.has-love-bg {
+    background-attachment: scroll;
+  }
+}
+
+/* ── 响应式 ── */
+@media (max-width: 700px) {
+  .uh-love-albums { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 640px) {
+  .uh-love-mod { padding: 12px; }
+  .uh-love-mods,
+  .uh-love-overview { grid-template-columns: 1fr; }
+  .uh-love-viewer-stage { padding: 0 16px 20px; }
+  .uh-love-viewer-nav { display: none; }
+}
+
+@media (max-width: 460px) {
+  .uh-love-albums { grid-template-columns: 1fr; }
+  .uh-love-pics { grid-template-columns: repeat(2, 1fr); }
+  .uh-love-story-date { width: 46px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .uh-love-mod,
+  .uh-love-heart { animation: none; }
+}

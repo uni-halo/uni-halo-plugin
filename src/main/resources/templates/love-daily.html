@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout :: html(head = ~{::head}, content = ~{::content})}">
+<!--
+  恋爱日记 · 恋爱清单列表（默认模板）
+  ------------------------------------------------------------------
+  状态筛选走 ?status=wait|doing|complete，翻页走 Halo 官方 /page/N 段式。
+  _templateId = plugin:uni-halo:love-daily。
+-->
+<th:block th:fragment="head">
+  <title th:text="|${pageTitle} - ${site.title}|">恋爱清单</title>
+</th:block>
+
+<th:block th:fragment="content">
+  <th:block th:replace="~{plugin:uni-halo:fragments/love-icons :: sprite}"></th:block>
+  <div class="uh-love-wrap" data-love-page="daily"
+       th:classappend="${loveConfig != null and !#strings.isEmpty(loveConfig.bgImageUrl)} ? 'has-bg'"
+       th:attr="style=${loveConfig != null and !#strings.isEmpty(loveConfig.bgImageUrl)} ? '--uh-love-bg-img:url(' + loveConfig.bgImageUrl + ')' : null">
+    <th:block th:replace="~{plugin:uni-halo:fragments/love-page :: page(pageKey='daily')}"></th:block>
+  </div>
+</th:block>
+</html>
