@@ -12,6 +12,17 @@
 -->
         <th:block th:fragment="body">
             <div class="uh-love-daily-page uh-glass">
+                <div class="uh-love-back-buttons">
+                    <a class="uh-love-back-button uh-glass" href="/">
+                        <svg class="uh-love-icon"><use href="#ri-arrow-left-s-line" /></svg>
+                        返回主页
+                    </a>
+                    <!-- todo：这里要返回 /love 页面，但是love页面是动态配置的 所以需要变量-->
+                    <a class="uh-love-back-button uh-glass">
+                        <svg class="uh-love-icon"><use href="#ri-arrow-left-s-line" /></svg>
+                        返回恋爱日记
+                    </a>
+                </div>
                 <!-- 筛选 + 排序（排序是纯前端增强，不改变 URL） -->
                 <div class="uh-love-filters">
                     <a
@@ -67,7 +78,7 @@
                 </div>
 
                 <th:block th:unless="${#lists.isEmpty(items.items)}">
-                    <div data-love-daily-list>
+                    <div class="uh-love-daily-list" data-love-daily-list>
                         <details
                             class="uh-love-daily"
                             th:each="item, it : ${items.items}"
@@ -138,7 +149,6 @@
                             下一页<svg class="uh-love-icon"><use href="#ri-arrow-right-s-line" /></svg>
                         </a>
                     </div>
-                    <p class="uh-love-pager-tip">翻页保留当前状态筛选；页内排序不会写进 URL。</p>
                 </th:block>
             </div>
         </th:block>

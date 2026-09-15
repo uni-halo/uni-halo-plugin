@@ -300,10 +300,10 @@ const onModalClose = () => {
           <VEmpty message="记录下你们的故事，成为珍贵的回忆" title="还没有故事" />
         </div>
         <div v-else class=":uno: relative">
-          <div class=":uno: absolute bottom-2 left-0 top-2 w-0.5 bg-pink-200" />
+          <div class=":uno: absolute bottom-2 left-0 top-2 w-0.5 bg-[#f8385640]" />
           <div class=":uno: space-y-6 pl-8">
             <div v-for="story in sortedStories" :key="story.metadata.name" class=":uno: relative">
-              <div class=":uno: absolute -left-9 top-1.5 h-3 w-3 rounded-full bg-pink-400 ring-4 ring-pink-100" />
+              <div class=":uno: absolute -left-9 top-1.5 h-3 w-3 rounded-full bg-[#f83856] ring-4 ring-[#f8385626]" />
               <VCard :body-class="[':uno: !p-4']">
                 <div class=":uno: flex items-center justify-between gap-2">
                   <div class=":uno: flex min-w-0 items-center gap-2">

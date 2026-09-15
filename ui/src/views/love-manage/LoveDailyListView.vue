@@ -181,10 +181,10 @@ const statusDotState = (status?: string) => {
   return "default" as const;
 };
 
-// 时间轴圆点颜色（wait 灰 / doing 黄 / complete 粉）
+// 时间轴圆点颜色（wait 灰 / doing 黄 / complete 主题粉 #f83856）
 const timelineDotClass = (status?: string) => {
   if (status === "complete") {
-    return "bg-pink-400 ring-pink-100";
+    return "bg-[#f83856] ring-[#f8385626]";
   }
   if (status === "doing") {
     return "bg-yellow-400 ring-yellow-100";
@@ -358,17 +358,17 @@ const timelineDotClass = (status?: string) => {
           <VEmpty message="写下第一件想一起做的事吧" title="清单还是空的" />
         </div>
         <div v-else class=":uno: relative">
-          <div class=":uno: absolute bottom-2 left-0 top-2 w-0.5 bg-pink-200" />
+          <div class=":uno: absolute bottom-2 left-0 top-2 w-0.5 bg-[#f8385640]" />
           <div class=":uno: space-y-6 pl-8">
             <div v-for="item in sortedItems" :key="item.metadata.name" class=":uno: relative">
               <div
                 class=":uno: absolute -left-9 top-1.5 h-3 w-3 rounded-full ring-4"
                 :class="timelineDotClass(item.spec.status)"
               />
-              <VCard :body-class="[':uno: !p-4']">
+              <VCard :body-class="[':uno: !p-4 !bg-[#fff5f7]']">
                 <div class=":uno: flex items-center justify-between gap-2">
                   <div class=":uno: flex min-w-0 items-center gap-2">
-                    <span class=":uno: truncate text-sm font-semibold text-gray-800">
+                    <span class=":uno: truncate text-sm font-semibold text-[#f83856]">
                       {{ item.spec.title || item.metadata.name }}
                     </span>
                     <VStatusDot
@@ -391,19 +391,19 @@ const timelineDotClass = (status?: string) => {
                     </VButton>
                   </VSpace>
                 </div>
-                <div class=":uno: mt-1 flex items-center gap-3 text-xs text-gray-400">
+                <div class=":uno: mt-1 flex items-center gap-3 text-xs text-[#f8385699]">
                   <span v-if="item.spec.planDate">计划 {{ item.spec.planDate }}</span>
                   <span v-if="item.spec.completeDate">完成于 {{ item.spec.completeDate }}</span>
                 </div>
                 <div
                   v-if="item.spec.content"
-                  class=":uno: mt-2 text-sm leading-relaxed text-gray-600"
+                  class=":uno: mt-2 text-sm leading-relaxed text-[#5c4a4e]"
                 >
                   {{ item.spec.content }}
                 </div>
                 <div
                   v-if="item.spec.completeRemark"
-                  class=":uno: mt-2 rounded bg-pink-50 px-3 py-2 text-sm text-pink-700"
+                  class=":uno: mt-2 rounded bg-[#f8385614] px-3 py-2 text-sm text-[#c22840]"
                 >
                   💬 {{ item.spec.completeRemark }}
                 </div>

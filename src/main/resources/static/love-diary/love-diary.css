@@ -991,7 +991,7 @@ body:has(.uh-love-wrap) {
 
 .uh-love-pics {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(6, 1fr);
   gap: 8px;
 }
 
@@ -1438,6 +1438,24 @@ body.uh-love-standalone[data-uh-color-scheme="dark"] {
   margin: auto;
   padding: 24px;
 }
+.uh-love-back-buttons {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+.uh-love-back-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 12px;
+  border-radius: 999px;
+  color: var(--uh-love-primary);
+  font: inherit;
+  font-size: 12px;
+  text-decoration: none;
+  cursor: pointer;
+}
 
 /* -------------- 恋爱首页---------------- */
 .uh-love-home-page {
@@ -1452,14 +1470,6 @@ body.uh-love-standalone[data-uh-color-scheme="dark"] {
   padding: 24px 52px;
 }
 /* -------------- 恋爱首页---------------- */
-
-.uh-love-daily-page {
-  width: 100%;
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  padding: 16px;
-}
 
 /* -------------- 恋爱故事---------------- */
 .uh-love-story-page {
@@ -1480,6 +1490,21 @@ body.uh-love-standalone[data-uh-color-scheme="dark"] {
   flex-direction: column;
   padding: 16px;
 }
+
+/* --------------恋爱相册------------- */
+
+/* -------------- 恋爱清单---------------- */
+.uh-love-daily-page {
+  width: 100%;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 16px;
+}
+
+.uh-love-daily-list {
+}
+/* -------------- 恋爱清单---------------- */
 
 /* standalone 外壳吃满视口；四页居中由 .uh-love-wrap 统一承担（见上方统一约定） */
 body.uh-love-standalone .uh-love-shell {
@@ -1510,6 +1535,9 @@ body.uh-love-standalone.has-love-bg {
   .uh-love-albums {
     grid-template-columns: repeat(4, 1fr);
   }
+  .uh-love-pics {
+    grid-template-columns: repeat(4, 1fr);
+  }
 }
 /* ── 响应式 ── */
 @media (max-width: 700px) {
@@ -1521,6 +1549,9 @@ body.uh-love-standalone.has-love-bg {
 @media (max-width: 640px) {
   .uh-love-mod {
     padding: 12px;
+  }
+  .uh-love-pics {
+    grid-template-columns: repeat(3, 1fr);
   }
   .uh-love-viewer-stage {
     padding: 0 16px 20px;
