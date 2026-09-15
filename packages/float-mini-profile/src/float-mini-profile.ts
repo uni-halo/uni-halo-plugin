@@ -195,7 +195,8 @@ export class FloatMiniProfileElement extends LitElement {
       return false;
     }
     try {
-      return localStorage.getItem(STORAGE_KEY) === "1";
+      // 会话级记忆：同一标签页会话内不再显示，新会话默认重新显示
+      return sessionStorage.getItem(STORAGE_KEY) === "1";
     } catch {
       return false;
     }
@@ -518,9 +519,10 @@ export class FloatMiniProfileElement extends LitElement {
   private onCloseClick(): void {
     if (this.config.rememberClosed !== false) {
       try {
-        localStorage.setItem(STORAGE_KEY, "1");
+        // 会话级记忆：仅当前标签页会话内不再显示，新会话默认重新显示
+        sessionStorage.setItem(STORAGE_KEY, "1");
       } catch {
-        // localStorage 不可用时仅本次会话关闭
+        // sessionStorage 不可用时仅本次页面关闭
       }
     }
     const card = this.cardEl;

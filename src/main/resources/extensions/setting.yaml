@@ -357,7 +357,7 @@ spec:
               id: floatingWindowRememberClosed
               label: 记住关闭状态
               value: false
-              help: 开启后访客点击关闭后，同一浏览器下次访问不再显示；关闭则每次刷新都重新显示。
+              help: 开启后访客点击关闭，本次会话（当前标签页）内不再显示，下次打开浏览器仍会默认显示；关闭则每次刷新都重新显示。
             - $formkit: switch
               name: miniProgramApply
               id: floatingWindowMiniProgramApply
