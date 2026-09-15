@@ -58,11 +58,7 @@ import tools.jackson.databind.node.JsonNodeFactory;
 import tools.jackson.databind.node.ObjectNode;
 
 /**
- * 功能设置服务实现（单例）。
- *
- * <p>默认值对齐 setting.yaml 的 value 缺省；存量配置组
- * （basicConfig/pageConfig/authorConfig/imagesConfig）在单例尚未创建时合并进
- * 默认结构，作为配置导入兜底。</p>
+ * 功能设置服务实现
  *
  * @author 小莫唐尼
  */

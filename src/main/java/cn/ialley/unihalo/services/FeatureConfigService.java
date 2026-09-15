@@ -4,11 +4,7 @@ import cn.ialley.unihalo.scheme.FeatureConfig;
 import reactor.core.publisher.Mono;
 
 /**
- * 功能设置服务（单例，metadata.name 固定为 general-config）。
- *
- * <p>承载站点内容与外观配置（authorConfig / pageConfig / basicConfig 内容部分 /
- * imagesConfig）。GET 不存在时返回「默认值 + 存量配置合并」结构
- * （不落库），保证配置页回填既有值、小程序端 getConfigs 输出不回退。</p>
+ * 功能设置服务
  *
  * @author 小莫唐尼
  */

@@ -7,8 +7,8 @@
  *
  * 数据源：
  *  - 申请提交：POST .../mini-program-links/submissions（验证码 query 参数，403 自动刷新）
- *  - 友链信息：GET .../getConfigs → pluginConfig.linkInfo.miniInfo（小程序信息）
- *    + authorConfig.blogger（博主信息）
+ *  - 友链信息：GET .../getConfigs → featureConfig.linkInfo.miniInfo（小程序信息）
+ *    + featureConfig.profile.blogger（博主信息）
  */
 import { LitElement, html } from "lit";
 import {
@@ -732,12 +732,12 @@ export class FloatMiniProfileElement extends LitElement {
     fetch(CONFIGS_URL)
       .then((res) => res.json())
       .then((data: Record<string, unknown>) => {
-        const pluginConfig = data?.pluginConfig as
-          | { linkInfo?: { miniInfo?: MiniInfo } }
+        // getConfigs 契约 v2：功能设置单例 spec 在顶层 featureConfig 键下
+        const featureConfig = data?.featureConfig as
+          | { linkInfo?: { miniInfo?: MiniInfo }; profile?: { blogger?: BloggerInfo } }
           | undefined;
-        const authorConfig = data?.authorConfig as { blogger?: BloggerInfo } | undefined;
-        this.miniInfo = pluginConfig?.linkInfo?.miniInfo || null;
-        this.blogger = authorConfig?.blogger || null;
+        this.miniInfo = featureConfig?.linkInfo?.miniInfo || null;
+        this.blogger = featureConfig?.profile?.blogger || null;
       })
       .catch(() => {
         this.linksError = true;

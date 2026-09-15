@@ -50,7 +50,7 @@ export interface MiniProgramLinkItem {
   };
 }
 
-/** 小程序信息（getConfigs → pluginConfig.linkInfo.miniInfo，app 端「申请信息」同源） */
+/** 小程序信息（getConfigs → featureConfig.linkInfo.miniInfo，app 端「申请信息」同源） */
 export interface MiniInfo {
   displayName?: string;
   miniProgramCode?: string;
@@ -59,7 +59,7 @@ export interface MiniInfo {
   applyRemark?: string;
 }
 
-/** 博主信息（getConfigs → authorConfig.blogger，应用设置-博主资料） */
+/** 博主信息（getConfigs → featureConfig.profile.blogger，应用设置-博主资料） */
 export interface BloggerInfo {
   nickname?: string;
   avatar?: string;
