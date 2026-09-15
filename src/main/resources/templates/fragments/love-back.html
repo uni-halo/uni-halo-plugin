@@ -1,0 +1,30 @@
+<!doctype html>
+<html xmlns:th="http://www.thymeleaf.org">
+    <body>
+        <!--
+  恋爱日记 · 顶部返回操作栏（子页面共用）
+  ------------------------------------------------------------------
+  只读 model：routes（LoveRoutePlan.paths，home = 恋爱日记首页路径）。
+
+  「返回恋爱日记」的 href 取 routes['home'] —— 首页路径由站长在
+  设置里动态配置（默认 /love），插件侧不硬编码；routes 缺失/未注册
+  时隐藏该按钮，只保留「返回主页」。
+-->
+        <th:block th:fragment="back-buttons">
+            <div class="uh-love-back-buttons">
+                <a class="uh-love-back-button uh-glass" href="/">
+                    <svg class="uh-love-icon"><use href="#ri-arrow-left-s-line" /></svg>
+                    返回主页
+                </a>
+                <a
+                    class="uh-love-back-button uh-glass"
+                    th:if="${routes != null and !#strings.isEmpty(routes['home'])}"
+                    th:href="@{${routes['home']}}"
+                >
+                    <svg class="uh-love-icon"><use href="#ri-arrow-left-s-line" /></svg>
+                    返回恋爱日记
+                </a>
+            </div>
+        </th:block>
+    </body>
+</html>

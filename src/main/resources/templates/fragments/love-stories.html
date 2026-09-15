@@ -11,7 +11,9 @@
     JS 点开抽屉时克隆进去即可 —— 于是 SSR 与前端**共用同一份 markup**，无重复实现。
 -->
         <th:block th:fragment="body">
-            <div class="uh-love-story-page">
+            <div class="uh-love-story-page" th:classappend="${(layoutMode ?: 'auto') == 'standalone' ? 'uh-glass' : null}">
+                <!-- 顶部返回操作（封装于 fragments/love-back.html，返回恋爱日记的路径取 routes['home']） -->
+                <th:block th:replace="~{plugin:uni-halo:fragments/love-back :: back-buttons}"></th:block>
                 <div class="uh-love-empty" th:if="${#lists.isEmpty(stories.items)}">
                     <svg class="uh-love-icon"><use href="#ri-inbox-2-line" /></svg>
                     <p>还没有故事</p>

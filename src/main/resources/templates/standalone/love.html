@@ -25,7 +25,8 @@
     >
         <th:block th:replace="~{plugin:uni-halo:fragments/love-icons :: sprite}"></th:block>
         <div class="uh-love-shell">
-            <div class="uh-love-wrap" th:attr="data-love-page=${pageKey}">
+            <div class="uh-love-wrap" th:attr="data-love-page=${pageKey}"
+                 th:classappend="${'uh-love-shell-' + (layoutMode ?: 'standalone')}">
                 <th:block th:replace="~{plugin:uni-halo:fragments/love-page :: page(pageKey=${pageKey})}"></th:block>
             </div>
         </div>

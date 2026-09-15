@@ -3,7 +3,9 @@
     <body>
         <!--  恋爱日记 · 恋爱相册列表正文  -->
         <th:block th:fragment="body">
-            <div class="uh-love-album-page uh-glass">
+            <div class="uh-love-album-page" th:classappend="${(layoutMode ?: 'auto') == 'standalone' ? 'uh-glass' : null}">
+                <!-- 顶部返回操作（封装于 fragments/love-back.html，返回恋爱日记的路径取 routes['home']） -->
+                <th:block th:replace="~{plugin:uni-halo:fragments/love-back :: back-buttons}"></th:block>
                 <div class="uh-love-empty" th:if="${#lists.isEmpty(albums.items)}">
                     <svg class="uh-love-icon"><use href="#ri-inbox-2-line" /></svg>
                     <p>还没有相册</p>

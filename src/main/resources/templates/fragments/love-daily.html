@@ -11,18 +11,9 @@
   · 序号圆标按状态着色（wait 黄 / doing 粉 / complete 蓝），与 app 端一致。
 -->
         <th:block th:fragment="body">
-            <div class="uh-love-daily-page uh-glass">
-                <div class="uh-love-back-buttons">
-                    <a class="uh-love-back-button uh-glass" href="/">
-                        <svg class="uh-love-icon"><use href="#ri-arrow-left-s-line" /></svg>
-                        返回主页
-                    </a>
-                    <!-- todo：这里要返回 /love 页面，但是love页面是动态配置的 所以需要变量-->
-                    <a class="uh-love-back-button uh-glass">
-                        <svg class="uh-love-icon"><use href="#ri-arrow-left-s-line" /></svg>
-                        返回恋爱日记
-                    </a>
-                </div>
+            <div class="uh-love-daily-page" th:classappend="${(layoutMode ?: 'auto') == 'standalone' ? 'uh-glass' : null}">
+                <!-- 顶部返回操作（封装于 fragments/love-back.html，返回恋爱日记的路径取 routes['home']） -->
+                <th:block th:replace="~{plugin:uni-halo:fragments/love-back :: back-buttons}"></th:block>
                 <!-- 筛选 + 排序（排序是纯前端增强，不改变 URL） -->
                 <div class="uh-love-filters">
                     <a
