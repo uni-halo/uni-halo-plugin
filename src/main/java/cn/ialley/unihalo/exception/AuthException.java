@@ -23,6 +23,9 @@ public class AuthException extends RuntimeException {
     /** 已识别但被拒绝（如配置不允许）。 */
     public static final int STATUS_FORBIDDEN = 403;
 
+    /** 请求参数/状态无效（如票据过期）。 */
+    public static final int STATUS_BAD_REQUEST = 400;
+
     /** 请求过于频繁（限流）。 */
     public static final int STATUS_TOO_MANY_REQUESTS = 429;
 

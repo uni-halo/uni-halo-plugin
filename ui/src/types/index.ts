@@ -883,6 +883,22 @@ export interface WechatBinding {
   boundAt?: string;
 }
 
+/** 扫码绑定票据（UC 侧创建返回） */
+export interface BindTicketIssued {
+  ticket: string;
+  /** 二维码内容：uh-bindwx-{ticket}，小程序端按前缀识别 */
+  qrContent: string;
+  /** 过期时间（RFC3339） */
+  expiresAt: string;
+}
+
+/** 扫码绑定票据轮询状态 */
+export interface BindTicketStatus {
+  ticket: string;
+  /** PENDING 等待扫码 / CONFIRMED 已绑定 / EXPIRED 已过期 */
+  status: "PENDING" | "CONFIRMED" | "EXPIRED";
+}
+
 /** getConfigs 顶层 maintenance 键（additive，仅 scheduled/active 时由服务端输出；
  * status 判定权威在服务端，客户端只算倒计时差值） */
 export interface PublicMaintenance {

@@ -1,0 +1,107 @@
+<!doctype html>
+<html xmlns:th="http://www.thymeleaf.org">
+    <body>
+        <!--
+  恋爱日记 · 恋爱故事列表正文
+  ------------------------------------------------------------------
+  只读 model：stories（UrlContextListResult<LoveStoryVo>）、routes、pageKey
+  · 时间轴（日大字 / 年·月 / 星期）由服务端派生，不引入 dayjs；
+  · 详情不是「另开一页」，而是每篇随卡片带一个 <template>：
+    <template> 内容在浏览器里是惰性的（不渲染、图片不请求），
+    JS 点开抽屉时克隆进去即可 —— 于是 SSR 与前端**共用同一份 markup**，无重复实现。
+-->
+        <th:block th:fragment="body">
+            <div class="uh-love-story-page">
+                <div class="uh-love-empty" th:if="${#lists.isEmpty(stories.items)}">
+                    <svg class="uh-love-icon"><use href="#ri-inbox-2-line" /></svg>
+                    <p>还没有故事</p>
+                    <p class="uh-love-note">站长在 Halo 控制台添加「恋爱故事」后，会自动出现在这里。</p>
+                </div>
+
+                <th:block th:unless="${#lists.isEmpty(stories.items)}">
+                    <article class="uh-love-story-item" th:each="s : ${stories.items}">
+                        <div class="uh-love-story-date">
+                            <div class="uh-love-story-day" th:text="${s.day != null ? s.day : '·'}">12</div>
+                            <div class="uh-love-story-ym" th:if="${s.yearMonth != null}" th:text="${s.yearMonth}">
+                                2026·03
+                            </div>
+                            <div class="uh-love-story-week" th:if="${s.weekday != null}" th:text="${s.weekday}">
+                                星期四
+                            </div>
+                        </div>
+
+                        <div class="uh-love-story-card">
+                            <h3 class="uh-love-story-title" th:text="${s.title}">故事标题</h3>
+
+                            <div class="uh-love-story-meta">
+                                <span th:if="${s.date != null}">
+                                    <svg class="uh-love-icon"><use href="#ri-calendar-line" /></svg>
+                                    <span th:text="${s.date}">2026-03-12</span>
+                                </span>
+                                <span th:if="${!#strings.isEmpty(s.location)}">
+                                    <svg class="uh-love-icon"><use href="#ri-map-pin-2-line" /></svg>
+                                    <span th:text="${s.location}">青岛 · 石老人</span>
+                                </span>
+                            </div>
+
+                            <div class="uh-love-story-thumbs" th:if="${!#lists.isEmpty(s.images)}">
+                                <span class="uh-love-thumb" th:each="img, i : ${s.images}" th:if="${i.index < 3}">
+                                    <img th:src="${img}" alt="" loading="lazy" referrerpolicy="no-referrer" />
+                                    <span
+                                        class="uh-love-thumb-more"
+                                        th:if="${i.index == 2 and #lists.size(s.images) > 3}"
+                                        th:text="|+${#lists.size(s.images) - 3}|"
+                                        >+2</span
+                                    >
+                                </span>
+                            </div>
+
+                            <button type="button" class="uh-love-linkbtn" data-love-story-open>
+                                查看详情
+                                <svg class="uh-love-icon"><use href="#ri-arrow-right-s-line" /></svg>
+                            </button>
+                        </div>
+
+                        <!-- 详情抽屉内容（惰性；JS 克隆到 fragments/love-overlays 的抽屉里） -->
+                        <template data-love-story-detail>
+                            <h2 class="uh-love-story-title" th:text="${s.title}">故事标题</h2>
+                            <div class="uh-love-sheet-meta">
+                                <span th:if="${s.date != null}">
+                                    <svg class="uh-love-icon"><use href="#ri-calendar-line" /></svg>
+                                    <span th:text="${s.date}">2026-03-12</span>
+                                </span>
+                                <span th:if="${!#strings.isEmpty(s.location)}">
+                                    <svg class="uh-love-icon"><use href="#ri-map-pin-2-line" /></svg>
+                                    <span th:text="${s.location}">青岛 · 石老人</span>
+                                </span>
+                            </div>
+
+                            <div class="uh-love-pics" th:if="${!#lists.isEmpty(s.images)}">
+                                <span class="uh-love-pic" th:each="img : ${s.images}">
+                                    <img th:src="${img}" alt="" loading="lazy" referrerpolicy="no-referrer" />
+                                </span>
+                            </div>
+
+                            <!-- 正文用主题自己的排版根类 .prose（见设计文档 §12.2）：
+                主题的字号/行高/引用/代码框/表格/链接色与明暗变量会直接生效，
+                插件只补主题没覆盖的编辑器独有节点（taskList/gallery/columns/details）。 -->
+                            <div class="prose uh-love-content" th:utext="${s.content}">故事正文</div>
+                        </template>
+                    </article>
+
+                    <div class="uh-love-pager" th:if="${stories.totalPages > 1}">
+                        <a class="uh-love-btn" th:if="${stories.prevUrl != null}" th:href="@{${stories.prevUrl}}">
+                            <svg class="uh-love-icon"><use href="#ri-arrow-left-s-line" /></svg>上一页
+                        </a>
+                        <span class="uh-love-pill" th:text="|第 ${stories.page} / ${stories.totalPages} 页|"
+                            >第 1 / 1 页</span
+                        >
+                        <a class="uh-love-btn" th:if="${stories.nextUrl != null}" th:href="@{${stories.nextUrl}}">
+                            下一页<svg class="uh-love-icon"><use href="#ri-arrow-right-s-line" /></svg>
+                        </a>
+                    </div>
+                </th:block>
+            </div>
+        </th:block>
+    </body>
+</html>

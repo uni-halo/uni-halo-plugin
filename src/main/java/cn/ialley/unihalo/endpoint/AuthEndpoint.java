@@ -49,8 +49,15 @@ public class AuthEndpoint implements CustomEndpoint {
                 .POST(Constants.AUTH_API_BASE_PATH + "/login", this::loginByPassword)
                 .POST(Constants.AUTH_API_BASE_PATH + "/login/wechat", this::loginByWechat)
                 .POST(Constants.AUTH_API_BASE_PATH + "/bind/wechat", this::bindWechat)
+                .POST(Constants.AUTH_API_BASE_PATH + "/bind/wechat/qr/tickets",
+                        this::createBindTicket)
+                .GET(Constants.AUTH_API_BASE_PATH + "/bind/wechat/qr/tickets/{ticket}",
+                        this::bindTicketStatus)
+                .POST(Constants.AUTH_API_BASE_PATH + "/bind/wechat/qr/tickets/{ticket}/confirm",
+                        this::confirmBindTicket)
                 .POST(Constants.AUTH_API_BASE_PATH + "/logout", this::logout)
                 .GET(Constants.AUTH_API_BASE_PATH + "/profile", this::profile)
+                .GET(Constants.AUTH_API_BASE_PATH + "/my/wechat-binding", this::myWechatBinding)
                 .build();
     }
 
@@ -84,6 +91,43 @@ public class AuthEndpoint implements CustomEndpoint {
                 .onErrorResume(AuthEndpoint::handleFailure);
     }
 
+    /**
+     * UC 侧创建扫码绑定票据：要求登录身份（PAT 或会话），票据创建即锁定该用户名。
+     */
+    private Mono<ServerResponse> createBindTicket(ServerRequest request) {
+        return currentIdentity()
+                .flatMap(identity -> authService.createBindTicket(identity.username()))
+                .flatMap(ticket -> ServerResponse.ok().bodyValue(Map.of(
+                        "ticket", ticket.ticket(),
+                        // 二维码内容带业务前缀，小程序端按前缀识别分发
+                        "qrContent", Constants.QR_BIND_WECHAT_PREFIX + ticket.ticket(),
+                        "expiresAt", ticket.expiresAt().toString())))
+                .onErrorResume(AuthEndpoint::handleFailure);
+    }
+
+    /** UC 侧轮询票据状态（等待扫码 / 已确认 / 已过期）。 */
+    private Mono<ServerResponse> bindTicketStatus(ServerRequest request) {
+        var ticket = request.pathVariable("ticket");
+        return authService.bindTicketStatus(ticket)
+                .flatMap(status -> ServerResponse.ok()
+                        .bodyValue(Map.of("ticket", status.ticket(),
+                                "status", status.status().name())))
+                .onErrorResume(AuthEndpoint::handleFailure);
+    }
+
+    /**
+     * 小程序端确认绑定（匿名调用）：身份由 wx.login() 的 code 换取，
+     * 绑定目标用户名在票据创建时已锁定，客户端无法指定。
+     */
+    private Mono<ServerResponse> confirmBindTicket(ServerRequest request) {
+        var ticket = request.pathVariable("ticket");
+        return request.bodyToMono(WechatLoginRequest.class)
+                .switchIfEmpty(Mono.error(new AuthException("BAD_REQUEST", "缺少请求体")))
+                .flatMap(body -> authService.confirmBindTicket(ticket, body.code()))
+                .then(ServerResponse.ok().bodyValue(Map.of("success", true)))
+                .onErrorResume(AuthEndpoint::handleFailure);
+    }
+
     private Mono<ServerResponse> logout(ServerRequest request) {
         return currentIdentity()
                 .flatMap(identity -> {
@@ -99,6 +143,14 @@ public class AuthEndpoint implements CustomEndpoint {
     private Mono<ServerResponse> profile(ServerRequest request) {
         return currentIdentity()
                 .flatMap(identity -> authService.profile(identity.username()))
+                .flatMap(result -> ServerResponse.ok().bodyValue(result))
+                .onErrorResume(AuthEndpoint::handleFailure);
+    }
+
+    /** UC 侧「我的微信绑定」状态（只需登录自身身份，无需管理权限）。 */
+    private Mono<ServerResponse> myWechatBinding(ServerRequest request) {
+        return currentIdentity()
+                .flatMap(identity -> authService.myWechatBinding(identity.username()))
                 .flatMap(result -> ServerResponse.ok().bodyValue(result))
                 .onErrorResume(AuthEndpoint::handleFailure);
     }

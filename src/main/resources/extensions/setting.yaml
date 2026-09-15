@@ -364,6 +364,67 @@ spec:
               label: 小程序申请
               value: false
               help: 开启后悬浮卡片底部显示「申请」「友链信息」两个按钮，点击分别弹出小程序申请表单与友链信息展示。
+        - $formkit: group
+          name: loveDiaryTheme
+          label: 恋爱日记主题页
+          children:
+            - $formkit: switch
+              name: enabled
+              id: loveDiaryThemeEnabled
+              label: 启用恋爱日记主题页
+              value: false
+              help: "关闭时插件不注册任何前台路由、不注入任何资源，站点行为零变化（默认关闭，老站升级无影响）。启用后页面自动跟随主题的页头/页脚与正文排版，背景图取自「通用配置 → 页面设置 → 恋爱日记页」。"
+            - $formkit: group
+              name: routes
+              label: 页面路径
+              children:
+                - $formkit: text
+                  name: home
+                  id: loveDiaryRouteHome
+                  label: 恋爱日记首页
+                  value: "/love"
+                  help: 以 / 开头 = 绝对完整路径；留空 = 不注册该页。
+                - $formkit: text
+                  name: stories
+                  id: loveDiaryRouteStories
+                  label: 恋爱故事
+                  value: "stories"
+                  help: 不以 / 开头 = 相对首页路径的子段（默认解析为 /love/stories）；以 / 开头 = 绝对路径；留空 = 不注册。
+                - $formkit: text
+                  name: albums
+                  id: loveDiaryRouteAlbums
+                  label: 恋爱相册
+                  value: "albums"
+                  help: 同上。相册详情沿用页内查看器，不单独注册路由。
+                - $formkit: text
+                  name: daily
+                  id: loveDiaryRouteDaily
+                  label: 恋爱清单
+                  value: "daily"
+                  help: 同上。
+            - $formkit: radio
+              name: layoutMode
+              label: 页面外壳
+              value: auto
+              options:
+                - label: 跟随主题布局（推荐）
+                  value: auto
+                - label: 独立页面（不套主题页头页脚）
+                  value: standalone
+              validation: required
+              help: 跟随主题布局时复用主题的页头/页脚与整体外壳；独立页面则不依赖主题的 layout 契约，便于主题未适配时兜底。
+            - $formkit: color
+              name: primaryColor
+              id: loveDiaryPrimaryColor
+              label: 强调色
+              value: "#f83856"
+              help: 恋爱页强调色（按钮、解锁表单、图标高亮等），同时作为前端 CSS 变量默认值。
+            - $formkit: switch
+              name: showOverview
+              id: loveDiaryShowOverview
+              label: 首页显示各模块最新 3 条
+              value: true
+              help: 开启后首页在各模块入口下方显示最近 3 条内容预览。
     - group: loginConfig
       label: 移动端登录
       formSchema:

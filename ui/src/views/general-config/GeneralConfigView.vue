@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import {Toast, VCard, VPageHeader, VSpace, VTabbar} from "@halo-dev/components";
-import {useQuery, useQueryClient} from "@tanstack/vue-query";
-import {cloneDeep} from "lodash-es";
-import {computed, nextTick, provide, ref, watch} from "vue";
+import { Toast, VCard, VPageHeader, VSpace, VTabbar } from "@halo-dev/components";
+import { useQuery, useQueryClient } from "@tanstack/vue-query";
+import { cloneDeep } from "lodash-es";
+import { computed, nextTick, provide, ref, watch } from "vue";
 import SubmitButton from "@/components/button/SubmitButton.vue";
-import {generalConfigApi} from "@/api";
+import { generalConfigApi } from "@/api";
 import {
   DEFAULT_MY_PAGE_COMMON_KEYS,
   DEFAULT_MY_PAGE_OTHER_KEYS,
@@ -12,8 +12,8 @@ import {
   featureEntriesByKeys,
   toQuickNavigationItem,
 } from "@/constant/feature-entries";
-import type {GeneralConfig, GeneralConfigSpec} from "@/types";
-import {GeneralConfigFormKey} from "./form-context";
+import type { GeneralConfig, GeneralConfigSpec } from "@/types";
+import { GeneralConfigFormKey } from "./form-context";
 import ProfileSection from "./sections/ProfileSection.vue";
 import PreferencesSection from "./sections/PreferencesSection.vue";
 import PagesSection from "./sections/PagesSection.vue";
@@ -26,65 +26,65 @@ const queryClient = useQueryClient();
 
 type BigGroup = "profile" | "preferences" | "pages" | "assets" | "love" | "linkInfo" | "maintenance";
 
-const GROUP_ITEMS: Array<{id: BigGroup; label: string; desc: string}> = [
-  {id: "profile", label: "应用设置", desc: "应用信息 / 博主 / 社交"},
-  {id: "preferences", label: "偏好设置", desc: "首页/列表/归档布局与卡片样式"},
-  {id: "pages", label: "页面设置", desc: "各页面标题 / 首页 / 图库 / 关于页 / 文章详情"},
-  {id: "assets", label: "资源设置", desc: "加载占位"},
-  {id: "love", label: "恋爱设置", desc: "恋爱页图片与模块入口"},
-  {id: "linkInfo", label: "友链信息", desc: "站点信息 / 小程序信息"},
-  {id: "maintenance", label: "维护设置", desc: "维护页文案 / 排期与开关"},
+const GROUP_ITEMS: Array<{ id: BigGroup; label: string; desc: string }> = [
+  { id: "profile", label: "应用设置", desc: "应用信息 / 博主 / 社交" },
+  { id: "preferences", label: "偏好设置", desc: "首页/列表/归档布局与卡片样式" },
+  { id: "pages", label: "页面设置", desc: "各页面标题 / 首页 / 图库 / 关于页 / 文章详情" },
+  { id: "assets", label: "资源设置", desc: "加载占位" },
+  { id: "love", label: "恋爱设置", desc: "恋爱页图片与模块入口" },
+  { id: "linkInfo", label: "友链信息", desc: "站点信息 / 小程序信息" },
+  { id: "maintenance", label: "维护设置", desc: "维护页文案 / 排期与开关" },
 ];
 
-const SUB_TABS: Record<BigGroup, Array<{id: string; label: string}>> = {
+const SUB_TABS: Record<BigGroup, Array<{ id: string; label: string }>> = {
   profile: [
-    {id: "appInfo", label: "应用信息"},
-    {id: "blogger", label: "博主资料"},
-    {id: "social", label: "社交信息"},
-    {id: "auditMode", label: "审核模式"},
-    {id: "copyright", label: "页脚版权"},
+    { id: "appInfo", label: "应用信息" },
+    { id: "blogger", label: "博主资料" },
+    { id: "social", label: "社交信息" },
+    { id: "auditMode", label: "审核模式" },
+    { id: "copyright", label: "页脚版权" },
   ],
   preferences: [
-    {id: "home", label: "首页"},
-    {id: "articles", label: "文章页面"},
-    {id: "archives", label: "归档页面"},
+    { id: "home", label: "首页" },
+    { id: "articles", label: "文章页面" },
+    { id: "archives", label: "归档页面" },
   ],
   pages: [
-    {id: "home", label: "首页"},
-    {id: "gallery", label: "图库页"},
-    {id: "categoryPage", label: "分类页"},
-    {id: "momentPage", label: "瞬间页"},
-    {id: "aboutPage", label: "关于页"},
-    {id: "postDetail", label: "文章详情页"},
-    {id: "disclaimersPage", label: "免责声明页"},
-    {id: "loveDiary", label: "恋爱日记"},
-    {id: "contactBlogger", label: "联系博主"},
-    {id: "favorites", label: "我的收藏"},
-    {id: "friendLinks", label: "友情链接"},
-    {id: "archives", label: "文章归档"},
-    {id: "vote", label: "投票中心"},
-    {id: "dataVisual", label: "数据看板"},
-    {id: "setting", label: "偏好设置"},
-    {id: "aboutProject", label: "关于项目"},
-    {id: "notice", label: "公告中心"},
-    {id: "search", label: "搜索页面"},
+    { id: "home", label: "首页" },
+    { id: "gallery", label: "图库页" },
+    { id: "categoryPage", label: "分类页" },
+    { id: "momentPage", label: "瞬间页" },
+    { id: "aboutPage", label: "关于页" },
+    { id: "postDetail", label: "文章详情页" },
+    { id: "disclaimersPage", label: "免责声明页" },
+    { id: "loveDiary", label: "恋爱日记" },
+    { id: "contactBlogger", label: "联系博主" },
+    { id: "favorites", label: "我的收藏" },
+    { id: "friendLinks", label: "友情链接" },
+    { id: "archives", label: "文章归档" },
+    { id: "vote", label: "投票中心" },
+    { id: "dataVisual", label: "数据看板" },
+    { id: "setting", label: "偏好设置" },
+    { id: "aboutProject", label: "关于项目" },
+    { id: "notice", label: "公告中心" },
+    { id: "search", label: "搜索页面" },
   ],
   assets: [
-    {id: "loading", label: "加载占位"},
+    { id: "loading", label: "加载占位" },
   ],
   love: [
-    {id: "info", label: "恋爱信息"},
-    {id: "pageEntry", label: "页面入口"},
-    {id: "modules", label: "模块入口"},
+    { id: "info", label: "恋爱信息" },
+    { id: "pageEntry", label: "页面入口" },
+    { id: "modules", label: "模块入口" },
   ],
   linkInfo: [
-    {id: "basic", label: "基本配置"},
-    {id: "site", label: "站点信息"},
-    {id: "info", label: "小程序信息"},
+    { id: "basic", label: "基本配置" },
+    { id: "site", label: "站点信息" },
+    { id: "info", label: "小程序信息" },
   ],
   maintenance: [
-    {id: "time", label: "维护时间"},
-    {id: "content", label: "维护内容"},
+    { id: "time", label: "维护时间" },
+    { id: "content", label: "维护内容" },
   ],
 };
 
@@ -100,7 +100,7 @@ watch(bigGroup, (group) => {
 
 const subTabItems = computed(() => SUB_TABS[bigGroup.value]);
 
-const {data: config, isLoading} = useQuery({
+const { data: config, isLoading } = useQuery({
   queryKey: ["uni-halo:general-config"],
   queryFn: () => generalConfigApi.get(),
 });
@@ -109,7 +109,7 @@ const formState = ref<GeneralConfig>(defaultConfig());
 
 function defaultConfig(): GeneralConfig {
   return {
-    metadata: {name: "general-config"},
+    metadata: { name: "general-config" },
     spec: defaultSpec(),
   };
 }
@@ -117,15 +117,15 @@ function defaultConfig(): GeneralConfig {
 function defaultSpec(): GeneralConfigSpec {
   return {
     profile: {
-      appInfo: {name: "uni-halo", logo: "/plugins/uni-halo/assets/static/logo.png"},
-      blogger: {nickname: "uni-halo", avatar: "", email: "", description: "", website: "", intro: ""},
+      appInfo: { name: "uni-halo", logo: "/plugins/uni-halo/assets/static/logo.png" },
+      blogger: { nickname: "uni-halo", avatar: "", email: "", description: "", website: "", intro: "" },
       // 社交信息（动态列表：qq/wechat/email/github 四项默认；图标由 app 端按颜色/背景色色块渲染）
       social: {
         items: [
-          {name: "企鹅号", content: "", color: "#12b7f5", bgColor: "#12b7f51A", priority: 1, visible: true},
-          {name: "微信号", content: "", color: "#07c160", bgColor: "#07c1601A", priority: 2, visible: true},
-          {name: "邮箱地址", content: "", color: "#f57c00", bgColor: "#f57c001A", priority: 3, visible: true},
-          {name: "Github", content: "", color: "#24292f", bgColor: "#24292f1A", priority: 4, visible: true},
+          { name: "企鹅号", content: "", color: "#12b7f5", bgColor: "#12b7f51A", priority: 1, visible: true },
+          { name: "微信号", content: "", color: "#07c160", bgColor: "#07c1601A", priority: 2, visible: true },
+          { name: "邮箱地址", content: "", color: "#f57c00", bgColor: "#f57c001A", priority: 3, visible: true },
+          { name: "Github", content: "", color: "#24292f", bgColor: "#24292f1A", priority: 4, visible: true },
         ],
       },
     },
@@ -138,14 +138,14 @@ function defaultSpec(): GeneralConfigSpec {
         useCategory: true,
         categories: [],
       },
-      galleryConfig: {pageTitle: "图库"},
-      categoryConfig: {pageTitle: ""},
-      momentConfig: {pageTitle: ""},
+      galleryConfig: { pageTitle: "图库" },
+      categoryConfig: { pageTitle: "" },
+      momentConfig: { pageTitle: "" },
       aboutConfig: {
         pageTitle: "关于博主",
         bgImageUrl: "/plugins/uni-halo/assets/static/uni_halo_profile_bg.jpg",
         waveImageUrl: "/plugins/uni-halo/assets/static/uni_halo_about_wave.gif",
-        copyrightConfig: {enabled: true, content: "「 2022 uni-halo 丨 开源项目@小莫唐尼 」"},
+        copyrightConfig: { enabled: true, content: "「 2022 uni-halo 丨 开源项目@小莫唐尼 」" },
       },
       // 我的页面功能入口：默认填充注册表条目，对齐 app 端 about.vue navList
       // （常用 7 项 / 其他 3 项，与后端 GeneralConfigServiceImpl 默认一致）
@@ -153,7 +153,7 @@ function defaultSpec(): GeneralConfigSpec {
         commonFeatures: featureEntriesByKeys(DEFAULT_MY_PAGE_COMMON_KEYS).map(toQuickNavigationItem),
         otherFeatures: featureEntriesByKeys(DEFAULT_MY_PAGE_OTHER_KEYS).map(toQuickNavigationItem),
       },
-      disclaimers: {content: ""},
+      disclaimers: { content: "" },
       postDetailConfig: {
         showComment: true,
         copyrightEnabled: true,
@@ -164,17 +164,17 @@ function defaultSpec(): GeneralConfigSpec {
           "若侵害到您的权利，请您及时联系我，在收到通知后第一时间处理，邮箱：xxxx@xx.com",
       },
       // 其余功能页面标题（默认留空，客户端回退内置标题）
-      loveDiaryConfig: {pageTitle: ""},
-      contactConfig: {pageTitle: ""},
-      favoritesConfig: {pageTitle: ""},
-      friendLinksConfig: {pageTitle: ""},
-      archivesConfig: {pageTitle: ""},
-      voteConfig: {pageTitle: ""},
-      dataVisualConfig: {pageTitle: ""},
-      settingConfig: {pageTitle: ""},
-      aboutProjectConfig: {pageTitle: ""},
-      noticeConfig: {pageTitle: ""},
-      searchConfig: {pageTitle: ""},
+      loveDiaryConfig: { pageTitle: "" },
+      contactConfig: { pageTitle: "" },
+      favoritesConfig: { pageTitle: "" },
+      friendLinksConfig: { pageTitle: "" },
+      archivesConfig: { pageTitle: "" },
+      voteConfig: { pageTitle: "" },
+      dataVisualConfig: { pageTitle: "" },
+      settingConfig: { pageTitle: "" },
+      aboutProjectConfig: { pageTitle: "" },
+      noticeConfig: { pageTitle: "" },
+      searchConfig: { pageTitle: "" },
     },
     assets: {
       loadingGifUrl: "/plugins/uni-halo/assets/static/uni_halo_img_lazyload.gif",
@@ -197,7 +197,7 @@ function defaultSpec(): GeneralConfigSpec {
       pageImages: {
         bgImageUrl: "",
       },
-      loveDiary: {passwordEnabled: false, password: "", passwordRemoved: false},
+      loveDiary: { passwordEnabled: false, password: "", passwordRemoved: false },
       ourStory: {
         enabled: true, title: "恋爱故事", subTitle: "我们一起度过的那些经历",
         titleColor: "#f83856", subTitleColor: "#f8385699", iconBgColor: "#fce7f3",
@@ -270,7 +270,7 @@ watch(
     }
     const loaded = cloneDeep(value);
     loaded.spec = deepMerge(defaultSpec(), loaded.spec || {});
-    loaded.metadata = {name: "general-config", ...loaded.metadata};
+    loaded.metadata = { name: "general-config", ...loaded.metadata };
     suppressDirty = true;
     formState.value = loaded;
     dirty.value = false;
@@ -278,7 +278,7 @@ watch(
       suppressDirty = false;
     });
   },
-  {immediate: true}
+  { immediate: true }
 );
 
 const dirty = ref(false);
@@ -290,7 +290,7 @@ watch(
       dirty.value = true;
     }
   },
-  {deep: true}
+  { deep: true }
 );
 
 function deepMerge<T>(base: T, overlay: object): T {
@@ -338,7 +338,7 @@ const handleSave = async () => {
     await generalConfigApi.save(formState.value);
     Toast.success("保存成功");
     dirty.value = false;
-    queryClient.invalidateQueries({queryKey: ["uni-halo:general-config"]});
+    queryClient.invalidateQueries({ queryKey: ["uni-halo:general-config"] });
   } catch (error) {
     Toast.error((error as Error).message);
   }
@@ -346,11 +346,11 @@ const handleSave = async () => {
 
 // 共享表单上下文：子组件（各 Section）直接改 formState 嵌套属性触发 deep watch → dirty；
 // save 供子组件触发整表单保存（如维护「提前结束维护」）
-provide(GeneralConfigFormKey, {formState, save: handleSave});
+provide(GeneralConfigFormKey, { formState, save: handleSave });
 </script>
 
 <template>
-  <VPageHeader title="UniHalo-通用配置">
+  <VPageHeader title="UniHalo-功能设置">
     <template #actions>
       <div class=":uno: flex items-center">
         <VSpace>
@@ -367,17 +367,10 @@ provide(GeneralConfigFormKey, {formState, save: handleSave});
         <div class=":uno: flex items-center justify-between border-b border-gray-100 px-4 py-3">
           <span class=":uno: text-sm font-semibold text-gray-700">配置分类</span>
         </div>
-        <div
-          v-for="item in GROUP_ITEMS"
-          :key="item.id"
-          class=":uno: cursor-pointer px-4 py-3"
-          :class="
-            bigGroup === item.id
-              ? ':uno: bg-gray-50 font-medium text-gray-900'
-              : ':uno: text-gray-700 hover:bg-gray-50'
-          "
-          @click="bigGroup = item.id"
-        >
+        <div v-for="item in GROUP_ITEMS" :key="item.id" class=":uno: cursor-pointer px-4 py-3" :class="bigGroup === item.id
+            ? ':uno: bg-gray-50 font-medium text-gray-900'
+            : ':uno: text-gray-700 hover:bg-gray-50'
+          " @click="bigGroup = item.id">
           <div class=":uno: text-sm">{{ item.label }}</div>
           <div class=":uno: mt-0.5 text-xs text-gray-400">{{ item.desc }}</div>
         </div>
@@ -389,7 +382,7 @@ provide(GeneralConfigFormKey, {formState, save: handleSave});
       <VCard :loading="isLoading">
         <template #header>
           <div class=":uno: p-2 pb-0">
-            <VTabbar v-model:active-id="subTab" :items="subTabItems"/>
+            <VTabbar v-model:active-id="subTab" :items="subTabItems" />
           </div>
         </template>
 

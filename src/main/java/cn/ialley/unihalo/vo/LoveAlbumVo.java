@@ -4,6 +4,7 @@ import java.util.List;
 
 import lombok.Data;
 import cn.ialley.unihalo.scheme.LoveAlbum;
+import cn.ialley.unihalo.utils.LoveDates;
 
 /**
  * 恋爱相册公开视图（脱敏）。
@@ -24,6 +25,14 @@ public class LoveAlbumVo {
     private String cover;
 
     private Integer photoCount;
+
+    /**
+     * 相册创建日期（{@code yyyy-MM-dd}，服务端派生自 {@code metadata.creationTimestamp}）。
+     *
+     * <p>主题页相册卡片要展示创建日期；派生在服务端，模板无需依赖 {@code #temporals}
+     * 的时区/格式化能力。为 null 时模板不渲染该行。</p>
+     */
+    private String createDate;
 
     /**
      * 是否加密：true 表示需要解锁才能查看照片。
@@ -47,6 +56,8 @@ public class LoveAlbumVo {
         vo.setPhotos(locked ? List.of()
                 : (spec != null && spec.getPhotos() != null ? spec.getPhotos() : List.of()));
         vo.setPhotoCount(album.getStatus() == null ? 0 : album.getStatus().getPhotoCount());
+        vo.setCreateDate(album.getMetadata() == null ? null
+                : LoveDates.isoDate(album.getMetadata().getCreationTimestamp()));
         vo.setLocked(locked);
         return vo;
     }

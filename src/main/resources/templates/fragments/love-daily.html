@@ -1,0 +1,146 @@
+<!doctype html>
+<html xmlns:th="http://www.thymeleaf.org">
+    <body>
+        <!--
+  恋爱日记 · 恋爱清单正文
+  ------------------------------------------------------------------
+  只读 model：items（UrlContextListResult<LoveDailyItemVo>）、status、routes
+
+  · 状态筛选走服务端（?status=wait|doing|complete），刷新即筛选，可被分享/收藏；
+  · 展开用原生 <details>/<summary>：无 JS 也能展开，JS 只负责排序增强；
+  · 序号圆标按状态着色（wait 黄 / doing 粉 / complete 蓝），与 app 端一致。
+-->
+        <th:block th:fragment="body">
+            <div class="uh-love-daily-page uh-glass">
+                <!-- 筛选 + 排序（排序是纯前端增强，不改变 URL） -->
+                <div class="uh-love-filters">
+                    <a
+                        class="uh-love-chip"
+                        th:classappend="${status == '' ? 'is-active' : ''}"
+                        th:href="@{${routes['daily']}}"
+                        >全部</a
+                    >
+                    <a
+                        class="uh-love-chip"
+                        th:classappend="${status == 'wait' ? 'is-active' : ''}"
+                        th:href="@{${routes['daily']}(status='wait')}"
+                        >未开始</a
+                    >
+                    <a
+                        class="uh-love-chip"
+                        th:classappend="${status == 'doing' ? 'is-active' : ''}"
+                        th:href="@{${routes['daily']}(status='doing')}"
+                        >进行中</a
+                    >
+                    <a
+                        class="uh-love-chip"
+                        th:classappend="${status == 'complete' ? 'is-active' : ''}"
+                        th:href="@{${routes['daily']}(status='complete')}"
+                        >已完成</a
+                    >
+
+                    <span style="margin-left: auto"></span>
+                    <button
+                        type="button"
+                        class="uh-love-btn"
+                        data-love-sort="asc"
+                        aria-pressed="false"
+                        aria-label="按时间正序"
+                    >
+                        <svg class="uh-love-icon"><use href="#ri-sort-asc" /></svg>
+                    </button>
+                    <button
+                        type="button"
+                        class="uh-love-btn"
+                        data-love-sort="desc"
+                        aria-pressed="true"
+                        aria-label="按时间倒序"
+                    >
+                        <svg class="uh-love-icon"><use href="#ri-sort-desc" /></svg>
+                    </button>
+                </div>
+
+                <div class="uh-love-empty" th:if="${#lists.isEmpty(items.items)}">
+                    <svg class="uh-love-icon"><use href="#ri-inbox-2-line" /></svg>
+                    <p>该筛选条件下暂无清单~</p>
+                    <p class="uh-love-note">换个状态筛选，或到 Halo 控制台添加「恋爱清单」条目。</p>
+                </div>
+
+                <th:block th:unless="${#lists.isEmpty(items.items)}">
+                    <div data-love-daily-list>
+                        <details
+                            class="uh-love-daily"
+                            th:each="item, it : ${items.items}"
+                            data-love-daily-item
+                            th:attr="data-love-sort-key=${!#strings.isEmpty(item.planDate) ? item.planDate : (item.completeDate != null ? item.completeDate : '')}"
+                        >
+                            <summary class="uh-love-daily-head">
+                                <span
+                                    class="uh-love-daily-no"
+                                    th:classappend="${item.status == 'complete' ? 'is-complete' : (item.status == 'doing' ? 'is-doing' : 'is-wait')}"
+                                    th:text="${it.count + (items.page - 1) * items.size}"
+                                    >1</span
+                                >
+                                <span class="uh-love-daily-title" th:text="${item.title}">清单条目</span>
+                                <span
+                                    class="uh-love-pill"
+                                    th:classappend="${item.status == 'complete' ? 'is-ok' : ''}"
+                                    th:text="${item.status == 'complete' ? '已完成' : (item.status == 'doing' ? '进行中' : '未开始')}"
+                                    >未开始</span
+                                >
+                                <span class="uh-love-daily-caret" aria-hidden="true">
+                                    <svg class="uh-love-icon"><use href="#ri-arrow-down-s-line" /></svg>
+                                </span>
+                            </summary>
+
+                            <div class="uh-love-daily-body">
+                                <dl class="uh-love-kv">
+                                    <th:block th:if="${item.planDate != null}">
+                                        <dt>计划时间</dt>
+                                        <dd th:text="${item.planDate}">2026-03-12</dd>
+                                    </th:block>
+                                    <th:block th:if="${item.completeDate != null}">
+                                        <dt>完成时间</dt>
+                                        <dd th:text="${item.completeDate}">2026-03-20</dd>
+                                    </th:block>
+                                    <th:block th:if="${!#strings.isEmpty(item.completeRemark)}">
+                                        <dt>完成感想</dt>
+                                        <dd th:text="${item.completeRemark}">感想</dd>
+                                    </th:block>
+                                </dl>
+
+                                <!-- 同 love-stories：正文交给主题的 .prose 排版，插件只补编辑器独有节点 -->
+                                <div
+                                    th:if="${!#strings.isEmpty(item.content)}"
+                                    class="prose uh-love-content"
+                                    th:utext="${item.content}"
+                                >
+                                    计划内容
+                                </div>
+
+                                <div class="uh-love-pics" th:if="${!#lists.isEmpty(item.images)}">
+                                    <span class="uh-love-pic" th:each="img : ${item.images}">
+                                        <img th:src="${img}" alt="" loading="lazy" referrerpolicy="no-referrer" />
+                                    </span>
+                                </div>
+                            </div>
+                        </details>
+                    </div>
+
+                    <div class="uh-love-pager" th:if="${items.totalPages > 1}">
+                        <a class="uh-love-btn" th:if="${items.prevUrl != null}" th:href="@{${items.prevUrl}}">
+                            <svg class="uh-love-icon"><use href="#ri-arrow-left-s-line" /></svg>上一页
+                        </a>
+                        <span class="uh-love-pill" th:text="|第 ${items.page} / ${items.totalPages} 页|"
+                            >第 1 / 1 页</span
+                        >
+                        <a class="uh-love-btn" th:if="${items.nextUrl != null}" th:href="@{${items.nextUrl}}">
+                            下一页<svg class="uh-love-icon"><use href="#ri-arrow-right-s-line" /></svg>
+                        </a>
+                    </div>
+                    <p class="uh-love-pager-tip">翻页保留当前状态筛选；页内排序不会写进 URL。</p>
+                </th:block>
+            </div>
+        </th:block>
+    </body>
+</html>

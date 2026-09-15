@@ -1,0 +1,143 @@
+/*!
+ * hljs.css — 恋爱日记主题页 · 代码高亮配色
+ *
+ * 作用域：只作用于正文容器 `.uh-love-content`，绝不外泄到主题其它区域。
+ * 明暗：由 CSS 变量驱动，切换只改变量块。
+ *
+ * v1.5 起不再有 `codeHighlight` 开关 —— 主题普遍只给 .prose pre 做「外框 + 内边距」
+ * 而不给 token 配色（cosolar 就是这样），所以配色固定由本文件提供；
+ * 页面已自带 Shiki/highlight.js 时 JS 会直接用它的类名，本文件的变量块仍可复用。
+ */
+
+:where(.uh-love-content) {
+  --uh-hl-comment: #6e7781;
+  --uh-hl-keyword: #cf222e;
+  --uh-hl-string: #0a3069;
+  --uh-hl-number: #0550ae;
+  --uh-hl-title: #8250df;
+  --uh-hl-attr: #953800;
+  --uh-hl-tag: #116329;
+  --uh-hl-symbol: #0550ae;
+  --uh-hl-deletion-bg: #ffebe9;
+  --uh-hl-addition-bg: #dafbe1;
+}
+
+/* 深色判定必须同时认第三方主题的自有标记（如 cosolar 用 data-theme="dark"）——
+   只认 Halo 的 data-color-scheme / color-scheme-dark 会在这些主题下漏判。 */
+:is(html[data-theme="dark"], html[data-color-scheme="dark"], html.color-scheme-dark, html.dark) :where(.uh-love-content),
+:where(.uh-love-content)[data-uh-color-scheme="dark"] {
+  --uh-hl-comment: #8b949e;
+  --uh-hl-keyword: #ff7b72;
+  --uh-hl-string: #a5d6ff;
+  --uh-hl-number: #79c0ff;
+  --uh-hl-title: #d2a8ff;
+  --uh-hl-attr: #ffa657;
+  --uh-hl-tag: #7ee787;
+  --uh-hl-symbol: #79c0ff;
+  --uh-hl-deletion-bg: #4c1d1d;
+  --uh-hl-addition-bg: #12321c;
+}
+
+:where(.uh-love-content) :is(.hljs-comment, .hljs-quote) {
+  color: var(--uh-hl-comment);
+  font-style: italic;
+}
+
+:where(.uh-love-content) :is(
+  .hljs-keyword, .hljs-selector-tag, .hljs-literal, .hljs-doctag, .hljs-doctag .hljs-keyword,
+  .hljs-meta .hljs-keyword, .hljs-template-tag, .hljs-operator
+) {
+  color: var(--uh-hl-keyword);
+}
+
+:where(.uh-love-content) :is(
+  .hljs-string, .hljs-regexp, .hljs-addition, .hljs-attribute, .hljs-meta .hljs-string,
+  .hljs-template-variable .hljs-string
+) {
+  color: var(--uh-hl-string);
+}
+
+:where(.uh-love-content) :is(
+  .hljs-number, .hljs-literal, .hljs-variable, .hljs-template-variable, .hljs-meta,
+  .hljs-bullet, .hljs-link
+) {
+  color: var(--uh-hl-number);
+}
+
+:where(.uh-love-content) :is(
+  .hljs-title, .hljs-title.function_, .hljs-title.class_, .hljs-titlefunction_, .hljs-section,
+  .hljs-function .hljs-title, .hljs-class .hljs-title
+) {
+  color: var(--uh-hl-title);
+}
+
+:where(.uh-love-content) :is(
+  .hljs-attr, .hljs-selector-attr, .hljs-selector-class, .hljs-selector-id,
+  .hljs-selector-pseudo, .hljs-property, .hljs-params, .hljs-type, .hljs-built_in
+) {
+  color: var(--uh-hl-attr);
+}
+
+:where(.uh-love-content) :is(
+  .hljs-tag, .hljs-name, .hljs-symbol, .hljs-selector-pseudo .hljs-name
+) {
+  color: var(--uh-hl-tag);
+}
+
+:where(.uh-love-content) .hljs-code,
+:where(.uh-love-content) .hljs-formula {
+  color: var(--uh-hl-attr);
+}
+
+:where(.uh-love-content) :is(.hljs-emphasis, .hljs-strong) {
+  font-weight: 600;
+}
+
+:where(.uh-love-content) .hljs-emphasis {
+  font-style: italic;
+}
+
+:where(.uh-love-content) .hljs-deletion {
+  background: var(--uh-hl-deletion-bg);
+}
+
+:where(.uh-love-content) .hljs-addition {
+  background: var(--uh-hl-addition-bg);
+}
+
+/* 代码块基础排版（外框 / 内边距 / 字体）由主题的 `.prose pre` 提供 ——
+   cosolar、theme-earth 都只做到这一步，不给 token 配色，所以配色固定由本文件补。
+   这里只再兜三件事：① 长行不撑破容器；② 复制按钮定位基准；③ 复制按钮不遮挡代码。 */
+:where(.uh-love-content) pre {
+  position: relative;
+}
+
+:where(.uh-love-content) pre > code {
+  display: block;
+  overflow-x: auto;
+}
+
+.uh-love-copy-code {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 3px 7px;
+  border: 1px solid var(--uh-love-border, rgba(0, 0, 0, .12));
+  border-radius: 6px;
+  background: var(--uh-love-surface, rgba(255, 255, 255, .9));
+  color: var(--uh-love-muted, #6b7280);
+  font: inherit;
+  font-size: 11px;
+  line-height: 1.4;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity .15s;
+}
+
+.uh-love-copy-code:focus-visible,
+:where(.uh-love-content) pre:hover .uh-love-copy-code {
+  opacity: 1;
+}

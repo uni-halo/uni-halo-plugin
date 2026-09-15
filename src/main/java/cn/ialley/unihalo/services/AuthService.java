@@ -1,8 +1,10 @@
 package cn.ialley.unihalo.services;
 
 import reactor.core.publisher.Mono;
+import cn.ialley.unihalo.services.BindTicketService;
 import cn.ialley.unihalo.vo.LoginResult;
 import cn.ialley.unihalo.vo.ProfileVo;
+import cn.ialley.unihalo.vo.WechatBindingVo;
 
 /**
  * 移动端登录服务。
@@ -41,6 +43,31 @@ public interface AuthService {
     Mono<Void> bindWechat(String username, String code);
 
     /**
+     * 为 UC 用户签发扫码绑定票据（UC 侧「扫码绑定微信」入口）。
+     *
+     * <p>二维码内容为 {@code Constants.QR_BIND_WECHAT_PREFIX + ticket}，
+     * 小程序端按前缀识别并引导到确认页。</p>
+     *
+     * @param username 创建票据时锁定的 UC 用户名
+     */
+    Mono<BindTicketService.IssuedTicket> createBindTicket(String username);
+
+    /**
+     * 查询扫码绑定票据状态（UC 侧轮询）。
+     *
+     * @param ticket 票据号
+     */
+    Mono<BindTicketService.TicketStatus> bindTicketStatus(String ticket);
+
+    /**
+     * 小程序端确认绑定：消费票据，把扫码微信身份绑定到票据创建时锁定的用户。
+     *
+     * @param ticket 票据号
+     * @param code   wx.login() 得到的临时登录凭证（换取微信身份）
+     */
+    Mono<Void> confirmBindTicket(String ticket, String code);
+
+    /**
      * 吊销当前令牌（置 revoked，不影响 JWT 本身）。
      *
      * @param patName  PAT 扩展名
@@ -52,4 +79,12 @@ public interface AuthService {
      * 当前登录用户的资料与权限。只读，<b>不签发新令牌</b>。
      */
     Mono<ProfileVo> profile(String username);
+
+    /**
+     * 查询指定用户的微信绑定状态（UC 侧「我的绑定」展示用；
+     * 与 Console 管理端 wechat-users 接口不同，这里只需登录自身身份）。
+     *
+     * @param username 当前登录用户
+     */
+    Mono<WechatBindingVo> myWechatBinding(String username);
 }

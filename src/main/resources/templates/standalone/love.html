@@ -1,6 +1,6 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
-<!--
+    <!--
   恋爱日记 · 独立外壳（layoutMode = standalone）
   ==================================================================
   什么时候用：主题没有适配 `layout :: html(head, content)` 契约
@@ -10,22 +10,24 @@
   与 auto 的差别**只有外面这圈**：正文、锁分支、浮层全部复用
   fragments/love-page.html —— 两套外壳不会各自漂移。
 
-  ⚠️ 资源注入仍由 LoveDiaryHeadProcessor 负责：它按 `_templateId` 前缀匹配，
+  资源注入仍由 LoveDiaryHeadProcessor 负责：它按 `_templateId` 前缀匹配，
   与本页自带 <head> 不冲突（Halo 会往这个 <head> 里追加插件资源）。
 -->
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title th:text="|${pageTitle} - ${site.title}|">恋爱日记</title>
-</head>
-<body class="uh-love-standalone"
-      th:classappend="${loveConfig != null and !#strings.isEmpty(loveConfig.bgImageUrl)} ? 'has-love-bg'"
-      th:attr="style=${loveConfig != null and !#strings.isEmpty(loveConfig.bgImageUrl)} ? ${'--uh-love-bg-img:url(' + loveConfig.bgImageUrl + ')'} : null">
-  <th:block th:replace="~{plugin:uni-halo:fragments/love-icons :: sprite}"></th:block>
-  <div class="uh-love-shell">
-    <div class="uh-love-wrap" th:attr="data-love-page=${pageKey}">
-      <th:block th:replace="~{plugin:uni-halo:fragments/love-page :: page(pageKey=${pageKey})}"></th:block>
-    </div>
-  </div>
-</body>
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title th:text="|${pageTitle} - ${site.title}|">恋爱日记</title>
+    </head>
+    <body
+        class="uh-love-standalone"
+        th:classappend="${loveConfig != null and !#strings.isEmpty(loveConfig.bgImageUrl)} ? 'has-love-bg'"
+        th:attr="style=${loveConfig != null and !#strings.isEmpty(loveConfig.bgImageUrl)} ? ${'--uh-love-bg-img:url(' + loveConfig.bgImageUrl + ')'} : null"
+    >
+        <th:block th:replace="~{plugin:uni-halo:fragments/love-icons :: sprite}"></th:block>
+        <div class="uh-love-shell">
+            <div class="uh-love-wrap" th:attr="data-love-page=${pageKey}">
+                <th:block th:replace="~{plugin:uni-halo:fragments/love-page :: page(pageKey=${pageKey})}"></th:block>
+            </div>
+        </div>
+    </body>
 </html>

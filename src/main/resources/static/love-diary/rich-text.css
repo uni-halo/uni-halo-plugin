@@ -1,0 +1,273 @@
+/*!
+ * rich-text.css — 恋爱日记主题页 · 正文层
+ * ==================================================================
+ * v1.5 起正文排版策略彻底改变（见设计文档 §12）：
+ *
+ *   ① 排版交给主题：正文容器带 `class="prose uh-love-content"`。
+ *      Halo 主流主题（官方 theme-earth、cosolar 等）都把自己的正文排版挂在
+ *      `.prose` 上，且**不认** `.markdown-body` —— 用同一个根类，字号/行高/
+ *      引用块/代码框/表格/链接色/明暗变量全部自动继承，主题改版也不用跟着改。
+ *      （此前是从 @halo-dev/richtext-editor 抽 19KB 的 .markdown-body，
+ *        等于和主题各写一套排版，才会「主题换个样子插件就不像」。）
+ *
+ *   ② 插件只做两件补位，且全部用 `:where()` 把特异性压到 **0**：
+ *      - 兜底排版：主题没有 `.prose`（或没覆盖到某个元素）时才生效；
+ *      - 编辑器独有节点：theme-earth / cosolar 都没有任何 `[data-type=…]` 规则，
+ *        任务列表、图集、分栏、折叠块在主题侧是**完全无样式**的，必须我们补。
+ *
+ *   特异性 0 的含义：任何主题的 `.prose xxx`（0,1,1）都稳压我们一头。
+ *   所以这里**不写任何主题色/字体** —— 那是主题的职责，写了就会打架。
+ */
+
+/* ── 兜底基础排版（主题有 .prose 时全部失效） ───────────────────── */
+
+:where(.uh-love-content) {
+  font-size: 15px;
+  line-height: 1.85;
+  word-wrap: break-word;
+}
+
+:where(.uh-love-content) :where(h1, h2, h3, h4, h5, h6) {
+  margin: 1.6em 0 0.7em;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+:where(.uh-love-content) :where(h1) { font-size: 1.7em; }
+:where(.uh-love-content) :where(h2) { font-size: 1.45em; }
+:where(.uh-love-content) :where(h3) { font-size: 1.25em; }
+:where(.uh-love-content) :where(h4) { font-size: 1.1em; }
+:where(.uh-love-content) :where(h5, h6) { font-size: 1em; }
+
+:where(.uh-love-content) :where(p, ul, ol, blockquote, pre, table, figure) {
+  margin: 0 0 1em;
+}
+
+:where(.uh-love-content) :where(ul, ol) {
+  padding-left: 1.6em;
+}
+
+:where(.uh-love-content) :where(ul) { list-style: disc; }
+:where(.uh-love-content) :where(ol) { list-style: decimal; }
+:where(.uh-love-content) :where(li) { margin-bottom: 0.35em; }
+
+:where(.uh-love-content) :where(blockquote) {
+  padding: 0.6em 1em;
+  border-left: 3px solid currentColor;
+  opacity: 0.85;
+}
+
+:where(.uh-love-content) :where(a) {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+:where(.uh-love-content) :where(hr) {
+  margin: 2em 0;
+  border: 0;
+  border-top: 1px solid currentColor;
+  opacity: 0.2;
+}
+
+/* 图片永不撑破容器（主题普遍只设圆角/外边距，不设尺寸约束） */
+:where(.uh-love-content) :where(img, video, canvas) {
+  max-width: 100%;
+  height: auto;
+}
+
+:where(.uh-love-content) :where(figure) {
+  margin-inline: 0;
+}
+
+:where(.uh-love-content) :where(figcaption) {
+  margin-top: 0.4em;
+  font-size: 0.875em;
+  opacity: 0.7;
+  text-align: center;
+}
+
+/* 代码块：只负责「不撑破」与「能滚动」，配色归主题 + hljs.css */
+:where(.uh-love-content) :where(code) {
+  word-break: break-word;
+}
+
+:where(.uh-love-content) :where(pre) {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+:where(.uh-love-content) :where(pre) > :where(code) {
+  display: block;
+  /* 长行交给横向滚动：折行会打乱代码缩进，比横向滚动更难读 */
+  white-space: pre;
+  word-break: normal;
+}
+
+/* 宽表格横向滚动。主题若已处理（cosolar 的 .prose table 就带 display:block），
+   本规则不会生效；没处理的主题由我们兜住。 */
+:where(.uh-love-content) :where(table) {
+  display: block;
+  max-width: 100%;
+  overflow-x: auto;
+  border-collapse: collapse;
+}
+
+:where(.uh-love-content) :where(th, td) {
+  padding: 0.5em 0.75em;
+  border: 1px solid currentColor;
+}
+
+:where(.uh-love-content) :where(th) {
+  border-color: transparent;
+  border-bottom-color: currentColor;
+}
+
+/* ── 编辑器独有节点（主题侧完全无样式，必须插件补） ───────────────── */
+
+/* 任务列表：落库结构是
+     <ul data-type="taskList"><li data-type="taskItem" data-checked="false">
+       <label><input type="checkbox"><span></span></label><div><p>待办</p></div></li>
+   ⚠️ 不能用 Halo 编辑器的 .task-list-item —— 那个 class 不在落库 HTML 里。 */
+:where(.uh-love-content) ul[data-type='taskList'] {
+  padding-left: 0;
+  list-style: none;
+}
+
+:where(.uh-love-content) li[data-type='taskItem'] {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5em;
+  margin-bottom: 0.4em;
+}
+
+:where(.uh-love-content) li[data-type='taskItem'] > label {
+  display: flex;
+  align-items: center;
+  flex: 0 0 auto;
+  /* 与首行文字视觉对齐；用 padding 微调，别用固定高度 */
+  padding-top: 0.32em;
+  cursor: pointer;
+}
+
+:where(.uh-love-content) li[data-type='taskItem'] input[type='checkbox'] {
+  width: 1em;
+  height: 1em;
+  margin: 0;
+  accent-color: var(--uh-love-primary);
+  cursor: pointer;
+}
+
+:where(.uh-love-content) li[data-type='taskItem'] > div {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+:where(.uh-love-content) li[data-type='taskItem'] > div > :where(p) {
+  margin-bottom: 0;
+}
+
+/* 已勾选：整条变淡 + 删除线（与 Halo 编辑器所见一致） */
+:where(.uh-love-content) li[data-type='taskItem'][data-checked='true'] {
+  opacity: 0.6;
+  text-decoration: line-through;
+}
+
+/* 图集：<div data-type="gallery" data-layout data-gap>
+           <div data-type="gallery-group" data-layout data-gap>
+             <div data-aspect-ratio="1.5"><img></div>
+   data-layout="auto" = 自适应列数；数字 = 固定列数（此处按自适应处理，
+   `data-layout` 只当密度提示，避免主题宽度不同时列数错乱）。 */
+:where(.uh-love-content) [data-type='gallery'] {
+  display: grid;
+  gap: calc(var(--uh-love-gallery-gap, 8) * 1px);
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  margin: 1em 0;
+}
+
+:where(.uh-love-content) [data-type='gallery-group'] {
+  display: grid;
+  gap: calc(var(--uh-love-gallery-gap, 8) * 1px);
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+}
+
+:where(.uh-love-content) [data-type='gallery'] [data-aspect-ratio] {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  border-radius: 8px;
+}
+
+:where(.uh-love-content) [data-type='gallery'] [data-aspect-ratio] > :where(img) {
+  display: block;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  object-fit: cover;
+}
+
+/* 分栏：编辑器落库为 <div class="columns"><div class="column">… */
+:where(.uh-love-content) :where(.columns) {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1em;
+  margin: 1em 0;
+}
+
+:where(.uh-love-content) :where(.columns) > :where(.column) {
+  flex: 1 1 220px;
+  min-width: 0;
+}
+
+/* 折叠块：<details><summary>标题</summary><div data-type="detailsContent"> */
+:where(.uh-love-content) :where(details) {
+  margin: 1em 0;
+  padding: 0.6em 0.9em;
+  border: 1px solid currentColor;
+  border-radius: 8px;
+}
+
+:where(.uh-love-content) :where(details) > :where(summary) {
+  font-weight: 600;
+  cursor: pointer;
+}
+
+:where(.uh-love-content) [data-type='detailsContent'] {
+  padding-top: 0.6em;
+}
+
+:where(.uh-love-content) [data-type='detailsContent'] > :last-child {
+  margin-bottom: 0;
+}
+
+/* 嵌入媒体：iframe 默认按固有尺寸渲染会撑破窄屏；video/audio 只需不溢出。
+   只给 iframe 定 16:9 —— 给 video 强行定比例会把竖屏视频压扁。 */
+:where(.uh-love-content) :where(iframe) {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border: 0;
+  border-radius: 8px;
+}
+
+:where(.uh-love-content) :where(video, audio) {
+  max-width: 100%;
+  border-radius: 8px;
+}
+
+:where(.uh-love-content) :where(audio) {
+  width: 100%;
+}
+
+/* ── 灯箱可点击提示（灯箱组件在 love-diary.css，这里只放触发范围） ──── */
+
+:where(.uh-love-content) :where(img),
+:where(.uh-love-content) [data-aspect-ratio] {
+  cursor: zoom-in;
+}
+
+/* ── 窄屏：分栏改纵向（横排会把每栏压到不可读） ─────────────────── */
+
+@media (max-width: 640px) {
+  :where(.uh-love-content) :where(.columns) {
+    flex-direction: column;
+  }
+}

@@ -1,6 +1,6 @@
-import {definePlugin} from '@halo-dev/ui-shared'
-import {IconDashboard, IconGrid, IconRocketLine} from '@halo-dev/components'
-import {markRaw} from 'vue'
+import { definePlugin } from '@halo-dev/ui-shared'
+import { IconDashboard, IconGrid, IconRocketLine } from '@halo-dev/components'
+import { markRaw } from 'vue'
 import RiHeartLine from '~icons/ri/heart-line'
 import RiGalleryLine from '~icons/ri/gallery-line'
 import RiCheckboxMultipleLine from '~icons/ri/checkbox-multiple-line'
@@ -12,6 +12,7 @@ import RiShieldCheckLine from '~icons/ri/shield-check-line'
 import RiSlideshowLine from '~icons/ri/slideshow-line'
 import RiSettings3Line from '~icons/ri/settings-3-line'
 import WechatBindingTab from '@/components/WechatBindingTab.vue'
+import UcWechatBindingTab from '@/components/UcWechatBindingTab.vue'
 import WelcomeView from './views/WelcomeView.vue'
 
 function baseRoutePath(path: string) {
@@ -50,12 +51,12 @@ export default definePlugin({
         name: 'GeneralConfig',
         component: () => import('@/views/general-config/GeneralConfigView.vue'),
         meta: {
-          title: '通用配置',
+          title: '功能设置',
           searchable: true,
           hideFooter: false,
-          permissions: ["plugin:uni-halo:general-config:view"],
+          permissions: ['plugin:uni-halo:general-config:view'],
           menu: {
-            name: '通用配置',
+            name: '功能设置',
             group: GROUP_NAME,
             icon: markRaw(RiSettings3Line),
             priority: 0,
@@ -74,7 +75,7 @@ export default definePlugin({
           title: '应用管理',
           searchable: false,
           hideFooter: false,
-          permissions: ["plugin:uni-halo:app:view"],
+          permissions: ['plugin:uni-halo:app:view'],
           menu: {
             name: '应用管理',
             group: GROUP_NAME,
@@ -91,7 +92,7 @@ export default definePlugin({
               title: '应用列表',
               searchable: true,
               hideFooter: false,
-              permissions: ["plugin:uni-halo:app:view"],
+              permissions: ['plugin:uni-halo:app:view'],
               menu: {
                 name: '应用列表',
                 icon: markRaw(IconGrid),
@@ -107,7 +108,7 @@ export default definePlugin({
               title: '版本管理',
               searchable: true,
               hideFooter: false,
-              permissions: ["plugin:uni-halo:version:view"],
+              permissions: ['plugin:uni-halo:version:view'],
               menu: {
                 name: '版本管理',
                 icon: markRaw(IconRocketLine),
@@ -129,7 +130,7 @@ export default definePlugin({
           title: '恋爱管理',
           searchable: false,
           hideFooter: false,
-          permissions: ["plugin:uni-halo:love:view"],
+          permissions: ['plugin:uni-halo:love:view'],
           menu: {
             name: '恋爱管理',
             group: GROUP_NAME,
@@ -146,7 +147,7 @@ export default definePlugin({
               title: '恋爱相册',
               searchable: true,
               hideFooter: false,
-              permissions: ["plugin:uni-halo:love:view"],
+              permissions: ['plugin:uni-halo:love:view'],
               menu: {
                 name: '恋爱相册',
                 icon: markRaw(RiGalleryLine),
@@ -162,7 +163,7 @@ export default definePlugin({
               title: '恋爱清单',
               searchable: true,
               hideFooter: false,
-              permissions: ["plugin:uni-halo:love:view"],
+              permissions: ['plugin:uni-halo:love:view'],
               menu: {
                 name: '恋爱清单',
                 icon: markRaw(RiCheckboxMultipleLine),
@@ -178,7 +179,7 @@ export default definePlugin({
               title: '恋爱故事',
               searchable: true,
               hideFooter: false,
-              permissions: ["plugin:uni-halo:love:view"],
+              permissions: ['plugin:uni-halo:love:view'],
               menu: {
                 name: '恋爱故事',
                 icon: markRaw(RiBook2Line),
@@ -199,7 +200,7 @@ export default definePlugin({
           title: '公告管理',
           searchable: true,
           hideFooter: false,
-          permissions: ["plugin:uni-halo:notice:view"],
+          permissions: ['plugin:uni-halo:notice:view'],
           menu: {
             name: '公告管理',
             group: GROUP_NAME,
@@ -220,7 +221,7 @@ export default definePlugin({
           title: '链接管理',
           searchable: false,
           hideFooter: false,
-          permissions: ["plugin:uni-halo:link:view"],
+          permissions: ['plugin:uni-halo:link:view'],
           menu: {
             name: '链接管理',
             group: GROUP_NAME,
@@ -237,7 +238,7 @@ export default definePlugin({
               title: '链接列表',
               searchable: true,
               hideFooter: false,
-              permissions: ["plugin:uni-halo:link:view"],
+              permissions: ['plugin:uni-halo:link:view'],
               menu: {
                 name: '链接列表',
                 icon: markRaw(RiLink),
@@ -253,7 +254,7 @@ export default definePlugin({
               title: '申请审核',
               searchable: true,
               hideFooter: false,
-              permissions: ["plugin:uni-halo:link:view"],
+              permissions: ['plugin:uni-halo:link:view'],
               menu: {
                 name: '申请审核',
                 icon: markRaw(RiFileList3Line),
@@ -274,7 +275,7 @@ export default definePlugin({
           title: '审核模式',
           searchable: true,
           hideFooter: false,
-          permissions: ["plugin:uni-halo:audit-data:view"],
+          permissions: ['plugin:uni-halo:audit-data:view'],
           menu: {
             name: '审核模式',
             group: GROUP_NAME,
@@ -294,7 +295,7 @@ export default definePlugin({
           title: '轮播管理',
           searchable: true,
           hideFooter: false,
-          permissions: ["plugin:uni-halo:banner:view"],
+          permissions: ['plugin:uni-halo:banner:view'],
           menu: {
             name: '轮播管理',
             group: GROUP_NAME,
@@ -314,6 +315,17 @@ export default definePlugin({
           id: 'uni-halo-wechat-binding',
           label: '微信绑定',
           component: markRaw(WechatBindingTab),
+          priority: 30,
+        },
+      ]
+    },
+    // 挂进 UC 个人中心「个人资料」页：用户自己扫码绑定微信（弹二维码 + 轮询状态）。
+    'uc:user:profile:tabs:create': () => {
+      return [
+        {
+          id: 'uni-halo-uc-wechat-binding',
+          label: '微信绑定',
+          component: markRaw(UcWechatBindingTab),
           priority: 30,
         },
       ]

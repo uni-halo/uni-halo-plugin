@@ -1,0 +1,78 @@
+<!doctype html>
+<html xmlns:th="http://www.thymeleaf.org">
+    <body>
+        <!--  恋爱日记 · 恋爱相册列表正文  -->
+        <th:block th:fragment="body">
+            <div class="uh-love-album-page uh-glass">
+                <div class="uh-love-empty" th:if="${#lists.isEmpty(albums.items)}">
+                    <svg class="uh-love-icon"><use href="#ri-inbox-2-line" /></svg>
+                    <p>还没有相册</p>
+                    <p class="uh-love-note">站长在 Halo 控制台添加「恋爱相册」后，会自动出现在这里。</p>
+                </div>
+
+                <th:block th:unless="${#lists.isEmpty(albums.items)}">
+                    <div class="uh-love-albums">
+                        <button
+                            type="button"
+                            class="uh-love-album"
+                            th:each="a : ${albums.items}"
+                            data-love-album-open
+                            th:attr="data-love-album=${a.name},
+                       data-love-album-locked=${a.locked},
+                       data-love-album-title=${a.displayName}"
+                        >
+                            <span class="uh-love-album-cover">
+                                <img
+                                    th:if="${!#strings.isEmpty(a.cover)}"
+                                    th:src="${a.cover}"
+                                    alt=""
+                                    loading="lazy"
+                                    referrerpolicy="no-referrer"
+                                />
+                                <span class="uh-love-album-lock" th:if="${a.locked}">
+                                    <svg class="uh-love-icon"><use href="#ri-lock-2-line" /></svg>
+                                </span>
+                            </span>
+                            <span class="uh-love-album-body">
+                                <span
+                                    class="uh-love-album-name"
+                                    th:text="${!#strings.isEmpty(a.displayName) ? a.displayName : '未命名相册'}"
+                                    >未命名相册</span
+                                >
+                                <span class="uh-love-album-meta">
+                                    <span>
+                                        <svg class="uh-love-icon"><use href="#ri-image-line" /></svg>
+                                        <span th:text="${a.photoCount != null ? a.photoCount : 0}">0</span> 张
+                                    </span>
+                                    <span th:if="${a.createDate != null}">
+                                        <svg class="uh-love-icon"><use href="#ri-calendar-line" /></svg>
+                                        <span th:text="${a.createDate}">2026-03-12</span>
+                                    </span>
+                                </span>
+                            </span>
+                        </button>
+                    </div>
+
+                    <div class="uh-love-pager" th:if="${albums.totalPages > 1}">
+                        <a class="uh-love-btn" th:if="${albums.prevUrl != null}" th:href="@{${albums.prevUrl}}">
+                            <svg class="uh-love-icon"><use href="#ri-arrow-left-s-line" /></svg>上一页
+                        </a>
+                        <span class="uh-love-pill" th:text="|第 ${albums.page} / ${albums.totalPages} 页|"
+                            >第 1 / 1 页</span
+                        >
+                        <a class="uh-love-btn" th:if="${albums.nextUrl != null}" th:href="@{${albums.nextUrl}}">
+                            下一页<svg class="uh-love-icon"><use href="#ri-arrow-right-s-line" /></svg>
+                        </a>
+                    </div>
+                </th:block>
+
+                <!-- 解锁 -->
+                <template data-love-album-lock>
+                    <th:block
+                        th:replace="~{plugin:uni-halo:fragments/love-lock :: form(module='lovePhoto', moduleTitle='', captchaRequired=${albumCaptchaRequired}, kind='album', albumName=null)}"
+                    ></th:block>
+                </template>
+            </div>
+        </th:block>
+    </body>
+</html>

@@ -123,10 +123,17 @@ public class LovePublicEndpoint implements CustomEndpoint {
     /**
      * 相册详情：加密相册需携带解锁 token 才返回 photos；恋爱相册入口设置密码时
      * 同样要求模块 token。
+     *
+     * <p><b>两个 token 不能共用一个参数名</b>：外层模块锁读 {@code ?token=}，
+     * 内层相册锁过去也读 {@code ?token=}，于是「模块锁 + 相册锁」同时打开时
+     * 客户端只能带一个，照片永远出不来。故相册锁改为<b>优先读 {@code ?albumToken=}</b>，
+     * 读不到再回落 {@code ?token=}（老客户端行为不变）。</p>
      */
     private Mono<ServerResponse> getAlbum(ServerRequest request) {
         String name = request.pathVariable("name");
-        String token = request.queryParam("token").orElse("");
+        String token = request.queryParam("albumToken")
+                .or(() -> request.queryParam("token"))
+                .orElse("");
         return requireModuleAccess(request, "lovePhoto",
                 loveAlbumService.getByName(name)
                         // 公开详情：删除中对象视为不存在
@@ -225,13 +232,18 @@ public class LovePublicEndpoint implements CustomEndpoint {
 
     /**
      * 恋爱清单公开列表（只读，支持状态筛选与分页）。
+     *
+     * <p>⚠️ 与故事/相册一致，必须走 {@code requireModuleAccess}：恋爱清单入口
+     * <b>同样可以设密码</b>（见类注释），漏判会让加密清单被匿名接口直接读走，
+     * 而主题端 Finder 却已按锁拦截 —— 两端语义必须一致（设计报告 §7.2）。</p>
      */
     private Mono<ServerResponse> listDailyItems(ServerRequest request) {
         int page = queryPage(request);
         int size = querySize(request);
         String status = request.queryParam("status").orElse("").trim();
-        return loveDailyItemService.listPublic(status, page, size)
-                .flatMap(body -> ServerResponse.ok().bodyValue(body));
+        return requireModuleAccess(request, "loveDaily",
+                loveDailyItemService.listPublic(status, page, size)
+                        .flatMap(body -> ServerResponse.ok().bodyValue(body)));
     }
 
     private static boolean isLocked(LoveAlbum album) {

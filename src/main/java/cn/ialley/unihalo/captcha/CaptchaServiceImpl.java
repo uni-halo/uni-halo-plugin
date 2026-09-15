@@ -65,6 +65,12 @@ public class CaptchaServiceImpl implements CaptchaService {
         });
     }
 
+    @Override
+    public Mono<Boolean> requiredFor(CaptchaScope scope) {
+        return captchaConfig()
+                .map(config -> config.enabled() && config.scopeEnabled(scope));
+    }
+
     private Mono<CaptchaConfig> captchaConfig() {
         return SettingGroupResolver.group(settingFetcher, "safetyConfig",
                 SETTING_GROUP_CAPTCHA)

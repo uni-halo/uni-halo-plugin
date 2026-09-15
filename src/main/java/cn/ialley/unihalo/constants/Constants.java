@@ -120,6 +120,13 @@ public class Constants {
     public static final String PAT_MANAGED_BY_VALUE = "uni-halo";
 
     /**
+     * 绑定类二维码内容前缀（{@code uh-bindwx-{ticket}}）。
+     * 小程序端按前缀识别业务类型并分发处理；后续其他扫码业务
+     * （如扫码登录）使用各自前缀并列。
+     */
+    public static final String QR_BIND_WECHAT_PREFIX = "uh-bindwx-";
+
+    /**
      * 友情链接-小程序链接（console/公开）接口基础路径
      */
     public static final String MINI_PROGRAM_LINK_API_BASE_PATH =
@@ -180,5 +187,72 @@ public class Constants {
      */
     public static final String PUBLIC_CUSTOM_API_GROUP_NAME =
         BASIC_DOMAIN_API_NAME + "/" + PLUGIN_API_VERSION;
+
+    // ==================== 恋爱日记主题模板（前台页面） ====================
+
+    /**
+     * 插件模板名前缀：Halo 模板片段引用与主题覆盖均以此为前缀，
+     * 形如 {@code plugin:uni-halo:fragments/love-icons}。
+     */
+    public static final String THEME_TEMPLATE_PREFIX = "plugin:uni-halo:";
+
+    /**
+     * {@code _templateId} 前缀：恋爱日记四页的模板 ID 均以此开头，
+     * HeadProcessor 据此判断是否注入资源（前缀匹配，fail-closed）。
+     */
+    public static final String LOVE_TEMPLATE_ID_PREFIX = "plugin:uni-halo:love";
+
+    /**
+     * 恋爱日记四页的模板 ID（{@code _templateId} 取值，属主题集成契约，不可随意变更）。
+     */
+    public static final String LOVE_TEMPLATE_ID_HOME = "plugin:uni-halo:love";
+
+    public static final String LOVE_TEMPLATE_ID_STORIES = "plugin:uni-halo:love-stories";
+
+    public static final String LOVE_TEMPLATE_ID_ALBUMS = "plugin:uni-halo:love-albums";
+
+    public static final String LOVE_TEMPLATE_ID_DAILY = "plugin:uni-halo:love-daily";
+
+    /**
+     * 插件静态资源前缀（由 {@code uni-halo-reverse-proxy.yaml} 的
+     * {@code /static/** → directory: static} 提供，与 Halo 主机同源，不走 CDN）。
+     */
+    public static final String PLUGIN_STATIC_PREFIX = "/plugins/uni-halo/assets/static";
+
+    /**
+     * 恋爱日记前端资产目录（相对 {@link #PLUGIN_STATIC_PREFIX}）。
+     */
+    public static final String LOVE_STATIC_DIR = "/love-diary";
+
+    /**
+     * 设置域组名（setting.yaml 的 Tab「主题展示」）。
+     */
+    public static final String SETTING_DOMAIN_THEME_CONFIG = "themeConfig";
+
+    /**
+     * 恋爱日记主题模板设置组名（themeConfig.loveDiaryTheme）。
+     */
+    public static final String SETTING_MODULE_LOVE_DIARY_THEME = "loveDiaryTheme";
+
+    /**
+     * 模块入口 key（与 GeneralConfig.Love 的字段名一致，app 端契约）。
+     */
+    public static final String LOVE_MODULE_DIARY = "loveDiary";
+
+    public static final String LOVE_MODULE_OUR_STORY = "ourStory";
+
+    public static final String LOVE_MODULE_PHOTO = "lovePhoto";
+
+    public static final String LOVE_MODULE_DAILY = "loveDaily";
+
+    /**
+     * 列表页分页路径段（Halo 官方范式：{@code /page/{page}}，非 {@code ?page=N}）。
+     */
+    public static final String PAGE_SEGMENT = "page";
+
+    /**
+     * 默认分页大小（与 Halo {@code ModelConst.DEFAULT_PAGE_SIZE} 对齐）。
+     */
+    public static final int DEFAULT_PAGE_SIZE = 10;
 
 }

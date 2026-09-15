@@ -17,6 +17,7 @@ import reactor.core.publisher.Mono;
 import cn.ialley.unihalo.constants.Constants;
 import cn.ialley.unihalo.exception.AuthException;
 import cn.ialley.unihalo.services.AuthService;
+import cn.ialley.unihalo.services.BindTicketService;
 import cn.ialley.unihalo.services.PatIssuer;
 import cn.ialley.unihalo.services.WechatService;
 import cn.ialley.unihalo.utils.LoginAttemptGuard;
@@ -24,6 +25,7 @@ import cn.ialley.unihalo.utils.LoginConfigResolver;
 import cn.ialley.unihalo.vo.LoginConfig;
 import cn.ialley.unihalo.vo.LoginResult;
 import cn.ialley.unihalo.vo.ProfileVo;
+import cn.ialley.unihalo.vo.WechatBindingVo;
 import run.halo.app.core.extension.User;
 import run.halo.app.core.extension.UserConnection;
 import run.halo.app.core.extension.Role;
@@ -67,6 +69,7 @@ public class AuthServiceImpl implements AuthService {
     private final WechatService wechatService;
     private final ReactiveExtensionClient client;
     private final LoginAttemptGuard attemptGuard;
+    private final BindTicketService bindTicketService;
 
     @Override
     public Mono<LoginResult> loginByPassword(String username, String rawPassword, String clientIp) {
@@ -117,6 +120,48 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
+    public Mono<BindTicketService.IssuedTicket> createBindTicket(String username) {
+        return configResolver.config()
+                .filter(LoginConfig::wechatLoginEnabled)
+                .switchIfEmpty(Mono.error(
+                        new AuthException("WECHAT_LOGIN_DISABLED", "微信登录未开启")))
+                .then(bindTicketService.issue(username));
+    }
+
+    @Override
+    public Mono<BindTicketService.TicketStatus> bindTicketStatus(String ticket) {
+        return bindTicketService.status(ticket);
+    }
+
+    @Override
+    public Mono<Void> confirmBindTicket(String ticket, String code) {
+        return configResolver.config()
+                .filter(LoginConfig::wechatLoginEnabled)
+                .switchIfEmpty(Mono.error(
+                        new AuthException("WECHAT_LOGIN_DISABLED", "微信登录未开启")))
+                .flatMap(config -> configResolver.wechatCredential(config.wechatSecretName())
+                        .onErrorResume(e -> Mono.error(e instanceof AuthException ? e
+                                : new AuthException("WECHAT_LOGIN_FAILED",
+                                        "微信登录未配置，请联系站长",
+                                        AuthException.STATUS_FORBIDDEN)))
+                        .flatMap(credential -> bindTicketService.consume(ticket)
+                                .flatMap(consumed -> {
+                                    if (!consumed.success()) {
+                                        return Mono.error(new AuthException(
+                                                "BIND_TICKET_INVALID", consumed.reason(),
+                                                AuthException.STATUS_BAD_REQUEST));
+                                    }
+                                    return wechatService.code2Session(
+                                            credential.appId(), credential.appSecret(), code)
+                                            .flatMap(session -> connect(consumed.username(),
+                                                    identity(session)))
+                                            .onErrorMap(e -> !(e instanceof AuthException),
+                                                    this::unexpectedWechatFailure);
+                                })))
+                .then();
+    }
+
+    @Override
     public Mono<ProfileVo> profile(String username) {
         return configResolver.config()
                 .flatMap(config -> userService.getUser(username)
@@ -125,6 +170,23 @@ public class AuthServiceImpl implements AuthService {
                                 .flatMap(roles -> permissions(roles)
                                         .map(rules -> new ProfileVo(
                                                 loginUserOf(user), roles, rules)))));
+    }
+
+    @Override
+    public Mono<WechatBindingVo> myWechatBinding(String username) {
+        return client.list(UserConnection.class,
+                        connection -> connection.getSpec() != null
+                                && Constants.WECHAT_REGISTRATION_ID.equals(
+                                        connection.getSpec().getRegistrationId())
+                                && username.equals(connection.getSpec().getUsername()),
+                        null)
+                .next()
+                .map(connection -> new WechatBindingVo(
+                        username,
+                        true,
+                        connection.getSpec().getProviderUserId(),
+                        connection.getSpec().getUpdatedAt()))
+                .defaultIfEmpty(WechatBindingVo.unbound(username));
     }
 
     // ---------- 内部实现 ----------

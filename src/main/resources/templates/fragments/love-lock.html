@@ -1,0 +1,120 @@
+<!doctype html>
+<html xmlns:th="http://www.thymeleaf.org">
+    <body>
+        <!--
+  恋爱日记 · 页内解锁表单（插件内置片段，主题可覆盖）
+  ==================================================================
+  【为什么必须是「页内表单」而不是弹窗/遮罩】
+  模块锁定时 Finder 一个业务字段都不返回，所以本片段的 HTML 里**根本没有任何内容节点**。
+  用户按 F12 删掉整个表单、或 Ctrl+F 搜 DOM，都看不到昵称/日期/图片 —— 这是方案成立的前提。
+  反过来，若用弹窗+遮罩，内容早已在 DOM 里，删掉遮罩的 display:none 即可全部看到。
+
+  参数：
+    module          模块 key：loveDiary / ourStory / lovePhoto / loveDaily
+    moduleTitle     表单副标题文案（站长配置的模块名，本身经公开接口下发，非内容）
+    captchaRequired 该 scope 是否真的要求验证码（false 时**不渲染**验证码框）
+    kind            'module' = 模块锁（整页）；'album' = 相册锁（查看器内）
+    albumName       kind='album' 时的相册 name（模块锁传 null，JS 会补上）
+
+  ⚠️ 验证码只按 captchaRequired 渲染：CaptchaServiceImpl.requireValid 在总开关关闭或
+  该 scope 未启用时直接放行，无脑渲染会让站长看到「填了也没用」的困惑。
+-->
+        <div
+            class="uh-love-lockwrap"
+            th:fragment="form(module, moduleTitle, captchaRequired, kind, albumName)"
+            data-love-lock-wrap
+        >
+            <div
+                class="uh-love-lockcard"
+                data-love-lock
+                th:attr="data-love-lock-kind=${kind},
+                data-love-module=${module},
+                data-love-album=${albumName},
+                data-love-captcha-required=${captchaRequired}"
+            >
+                <svg class="uh-love-icon uh-love-lock-icon" aria-hidden="true">
+                    <use href="#ri-shield-keyhole-line" />
+                </svg>
+
+                <h2>该模块已加密</h2>
+                <p class="uh-love-lock-sub" data-love-lock-sub>
+                    <span th:if="${!#strings.isEmpty(moduleTitle)}" th:text="|「${moduleTitle}」|">「恋爱日记」</span>
+                    <span>需要密码才能查看</span>
+                </p>
+
+                <form data-love-lock-form autocomplete="off" novalidate>
+                    <div class="uh-love-field">
+                        <span class="uh-love-field-lead" aria-hidden="true">
+                            <svg class="uh-love-icon"><use href="#ri-lock-2-line" /></svg>
+                        </span>
+                        <input
+                            type="password"
+                            name="password"
+                            data-love-password
+                            placeholder="请输入访问密码"
+                            aria-label="访问密码"
+                            autocomplete="current-password"
+                        />
+                        <button
+                            type="button"
+                            class="uh-love-field-btn"
+                            data-love-eye
+                            aria-label="显示或隐藏密码"
+                            aria-pressed="false"
+                        >
+                            <svg
+                                class="uh-love-icon"
+                                data-love-eye-icon
+                                data-icon-off="ri-eye-off-line"
+                                data-icon-on="ri-eye-line"
+                            >
+                                <use href="#ri-eye-off-line" />
+                            </svg>
+                        </button>
+                    </div>
+
+                    <th:block th:if="${captchaRequired}">
+                        <div class="uh-love-captcha">
+                            <div class="uh-love-field">
+                                <span class="uh-love-field-lead" aria-hidden="true">
+                                    <svg class="uh-love-icon"><use href="#ri-shield-keyhole-line" /></svg>
+                                </span>
+                                <input
+                                    type="text"
+                                    name="captchaCode"
+                                    data-love-captcha-code
+                                    placeholder="验证码"
+                                    aria-label="验证码"
+                                    maxlength="8"
+                                    inputmode="text"
+                                />
+                            </div>
+                            <button
+                                type="button"
+                                class="uh-love-captcha-img"
+                                data-love-captcha-img
+                                data-love-captcha-id=""
+                                aria-label="点击刷新验证码"
+                            >
+                                点击获取
+                            </button>
+                        </div>
+                        <p class="uh-love-captcha-hint">看不清？点击图片可刷新</p>
+                    </th:block>
+
+                    <div class="uh-love-err" data-love-err role="alert" aria-live="polite"></div>
+
+                    <button type="submit" class="uh-love-submit" data-love-submit>
+                        <svg class="uh-love-icon"><use href="#ri-key-2-line" /></svg>
+                        <span>解锁查看</span>
+                    </button>
+                </form>
+
+                <p class="uh-love-lock-hint">解锁后 30 分钟内免重复验证</p>
+                <noscript>
+                    <p class="uh-love-err">页面内容依赖 JavaScript 加载，请启用后重试</p>
+                </noscript>
+            </div>
+        </div>
+    </body>
+</html>

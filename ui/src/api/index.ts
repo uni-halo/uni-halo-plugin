@@ -26,6 +26,8 @@ import type {
   BannerCandidate,
   GeneralConfig,
   WechatBinding,
+  BindTicketIssued,
+  BindTicketStatus,
 } from "@/types";
 
 const CONSOLE_API_GROUP = "console.api.unihalo.ialley.cn/v1alpha1";
@@ -313,4 +315,19 @@ export const wechatUserApi = {
   /** 解绑：只删绑定关系，不删除 Halo 用户 */
   unbind: (username: string) =>
     http.delete<{ success: boolean }>(`${PLUGIN_BASE}/wechat-users/${username}/binding`),
+};
+
+// ===== 微信绑定（UC 个人中心，登录自身身份即可） =====
+
+const AUTH_BASE = `${PUBLIC_BASE}/auth`;
+
+export const ucWechatBindingApi = {
+  /** 当前登录用户的微信绑定状态 */
+  getMyBinding: () => http.get<WechatBinding>(`${AUTH_BASE}/my/wechat-binding`),
+  /** 创建扫码绑定票据，qrContent = uh-bindwx-{ticket} */
+  createBindTicket: () =>
+    http.post<BindTicketIssued>(`${AUTH_BASE}/bind/wechat/qr/tickets`),
+  /** 轮询票据状态：PENDING 等待扫码 / CONFIRMED 已绑定 / EXPIRED 已过期 */
+  getTicketStatus: (ticket: string) =>
+    http.get<BindTicketStatus>(`${AUTH_BASE}/bind/wechat/qr/tickets/${ticket}`),
 };
