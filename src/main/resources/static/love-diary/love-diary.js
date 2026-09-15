@@ -656,6 +656,13 @@
       albumToken: token || '',
       token: moduleToken('lovePhoto')
     })).then(function (album) {
+      if (album && album.locked) {
+        // 服务端在相册锁 token 缺失/过期时返回 locked=true 且 photos 被剥离
+        // （不是 401）—— 这不是空相册：清掉旧 token，重新弹解锁表单
+        drop(ALBUM_TOKEN_PREFIX + name);
+        showAlbumLock(name, title);
+        return;
+      }
       var urls = ((album && album.photos) || []).map(photoUrl).filter(Boolean);
       if (!urls.length) {
         toast('这本相册还没有照片');

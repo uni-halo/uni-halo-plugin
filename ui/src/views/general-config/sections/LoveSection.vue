@@ -26,10 +26,10 @@ const LOVE_MODULES: Array<{
   label: string;
   desc: string;
 }> = [
-  {key: "ourStory", label: "恋爱故事", desc: "恋爱页是否展示「恋爱故事」入口"},
-  {key: "lovePhoto", label: "恋爱相册", desc: "恋爱页是否展示「恋爱相册」入口"},
-  {key: "loveDaily", label: "恋爱清单", desc: "恋爱页是否展示「恋爱清单」入口"},
-];
+    { key: "ourStory", label: "恋爱故事", desc: "恋爱页是否展示「恋爱故事」入口" },
+    { key: "lovePhoto", label: "恋爱相册", desc: "恋爱页是否展示「恋爱相册」入口" },
+    { key: "loveDaily", label: "恋爱清单", desc: "恋爱页是否展示「恋爱清单」入口" },
+  ];
 
 /**
  * 模块入口拖拽排序：按 priority 降序展示（对齐后端 loveConfig 输出顺序、
@@ -113,65 +113,28 @@ function cancelRemovalOnTyping(module: GeneralConfigLoveModule) {
     <p class=":uno: mb-3 text-xs text-gray-400">
       恋爱纪念日与恋人信息展示在恋爱页顶部。
     </p>
-    <div class=":uno: mb-4">
+    <div class=":uno: mb-6">
       <div class=":uno: mb-2 text-sm font-semibold text-gray-700">纪念日</div>
-      <FormKit
-        v-model="formState.spec.love.loveInfo!.loveDateTitle"
-        name="love_info_date_title"
-        label="纪念日标题"
-        type="text"
-        placeholder="例如：我们在一起的那天"
-      />
-      <FormKit
-        v-model="formState.spec.love.loveInfo!.loveDate"
-        name="love_info_date"
-        label="恋爱纪念日"
-        type="date"
-        help="用于计算恋爱天数，同时这可是一个非常重要的节日呢，可不能忘记哦~"
-      />
+      <FormKit v-model="formState.spec.love.loveInfo!.loveDateTitle" name="love_info_date_title" label="纪念日标题"
+        type="text" placeholder="例如：我们在一起的那天" />
+      <FormKit v-model="formState.spec.love.loveInfo!.loveDate" name="love_info_date" label="恋爱纪念日" type="date"
+        help="用于计算恋爱天数，同时这可是一个非常重要的节日呢，可不能忘记哦~" />
     </div>
 
     <div class=":uno: mb-4">
       <div class=":uno: mb-2 text-sm font-semibold text-gray-700">恋人信息</div>
-      <div class=":uno: grid grid-cols-1 gap-4 md:grid-cols-2">
-        <div class="flex flex-col">
-          <FormKit
-            v-model="formState.spec.love.loveInfo!.boyAvatar"
-            name="love_info_boy_avatar"
-            label="男生头像"
-            type="attachment"
-            :accepts="['image/*']"
-          />
-          <FormKit
-            v-model="formState.spec.love.loveInfo!.boyNickname"
-            name="love_info_boy_nickname"
-            label="男生昵称"
-            type="text"
-            placeholder="男生的昵称"
-          />
-        </div>
-        <div class="flex flex-col">
-          <FormKit
-            v-model="formState.spec.love.loveInfo!.girlAvatar"
-            name="love_info_girl_avatar"
-            label="女生头像"
-            type="attachment"
-            :accepts="['image/*']"
-          />
-          <FormKit
-            v-model="formState.spec.love.loveInfo!.girlNickname"
-            name="love_info_girl_nickname"
-            label="女生昵称"
-            type="text"
-            placeholder="女生的昵称"
-          />
-        </div>
-      </div>
+      <FormKit v-model="formState.spec.love.loveInfo!.boyAvatar" name="love_info_boy_avatar" label="男生头像"
+        type="attachment" :accepts="['image/*']" />
+      <FormKit v-model="formState.spec.love.loveInfo!.boyNickname" name="love_info_boy_nickname" label="男生昵称"
+        type="text" placeholder="男生的昵称" />
+      <FormKit v-model="formState.spec.love.loveInfo!.girlAvatar" name="love_info_girl_avatar" label="女生头像"
+        type="attachment" :accepts="['image/*']" />
+      <FormKit v-model="formState.spec.love.loveInfo!.girlNickname" name="love_info_girl_nickname" label="女生昵称"
+        type="text" placeholder="女生的昵称" />
     </div>
   </template>
 
-  <!-- 恋爱 → 页面入口（恋爱日记入口密码，无开关；入口显隐由页面设置
-       快捷导航/关于页功能入口注册表控制） -->
+  <!-- 恋爱 → 页面入口（恋爱日记入口密码，无开关；入口显隐由页面设置 快捷导航/关于页功能入口注册表控制） -->
   <template v-if="subTab === 'pageEntry'">
     <p class=":uno: mb-3 text-xs text-gray-400">
       恋爱日记页（app 端恋爱页）本身的入口密码；设置密码后，进入恋爱页前需先验证密码。
@@ -180,43 +143,21 @@ function cancelRemovalOnTyping(module: GeneralConfigLoveModule) {
     <div class=":uno: mb-4 rounded-lg bg-gray-50 p-4">
       <div class=":uno: mb-2 flex items-center text-sm text-gray-700">
         入口密码
-        <span
-          v-if="formState.spec.love.loveDiary!.passwordEnabled"
-          class=":uno: ml-2 text-xs font-normal text-emerald-600"
-        >已设置</span>
+        <span v-if="formState.spec.love.loveDiary!.passwordEnabled"
+          class=":uno: ml-2 text-xs font-normal text-emerald-600">已设置</span>
         <span v-else class=":uno: ml-2 text-xs font-normal text-gray-400">未设置</span>
       </div>
-      <FormKit
-        v-if="!formState.spec.love.loveDiary!.passwordRemoved"
-        v-model="formState.spec.love.loveDiary!.password"
-        name="love_diary_password"
-        label="新密码"
-        type="password"
-        :help="formState.spec.love.loveDiary!.passwordEnabled
+      <FormKit v-if="!formState.spec.love.loveDiary!.passwordRemoved" v-model="formState.spec.love.loveDiary!.password"
+        name="love_diary_password" label="新密码" type="password" :help="formState.spec.love.loveDiary!.passwordEnabled
           ? '留空表示保持原密码不变'
-          : '设置后进入恋爱页前需先输入密码'"
-        placeholder="输入入口密码"
-        @input="cancelRemovalOnTyping(formState.spec.love.loveDiary!)"
-      />
+          : '设置后进入恋爱页前需先输入密码'" placeholder="输入入口密码" @input="cancelRemovalOnTyping(formState.spec.love.loveDiary!)" />
       <p v-else class=":uno: text-sm text-gray-500">保存后将清除该入口密码。</p>
-      <VButton
-        v-if="formState.spec.love.loveDiary!.passwordEnabled && !formState.spec.love.loveDiary!.passwordRemoved"
-        size="sm"
-        type="danger"
-        plain
-        class=":uno: mt-2"
-        @click="clearModulePassword('loveDiary')"
-      >
+      <VButton v-if="formState.spec.love.loveDiary!.passwordEnabled && !formState.spec.love.loveDiary!.passwordRemoved"
+        size="sm" type="danger" plain class=":uno: mt-2" @click="clearModulePassword('loveDiary')">
         清除密码
       </VButton>
-      <VButton
-        v-if="formState.spec.love.loveDiary!.passwordRemoved"
-        size="sm"
-        type="secondary"
-        plain
-        class=":uno: mt-2"
-        @click="formState.spec.love.loveDiary!.passwordRemoved = false"
-      >
+      <VButton v-if="formState.spec.love.loveDiary!.passwordRemoved" size="sm" type="secondary" plain class=":uno: mt-2"
+        @click="formState.spec.love.loveDiary!.passwordRemoved = false">
         取消清除
       </VButton>
     </div>
@@ -226,150 +167,92 @@ function cancelRemovalOnTyping(module: GeneralConfigLoveModule) {
        入口列表数据供 app 端直接渲染，模块数据分别在「恋爱管理」对应菜单维护） -->
   <template v-if="subTab === 'modules'">
     <p class=":uno: mb-3 text-xs text-gray-400 flex flex-col gap-y-2">
-      以下为恋爱页各模块入口的展示开关,拖拽卡片可调整展示顺序。
-      <br />
-      模块数据分别在「恋爱管理-恋爱故事 / 恋爱相册 / 恋爱清单」维护。
-      <br />
-      设置密码后，小程序端进入对应模块前需先验证密码。
+      以下为恋爱页各模块入口的展示开关,拖拽卡片可调整展示顺序。 模块数据分别在「恋爱管理-恋爱故事 / 恋爱相册 / 恋爱清单」维护。 设置密码后，小程序端进入对应模块前需先验证密码。
     </p>
     <VueDraggable v-model="moduleSortable" handle=".love-module-drag-handle" class=":uno: space-y-3">
-      <div
-        v-for="itemKey in moduleSortable"
-        :key="itemKey"
-        class=":uno: rounded-lg bg-gray-50 p-4"
-      >
+      <div v-for="itemKey in moduleSortable" :key="itemKey" class=":uno: rounded-lg bg-gray-50 p-4">
         <div class=":uno: flex items-center justify-between gap-4 border-b border-gray-100 pb-3">
           <div class=":uno: flex items-center gap-2">
             <RiDragMove2Line class="love-module-drag-handle cursor-move text-gray-400" />
             <div>
-              <div class=":uno: text-sm text-gray-700" :style="{ color: formState.spec.love[itemKey]!.titleColor }">
-                {{ LOVE_MODULES.find((item) => item.key === itemKey)!.label }}
+              <div class=":uno: text-sm text-gray-700 font-bold"
+                :style="{ color: formState.spec.love[itemKey]!.titleColor }">
+                {{LOVE_MODULES.find((item) => item.key === itemKey)!.label}}
               </div>
               <div class=":uno: mt-0.5 text-xs text-gray-400">
-                {{ LOVE_MODULES.find((item) => item.key === itemKey)!.desc }}
+                {{LOVE_MODULES.find((item) => item.key === itemKey)!.desc}}
               </div>
             </div>
           </div>
           <div class=":uno: flex items-center gap-4">
             <VSwitch v-model="formState.spec.love[itemKey]!.enabled" />
-            <VButton
-              size="sm"
-              type="secondary"
-              plain
-              class=":uno: !py-1.5 !px-3 rounded-full"
-              :title="collapsedModules[itemKey] ? '展开配置' : '折叠配置'"
-              @click="toggleModuleCollapse(itemKey)"
-            >
-               <span class=":uno: flex items-center justify-center gap-x-1 my-auto">
-                  <span>{{ collapsedModules[itemKey] ? '展开配置' : '折叠配置' }} </span>
-                  <RiArrowDownSLine v-if="collapsedModules[itemKey]" class=":uno: text-base" />
-                  <RiArrowUpSLine v-else class=":uno: text-base" />
-               </span>
+            <VButton size="sm" type="secondary" plain class=":uno: !py-1.5 !px-3 rounded-full"
+              :title="collapsedModules[itemKey] ? '展开配置' : '折叠配置'" @click="toggleModuleCollapse(itemKey)">
+              <span class=":uno: flex items-center justify-center gap-x-1 my-auto">
+                <span>{{ collapsedModules[itemKey] ? '展开配置' : '折叠配置' }} </span>
+                <RiArrowDownSLine v-if="collapsedModules[itemKey]" class=":uno: text-base" />
+                <RiArrowUpSLine v-else class=":uno: text-base" />
+              </span>
             </VButton>
           </div>
         </div>
 
         <div v-show="!collapsedModules[itemKey]" class=":uno: pt-1">
           <div class=":uno: mt-3 grid grid-cols-1 gap-3">
-            <FormKit
-              v-model="formState.spec.love[itemKey]!.title"
-              :name="`love_${itemKey}_title`"
-              label="入口名称"
-              type="text"
-              placeholder="入口名称（app 端入口列表标题）"
-            />
-            <FormKit
-              v-model="formState.spec.love[itemKey]!.subTitle"
-              :name="`love_${itemKey}_sub_title`"
-              label="副标题"
-              type="text"
-              placeholder="入口副标题"
-            />
+            <FormKit v-model="formState.spec.love[itemKey]!.title" :name="`love_${itemKey}_title`" label="入口名称"
+              type="text" placeholder="入口名称（app 端入口列表标题）" />
+            <FormKit v-model="formState.spec.love[itemKey]!.subTitle" :name="`love_${itemKey}_sub_title`" label="副标题"
+              type="text" placeholder="入口副标题" />
           </div>
 
           <!-- 颜色 -->
           <div class=":uno: mt-6 space-y-6">
             <div class=":uno: flex items-center gap-3">
               <span class=":uno: w-20 shrink-0 text-xs text-gray-700">标题颜色</span>
-              <FormKit
-                type="color"
-                format="hex8"
-                :model-value="toColorInput(formState.spec.love[itemKey]!.titleColor)"
+              <FormKit type="color" format="hex8" :model-value="toColorInput(formState.spec.love[itemKey]!.titleColor)"
                 @update:model-value="onModuleTitleColor(formState.spec.love[itemKey]!, $event)"
-                outer-class=":uno: w-12 shrink-0 !pt-0"
-              />
+                outer-class=":uno: w-12 shrink-0 !pt-0" />
             </div>
             <div class=":uno: flex items-center gap-3">
               <span class=":uno: w-20 shrink-0 text-xs text-gray-700">副标题颜色</span>
-              <FormKit
-                type="color"
-                format="hex8"
+              <FormKit type="color" format="hex8"
                 :model-value="toColorInput(formState.spec.love[itemKey]!.subTitleColor)"
                 @update:model-value="onModuleSubTitleColor(formState.spec.love[itemKey]!, $event)"
-                outer-class=":uno: w-12 shrink-0 !pt-0"
-              />
+                outer-class=":uno: w-12 shrink-0 !pt-0" />
             </div>
             <div class=":uno: flex items-center gap-3">
               <span class=":uno: w-20 shrink-0 text-xs text-gray-700">图标背景色</span>
-              <FormKit
-                type="color"
-                format="hex8"
-                :model-value="toColorInput(formState.spec.love[itemKey]!.iconBgColor)"
+              <FormKit type="color" format="hex8" :model-value="toColorInput(formState.spec.love[itemKey]!.iconBgColor)"
                 @update:model-value="onModuleIconBgColor(formState.spec.love[itemKey]!, $event)"
-                outer-class=":uno: w-12 shrink-0 !pt-0"
-              />
+                outer-class=":uno: w-12 shrink-0 !pt-0" />
             </div>
-            <FormKit
-              v-model="formState.spec.love[itemKey]!.path"
-              :name="`love_${itemKey}_path`"
-              label="跳转路径"
-              type="text"
-              placeholder="app 端进入该模块页面的路径"
-            />
+            <FormKit v-model="formState.spec.love[itemKey]!.path" :name="`love_${itemKey}_path`" label="跳转路径"
+              type="text" placeholder="app 端进入该模块页面的路径" />
           </div>
 
           <div class=":uno: mt-6">
-          <div class=":uno: mb-2 flex items-center text-sm text-gray-700">
-            入口密码
-            <span
-              v-if="formState.spec.love[itemKey]!.passwordEnabled"
-              class=":uno: ml-2 text-xs font-normal text-emerald-600"
-            >已设置</span>
-            <span v-else class=":uno: ml-2 text-xs font-normal text-gray-400">未设置</span>
-          </div>
-          <FormKit
-            v-if="!formState.spec.love[itemKey]!.passwordRemoved"
-            v-model="formState.spec.love[itemKey]!.password"
-            :name="`love_${itemKey}_password`"
-            label="新密码"
-            type="password"
-            :help="formState.spec.love[itemKey]!.passwordEnabled
-              ? '留空表示保持原密码不变'
-              : '设置后进入该模块前需先输入密码'"
-            placeholder="输入入口密码"
-            @input="cancelRemovalOnTyping(formState.spec.love[itemKey]!)"
-          />
-          <p v-else class=":uno: text-sm text-gray-500">保存后将清除该入口密码。</p>
-          <VButton
-            v-if="formState.spec.love[itemKey]!.passwordEnabled && !formState.spec.love[itemKey]!.passwordRemoved"
-            size="sm"
-            type="danger"
-            plain
-            class=":uno: mt-2"
-            @click="clearModulePassword(itemKey)"
-          >
-            清除密码
-          </VButton>
-          <VButton
-            v-if="formState.spec.love[itemKey]!.passwordRemoved"
-            size="sm"
-            type="secondary"
-            plain
-            class=":uno: mt-2"
-            @click="formState.spec.love[itemKey]!.passwordRemoved = false"
-          >
-            取消清除
-          </VButton>
+            <div class=":uno: mb-2 flex items-center text-sm text-gray-700">
+              入口密码
+              <span v-if="formState.spec.love[itemKey]!.passwordEnabled"
+                class=":uno: ml-2 text-xs font-normal text-emerald-600">已设置</span>
+              <span v-else class=":uno: ml-2 text-xs font-normal text-gray-400">未设置</span>
+            </div>
+            <FormKit v-if="!formState.spec.love[itemKey]!.passwordRemoved"
+              v-model="formState.spec.love[itemKey]!.password" :name="`love_${itemKey}_password`" label="新密码"
+              type="password" :help="formState.spec.love[itemKey]!.passwordEnabled
+                ? '留空表示保持原密码不变'
+                : '设置后进入该模块前需先输入密码'" placeholder="输入入口密码"
+              @input="cancelRemovalOnTyping(formState.spec.love[itemKey]!)" />
+            <p v-else class=":uno: text-sm text-gray-500">保存后将清除该入口密码。</p>
+            <VButton
+              v-if="formState.spec.love[itemKey]!.passwordEnabled && !formState.spec.love[itemKey]!.passwordRemoved"
+              size="sm" type="danger" plain class=":uno: mt-2" @click="clearModulePassword(itemKey)">
+              清除密码
+            </VButton>
+            <VButton v-if="formState.spec.love[itemKey]!.passwordRemoved" size="sm" type="secondary" plain
+              class=":uno: mt-2" @click="formState.spec.love[itemKey]!.passwordRemoved = false">
+              取消清除
+            </VButton>
           </div>
         </div>
       </div>

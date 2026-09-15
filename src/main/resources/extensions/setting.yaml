@@ -279,7 +279,7 @@ spec:
               name: position
               id: floatingWindowPosition
               label: 显示位置
-              value: "bottom-right"
+              value: "right-center"
               options:
                 - label: 左上角
                   value: "top-left"
@@ -356,7 +356,7 @@ spec:
               name: rememberClosed
               id: floatingWindowRememberClosed
               label: 记住关闭状态
-              value: true
+              value: false
               help: 开启后访客点击关闭后，同一浏览器下次访问不再显示；关闭则每次刷新都重新显示。
             - $formkit: switch
               name: miniProgramApply
@@ -373,7 +373,7 @@ spec:
               id: loveDiaryThemeEnabled
               label: 启用恋爱日记主题页
               value: false
-              help: "关闭时插件不注册任何前台路由、不注入任何资源，站点行为零变化（默认关闭，老站升级无影响）。启用后页面自动跟随主题的页头/页脚与正文排版，背景图取自「通用配置 → 页面设置 → 恋爱日记页」。"
+              help: "关闭时插件不注册任何前台路由、不注入任何资源（默认关闭）。背景图取自「通用配置 → 页面设置 → 恋爱日记页」。"
             - $formkit: group
               name: routes
               label: 页面路径
@@ -407,9 +407,9 @@ spec:
               label: 页面外壳
               value: auto
               options:
-                - label: 跟随主题布局（推荐）
+                - label: 跟随主题布局
                   value: auto
-                - label: 独立页面（不套主题页头页脚）
+                - label: 独立页面
                   value: standalone
               validation: required
               help: 跟随主题布局时复用主题的页头/页脚与整体外壳；独立页面则不依赖主题的 layout 契约，便于主题未适配时兜底。
@@ -437,7 +437,7 @@ spec:
               id: passwordLoginEnabled
               label: 账号密码登录
               value: true
-              help: 使用 Halo 账号密码登录。开启二次验证（2FA）的用户会被拒绝，需改用微信登录或先在网页端登录。
+              help: 使用 Halo 账号密码登录，这里仅控制小程序端是否显示登录界面。
             - $formkit: switch
               name: wechatLoginEnabled
               id: wechatLoginEnabled

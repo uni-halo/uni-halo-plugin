@@ -1,7 +1,10 @@
-<!DOCTYPE html>
-<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org"
-      th:replace="~{layout :: html(head = ~{::head}, content = ~{::content})}">
-<!--
+<!doctype html>
+<html
+    lang="zh-CN"
+    xmlns:th="http://www.thymeleaf.org"
+    th:replace="~{layout :: html(head = ~{::head}, content = ~{::content})}"
+>
+    <!--
   恋爱日记 · 首页（默认模板）
   ------------------------------------------------------------------
   主题在**自己的** templates/ 放同名 love.html 即可整页接管；
@@ -9,17 +12,19 @@
 
   模板名 / _templateId / 模型字段都属于主题集成契约，不要在兼容版本里改。
 -->
-<th:block th:fragment="head">
-  <title th:text="|${pageTitle} - ${site.title}|">恋爱日记</title>
-</th:block>
+    <th:block th:fragment="head">
+        <title th:text="|${pageTitle} - ${site.title}|">恋爱日记</title>
+    </th:block>
 
-<th:block th:fragment="content">
-  <th:block th:replace="~{plugin:uni-halo:fragments/love-icons :: sprite}"></th:block>
-  <!-- 背景图挂 wrap 级（attachment:fixed 钉住视口）→ 整页全屏，见 love-diary.css .has-bg -->
-  <div class="uh-love-wrap" data-love-page="home"
-       th:classappend="${'uh-love-shell-' + (layoutMode ?: 'auto') + (loveConfig != null and !#strings.isEmpty(loveConfig.bgImageUrl) ? ' has-bg' : '')}"
-       th:attr="style=${loveConfig != null and !#strings.isEmpty(loveConfig.bgImageUrl)} ? ${'--uh-love-bg-img:url(' + loveConfig.bgImageUrl + ')'} : null">
-    <th:block th:replace="~{plugin:uni-halo:fragments/love-page :: page(pageKey='home')}"></th:block>
-  </div>
-</th:block>
+    <th:block th:fragment="content">
+        <th:block th:replace="~{plugin:uni-halo:fragments/love-icons :: sprite}"></th:block>
+        <div
+            class="uh-love-wrap"
+            data-love-page="home"
+            th:classappend="${'uh-love-shell-' + (layoutMode ?: 'auto') + (loveConfig != null and !#strings.isEmpty(loveConfig.bgImageUrl) ? ' has-bg' : '')}"
+            th:attr="style=${loveConfig != null and !#strings.isEmpty(loveConfig.bgImageUrl)} ? ${'--uh-love-bg-img:url(' + loveConfig.bgImageUrl + ')'} : null"
+        >
+            <th:block th:replace="~{plugin:uni-halo:fragments/love-page :: page(pageKey='home')}"></th:block>
+        </div>
+    </th:block>
 </html>

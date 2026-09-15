@@ -1,52 +1,41 @@
-<!DOCTYPE html>
+<!doctype html>
 <html xmlns:th="http://www.thymeleaf.org">
-<body>
-<!--
-  恋爱日记 · 页面正文装配（四个默认模板与独立外壳共用这一份）
-  ==================================================================
-  为什么抽这一层：auto（跟随主题布局）与 standalone（独立外壳）两种外壳
-  只差最外面那圈 html/body，里面的锁分支、正文、浮层完全相同。
-  抽出来后「主题覆盖某个页面」依旧成立 —— 模板名 love-stories.html 等
-  还是各自的文件，只是内容薄了一层。
+    <body>
+        <!--
+        恋爱日记
 
-  ⚠️ 这里**不再渲染任何导航/页脚**（v1.5 起）：
-    auto 模式 → 页头页脚由主题自己的 layout.html 提供（`layout :: html(head, content)`）；
-    standalone → 干脆没有页头页脚。
-    子页面之间的跳转靠首页的模块入口卡片，插件不再自己造一条顶部导航——
-    否则主题换一次外观就要跟着改一遍，且与主题的全局导航重复。
+        行为契约：
+            ① access.locked = true → **只**渲染页内解锁表单，一个业务字段都不出现；
+            ② 未锁定 → 按 pageKey 渲染对应正文；
+            ③ 浮层（抽屉/查看器/提示）恒渲染但默认隐藏，供 JS 使用。
+        -->
+        <th:block th:fragment="page(pageKey)" th:with="locked=${access != null and access.locked}">
+            <!-- 锁定态 -->
+            <th:block th:if="${locked}">
+                <th:block
+                    th:replace="~{plugin:uni-halo:fragments/love-lock :: form(module=${access.module}, moduleTitle=${access.moduleTitle}, captchaRequired=${access.captchaRequired}, kind='module', albumName=null)}"
+                ></th:block>
+            </th:block>
 
-  行为契约：
-    ① access.locked = true → **只**渲染页内解锁表单，一个业务字段都不出现；
-    ② 未锁定 → 按 pageKey 渲染对应正文；
-    ③ 浮层（抽屉/查看器/提示）恒渲染但默认隐藏，供 JS 使用。
--->
-<th:block th:fragment="page(pageKey)"
-          th:with="locked=${access != null and access.locked}">
+            <!-- 未锁定：按页 key 分派正文 -->
+            <th:block th:unless="${locked}">
+                <th:block th:switch="${pageKey}">
+                    <th:block th:case="'home'">
+                        <th:block th:replace="~{plugin:uni-halo:fragments/love-home :: body}"></th:block>
+                    </th:block>
+                    <th:block th:case="'stories'">
+                        <th:block th:replace="~{plugin:uni-halo:fragments/love-stories :: body}"></th:block>
+                    </th:block>
+                    <th:block th:case="'albums'">
+                        <th:block th:replace="~{plugin:uni-halo:fragments/love-albums :: body}"></th:block>
+                    </th:block>
+                    <th:block th:case="*">
+                        <th:block th:replace="~{plugin:uni-halo:fragments/love-daily :: body}"></th:block>
+                    </th:block>
+                </th:block>
+            </th:block>
 
-  <!-- 锁定态：整页只有解锁表单（内容从未进入 DOM，F12 也看不到） -->
-  <th:block th:if="${locked}">
-    <th:block th:replace="~{plugin:uni-halo:fragments/love-lock :: form(module=${access.module}, moduleTitle=${access.moduleTitle}, captchaRequired=${access.captchaRequired}, kind='module', albumName=null)}"></th:block>
-  </th:block>
-
-  <!-- 未锁定：按页 key 分派正文 -->
-  <th:block th:unless="${locked}">
-    <th:block th:switch="${pageKey}">
-      <th:block th:case="'home'">
-        <th:block th:replace="~{plugin:uni-halo:fragments/love-home :: body}"></th:block>
-      </th:block>
-      <th:block th:case="'stories'">
-        <th:block th:replace="~{plugin:uni-halo:fragments/love-stories :: body}"></th:block>
-      </th:block>
-      <th:block th:case="'albums'">
-        <th:block th:replace="~{plugin:uni-halo:fragments/love-albums :: body}"></th:block>
-      </th:block>
-      <th:block th:case="*">
-        <th:block th:replace="~{plugin:uni-halo:fragments/love-daily :: body}"></th:block>
-      </th:block>
-    </th:block>
-  </th:block>
-
-  <th:block th:replace="~{plugin:uni-halo:fragments/love-overlays :: overlays}"></th:block>
-</th:block>
-</body>
+            <th:block th:replace="~{plugin:uni-halo:fragments/love-overlays :: overlays}"></th:block>
+        </th:block>
+    </body>
 </html>

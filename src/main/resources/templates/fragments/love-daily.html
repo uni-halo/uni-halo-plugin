@@ -1,17 +1,12 @@
 <!doctype html>
 <html xmlns:th="http://www.thymeleaf.org">
     <body>
-        <!--
-  恋爱日记 · 恋爱清单正文
-  ------------------------------------------------------------------
-  只读 model：items（UrlContextListResult<LoveDailyItemVo>）、status、routes
-
-  · 状态筛选走服务端（?status=wait|doing|complete），刷新即筛选，可被分享/收藏；
-  · 展开用原生 <details>/<summary>：无 JS 也能展开，JS 只负责排序增强；
-  · 序号圆标按状态着色（wait 黄 / doing 粉 / complete 蓝），与 app 端一致。
--->
+        <!-- 日记 · 恋爱清单正文  -->
         <th:block th:fragment="body">
-            <div class="uh-love-daily-page" th:classappend="${(layoutMode ?: 'auto') == 'standalone' ? 'uh-glass' : null}">
+            <div
+                class="uh-love-daily-page"
+                th:classappend="${(layoutMode ?: 'auto') == 'standalone' ? 'uh-glass' : null}"
+            >
                 <!-- 顶部返回操作（封装于 fragments/love-back.html，返回恋爱日记的路径取 routes['home']） -->
                 <th:block th:replace="~{plugin:uni-halo:fragments/love-back :: back-buttons}"></th:block>
                 <!-- 筛选 + 排序（排序是纯前端增强，不改变 URL） -->

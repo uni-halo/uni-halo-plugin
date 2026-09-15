@@ -1,12 +1,7 @@
 <!doctype html>
 <html xmlns:th="http://www.thymeleaf.org">
     <body>
-        <!--
-  恋爱日记 · 首页正文（亲密区 / 恋爱计时 / 模块入口 / 最新摘要）
-  ------------------------------------------------------------------
-  只读 model：loveConfig、overview、moduleLocks、routes、pageKey、showOverview
-  锁定态由上层 fragments/love-page 拦掉，本片段只在「未锁定」时渲染。
--->
+        <!-- 恋爱日记 -->
         <th:block
             th:fragment="body"
             th:with="boyName=${!#strings.isEmpty(loveConfig.boyNickname) ? loveConfig.boyNickname : '他'},

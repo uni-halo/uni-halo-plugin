@@ -1,52 +1,45 @@
-<!DOCTYPE html>
+<!doctype html>
 <html xmlns:th="http://www.thymeleaf.org">
-<body>
-<!--
-  恋爱日记 · 浮层（故事详情抽屉 / 全屏查看器 / 轻提示）
-  ------------------------------------------------------------------
-  全部默认隐藏（CSS 里 display:none 或 opacity:0），由 love-diary.js 打开。
-  无 JS 时这些节点不出现任何内容 —— 正文详情在页面里已有 <template> 承载，
-  真正「看得到」的部分始终由 SSR 渲染，不依赖脚本。
--->
-<th:block th:fragment="overlays">
+    <body>
+        <!--  恋爱日记 · 浮层-->
+        <th:block th:fragment="overlays">
+            <!-- 抽屉遮罩（故事详情用；不用于解锁表单 —— 解锁表单是页内的一部分） -->
+            <div class="uh-love-mask" data-love-mask></div>
 
-  <!-- 抽屉遮罩（故事详情用；不用于解锁表单 —— 解锁表单是页内的一部分） -->
-  <div class="uh-love-mask" data-love-mask></div>
+            <!-- 故事详情抽屉：内容由 JS 从 <template data-love-story-detail> 克隆进来 -->
+            <div class="uh-love-sheet" data-love-sheet role="dialog" aria-modal="true" aria-hidden="true">
+                <div class="uh-love-sheet-head">
+                    <span class="uh-love-sheet-title" data-love-sheet-title>故事详情</span>
+                    <button type="button" class="uh-love-sheet-close" data-love-sheet-close aria-label="关闭">
+                        <svg class="uh-love-icon"><use href="#ri-close-line" /></svg>
+                    </button>
+                </div>
+                <div class="uh-love-sheet-body" data-love-sheet-body></div>
+            </div>
 
-  <!-- 故事详情抽屉：内容由 JS 从 <template data-love-story-detail> 克隆进来 -->
-  <div class="uh-love-sheet" data-love-sheet role="dialog" aria-modal="true" aria-hidden="true">
-    <div class="uh-love-sheet-head">
-      <span class="uh-love-sheet-title" data-love-sheet-title>故事详情</span>
-      <button type="button" class="uh-love-sheet-close" data-love-sheet-close aria-label="关闭">
-        <svg class="uh-love-icon"><use href="#ri-close-line" /></svg>
-      </button>
-    </div>
-    <div class="uh-love-sheet-body" data-love-sheet-body></div>
-  </div>
+            <!-- 全屏查看器（相册 / 正文灯箱共用一套）：图片不裁剪，左右切换，Esc 关闭 -->
+            <div class="uh-love-viewer" data-love-viewer role="dialog" aria-modal="true" aria-hidden="true">
+                <div class="uh-love-viewer-bar">
+                    <span class="uh-love-viewer-title" data-love-viewer-title>照片</span>
+                    <span class="uh-love-viewer-count" data-love-viewer-count></span>
+                    <button type="button" data-love-viewer-close aria-label="关闭查看器">
+                        <svg class="uh-love-icon"><use href="#ri-close-line" /></svg>
+                    </button>
+                </div>
+                <div class="uh-love-viewer-stage" data-love-viewer-stage>
+                    <button type="button" class="uh-love-viewer-nav is-prev" data-love-viewer-prev aria-label="上一张">
+                        <svg class="uh-love-icon"><use href="#ri-arrow-left-s-line" /></svg>
+                    </button>
+                    <img class="uh-love-viewer-photo" data-love-viewer-photo alt="" />
+                    <button type="button" class="uh-love-viewer-nav is-next" data-love-viewer-next aria-label="下一张">
+                        <svg class="uh-love-icon"><use href="#ri-arrow-right-s-line" /></svg>
+                    </button>
+                </div>
+                <div class="uh-love-viewer-info" data-love-viewer-info></div>
+            </div>
 
-  <!-- 全屏查看器（相册 / 正文灯箱共用一套）：图片不裁剪，左右切换，Esc 关闭 -->
-  <div class="uh-love-viewer" data-love-viewer role="dialog" aria-modal="true" aria-hidden="true">
-    <div class="uh-love-viewer-bar">
-      <span class="uh-love-viewer-title" data-love-viewer-title>照片</span>
-      <span class="uh-love-viewer-count" data-love-viewer-count></span>
-      <button type="button" data-love-viewer-close aria-label="关闭查看器">
-        <svg class="uh-love-icon"><use href="#ri-close-line" /></svg>
-      </button>
-    </div>
-    <div class="uh-love-viewer-stage" data-love-viewer-stage>
-      <button type="button" class="uh-love-viewer-nav is-prev" data-love-viewer-prev aria-label="上一张">
-        <svg class="uh-love-icon"><use href="#ri-arrow-left-s-line" /></svg>
-      </button>
-      <img class="uh-love-viewer-photo" data-love-viewer-photo alt="" />
-      <button type="button" class="uh-love-viewer-nav is-next" data-love-viewer-next aria-label="下一张">
-        <svg class="uh-love-icon"><use href="#ri-arrow-right-s-line" /></svg>
-      </button>
-    </div>
-    <div class="uh-love-viewer-info" data-love-viewer-info></div>
-  </div>
-
-  <!-- 轻提示（解锁失败、复制提示等） -->
-  <div class="uh-love-toast" data-love-toast role="status" aria-live="polite"></div>
-</th:block>
-</body>
+            <!-- 轻提示（解锁失败、复制提示等） -->
+            <div class="uh-love-toast" data-love-toast role="status" aria-live="polite"></div>
+        </th:block>
+    </body>
 </html>

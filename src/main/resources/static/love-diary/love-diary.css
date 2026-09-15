@@ -1,7 +1,7 @@
 /*!
  * love-diary.css — 恋爱日记主题模板 · 布局/组件层
  *
- * 设计约束（与设计报告 §3.5 的 v1.4 修订一致）：
+ * 设计约束：
  *   ① 不用 preflight、不用 `*{}` / `body{}` 等全局选择器 —— 基础重置全部限定在 `.uh-love-wrap` 内；
  *   ② 全部类名 `uh-love-` 前缀，彻底避开与主题/其它插件撞名；
  *   ③ 采用**语义化类名**（`.uh-love-album` 这类）而非 utility class —— 于是
@@ -305,6 +305,13 @@ body:has(.uh-love-wrap) {
   justify-content: center;
   overflow: hidden;
   padding: 52px;
+}
+
+/* auto 外壳（跟随主题布局）：wrap 收紧为卡片观感 —— 小内边距 + 圆角，
+   standalone 维持 52px 大留白。外壳标记类见模板 th:classappend='uh-love-shell-*' */
+.uh-love-wrap.uh-love-shell-auto {
+  padding: 16px;
+  border-radius: 12px;
 }
 
 /* ── 首页：亲密区 ──
@@ -1404,11 +1411,6 @@ body:has(.uh-love-wrap) {
   font-variant-numeric: tabular-nums;
 }
 
-/* ── 正文层（.prose 补充 / 兜底）已全部移到 rich-text.css ──
-   v1.5 起本文件只管「布局与组件」；正文排版与编辑器独有节点只有一份实现，
-   见 static/love-diary/rich-text.css。此前这里有一套重复的 data-type 样式，
-   与 rich-text.css 形成两个事实源，已删除。 */
-
 /* ── 独立外壳（layoutMode=standalone） ── */
 body.uh-love-standalone {
   margin: 0;
@@ -1442,7 +1444,7 @@ body.uh-love-standalone[data-uh-color-scheme="dark"] {
   display: flex;
   align-items: center;
   gap: 12px;
-  margin-bottom: 12px;
+  margin-bottom: 24px;
 }
 .uh-love-back-button {
   display: inline-flex;

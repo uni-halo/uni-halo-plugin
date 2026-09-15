@@ -1,23 +1,18 @@
 <!doctype html>
 <html xmlns:th="http://www.thymeleaf.org">
     <body>
-        <!--
-  恋爱日记 · 恋爱故事列表正文
-  ------------------------------------------------------------------
-  只读 model：stories（UrlContextListResult<LoveStoryVo>）、routes、pageKey
-  · 时间轴（日大字 / 年·月 / 星期）由服务端派生，不引入 dayjs；
-  · 详情不是「另开一页」，而是每篇随卡片带一个 <template>：
-    <template> 内容在浏览器里是惰性的（不渲染、图片不请求），
-    JS 点开抽屉时克隆进去即可 —— 于是 SSR 与前端**共用同一份 markup**，无重复实现。
--->
+        <!--  恋爱日记 · 恋爱故事 -->
         <th:block th:fragment="body">
-            <div class="uh-love-story-page" th:classappend="${(layoutMode ?: 'auto') == 'standalone' ? 'uh-glass' : null}">
+            <div
+                class="uh-love-story-page"
+                th:classappend="${(layoutMode ?: 'auto') == 'standalone' ? 'uh-glass' : null}"
+            >
                 <!-- 顶部返回操作（封装于 fragments/love-back.html，返回恋爱日记的路径取 routes['home']） -->
                 <th:block th:replace="~{plugin:uni-halo:fragments/love-back :: back-buttons}"></th:block>
                 <div class="uh-love-empty" th:if="${#lists.isEmpty(stories.items)}">
                     <svg class="uh-love-icon"><use href="#ri-inbox-2-line" /></svg>
                     <p>还没有故事</p>
-                    <p class="uh-love-note">站长在 Halo 控制台添加「恋爱故事」后，会自动出现在这里。</p>
+                    <p class="uh-love-note">添加「恋爱故事」后，会自动出现在这里。</p>
                 </div>
 
                 <th:block th:unless="${#lists.isEmpty(stories.items)}">
@@ -25,10 +20,10 @@
                         <div class="uh-love-story-date">
                             <div class="uh-love-story-day" th:text="${s.day != null ? s.day : '·'}">12</div>
                             <div class="uh-love-story-ym" th:if="${s.yearMonth != null}" th:text="${s.yearMonth}">
-                                2026·03
+                                ---
                             </div>
                             <div class="uh-love-story-week" th:if="${s.weekday != null}" th:text="${s.weekday}">
-                                星期四
+                                ---
                             </div>
                         </div>
 
@@ -42,7 +37,7 @@
                                 </span>
                                 <span th:if="${!#strings.isEmpty(s.location)}">
                                     <svg class="uh-love-icon"><use href="#ri-map-pin-2-line" /></svg>
-                                    <span th:text="${s.location}">青岛 · 石老人</span>
+                                    <span th:text="${s.location}">---</span>
                                 </span>
                             </div>
 
@@ -74,7 +69,7 @@
                                 </span>
                                 <span th:if="${!#strings.isEmpty(s.location)}">
                                     <svg class="uh-love-icon"><use href="#ri-map-pin-2-line" /></svg>
-                                    <span th:text="${s.location}">青岛 · 石老人</span>
+                                    <span th:text="${s.location}">---</span>
                                 </span>
                             </div>
 
@@ -83,10 +78,6 @@
                                     <img th:src="${img}" alt="" loading="lazy" referrerpolicy="no-referrer" />
                                 </span>
                             </div>
-
-                            <!-- 正文用主题自己的排版根类 .prose（见设计文档 §12.2）：
-                主题的字号/行高/引用/代码框/表格/链接色与明暗变量会直接生效，
-                插件只补主题没覆盖的编辑器独有节点（taskList/gallery/columns/details）。 -->
                             <div class="prose uh-love-content" th:utext="${s.content}">故事正文</div>
                         </template>
                     </article>
