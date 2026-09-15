@@ -12,7 +12,6 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import cn.ialley.unihalo.constants.Constants;
 import cn.ialley.unihalo.scheme.FeatureConfig;
-import cn.ialley.unihalo.scheme.LegacyGeneralConfig;
 import cn.ialley.unihalo.scheme.FeatureConfig.About;
 import cn.ialley.unihalo.scheme.FeatureConfig.AboutProjectPage;
 import cn.ialley.unihalo.scheme.FeatureConfig.ArchivesPage;
@@ -73,17 +72,6 @@ import tools.jackson.databind.node.ObjectNode;
 public class FeatureConfigServiceImpl implements FeatureConfigService {
 
     /**
-     * TODO-TEMPORARY-MIGRATION：旧「通用配置」单例名（改名前 general-config）。
-     */
-    private static final String LEGACY_GENERAL_CONFIG_SINGLETON_NAME = "general-config";
-
-    /**
-     * 参与导入的存量设置组
-     */
-    private static final String[] LEGACY_GROUPS =
-        {"basicConfig", "pageConfig", "authorConfig", "imagesConfig"};
-
-    /**
      * 插件 Spring 上下文未注册 Jackson 3 ObjectMapper bean，故内部自行创建
      * （与 EmailService 同套路）。
      */
@@ -100,7 +88,7 @@ public class FeatureConfigServiceImpl implements FeatureConfigService {
 
     @Override
     public Mono<FeatureConfig> get() {
-        return fetchOrMigrate()
+        return fetchRaw()
                 // 恋爱模块入口密码一律脱敏（哈希不回显；passwordEnabled 由哈希派生）
                 .map(this::maskLovePasswords);
     }
@@ -108,13 +96,13 @@ public class FeatureConfigServiceImpl implements FeatureConfigService {
     @Override
     public Mono<FeatureConfig> save(FeatureConfig config) {
         FeatureConfig body = config == null ? new FeatureConfig() : config;
-        // 写入前合并：默认值 → 存量配置值 → 请求体非空字段，防丢字段/防空写。
-        // 先取现有单例（可能不存在，走 fetchOrMigrate 兜旧数据迁移）以保留恋爱模块入口密码哈希。
-        return fetchOrMigrate()
+        // 写入前合并：默认值 → 请求体非空字段，防丢字段/防空写。
+        // 先取现有单例（可能不存在，回落纯默认结构）以保留恋爱模块入口密码哈希。
+        return fetchRaw()
                 .map(Optional::of)
                 .defaultIfEmpty(Optional.<FeatureConfig>empty())
-                .flatMap(existingOpt -> legacyOverlay().map(overlay -> {
-                    ObjectNode merged = merge(defaultSpecTree(), overlay);
+                .flatMap(existingOpt -> {
+                    ObjectNode merged = defaultSpecTree();
                     if (body.getSpec() != null) {
                         merged = merge(merged,
                                 (ObjectNode) objectMapper.valueToTree(body.getSpec()));
@@ -126,8 +114,6 @@ public class FeatureConfigServiceImpl implements FeatureConfigService {
                             existingOpt.map(FeatureConfig::getSpec)
                                     .map(Spec::getLove).orElse(null));
                     validateMaintenance(target.getSpec().getMaintenance());
-                    return target;
-                }).flatMap(target -> {
                     FeatureConfig existing = existingOpt.orElse(null);
                     if (existing == null || existing.getMetadata() == null) {
                         Metadata metadata = new Metadata();
@@ -138,7 +124,7 @@ public class FeatureConfigServiceImpl implements FeatureConfigService {
                     }
                     existing.setSpec(target.getSpec());
                     return client.update(existing);
-                }))
+                })
                 // 响应同样脱敏（哈希/写请求字段不回显）
                 .map(this::maskLovePasswords);
     }
@@ -165,90 +151,11 @@ public class FeatureConfigServiceImpl implements FeatureConfigService {
 
     /**
      * 读取原始单例（未经脱敏，含恋爱模块密码哈希），供解锁/锁定判断使用。
+     * 单例不存在时回落默认值 + 存量设置导入（不落库）。
      */
     private Mono<FeatureConfig> fetchRaw() {
-        return fetchOrMigrate();
-    }
-
-    /**
-     * TODO-TEMPORARY-MIGRATION：统一读取入口 —— 新单例存在直接返回；
-     * 不存在且旧「通用配置」单例（general-config）存在时，把旧 spec 原样复制
-     * 创建为新单例（feature-config）后返回；两边都没有则回落默认值+存量导入。
-     * 迁移为幂等：创建成功即写新单例，后续读取不再走旧数据。
-     * 迁移完成经用户确认后，本方法与 LegacyGeneralConfig 一并删除。
-     */
-    private Mono<FeatureConfig> fetchOrMigrate() {
         return client.fetch(FeatureConfig.class, Constants.FEATURE_CONFIG_SINGLETON_NAME)
-                .switchIfEmpty(Mono.defer(this::migrateFromLegacy)
-                        .switchIfEmpty(Mono.defer(this::defaultWithLegacy)));
-    }
-
-    /**
-     * TODO-TEMPORARY-MIGRATION：从旧单例复制创建新单例；旧单例不存在时返回空。
-     * 复制前对旧 spec 做树级搬移（见 {@link #migrateLoveDiaryPageTree(JsonNode)}）。
-     */
-    private Mono<FeatureConfig> migrateFromLegacy() {
-        return client.fetch(LegacyGeneralConfig.class, LEGACY_GENERAL_CONFIG_SINGLETON_NAME)
-                .flatMap(legacy -> {
-                    JsonNode legacySpec = legacy.getSpec() != null
-                            ? migrateLoveDiaryPageTree(toJackson3(legacy.getSpec()))
-                            : null;
-                    FeatureConfig config = new FeatureConfig();
-                    Metadata metadata = new Metadata();
-                    metadata.setName(Constants.FEATURE_CONFIG_SINGLETON_NAME);
-                    metadata.setCreationTimestamp(
-                            legacy.getMetadata() != null && legacy.getMetadata().getCreationTimestamp() != null
-                                    ? legacy.getMetadata().getCreationTimestamp()
-                                    : Instant.now());
-                    config.setMetadata(metadata);
-                    config.setSpec(legacySpec != null
-                            ? objectMapper.convertValue(legacySpec, Spec.class)
-                            : treeToValue(defaultSpecTree()));
-                    log.info("【UniHalo】已从旧通用配置（general-config）迁移功能设置（feature-config）");
-                    return client.create(config);
-                });
-    }
-
-    /**
-     * TODO-TEMPORARY-MIGRATION：Jackson 2→3 桥接。旧单例 spec 由 Halo Extension
-     * 存取层（Jackson 2）反序列化，本类内部树操作统一用 Jackson 3，经 JSON 字符串
-     * 重建节点。随迁移代码一并删除。
-     */
-    private tools.jackson.databind.JsonNode toJackson3(com.fasterxml.jackson.databind.JsonNode v2Node) {
-        return objectMapper.readTree(v2Node.toString());
-    }
-
-    /**
-     * TODO-TEMPORARY-MIGRATION：旧 spec 树级搬移恋爱日记页配置
-     * {@code pages.loveDiaryConfig → love.diaryPage}（新位置已有值时旧值忽略），
-     * 搬移后删除旧节点，再整体反序列化为新 Spec（该字段已从模型删除）。
-     * 随迁移代码一并删除。
-     */
-    private JsonNode migrateLoveDiaryPageTree(JsonNode spec) {
-        if (spec == null || !spec.isObject()) {
-            return spec;
-        }
-        JsonNode pages = spec.get("pages");
-        JsonNode legacyPage = pages != null && pages.isObject()
-                ? pages.get("loveDiaryConfig") : null;
-        if (legacyPage == null || !legacyPage.isObject() || legacyPage.isEmpty()) {
-            return spec;
-        }
-        ObjectNode mutable = (ObjectNode) spec;
-        JsonNode love = mutable.get("love");
-        if (love == null || !love.isObject()) {
-            love = objectMapper.createObjectNode();
-            mutable.set("love", love);
-        }
-        JsonNode diaryPage = love.get("diaryPage");
-        boolean diaryPageEmpty = diaryPage == null || diaryPage.isNull()
-                || (diaryPage.path("pageTitle").asString("").isEmpty()
-                        && diaryPage.path("bgImageUrl").asString("").isEmpty());
-        if (diaryPageEmpty) {
-            ((ObjectNode) love).set("diaryPage", legacyPage.deepCopy());
-        }
-        ((ObjectNode) pages).remove("loveDiaryConfig");
-        return mutable;
+                .switchIfEmpty(Mono.defer(this::defaultConfig));
     }
 
     private static ModuleSwitch findLoveModule(FeatureConfig config, String module) {
@@ -268,168 +175,16 @@ public class FeatureConfigServiceImpl implements FeatureConfigService {
     // ---------- 默认结构与存量导入 ----------
 
     /**
-     * 默认结构（不落库）：默认值 + 存量配置值合并。
+     * 默认结构（不落库）：纯默认值，不混入任何存量设置数据。
      */
-    private Mono<FeatureConfig> defaultWithLegacy() {
-        return legacyOverlay().map(overlay -> {
+    private Mono<FeatureConfig> defaultConfig() {
+        return Mono.fromSupplier(() -> {
             FeatureConfig config = new FeatureConfig();
             // 不设置 metadata：save() 以「metadata 为空」判定未落库、走 create 分支；
             // 兜底默认结构一旦带上 metadata 会被误判为已存在单例（update 不存在的资源）。
-            config.setSpec(treeToValue(merge(defaultSpecTree(), overlay)));
+            config.setSpec(treeToValue(defaultSpecTree()));
             return config;
         });
-    }
-
-    /**
-     * 读取存量设置组并整理成 spec 形态的覆盖树
-     * （{@code profile: {...}} / {@code pages: {...}} / {@code assets: {...}}）。
-     * 组不存在时返回空对象。
-     */
-    private Mono<ObjectNode> legacyOverlay() {
-        return settingFetcher.getSettingValues()
-                .defaultIfEmpty(Map.of())
-                .map(values -> {
-                    ObjectNode overlay = JsonNodeFactory.instance.objectNode();
-                    JsonNode author = values.get("authorConfig");
-                    JsonNode basic = values.get("basicConfig");
-                    ObjectNode profile = JsonNodeFactory.instance.objectNode();
-                    pick(author, profile, "blogger");
-                    // 社交信息（动态列表）：authorConfig.social 固定字段
-                    // （enabled/qq/wechat/...）转为 items 列表（key=字段名、content=值）
-                    JsonNode oldSocial = author != null ? author.get("social") : null;
-                    if (oldSocial != null && oldSocial.isObject()) {
-                        JsonNode items = migrateLegacySocialItems(oldSocial);
-                        if (items != null && items.size() > 0) {
-                            ObjectNode socialOut = JsonNodeFactory.instance.objectNode();
-                            socialOut.set("items", items);
-                            profile.set("social", socialOut);
-                        }
-                    }
-                    // 页脚版权（basicConfig.copyrightConfig → profile.copyrightConfig）
-                    JsonNode basicCopyright = basic != null ? basic.get("copyrightConfig") : null;
-                    if (basicCopyright != null && !basicCopyright.isNull()) {
-                        profile.set("copyrightConfig", basicCopyright);
-                    }
-                    // showAboutSystem/disclaimers/postDetailConfig 不属于 profile：
-                    // 免责/文章详情位于页面设置，showAboutSystem 由开关入口统一管理，
-                    // 此处仅保留博主/社交值
-                    // 应用信息（名称/图标）：优先取「基本配置」baseConfig.appInfo，
-                    // 回退 appConfig.appInfo
-                    JsonNode appInfo = null;
-                    JsonNode baseCfg = values.get("baseConfig");
-                    if (baseCfg != null && baseCfg.isObject() && baseCfg.has("appInfo")) {
-                        appInfo = baseCfg.get("appInfo");
-                    } else {
-                        JsonNode appCfg = values.get("appConfig");
-                        if (appCfg != null && appCfg.isObject() && appCfg.has("appInfo")) {
-                            appInfo = appCfg.get("appInfo");
-                        }
-                    }
-                    if (appInfo != null && !appInfo.isNull()) {
-                        profile.set("appInfo", appInfo);
-                    }
-                    if (profile.size() > 0) {
-                        overlay.set("profile", profile);
-                    }
-                    JsonNode page = values.get("pageConfig");
-                    ObjectNode pages = JsonNodeFactory.instance.objectNode();
-                    pick(page, pages, "homeConfig", "galleryConfig");
-                    // 关于页：pageConfig.aboutConfig（标题/背景/波浪）；
-                    // 页脚版权由应用资料 profile.copyrightConfig 承担（见上），
-                    // 此处不再合并 basicConfig.copyrightConfig
-                    ObjectNode aboutOut = JsonNodeFactory.instance.objectNode();
-                    JsonNode aboutOld = page != null ? page.get("aboutConfig") : null;
-                    pick(aboutOld, aboutOut, "pageTitle", "bgImageUrl", "waveImageUrl");
-                    if (aboutOut.size() > 0) {
-                        pages.set("aboutConfig", aboutOut);
-                    }
-                    // 免责声明/文章详情（basicConfig → 页面设置）
-                    pick(basic, pages, "disclaimers", "postDetailConfig");
-                    if (pages.size() > 0) {
-                        overlay.set("pages", pages);
-                    }
-                    JsonNode images = values.get("imagesConfig");
-                    if (images != null && images.isObject() && images.size() > 0) {
-                        overlay.set("assets", images);
-                    }
-                    // 恋爱模块：旧 loveConfig 字段（模块开关）从 ConfigMap 导入
-                    // spec.love，兼容 featureConfig.loveConfig 与旧顶层键 loveConfig
-                    // 两种旧结构；仅显式挑选仍有效的字段（模块 enabled），
-                    // 旧 iconUrl/waveImageUrl/heartImageUrl/loveEnabled/pageImages
-                    // 等字段不再导入（背景图由 spec.love.diaryPage.bgImageUrl 承担）。
-                    JsonNode love = values.get("loveConfig");
-                    if (love == null || !love.isObject()) {
-                        JsonNode feature = values.get("featureConfig");
-                        if (feature != null && feature.isObject()) {
-                            love = feature.get("loveConfig");
-                        }
-                    }
-                    if (love != null && love.isObject() && love.size() > 0) {
-                        ObjectNode loveOut = JsonNodeFactory.instance.objectNode();
-                        // 入口展示由模块入口开关与 navList 统一管理，loveEnabled 不导入
-                        for (String moduleKey : new String[]{"ourStory", "lovePhoto", "loveDaily"}) {
-                            JsonNode module = love.get(moduleKey);
-                            if (module != null && module.isObject()) {
-                                ObjectNode moduleOut = JsonNodeFactory.instance.objectNode();
-                                pick(module, moduleOut, "enabled");
-                                if (moduleOut.size() > 0) {
-                                    loveOut.set(moduleKey, moduleOut);
-                                }
-                            }
-                        }
-                        if (loveOut.size() > 0) {
-                            overlay.set("love", loveOut);
-                        }
-                    }
-                    // 友链信息基本配置：旧 featureConfig.linkConfig.submissionEnabled
-                    // （是否开放公开提交申请）导入 spec.linkInfo.submissionEnabled，
-                    // 曾关闭提交的老配置应保持关闭。
-                    JsonNode linkConfig = values.get("linkConfig");
-                    if (linkConfig == null || !linkConfig.isObject()) {
-                        JsonNode feature = values.get("featureConfig");
-                        if (feature != null && feature.isObject()) {
-                            linkConfig = feature.get("linkConfig");
-                        }
-                    }
-                    if (linkConfig != null && linkConfig.isObject()) {
-                        JsonNode submission = linkConfig.get("submissionEnabled");
-                        if (submission != null && submission.isBoolean()) {
-                            ObjectNode linkInfoOut = JsonNodeFactory.instance.objectNode();
-                            linkInfoOut.set("submissionEnabled", submission);
-                            overlay.set("linkInfo", linkInfoOut);
-                        }
-                    }
-                    // 审核模式开关：旧 auditConfig.auditModeEnabled 导入
-                    // spec.auditMode.enabled，曾开启的审核模式不回退默认关闭。
-                    JsonNode auditConfig = values.get("auditConfig");
-                    if (auditConfig == null || !auditConfig.isObject()) {
-                        JsonNode safety = values.get("safetyConfig");
-                        if (safety != null && safety.isObject()) {
-                            auditConfig = safety.get("auditConfig");
-                        }
-                    }
-                    if (auditConfig != null && auditConfig.isObject()) {
-                        JsonNode auditModeEnabled = auditConfig.get("auditModeEnabled");
-                        if (auditModeEnabled != null && auditModeEnabled.isBoolean()) {
-                            ObjectNode auditModeOut = JsonNodeFactory.instance.objectNode();
-                            auditModeOut.set("enabled", auditModeEnabled);
-                            overlay.set("auditMode", auditModeOut);
-                        }
-                    }
-                    return overlay;
-                });
-    }
-
-    private static void pick(JsonNode source, ObjectNode target, String... keys) {
-        if (source == null || !source.isObject()) {
-            return;
-        }
-        for (String key : keys) {
-            JsonNode value = source.get(key);
-            if (value != null && !value.isNull()) {
-                target.set(key, value);
-            }
-        }
     }
 
     /**
@@ -563,41 +318,7 @@ public class FeatureConfigServiceImpl implements FeatureConfigService {
         return item;
     }
 
-    /**
-     * 社交固定字段（authorConfig.social：enabled/qq/wechat/weibo/email/blog/bilibili/
-     * juejin/csdn/gitee/github）转为 items 列表：仅取非空值的字段，name=平台中文名、
-     * content=原值，颜色沿用默认社交项同款色板；enabled 忽略，不携带 key 平台标识。
-     */
-    private static JsonNode migrateLegacySocialItems(JsonNode oldSocial) {
-        Map<String, String> names = Map.of(
-                "qq", "企鹅号", "wechat", "微信号", "weibo", "微博地址", "email", "邮箱地址",
-                "blog", "博客地址", "bilibili", "B站", "juejin", "掘金地址", "csdn", "CSDN",
-                "gitee", "Gitee", "github", "Github");
-        ObjectNode items = JsonNodeFactory.instance.objectNode();
-        int priority = 1;
-        for (Map.Entry<String, String> entry : names.entrySet()) {
-            JsonNode value = oldSocial.get(entry.getKey());
-            if (value == null || value.isNull() || value.asString().isBlank()) {
-                continue;
-            }
-            SocialItem item = socialItem(entry.getValue(),
-                    value.asString(), "#8a8a8a", "#8a8a8a1A", priority++);
-            items.set(entry.getKey(),
-                    JsonNodeFactory.instance.pojoNode(item));
-        }
-        if (items.size() == 0) {
-            return null;
-        }
-        // 转数组
-        tools.jackson.databind.node.ArrayNode array =
-                JsonNodeFactory.instance.arrayNode();
-        for (JsonNode node : items) {
-            array.add(node);
-        }
-        return array;
-    }
-
-    private static Pages buildDefaultPages() {
+        private static Pages buildDefaultPages() {
         Pages pages = new Pages();
 
         Home home = new Home();

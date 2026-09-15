@@ -5,7 +5,6 @@ import cn.ialley.unihalo.scheme.AppVersion;
 import cn.ialley.unihalo.scheme.AuditDataConfig;
 import cn.ialley.unihalo.scheme.Banner;
 import cn.ialley.unihalo.scheme.FeatureConfig;
-import cn.ialley.unihalo.scheme.LegacyGeneralConfig;
 import cn.ialley.unihalo.scheme.LoveAlbum;
 import cn.ialley.unihalo.scheme.LoveDailyItem;
 import cn.ialley.unihalo.scheme.LoveStory;
@@ -76,12 +75,6 @@ public class UniHaloPlugin extends BasePlugin {
         });
 
         schemeManager.register(FeatureConfig.class, indexSpecs -> {
-            // 单例模型，无需额外索引
-        });
-
-        // TODO-TEMPORARY-MIGRATION：旧「通用配置」scheme，仅供 feature-config 迁移读取；
-        // 迁移完成经用户确认后与迁移代码一并删除
-        schemeManager.register(LegacyGeneralConfig.class, indexSpecs -> {
             // 单例模型，无需额外索引
         });
 
@@ -188,8 +181,6 @@ public class UniHaloPlugin extends BasePlugin {
         unregisterQuietly(AppVersion.class);
         unregisterQuietly(AuditDataConfig.class);
         unregisterQuietly(FeatureConfig.class);
-        // TODO-TEMPORARY-MIGRATION：随迁移代码一并删除
-        unregisterQuietly(LegacyGeneralConfig.class);
         unregisterQuietly(LoveAlbum.class);
         unregisterQuietly(LoveDailyItem.class);
         unregisterQuietly(LoveStory.class);

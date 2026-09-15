@@ -11,7 +11,7 @@ import static cn.ialley.unihalo.constants.Constants.BASIC_DOMAIN_NAME;
 import static cn.ialley.unihalo.constants.Constants.PLUGIN_API_VERSION;
 
 /**
- * 功能设置（单例，metadata.name 固定为 general-config）。
+ * 功能设置（单例，metadata.name 固定为 feature-config）。
  *
  * <p>承载小程序通用内容与外观配置，分为以下区块：</p>
  * <ul>
