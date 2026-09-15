@@ -18,7 +18,7 @@
   <!-- 背景图挂 wrap 级（attachment:fixed 钉住视口）→ 整页全屏，见 love-diary.css .has-bg -->
   <div class="uh-love-wrap" data-love-page="home"
        th:classappend="${loveConfig != null and !#strings.isEmpty(loveConfig.bgImageUrl)} ? 'has-bg'"
-       th:attr="style=${loveConfig != null and !#strings.isEmpty(loveConfig.bgImageUrl)} ? '--uh-love-bg-img:url(' + loveConfig.bgImageUrl + ')' : null">
+       th:attr="style=${loveConfig != null and !#strings.isEmpty(loveConfig.bgImageUrl)} ? ${'--uh-love-bg-img:url(' + loveConfig.bgImageUrl + ')'} : null">
     <th:block th:replace="~{plugin:uni-halo:fragments/love-page :: page(pageKey='home')}"></th:block>
   </div>
 </th:block>

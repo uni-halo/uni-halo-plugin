@@ -15,7 +15,7 @@
   <th:block th:replace="~{plugin:uni-halo:fragments/love-icons :: sprite}"></th:block>
   <div class="uh-love-wrap" data-love-page="daily"
        th:classappend="${loveConfig != null and !#strings.isEmpty(loveConfig.bgImageUrl)} ? 'has-bg'"
-       th:attr="style=${loveConfig != null and !#strings.isEmpty(loveConfig.bgImageUrl)} ? '--uh-love-bg-img:url(' + loveConfig.bgImageUrl + ')' : null">
+       th:attr="style=${loveConfig != null and !#strings.isEmpty(loveConfig.bgImageUrl)} ? ${'--uh-love-bg-img:url(' + loveConfig.bgImageUrl + ')'} : null">
     <th:block th:replace="~{plugin:uni-halo:fragments/love-page :: page(pageKey='daily')}"></th:block>
   </div>
 </th:block>

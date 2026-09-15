@@ -20,7 +20,7 @@
 </head>
 <body class="uh-love-standalone"
       th:classappend="${loveConfig != null and !#strings.isEmpty(loveConfig.bgImageUrl)} ? 'has-love-bg'"
-      th:attr="style=${loveConfig != null and !#strings.isEmpty(loveConfig.bgImageUrl)} ? '--uh-love-bg-img:url(' + loveConfig.bgImageUrl + ')' : null">
+      th:attr="style=${loveConfig != null and !#strings.isEmpty(loveConfig.bgImageUrl)} ? ${'--uh-love-bg-img:url(' + loveConfig.bgImageUrl + ')'} : null">
   <th:block th:replace="~{plugin:uni-halo:fragments/love-icons :: sprite}"></th:block>
   <div class="uh-love-shell">
     <div class="uh-love-wrap" th:attr="data-love-page=${pageKey}">
