@@ -4,7 +4,7 @@ import { useQuery, useQueryClient } from "@tanstack/vue-query";
 import { cloneDeep } from "lodash-es";
 import { computed, nextTick, provide, ref, watch } from "vue";
 import SubmitButton from "@/components/button/SubmitButton.vue";
-import { generalConfigApi } from "@/api";
+import { featureConfigApi } from "@/api";
 import {
   DEFAULT_MY_PAGE_COMMON_KEYS,
   DEFAULT_MY_PAGE_OTHER_KEYS,
@@ -12,8 +12,8 @@ import {
   featureEntriesByKeys,
   toQuickNavigationItem,
 } from "@/constant/feature-entries";
-import type { GeneralConfig, GeneralConfigSpec } from "@/types";
-import { GeneralConfigFormKey } from "./form-context";
+import type { FeatureConfig, FeatureConfigSpec } from "@/types";
+import { FeatureConfigFormKey } from "./form-context";
 import ProfileSection from "./sections/ProfileSection.vue";
 import PreferencesSection from "./sections/PreferencesSection.vue";
 import PagesSection from "./sections/PagesSection.vue";
@@ -32,7 +32,7 @@ const GROUP_ITEMS: Array<{ id: BigGroup; label: string; desc: string }> = [
   { id: "pages", label: "页面设置", desc: "各页面标题 / 首页 / 图库 / 关于页 / 文章详情" },
   { id: "assets", label: "资源设置", desc: "加载占位" },
   { id: "love", label: "恋爱设置", desc: "恋爱页图片与模块入口" },
-  { id: "linkInfo", label: "友链信息", desc: "站点信息 / 小程序信息" },
+  { id: "linkInfo", label: "友链设置", desc: "站点信息 / 小程序信息" },
   { id: "maintenance", label: "维护设置", desc: "维护页文案 / 排期与开关" },
 ];
 
@@ -57,7 +57,6 @@ const SUB_TABS: Record<BigGroup, Array<{ id: string; label: string }>> = {
     { id: "aboutPage", label: "关于页" },
     { id: "postDetail", label: "文章详情页" },
     { id: "disclaimersPage", label: "免责声明页" },
-    { id: "loveDiary", label: "恋爱日记" },
     { id: "contactBlogger", label: "联系博主" },
     { id: "favorites", label: "我的收藏" },
     { id: "friendLinks", label: "友情链接" },
@@ -73,12 +72,13 @@ const SUB_TABS: Record<BigGroup, Array<{ id: string; label: string }>> = {
     { id: "loading", label: "加载占位" },
   ],
   love: [
+    { id: "page", label: "页面设置" },
     { id: "info", label: "恋爱信息" },
     { id: "pageEntry", label: "页面入口" },
     { id: "modules", label: "模块入口" },
   ],
   linkInfo: [
-    { id: "basic", label: "基本配置" },
+    { id: "basic", label: "基本设置" },
     { id: "site", label: "站点信息" },
     { id: "info", label: "小程序信息" },
   ],
@@ -101,20 +101,20 @@ watch(bigGroup, (group) => {
 const subTabItems = computed(() => SUB_TABS[bigGroup.value]);
 
 const { data: config, isLoading } = useQuery({
-  queryKey: ["uni-halo:general-config"],
-  queryFn: () => generalConfigApi.get(),
+  queryKey: ["uni-halo:feature-config"],
+  queryFn: () => featureConfigApi.get(),
 });
 
-const formState = ref<GeneralConfig>(defaultConfig());
+const formState = ref<FeatureConfig>(defaultConfig());
 
-function defaultConfig(): GeneralConfig {
+function defaultConfig(): FeatureConfig {
   return {
-    metadata: { name: "general-config" },
+    metadata: { name: "feature-config" },
     spec: defaultSpec(),
   };
 }
 
-function defaultSpec(): GeneralConfigSpec {
+function defaultSpec(): FeatureConfigSpec {
   return {
     profile: {
       appInfo: { name: "uni-halo", logo: "/plugins/uni-halo/assets/static/logo.png" },
@@ -148,7 +148,7 @@ function defaultSpec(): GeneralConfigSpec {
         copyrightConfig: { enabled: true, content: "「 2022 uni-halo 丨 开源项目@小莫唐尼 」" },
       },
       // 我的页面功能入口：默认填充注册表条目，对齐 app 端 about.vue navList
-      // （常用 7 项 / 其他 3 项，与后端 GeneralConfigServiceImpl 默认一致）
+      // （常用 7 项 / 其他 3 项，与后端 FeatureConfigServiceImpl 默认一致）
       myPageConfig: {
         commonFeatures: featureEntriesByKeys(DEFAULT_MY_PAGE_COMMON_KEYS).map(toQuickNavigationItem),
         otherFeatures: featureEntriesByKeys(DEFAULT_MY_PAGE_OTHER_KEYS).map(toQuickNavigationItem),
@@ -164,7 +164,6 @@ function defaultSpec(): GeneralConfigSpec {
           "若侵害到您的权利，请您及时联系我，在收到通知后第一时间处理，邮箱：xxxx@xx.com",
       },
       // 其余功能页面标题（默认留空，客户端回退内置标题）
-      loveDiaryConfig: { pageTitle: "" },
       contactConfig: { pageTitle: "" },
       favoritesConfig: { pageTitle: "" },
       friendLinksConfig: { pageTitle: "" },
@@ -190,13 +189,9 @@ function defaultSpec(): GeneralConfigSpec {
       avatarRadius: true,
     },
     love: {
-      // 恋爱模块默认：背景图留空（由站长配置或客户端内置回退）；
-      // 恋爱日记入口仅密码（无开关，入口显隐由快捷导航/功能入口注册表控制）；
+      // 恋爱模块默认：恋爱日记入口仅密码（无开关，入口显隐由快捷导航/功能入口注册表控制）；
       // 三模块入口默认值对齐 app 端 love.vue 硬编码
       // （title/subTitle/颜色（hex8）/iconBgColor/path/priority）
-      pageImages: {
-        bgImageUrl: "",
-      },
       loveDiary: { passwordEnabled: false, password: "", passwordRemoved: false },
       ourStory: {
         enabled: true, title: "恋爱故事", subTitle: "我们一起度过的那些经历",
@@ -225,9 +220,11 @@ function defaultSpec(): GeneralConfigSpec {
         girlNickname: "",
         girlAvatar: "",
       },
+      // 恋爱日记页面设置（页面标题 + 恋爱页背景图，默认留空客户端内置回退）
+      diaryPage: { pageTitle: "", bgImageUrl: "" },
     },
     linkInfo: {
-      // 友链信息默认：基本配置开放公开提交申请；miniInfo/siteInfo 留空
+      // 友链设置默认：基本设置开放公开提交申请；miniInfo/siteInfo 留空
       // （站长配置后经 getConfigs 直接下发 pluginConfig.linkInfo）
       submissionEnabled: true,
       miniInfo: {
@@ -270,7 +267,7 @@ watch(
     }
     const loaded = cloneDeep(value);
     loaded.spec = deepMerge(defaultSpec(), loaded.spec || {});
-    loaded.metadata = { name: "general-config", ...loaded.metadata };
+    loaded.metadata = { name: "feature-config", ...loaded.metadata };
     suppressDirty = true;
     formState.value = loaded;
     dirty.value = false;
@@ -335,10 +332,10 @@ const handleSave = async () => {
     return;
   }
   try {
-    await generalConfigApi.save(formState.value);
+    await featureConfigApi.save(formState.value);
     Toast.success("保存成功");
     dirty.value = false;
-    queryClient.invalidateQueries({ queryKey: ["uni-halo:general-config"] });
+    queryClient.invalidateQueries({ queryKey: ["uni-halo:feature-config"] });
   } catch (error) {
     Toast.error((error as Error).message);
   }
@@ -346,7 +343,7 @@ const handleSave = async () => {
 
 // 共享表单上下文：子组件（各 Section）直接改 formState 嵌套属性触发 deep watch → dirty；
 // save 供子组件触发整表单保存（如维护「提前结束维护」）
-provide(GeneralConfigFormKey, { formState, save: handleSave });
+provide(FeatureConfigFormKey, { formState, save: handleSave });
 </script>
 
 <template>

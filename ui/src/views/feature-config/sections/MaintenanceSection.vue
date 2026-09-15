@@ -2,7 +2,7 @@
 import {VButton, VStatusDot, VSwitch} from "@halo-dev/components";
 import { computed, inject, onUnmounted, ref } from "vue";
 import RichTextEditorField from "@/components/common/RichTextEditorField.vue";
-import { GeneralConfigFormKey } from "../form-context";
+import { FeatureConfigFormKey } from "../form-context";
 
 /**
  * 维护设置分区：
@@ -11,7 +11,7 @@ import { GeneralConfigFormKey } from "../form-context";
  */
 defineProps<{ subTab: string }>();
 
-const { formState, save } = inject(GeneralConfigFormKey)!;
+const { formState, save } = inject(FeatureConfigFormKey)!;
 
 type MaintenanceViewStatus = "none" | "scheduled" | "active" | "ended";
 

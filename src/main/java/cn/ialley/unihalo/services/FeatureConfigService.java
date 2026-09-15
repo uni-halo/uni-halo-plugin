@@ -1,10 +1,10 @@
 package cn.ialley.unihalo.services;
 
-import cn.ialley.unihalo.scheme.GeneralConfig;
+import cn.ialley.unihalo.scheme.FeatureConfig;
 import reactor.core.publisher.Mono;
 
 /**
- * 通用配置服务（单例，metadata.name 固定为 general-config）。
+ * 功能设置服务（单例，metadata.name 固定为 general-config）。
  *
  * <p>承载站点内容与外观配置（authorConfig / pageConfig / basicConfig 内容部分 /
  * imagesConfig）。GET 不存在时返回「默认值 + 存量配置合并」结构
@@ -12,17 +12,17 @@ import reactor.core.publisher.Mono;
  *
  * @author 小莫唐尼
  */
-public interface GeneralConfigService {
+public interface FeatureConfigService {
 
     /**
-     * 读取通用配置单例；不存在时返回默认结构（与存量配置合并）。
+     * 读取功能设置单例；不存在时返回默认结构（与存量配置合并）。
      */
-    Mono<GeneralConfig> get();
+    Mono<FeatureConfig> get();
 
     /**
-     * 保存通用配置单例（不存在则创建；写入前与默认值/存量值做非空合并，防丢字段）。
+     * 保存功能设置单例（不存在则创建；写入前与默认值/存量值做非空合并，防丢字段）。
      */
-    Mono<GeneralConfig> save(GeneralConfig config);
+    Mono<FeatureConfig> save(FeatureConfig config);
 
     /**
      * 校验恋爱模块入口密码（ourStory/lovePhoto/loveDaily）。

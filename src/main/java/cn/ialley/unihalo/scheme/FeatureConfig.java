@@ -11,7 +11,7 @@ import static cn.ialley.unihalo.constants.Constants.BASIC_DOMAIN_NAME;
 import static cn.ialley.unihalo.constants.Constants.PLUGIN_API_VERSION;
 
 /**
- * 通用配置（单例，metadata.name 固定为 general-config）。
+ * 功能设置（单例，metadata.name 固定为 general-config）。
  *
  * <p>承载小程序通用内容与外观配置，分为以下区块：</p>
  * <ul>
@@ -26,7 +26,7 @@ import static cn.ialley.unihalo.constants.Constants.PLUGIN_API_VERSION;
  *       与排期窗口，状态由服务端按时间窗口计算。</li>
  * </ul>
  *
- * <p>本模型是控制台「通用配置」页的写端事实源；小程序端仍通过 {@code getConfigs}
+ * <p>本模型是控制台「功能设置」页的写端事实源；小程序端仍通过 {@code getConfigs}
  * 读取（由服务端输出合成层把本模型映射回旧 shape，见 UniHaloServiceImpl）。</p>
  *
  * @author 小莫唐尼
@@ -34,8 +34,8 @@ import static cn.ialley.unihalo.constants.Constants.PLUGIN_API_VERSION;
 @Data
 @EqualsAndHashCode(callSuper = true)
 @GVK(group = BASIC_DOMAIN_NAME, version = PLUGIN_API_VERSION,
-        kind = "GeneralConfig", plural = "generalConfigs", singular = "generalConfig")
-public class GeneralConfig extends AbstractExtension {
+        kind = "FeatureConfig", plural = "featureConfigs", singular = "featureConfig")
+public class FeatureConfig extends AbstractExtension {
 
     private Spec spec;
 
@@ -165,8 +165,6 @@ public class GeneralConfig extends AbstractExtension {
         private Disclaimer disclaimers;
         /** 文章详情页内容与版权文案 */
         private PostDetail postDetailConfig;
-        /** 恋爱日记页（页面标题，客户端 pageConfig.loveDiaryConfig） */
-        private LoveDiaryPage loveDiaryConfig;
         /** 联系博主页（页面标题，客户端 pageConfig.contactConfig） */
         private ContactPage contactConfig;
         /** 我的收藏页（页面标题，客户端 pageConfig.favoritesConfig） */
@@ -408,8 +406,11 @@ public class GeneralConfig extends AbstractExtension {
         private ModuleSwitch lovePhoto;
         /** 恋爱清单模块入口（数据在「恋爱管理-恋爱清单」维护） */
         private ModuleSwitch loveDaily;
-        /** 恋爱信息（纪念日 + 恋人信息，配置在通用配置-恋爱设置-恋爱信息 tab） */
+        /** 恋爱信息（纪念日 + 恋人信息，配置在功能设置-恋爱设置-恋爱信息 tab） */
         private LoveInfo loveInfo;
+        /** 恋爱日记页面设置（页面标题 + 恋爱页背景图，配置在功能设置-恋爱设置-页面设置
+         * tab；app 端输出 shape 不变：经 getConfigs 仍以 pageConfig.loveDiaryConfig 下发） */
+        private LoveDiaryPage diaryPage;
     }
 
     /** 恋爱信息（纪念日 + 恋人信息） */

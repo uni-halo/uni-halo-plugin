@@ -46,7 +46,7 @@ public class FloatingWindowHeadProcessor implements TemplateHeadProcessor {
 
     /**
      * 插件 Spring 上下文未注册 Jackson 3 ObjectMapper bean，内部自行创建
-     * （与 PublicConfigAssembler / GeneralConfigServiceImpl 同套路）。
+     * （与 PublicConfigAssembler / FeatureConfigServiceImpl 同套路）。
      */
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -63,7 +63,7 @@ public class FloatingWindowHeadProcessor implements TemplateHeadProcessor {
             .flatMap(node -> {
                 // fail closed：总开关未开或未选择太阳码时不注入任何内容
                 if (!node.path("enabled").asBoolean(false)
-                        || node.path("imageUrl").asText("").isBlank()) {
+                        || node.path("imageUrl").asString("").isBlank()) {
                     return Mono.empty();
                 }
                 try {
@@ -83,21 +83,21 @@ public class FloatingWindowHeadProcessor implements TemplateHeadProcessor {
     private ObjectNode buildConfig(JsonNode node) {
         ObjectNode config = JsonNodeFactory.instance.objectNode();
         config.put("enabled", node.path("enabled").asBoolean(false));
-        config.put("pageScope", node.path("pageScope").asText("all"));
-        config.put("pagePatterns", node.path("pagePatterns").asText(""));
-        config.put("position", node.path("position").asText("bottom-right"));
+        config.put("pageScope", node.path("pageScope").asString("all"));
+        config.put("pagePatterns", node.path("pagePatterns").asString(""));
+        config.put("position", node.path("position").asString("bottom-right"));
         config.put("offsetX", node.path("offsetX").asInt(0));
         config.put("offsetY", node.path("offsetY").asInt(0));
-        config.put("name", node.path("name").asText("小程序"));
+        config.put("name", node.path("name").asString("小程序"));
         config.put("nameSize", node.path("nameSize").asInt(14));
-        config.put("nameColor", node.path("nameColor").asText("#333333"));
-        config.put("description", node.path("description").asText(""));
+        config.put("nameColor", node.path("nameColor").asString("#333333"));
+        config.put("description", node.path("description").asString(""));
         config.put("descSize", node.path("descSize").asInt(12));
-        config.put("descColor", node.path("descColor").asText("#999999"));
-        config.put("imageUrl", node.path("imageUrl").asText(""));
+        config.put("descColor", node.path("descColor").asString("#999999"));
+        config.put("imageUrl", node.path("imageUrl").asString(""));
         config.put("cardWidth", node.path("cardWidth").asInt(100));
         config.put("dragEnabled", node.path("dragEnabled").asBoolean(true));
-        config.put("defaultState", node.path("defaultState").asText("default"));
+        config.put("defaultState", node.path("defaultState").asString("default"));
         config.put("closeEnabled", node.path("closeEnabled").asBoolean(true));
         config.put("edgeHideEnabled", node.path("edgeHideEnabled").asBoolean(true));
         config.put("edgeHideDistance", node.path("edgeHideDistance").asInt(24));

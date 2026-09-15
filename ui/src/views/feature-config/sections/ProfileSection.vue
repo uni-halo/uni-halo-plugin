@@ -5,8 +5,8 @@ import {VueDraggable} from "vue-draggable-plus";
 import RiDragMove2Line from "~icons/ri/drag-move-2-line";
 import RiDeleteBinLine from "~icons/ri/delete-bin-6-line";
 import RichTextEditorField from "@/components/common/RichTextEditorField.vue";
-import type { GeneralConfigSocialItem } from "@/types";
-import { GeneralConfigFormKey } from "../form-context";
+import type { FeatureConfigSocialItem } from "@/types";
+import { FeatureConfigFormKey } from "../form-context";
 
 /**
  * 应用设置分区：
@@ -15,12 +15,12 @@ import { GeneralConfigFormKey } from "../form-context";
  */
 defineProps<{ subTab: string }>();
 
-const { formState } = inject(GeneralConfigFormKey)!;
+const { formState } = inject(FeatureConfigFormKey)!;
 
 /** 社交项列表（写回 formState，VueDraggable 需要非 undefined 数组） */
 const socialItems = computed({
   get: () => formState.value.spec.profile.social?.items || [],
-  set: (value: GeneralConfigSocialItem[]) => {
+  set: (value: FeatureConfigSocialItem[]) => {
     if (!formState.value.spec.profile.social) {
       formState.value.spec.profile.social = {};
     }
@@ -44,7 +44,7 @@ function addSocialItem() {
 }
 
 /** 删除某条社交项 */
-function removeSocialItem(item: GeneralConfigSocialItem) {
+function removeSocialItem(item: FeatureConfigSocialItem) {
   socialItems.value = socialItems.value.filter((it) => it !== item);
 }
 
@@ -54,13 +54,13 @@ function toColorInput(value?: string): string {
 }
 
 /** FormKit type="color" 选色（format="hex8" 输出 #rrggbbaa 含透明度）写回颜色字段 */
-function onSocialColor(item: GeneralConfigSocialItem, value: unknown) {
+function onSocialColor(item: FeatureConfigSocialItem, value: unknown) {
   if (typeof value === "string") {
     item.color = value;
   }
 }
 
-function onSocialBgColor(item: GeneralConfigSocialItem, value: unknown) {
+function onSocialBgColor(item: FeatureConfigSocialItem, value: unknown) {
   if (typeof value === "string") {
     item.bgColor = value;
   }

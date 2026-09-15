@@ -17,9 +17,9 @@ import cn.ialley.unihalo.captcha.CaptchaScope;
 import cn.ialley.unihalo.captcha.CaptchaService;
 import cn.ialley.unihalo.constants.Constants;
 import cn.ialley.unihalo.finders.UniHaloFinder;
-import cn.ialley.unihalo.scheme.GeneralConfig;
+import cn.ialley.unihalo.scheme.FeatureConfig;
 import cn.ialley.unihalo.scheme.LoveAlbum;
-import cn.ialley.unihalo.services.GeneralConfigService;
+import cn.ialley.unihalo.services.FeatureConfigService;
 import cn.ialley.unihalo.services.LoveAlbumService;
 import cn.ialley.unihalo.services.LoveDailyItemService;
 import cn.ialley.unihalo.services.LoveStoryService;
@@ -87,7 +87,7 @@ public class UniHaloFinderImpl implements UniHaloFinder {
 
     private final LoveDailyItemService loveDailyItemService;
 
-    private final GeneralConfigService generalConfigService;
+    private final FeatureConfigService featureConfigService;
 
     private final CaptchaService captchaService;
 
@@ -193,16 +193,16 @@ public class UniHaloFinderImpl implements UniHaloFinder {
     // ------------------------------------------------------------------
 
     /**
-     * 一次页面渲染所需的全部只读上下文（路由计划 + 主题配置 + 通用配置 + 锁状态 + 验证码）。
+     * 一次页面渲染所需的全部只读上下文（路由计划 + 主题配置 + 功能设置 + 锁状态 + 验证码）。
      */
     private Mono<Ctx> context() {
         return Mono.zip(
                         routeResolver.resolvePlan(),
                         configResolver.resolve(),
-                        generalConfigService.get()
+                        featureConfigService.get()
                                 .onErrorResume(e -> {
-                                    log.warn("读取通用配置失败，恋爱页按空配置渲染：{}", e.getMessage());
-                                    return Mono.just(new GeneralConfig());
+                                    log.warn("读取功能设置失败，恋爱页按空配置渲染：{}", e.getMessage());
+                                    return Mono.just(new FeatureConfig());
                                 }),
                         lockFlags(),
                         captchaService.requiredFor(CaptchaScope.LOVE_MODULE_UNLOCK)
@@ -235,7 +235,7 @@ public class UniHaloFinderImpl implements UniHaloFinder {
     }
 
     private Mono<Boolean> lockFlag(String module) {
-        return generalConfigService.isLoveModuleLocked(module)
+        return featureConfigService.isLoveModuleLocked(module)
                 .defaultIfEmpty(false)
                 .onErrorResume(e -> {
                     log.warn("读取恋爱模块锁状态失败，按已锁定处理（fail-closed）：module={}, err={}",
@@ -245,11 +245,11 @@ public class UniHaloFinderImpl implements UniHaloFinder {
     }
 
     private LoveConfigVo buildConfig(Ctx ctx) {
-        GeneralConfig.Love love = loveOf(ctx.general());
+        FeatureConfig.Love love = loveOf(ctx.general());
         LoveConfigVo vo = new LoveConfigVo();
         vo.setEnabled(love != null);
         if (love != null && love.getLoveInfo() != null) {
-            GeneralConfig.LoveInfo info = love.getLoveInfo();
+            FeatureConfig.LoveInfo info = love.getLoveInfo();
             vo.setLoveDateTitle(info.getLoveDateTitle());
             vo.setLoveDate(LoveDates.isoDate(info.getLoveDate()));
             vo.setLoveDays(LoveDates.daysSince(info.getLoveDate()));
@@ -266,7 +266,7 @@ public class UniHaloFinderImpl implements UniHaloFinder {
     /**
      * 模块入口列表：<b>只保留 enabled=true 且路由已注册的模块</b>，按 priority 降序。
      */
-    private List<LoveModuleVo> buildModules(Ctx ctx, GeneralConfig.Love love) {
+    private List<LoveModuleVo> buildModules(Ctx ctx, FeatureConfig.Love love) {
         List<LoveModuleVo> modules = new ArrayList<>();
         for (String module : MODULE_ORDER) {
             String url = ctx.plan().getPaths().get(routeKeyOf(module));
@@ -274,7 +274,7 @@ public class UniHaloFinderImpl implements UniHaloFinder {
                 // 路由未注册（留空 / 冲突 / 未启用）→ 不下发入口，模板无需兜底判空
                 continue;
             }
-            GeneralConfig.ModuleSwitch cfg = findModule(love, module);
+            FeatureConfig.ModuleSwitch cfg = findModule(love, module);
             if (cfg == null || !Boolean.TRUE.equals(cfg.getEnabled())) {
                 continue;
             }
@@ -344,27 +344,27 @@ public class UniHaloFinderImpl implements UniHaloFinder {
                 && Boolean.TRUE.equals(album.getSpec().getPasswordEnabled());
     }
 
-    private static GeneralConfig.Love loveOf(GeneralConfig config) {
+    private static FeatureConfig.Love loveOf(FeatureConfig config) {
         return config == null || config.getSpec() == null ? null : config.getSpec().getLove();
     }
 
     /**
-     * 恋爱页背景图：取自<b>通用配置</b>
-     * {@code spec.pages.loveDiaryConfig.bgImageUrl} —— 与小程序端同一处配置，
+     * 恋爱页背景图：取自<b>功能设置</b>
+     * {@code spec.love.diaryPage.bgImageUrl} —— 与小程序端同一处配置，
      * 站长只维护一份。
      *
      * <p>v1.5 起刻意<b>不再</b>回落主题页自己的配置：恋爱日记主题页已删除
      * {@code bgImageUrl} 设置项，避免同一个背景图要在两个地方各填一次。</p>
      */
-    private static String loveBgImage(GeneralConfig config) {
-        if (config == null || config.getSpec() == null || config.getSpec().getPages() == null) {
+    private static String loveBgImage(FeatureConfig config) {
+        if (config == null || config.getSpec() == null || config.getSpec().getLove() == null) {
             return null;
         }
-        GeneralConfig.LoveDiaryPage page = config.getSpec().getPages().getLoveDiaryConfig();
+        FeatureConfig.LoveDiaryPage page = config.getSpec().getLove().getDiaryPage();
         return page == null ? null : trimToNull(page.getBgImageUrl());
     }
 
-    private static GeneralConfig.ModuleSwitch findModule(GeneralConfig.Love love, String module) {
+    private static FeatureConfig.ModuleSwitch findModule(FeatureConfig.Love love, String module) {
         if (love == null) {
             return null;
         }
@@ -378,13 +378,13 @@ public class UniHaloFinderImpl implements UniHaloFinder {
     }
 
     private String moduleTitle(Ctx ctx, String module) {
-        GeneralConfig.ModuleSwitch cfg = findModule(loveOf(ctx.general()), module);
+        FeatureConfig.ModuleSwitch cfg = findModule(loveOf(ctx.general()), module);
         return cfg == null ? defaultModuleTitle(module)
                 : blankTo(cfg.getTitle(), defaultModuleTitle(module));
     }
 
     /** 站长配置的图标优先，缺失时按模块 key 回落内置彩色图标。 */
-    private static String iconClass(String module, GeneralConfig.ModuleSwitch cfg) {
+    private static String iconClass(String module, FeatureConfig.ModuleSwitch cfg) {
         String prefix = cfg == null ? null : trimToNull(cfg.getIconPrefix());
         String icon = cfg == null ? null : trimToNull(cfg.getIcon());
         if (prefix != null && icon != null) {
@@ -456,7 +456,7 @@ public class UniHaloFinderImpl implements UniHaloFinder {
     /**
      * 单次渲染的只读上下文。
      */
-    private record Ctx(LoveRoutePlan plan, LoveDiaryThemeConfig theme, GeneralConfig general,
+    private record Ctx(LoveRoutePlan plan, LoveDiaryThemeConfig theme, FeatureConfig general,
                        Map<String, Boolean> locks, boolean captchaRequired) {
 
         boolean locked(String module) {

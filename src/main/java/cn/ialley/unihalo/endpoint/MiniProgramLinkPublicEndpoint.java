@@ -12,10 +12,10 @@ import cn.ialley.unihalo.captcha.CaptchaScope;
 import cn.ialley.unihalo.captcha.CaptchaService;
 import cn.ialley.unihalo.captcha.CaptchaValidationException;
 import cn.ialley.unihalo.constants.Constants;
-import cn.ialley.unihalo.scheme.GeneralConfig;
+import cn.ialley.unihalo.scheme.FeatureConfig;
 import cn.ialley.unihalo.scheme.MiniProgramLink;
 import cn.ialley.unihalo.scheme.MiniProgramLinkSubmission;
-import cn.ialley.unihalo.services.GeneralConfigService;
+import cn.ialley.unihalo.services.FeatureConfigService;
 import cn.ialley.unihalo.services.MiniProgramLinkService;
 import cn.ialley.unihalo.services.MiniProgramLinkSubmissionService;
 import reactor.core.publisher.Mono;
@@ -26,7 +26,7 @@ import run.halo.app.extension.GroupVersion;
  * 友情链接-小程序链接公开接口（app 端，匿名可访问）。
  *
  * <p>仅返回可见（visible=true）的链接（D8）；支持 grouped=true 按类型分组返回
- * （D3）；公开提交申请（D6），提交接口校验必填项并落库为待审核；通用配置
+ * （D3）；公开提交申请（D6），提交接口校验必填项并落库为待审核；功能设置
  * 友链信息-基本配置 submissionEnabled 关闭时提交申请返回提示。</p>
  *
  * @author 小莫唐尼
@@ -36,16 +36,16 @@ public class MiniProgramLinkPublicEndpoint implements CustomEndpoint {
 
     private final MiniProgramLinkService miniProgramLinkService;
     private final MiniProgramLinkSubmissionService miniProgramLinkSubmissionService;
-    private final GeneralConfigService generalConfigService;
+    private final FeatureConfigService featureConfigService;
     private final CaptchaService captchaService;
 
     public MiniProgramLinkPublicEndpoint(MiniProgramLinkService miniProgramLinkService,
             MiniProgramLinkSubmissionService miniProgramLinkSubmissionService,
-            GeneralConfigService generalConfigService,
+            FeatureConfigService featureConfigService,
             CaptchaService captchaService) {
         this.miniProgramLinkService = miniProgramLinkService;
         this.miniProgramLinkSubmissionService = miniProgramLinkSubmissionService;
-        this.generalConfigService = generalConfigService;
+        this.featureConfigService = featureConfigService;
         this.captchaService = captchaService;
     }
 
@@ -88,13 +88,13 @@ public class MiniProgramLinkPublicEndpoint implements CustomEndpoint {
     }
 
     /**
-     * 是否开放公开提交申请：通用配置-友链信息-基本配置 submissionEnabled
+     * 是否开放公开提交申请：功能设置-友链信息-基本配置 submissionEnabled
      * （默认 true）。
      */
     private Mono<Boolean> isSubmissionEnabled() {
-        return generalConfigService.get()
+        return featureConfigService.get()
                 .map(config -> {
-                    GeneralConfig.LinkInfo linkInfo = config.getSpec() != null
+                    FeatureConfig.LinkInfo linkInfo = config.getSpec() != null
                             ? config.getSpec().getLinkInfo() : null;
                     return linkInfo == null
                             || linkInfo.getSubmissionEnabled() == null

@@ -7,7 +7,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import cn.ialley.unihalo.scheme.GeneralConfig;
+import cn.ialley.unihalo.scheme.FeatureConfig;
 import cn.ialley.unihalo.utils.MaintenanceResolver;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
@@ -17,15 +17,15 @@ import tools.jackson.databind.node.ObjectNode;
 /**
  * 公开配置输出合成器（getConfigs 出口，只读）。
  *
- * <p>把「设置剩余组（ConfigMap）+ 通用配置单例 {@link GeneralConfig}」合成为小程序端
+ * <p>把「设置剩余组（ConfigMap）+ 功能设置单例 {@link FeatureConfig}」合成为小程序端
  * 依赖的旧 shape：</p>
  * <ul>
  *   <li>authorConfig / pageConfig / basicConfig（内容部分）/ imagesConfig / loveConfig
- *       五个顶层键由 GeneralConfig 重建（不再依赖 ConfigMap 旧组）；</li>
+ *       五个顶层键由 FeatureConfig 重建（不再依赖 ConfigMap 旧组）；</li>
  *   <li>剔除敏感/无效字段：basicConfig.tokenConfig（个人令牌）、appConfig.startConfig
  *       （启动页配置）、auditConfig.auditModeData（死字段）；loginConfig 组只输出
  *       三个登录开关，Secret 名称与权限策略不外发；</li>
- *   <li>maintenance（additive 顶层键）：按 GeneralConfig.spec.maintenance
+ *   <li>maintenance（additive 顶层键）：按 FeatureConfig.spec.maintenance
  *       时间窗口与当前时刻计算状态，仅 scheduled/active 时输出；</li>
  *   <li>其余设置组（captchaConfig / pluginConfig / linkConfig …）原样透传。</li>
  * </ul>
@@ -36,7 +36,7 @@ public class PublicConfigAssembler {
 
     /**
      * 插件 Spring 上下文未注册 Jackson 3 ObjectMapper bean，故内部自行创建
-     * （与 EmailService / GeneralConfigServiceImpl 同套路）。
+     * （与 EmailService / FeatureConfigServiceImpl 同套路）。
      */
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -44,9 +44,9 @@ public class PublicConfigAssembler {
      * 合成公开配置输出（维护状态按当前时刻判定）。
      *
      * @param settings 当前插件设置（ReactiveSettingFetcher.getSettingValues 结果，可为空）
-     * @param config   通用配置单例（可能为 null 或 spec 为空，此时内容组不输出）
+     * @param config   功能设置单例（可能为 null 或 spec 为空，此时内容组不输出）
      */
-    public ObjectNode assemble(Map<String, JsonNode> settings, GeneralConfig config) {
+    public ObjectNode assemble(Map<String, JsonNode> settings, FeatureConfig config) {
         return assemble(settings, config, Instant.now());
     }
 
@@ -55,10 +55,10 @@ public class PublicConfigAssembler {
      * scheduled/active/到点自动结束等分支）。
      *
      * @param settings 当前插件设置（可为空）
-     * @param config   通用配置单例（可能为 null 或 spec 为空）
+     * @param config   功能设置单例（可能为 null 或 spec 为空）
      * @param now      维护状态判定的当前时刻（见 {@link MaintenanceResolver}）
      */
-    public ObjectNode assemble(Map<String, JsonNode> settings, GeneralConfig config,
+    public ObjectNode assemble(Map<String, JsonNode> settings, FeatureConfig config,
             Instant now) {
         ObjectNode root = JsonNodeFactory.instance.objectNode();
         if (settings != null) {
@@ -67,7 +67,7 @@ public class PublicConfigAssembler {
                     return;
                 }
                 if (isContentGroup(group)) {
-                    // 内容组由 GeneralConfig 重建，跳过原样透传
+                    // 内容组由 FeatureConfig 重建，跳过原样透传
                     return;
                 }
                 if ("appConfig".equals(group)) {
@@ -119,9 +119,17 @@ public class PublicConfigAssembler {
             pick(pages, pageConfig, "homeConfig", "galleryConfig", "aboutConfig",
                     "categoryConfig", "momentConfig", "postDetailConfig", "disclaimers",
                     // 其余功能页面标题（均含 pageTitle）
-                    "loveDiaryConfig", "contactConfig", "favoritesConfig",
+                    "contactConfig", "favoritesConfig",
                     "friendLinksConfig", "archivesConfig", "voteConfig", "dataVisualConfig",
                     "settingConfig", "aboutProjectConfig", "noticeConfig", "searchConfig");
+            // 恋爱日记页（数据源 spec.love.diaryPage，输出 shape 不变：
+            // 仍以 pageConfig.loveDiaryConfig 下发，app 端无感）
+            JsonNode loveSpec = spec.get("love");
+            JsonNode diaryPage = loveSpec != null && loveSpec.isObject()
+                    ? loveSpec.get("diaryPage") : null;
+            if (diaryPage != null && diaryPage.isObject()) {
+                pageConfig.set("loveDiaryConfig", diaryPage);
+            }
             // 页脚版权（来自 profile.copyrightConfig；app 端 about.vue 读
             // pageConfig.aboutConfig.copyrightConfig 保持不变）
             JsonNode copyright = profile != null ? profile.get("copyrightConfig") : null;
@@ -263,7 +271,7 @@ public class PublicConfigAssembler {
         }
     }
 
-    private JsonNode toSpecTree(GeneralConfig config) {
+    private JsonNode toSpecTree(FeatureConfig config) {
         if (config == null || config.getSpec() == null) {
             return null;
         }
@@ -278,7 +286,7 @@ public class PublicConfigAssembler {
      * 入口列表数据（title/subTitle/titleColor/subTitleColor/iconBgColor/path/
      * priority，app 端直接按模块 key 渲染入口列表），按 priority 降序输出；
      * passwordEnabled 优先透传输入中已派生的布尔（getConfigs 入参经
-     * generalConfigService.get() 脱敏，哈希已置空；直接传入原始 spec 时回退
+     * featureConfigService.get() 脱敏，哈希已置空；直接传入原始 spec 时回退
      * 按 passwordHash 非空派生），password / passwordHash / passwordRemoved
      * 等密码字段一律不下发小程序端；
      * loveInfo（纪念日 + 恋人信息）：含任意非空字段时输出，
@@ -360,7 +368,7 @@ public class PublicConfigAssembler {
         JsonNode hash = module.get("passwordHash");
         return (passwordEnabled != null && passwordEnabled.isBoolean()
                 && passwordEnabled.asBoolean())
-                || (hash != null && !hash.isNull() && !hash.asText().isBlank());
+                || (hash != null && !hash.isNull() && !hash.asString().isBlank());
     }
 
     private static boolean isContentGroup(String group) {
@@ -379,7 +387,7 @@ public class PublicConfigAssembler {
             return false;
         }
         if (node.isValueNode()) {
-            return !node.asText().isBlank();
+            return !node.asString().isBlank();
         }
         for (JsonNode child : node) {
             if (hasNonBlankText(child)) {
@@ -412,7 +420,7 @@ public class PublicConfigAssembler {
     }
 
     private static String jsonText(JsonNode node) {
-        return node == null || node.isNull() ? null : node.asText();
+        return node == null || node.isNull() ? null : node.asString();
     }
 
     private static Boolean jsonBool(JsonNode node) {

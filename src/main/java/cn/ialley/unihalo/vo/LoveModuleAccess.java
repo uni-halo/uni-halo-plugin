@@ -11,7 +11,7 @@ import lombok.Data;
  * 模块锁定时 Finder 只把这个对象交给模板，页面 HTML 里因此不存在任何可被
  * F12 挖出的内容 —— 这是「页内表单而非弹窗/遮罩」方案的成立前提。</p>
  *
- * <p>{@link #moduleTitle} 取自站长在通用配置里填写的模块名称（该字段本就经公开
+ * <p>{@link #moduleTitle} 取自站长在功能设置里填写的模块名称（该字段本就经公开
  * {@code getConfigs} 下发），仅用于「XX 模块已加密」这类表单标题文案，不构成内容泄露。</p>
  *
  * <p>注意：本类用 Lombok {@code @Data}（生成 {@code isLocked()}/{@code getModule()}），

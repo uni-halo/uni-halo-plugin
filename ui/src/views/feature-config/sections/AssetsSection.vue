@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { inject } from "vue";
-import { GeneralConfigFormKey } from "../form-context";
+import { FeatureConfigFormKey } from "../form-context";
 
 /**
  * 资源设置分区：
@@ -8,7 +8,7 @@ import { GeneralConfigFormKey } from "../form-context";
  */
 defineProps<{ subTab: string }>();
 
-const { formState } = inject(GeneralConfigFormKey)!;
+const { formState } = inject(FeatureConfigFormKey)!;
 </script>
 
 <template>

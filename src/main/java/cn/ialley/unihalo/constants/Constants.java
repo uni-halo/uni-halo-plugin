@@ -150,15 +150,15 @@ public class Constants {
     public static final String AUDIT_DATA_CONFIG_SINGLETON_NAME = "audit-data-config";
 
     /**
-     * 通用配置（GeneralConfig）单例名称（metadata.name 固定值）
+     * 功能设置（FeatureConfig）单例名称（metadata.name 固定值）
      */
-    public static final String GENERAL_CONFIG_SINGLETON_NAME = "general-config";
+    public static final String FEATURE_CONFIG_SINGLETON_NAME = "feature-config";
 
     /**
-     * 通用配置（console）接口基础路径
+     * 功能设置（console）接口基础路径
      */
-    public static final String GENERAL_CONFIG_API_BASE_PATH =
-        "plugins/uni-halo/general-config";
+    public static final String FEATURE_CONFIG_API_BASE_PATH =
+        "plugins/uni-halo/feature-config";
 
     /**
      * 基础的域名地址
@@ -235,7 +235,7 @@ public class Constants {
     public static final String SETTING_MODULE_LOVE_DIARY_THEME = "loveDiaryTheme";
 
     /**
-     * 模块入口 key（与 GeneralConfig.Love 的字段名一致，app 端契约）。
+     * 模块入口 key（与 FeatureConfig.Love 的字段名一致，app 端契约）。
      */
     public static final String LOVE_MODULE_DIARY = "loveDiary";
 

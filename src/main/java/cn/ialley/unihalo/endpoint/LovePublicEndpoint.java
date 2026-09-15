@@ -16,7 +16,7 @@ import cn.ialley.unihalo.captcha.CaptchaService;
 import cn.ialley.unihalo.captcha.CaptchaValidationException;
 import cn.ialley.unihalo.constants.Constants;
 import cn.ialley.unihalo.scheme.LoveAlbum;
-import cn.ialley.unihalo.services.GeneralConfigService;
+import cn.ialley.unihalo.services.FeatureConfigService;
 import cn.ialley.unihalo.services.LoveAlbumService;
 import cn.ialley.unihalo.services.LoveDailyItemService;
 import cn.ialley.unihalo.services.LoveStoryService;
@@ -35,7 +35,7 @@ import run.halo.app.extension.ListResult;
  * 三模块入口含 enabled/passwordEnabled/入口列表数据、loveInfo），不再提供独立的
  * /love-config 聚合接口；本端点仅保留恋爱数据接口，相册接口按锁定状态脱敏。</p>
  *
- * <p>恋爱模块入口密码：恋爱故事/相册/清单三个入口可在通用配置
+ * <p>恋爱模块入口密码：恋爱故事/相册/清单三个入口可在功能设置
  * 「恋爱设置-模块入口」分别设置密码，设置后对应数据接口（love-stories /
  * love-albums / love-daily-items）要求携带 {@code ?token=}（经
  * {@code POST /love-modules/unlock} 校验密码换取，30 分钟有效），未带或无效返回
@@ -47,7 +47,7 @@ import run.halo.app.extension.ListResult;
 @Component
 public class LovePublicEndpoint implements CustomEndpoint {
 
-    private final GeneralConfigService generalConfigService;
+    private final FeatureConfigService featureConfigService;
     private final LoveAlbumService loveAlbumService;
     private final LoveDailyItemService loveDailyItemService;
     private final LoveStoryService loveStoryService;
@@ -55,14 +55,14 @@ public class LovePublicEndpoint implements CustomEndpoint {
     private final LoveModuleTokenManager loveModuleTokenManager;
     private final CaptchaService captchaService;
 
-    public LovePublicEndpoint(GeneralConfigService generalConfigService,
+    public LovePublicEndpoint(FeatureConfigService featureConfigService,
             LoveAlbumService loveAlbumService,
             LoveDailyItemService loveDailyItemService,
             LoveStoryService loveStoryService,
             AlbumTokenManager albumTokenManager,
             LoveModuleTokenManager loveModuleTokenManager,
             CaptchaService captchaService) {
-        this.generalConfigService = generalConfigService;
+        this.featureConfigService = featureConfigService;
         this.loveAlbumService = loveAlbumService;
         this.loveDailyItemService = loveDailyItemService;
         this.loveStoryService = loveStoryService;
@@ -186,7 +186,7 @@ public class LovePublicEndpoint implements CustomEndpoint {
     private Mono<ServerResponse> unlockLoveModule(ServerRequest request) {
         return captchaService.requireValid(request, CaptchaScope.LOVE_MODULE_UNLOCK)
                 .then(request.bodyToMono(LoveModuleUnlockRequest.class)
-                        .flatMap(body -> generalConfigService
+                        .flatMap(body -> featureConfigService
                                 .verifyLoveModulePassword(body.getModule(), body.getPassword())
                                 .flatMap(ok -> {
                                     if (!ok) {
@@ -207,7 +207,7 @@ public class LovePublicEndpoint implements CustomEndpoint {
      */
     private Mono<ServerResponse> requireModuleAccess(ServerRequest request, String module,
             Mono<ServerResponse> body) {
-        return generalConfigService.isLoveModuleLocked(module)
+        return featureConfigService.isLoveModuleLocked(module)
                 .flatMap(locked -> {
                     if (!locked) {
                         return body;

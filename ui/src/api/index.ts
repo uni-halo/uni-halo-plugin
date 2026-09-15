@@ -24,7 +24,7 @@ import type {
   AuditCandidateType,
   Banner,
   BannerCandidate,
-  GeneralConfig,
+  FeatureConfig,
   WechatBinding,
   BindTicketIssued,
   BindTicketStatus,
@@ -52,11 +52,11 @@ export const appVersionsApi = {
     http.delete<{ success: boolean }>(`${PLUGIN_BASE}/app-versions/${name}`),
 };
 
-// ===== 通用配置（GeneralConfig 单例）=====
+// ===== 通用配置（FeatureConfig 单例）=====
 
-export const generalConfigApi = {
-  get: () => http.get<GeneralConfig>(`${PLUGIN_BASE}/general-config`),
-  save: (data: GeneralConfig) => http.put<GeneralConfig>(`${PLUGIN_BASE}/general-config`, data),
+export const featureConfigApi = {
+  get: () => http.get<FeatureConfig>(`${PLUGIN_BASE}/feature-config`),
+  save: (data: FeatureConfig) => http.put<FeatureConfig>(`${PLUGIN_BASE}/feature-config`, data),
 };
 
 export interface LoveAlbumWriteRequest {

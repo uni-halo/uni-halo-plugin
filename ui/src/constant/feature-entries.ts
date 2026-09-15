@@ -1,9 +1,9 @@
-import type { GeneralConfigQuickNavigationItem } from "@/types";
+import type { FeatureConfigQuickNavigationItem } from "@/types";
 
 /**
  * 功能入口注册表
  */
-export interface FeatureEntry extends GeneralConfigQuickNavigationItem {
+export interface FeatureEntry extends FeatureConfigQuickNavigationItem {
   /** 归属：我的页-常用 / 我的页-其他 */
   group: "common" | "other";
 }
@@ -29,7 +29,7 @@ export const FEATURE_ENTRY_REGISTRY: FeatureEntry[] = [
 /**
  * 首页快捷导航默认 5 项
  */
-export const DEFAULT_QUICK_NAV_KEYS = ["archives", "vote", "disclaimers", "love", "contact-blogger"];
+export const DEFAULT_QUICK_NAV_KEYS = ["love", "contact-blogger", "favorites", "friend-links", "about"];
 
 /** 我的页面-常用功能默认 7 项 */
 export const DEFAULT_MY_PAGE_COMMON_KEYS = [
@@ -52,7 +52,7 @@ export function featureEntriesByKeys(keys: string[]): FeatureEntry[] {
 }
 
 /** 注册表条目 → 快捷导航项快照（去掉 group，写入配置） */
-export function toQuickNavigationItem(entry: FeatureEntry): GeneralConfigQuickNavigationItem {
+export function toQuickNavigationItem(entry: FeatureEntry): FeatureConfigQuickNavigationItem {
   const {group: _group, ...item} = entry;
   return {...item};
 }

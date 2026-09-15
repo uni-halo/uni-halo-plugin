@@ -1,20 +1,20 @@
 apiVersion: v1alpha1
 kind: "Role"
 metadata:
-  name: uni-halo-role-template-view-general-config
+  name: uni-halo-role-template-view-feature-config
   labels:
     halo.run/role-template: "true"
     rbac.authorization.halo.run/aggregate-to-admin: "true"
   annotations:
-    rbac.authorization.halo.run/module: "UniHalo 通用配置"
-    rbac.authorization.halo.run/display-name: "通用配置查看"
+    rbac.authorization.halo.run/module: "UniHalo 功能设置"
+    rbac.authorization.halo.run/display-name: "功能设置查看"
     rbac.authorization.halo.run/ui-permissions: |
-      ["plugin:uni-halo:general-config:view"]
+      ["plugin:uni-halo:feature-config:view"]
 rules:
   - apiGroups: [ "console.api.unihalo.ialley.cn" ]
     resources:
-      - "plugins/uni-halo/general-config"
-      - "plugins/uni-halo/general-config/*"
+      - "plugins/uni-halo/feature-config"
+      - "plugins/uni-halo/feature-config/*"
     verbs: [ "get", "list" ]
 
 ---
@@ -22,20 +22,20 @@ rules:
 apiVersion: v1alpha1
 kind: "Role"
 metadata:
-  name: uni-halo-role-template-manage-general-config
+  name: uni-halo-role-template-manage-feature-config
   labels:
     halo.run/role-template: "true"
     rbac.authorization.halo.run/aggregate-to-admin: "true"
   annotations:
     rbac.authorization.halo.run/dependencies: |
-      [ "uni-halo-role-template-view-general-config" ]
-    rbac.authorization.halo.run/module: "UniHalo 通用配置"
-    rbac.authorization.halo.run/display-name: "通用配置管理"
+      [ "uni-halo-role-template-view-feature-config" ]
+    rbac.authorization.halo.run/module: "UniHalo 功能设置"
+    rbac.authorization.halo.run/display-name: "功能设置管理"
     rbac.authorization.halo.run/ui-permissions: |
-      ["plugin:uni-halo:general-config:manage"]
+      ["plugin:uni-halo:feature-config:manage"]
 rules:
   - apiGroups: [ "console.api.unihalo.ialley.cn" ]
     resources:
-      - "plugins/uni-halo/general-config"
-      - "plugins/uni-halo/general-config/*"
+      - "plugins/uni-halo/feature-config"
+      - "plugins/uni-halo/feature-config/*"
     verbs: [ "create", "patch", "update", "delete", "deletecollection" ]

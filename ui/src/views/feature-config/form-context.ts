@@ -1,5 +1,5 @@
 import type { InjectionKey, Ref } from "vue";
-import type { GeneralConfig } from "@/types";
+import type { FeatureConfig } from "@/types";
 
 /**
  * 通用配置表单共享上下文（组件化拆分后 provide/inject）：
@@ -11,13 +11,13 @@ import type { GeneralConfig } from "@/types";
  * <p>save 供子组件触发整表单保存（如维护分区「提前结束维护」先置 enabled=false
  * 再保存）。</p>
  */
-export interface GeneralConfigFormContext {
+export interface FeatureConfigFormContext {
   /** 表单单一数据源（ref 由父组件持有） */
-  formState: Ref<GeneralConfig>;
+  formState: Ref<FeatureConfig>;
   /** 保存当前表单（父组件 handleSave：预检 + PUT + dirty 复位 + 失效缓存） */
   save: () => Promise<void>;
 }
 
 /** 通用配置表单上下文注入 key（父组件 provide，Section 组件 inject） */
-export const GeneralConfigFormKey: InjectionKey<GeneralConfigFormContext> =
-  Symbol("general-config-form");
+export const FeatureConfigFormKey: InjectionKey<FeatureConfigFormContext> =
+  Symbol("feature-config-form");

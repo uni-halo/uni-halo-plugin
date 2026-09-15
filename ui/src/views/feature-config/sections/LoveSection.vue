@@ -5,8 +5,8 @@ import { computed, inject, ref } from "vue";
 import RiDragMove2Line from "~icons/ri/drag-move-2-line";
 import RiArrowDownSLine from "~icons/ri/arrow-down-s-line";
 import RiArrowUpSLine from "~icons/ri/arrow-up-s-line";
-import type { GeneralConfigLoveModule } from "@/types";
-import { GeneralConfigFormKey } from "../form-context";
+import type { FeatureConfigLoveModule } from "@/types";
+import { FeatureConfigFormKey } from "../form-context";
 
 /**
  * 恋爱设置分区：
@@ -18,9 +18,9 @@ import { GeneralConfigFormKey } from "../form-context";
  */
 defineProps<{ subTab: string }>();
 
-const { formState } = inject(GeneralConfigFormKey)!;
+const { formState } = inject(FeatureConfigFormKey)!;
 
-/** 恋爱模块入口（三模块，模块入口分区渲染数据源；password 语义见 GeneralConfigLoveModule 类型） */
+/** 恋爱模块入口（三模块，模块入口分区渲染数据源；password 语义见 FeatureConfigLoveModule 类型） */
 const LOVE_MODULES: Array<{
   key: "ourStory" | "lovePhoto" | "loveDaily";
   label: string;
@@ -70,21 +70,21 @@ function toggleModuleCollapse(key: string) {
 }
 
 /** FormKit type="color" 选色（format="hex8" 输出 #rrggbbaa 含透明度）写回标题颜色 */
-function onModuleTitleColor(module: GeneralConfigLoveModule, value: unknown) {
+function onModuleTitleColor(module: FeatureConfigLoveModule, value: unknown) {
   if (typeof value === "string") {
     module.titleColor = value;
   }
 }
 
 /** FormKit type="color" 选色（format="hex8"）写回副标题颜色 */
-function onModuleSubTitleColor(module: GeneralConfigLoveModule, value: unknown) {
+function onModuleSubTitleColor(module: FeatureConfigLoveModule, value: unknown) {
   if (typeof value === "string") {
     module.subTitleColor = value;
   }
 }
 
 /** FormKit type="color" 选色（format="hex8"）写回图标背景色 */
-function onModuleIconBgColor(module: GeneralConfigLoveModule, value: unknown) {
+function onModuleIconBgColor(module: FeatureConfigLoveModule, value: unknown) {
   if (typeof value === "string") {
     module.iconBgColor = value;
   }
@@ -100,7 +100,7 @@ function clearModulePassword(key: "loveDiary" | "ourStory" | "lovePhoto" | "love
 }
 
 /** 新密码输入时自动取消「清除密码」标记（重设优先级高于清除） */
-function cancelRemovalOnTyping(module: GeneralConfigLoveModule) {
+function cancelRemovalOnTyping(module: FeatureConfigLoveModule) {
   if (module?.passwordRemoved) {
     module.passwordRemoved = false;
   }
@@ -108,6 +108,17 @@ function cancelRemovalOnTyping(module: GeneralConfigLoveModule) {
 </script>
 
 <template>
+  <!-- 恋爱 → 页面设置（恋爱日记页标题 + 恋爱页背景图，2026-09-15 自页面设置-恋爱日记迁入） -->
+  <template v-if="subTab === 'page'">
+    <p class=":uno: mb-3 text-xs text-gray-400">
+      恋爱日记页（app 端恋爱页）的展示标题与背景图；留空分别回退内置标题与内置背景。
+    </p>
+    <FormKit v-model="formState.spec.love.diaryPage!.pageTitle" name="love_diary_page_title" label="页面标题" type="text"
+      help="恋爱日记页展示标题，留空使用默认" />
+    <FormKit v-model="formState.spec.love.diaryPage!.bgImageUrl" name="love_diary_bg_image" label="恋爱页背景图"
+      type="attachment" :accepts="['image/*']" help="恋爱页（恋爱日记）顶部背景图，留空使用内置回退" />
+  </template>
+
   <!-- 恋爱 → 恋爱信息（纪念日 + 恋人信息） -->
   <template v-if="subTab === 'info'">
     <p class=":uno: mb-3 text-xs text-gray-400">

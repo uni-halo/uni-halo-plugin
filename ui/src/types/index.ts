@@ -510,47 +510,47 @@ export const AUDIT_CANDIDATE_PLUGIN_HINTS: Partial<Record<AuditCandidateType, st
   linkGroup: "请先安装 plugin-links（链接管理插件）",
 };
 
-// ===== 通用配置（GeneralConfig 单例，name 固定 general-config）=====
+// ===== 通用配置（FeatureConfig 单例，name 固定 feature-config）=====
 
-export interface GeneralConfig {
+export interface FeatureConfig {
   metadata?: { name?: string };
-  spec: GeneralConfigSpec;
+  spec: FeatureConfigSpec;
 }
 
-export interface GeneralConfigSpec {
-  profile: GeneralConfigProfile;
-  pages: GeneralConfigPages;
-  assets: GeneralConfigAssets;
-  preferences: GeneralConfigPreferences;
+export interface FeatureConfigSpec {
+  profile: FeatureConfigProfile;
+  pages: FeatureConfigPages;
+  assets: FeatureConfigAssets;
+  preferences: FeatureConfigPreferences;
   /** 恋爱模块（经 getConfigs loveConfig 组下发；恋爱日记仅密码状态，三模块入口
    * 自身承载 app 端入口列表数据：title/subTitle/颜色/iconBgColor/path/priority） */
-  love: GeneralConfigLove;
-  /** 友链信息：站长小程序展示信息，经 getConfigs 覆盖
+  love: FeatureConfigLove;
+  /** 友链设置：站长小程序展示信息，经 getConfigs 覆盖
    * pluginConfig.linksSubmitPlugin 对应键下发，供小程序端「申请信息」弹窗展示 */
-  linkInfo: GeneralConfigLinkInfo;
+  linkInfo: FeatureConfigLinkInfo;
   /** 维护模式 */
-  maintenance: GeneralConfigMaintenance;
+  maintenance: FeatureConfigMaintenance;
   /** 审核模式：开启后关闭小程序部分数据展示，小程序提交审核时建议开启；
    * 经 getConfigs 重建回旧 auditConfig.auditModeEnabled 形态下发 */
   auditMode: { enabled?: boolean };
 }
 
 /**
- * 友链信息：基本配置（公开提交申请开关）/ miniInfo 小程序信息 / siteInfo 站点信息
+ * 友链设置：基本设置（公开提交申请开关）/ miniInfo 小程序信息 / siteInfo 站点信息
  * （字段对齐 Halo 官方 plugin-links 友链提交 API）；
  * 经 getConfigs 直接下发 pluginConfig.linkInfo
  */
-export interface GeneralConfigLinkInfo {
+export interface FeatureConfigLinkInfo {
   /** 是否开放公开提交申请（默认 true，关闭后公开提交接口返回「暂未开放提交申请」） */
   submissionEnabled?: boolean;
   /** 小程序信息（小程序名称/太阳码/跳转地址/描述/申请说明） */
-  miniInfo?: GeneralConfigMiniInfo;
+  miniInfo?: FeatureConfigMiniInfo;
   /** 站点信息（本站站点名片，对齐 Halo 官方友链提交 API 字段） */
-  siteInfo?: GeneralConfigSiteInfo;
+  siteInfo?: FeatureConfigSiteInfo;
 }
 
 /** 小程序信息（app 端「申请信息」弹窗展示项） */
-export interface GeneralConfigMiniInfo {
+export interface FeatureConfigMiniInfo {
   /** 小程序名称 */
   displayName?: string;
   /** 太阳码/小程序码图片 */
@@ -564,7 +564,7 @@ export interface GeneralConfigMiniInfo {
 }
 
 /** 站点信息（字段对齐 Halo 官方 plugin-links 友链提交 API：link-applications 请求体） */
-export interface GeneralConfigSiteInfo {
+export interface FeatureConfigSiteInfo {
   /** 网站名称（官方 displayName） */
   displayName?: string;
   /** 网站地址（官方 url，HTTP/HTTPS） */
@@ -579,7 +579,7 @@ export interface GeneralConfigSiteInfo {
   feedUrls?: string[];
 }
 
-export interface GeneralConfigProfile {
+export interface FeatureConfigProfile {
   appInfo: {
     name?: string;
     logo?: string;
@@ -596,7 +596,7 @@ export interface GeneralConfigProfile {
   };
   social: {
     /** 社交项列表（app 端联系博主页按序渲染） */
-    items?: GeneralConfigSocialItem[];
+    items?: FeatureConfigSocialItem[];
   };
   /** 页脚版权（显示于关于页页脚） */
   copyrightConfig?: {
@@ -607,7 +607,7 @@ export interface GeneralConfigProfile {
 
 /** 社交项（app 端联系博主页展示/复制；图标由 app 端按 color/bgColor 色块渲染；
  * 仅名称/内容/颜色/背景色/排序/显隐） */
-export interface GeneralConfigSocialItem {
+export interface FeatureConfigSocialItem {
   /** 名称（如「企鹅号」「微信号」） */
   name?: string;
   /** 内容（账号/地址/链接，点击复制） */
@@ -622,16 +622,16 @@ export interface GeneralConfigSocialItem {
   visible?: boolean;
 }
 
-export interface GeneralConfigPages {
+export interface FeatureConfigPages {
   homeConfig: {
     /** 首页标题（控制台不再提供配置项，保留字段由客户端读取默认） */
     pageTitle?: string;
     useQuickNavigation?: boolean;
     /** 快捷导航项列表（每项可配置名称/排序/显示隐藏，排序=数组顺序） */
-    quickNavigation?: GeneralConfigQuickNavigationItem[];
+    quickNavigation?: FeatureConfigQuickNavigationItem[];
     useCategory?: boolean;
     /** 首页分类栏展示的分类引用（固定 3 个，数据在「分类管理」维护） */
-    categories?: GeneralConfigCategoryItem[];
+    categories?: FeatureConfigCategoryItem[];
   };
   galleryConfig: {
     /** 图库页标题 */
@@ -657,7 +657,7 @@ export interface GeneralConfigPages {
   };
   /** 我的页面功能入口（常用功能/其他功能两组，配置并入「关于页」tab，
    * 经 getConfigs 下发 pageConfig.myPageConfig） */
-  myPageConfig?: GeneralConfigMyPage;
+  myPageConfig?: FeatureConfigMyPage;
   /** 免责声明页（不再需要启用开关，仅内容） */
   disclaimers?: {
     content?: string;
@@ -669,12 +669,6 @@ export interface GeneralConfigPages {
     copyrightAuthor?: string;
     copyrightDesc?: string;
     copyrightViolation?: string;
-  };
-  /** 恋爱日记页（页面标题 + 恋爱页背景图，客户端 pageConfig.loveDiaryConfig） */
-  loveDiaryConfig?: {
-    pageTitle?: string;
-    /** 恋爱页背景图（配置于页面设置-恋爱日记） */
-    bgImageUrl?: string;
   };
   /** 联系博主页（页面标题，客户端 pageConfig.contactConfig） */
   contactConfig?: {
@@ -719,7 +713,7 @@ export interface GeneralConfigPages {
 }
 
 /** 快捷导航项（字段与客户端 uh-home-quick-nav 对齐） */
-export interface GeneralConfigQuickNavigationItem {
+export interface FeatureConfigQuickNavigationItem {
   key?: string;
   title?: string;
   /** 副标题（对标 app 端 rightText，如「全部文章」，可空） */
@@ -740,16 +734,16 @@ export interface GeneralConfigQuickNavigationItem {
 
 /** 我的页面功能入口（常用功能/其他功能两组，条目复用快捷导航项结构，
  * app 端 about 页按组渲染） */
-export interface GeneralConfigMyPage {
+export interface FeatureConfigMyPage {
   /** 常用功能 */
-  commonFeatures?: GeneralConfigQuickNavigationItem[];
+  commonFeatures?: FeatureConfigQuickNavigationItem[];
   /** 其他功能 */
-  otherFeatures?: GeneralConfigQuickNavigationItem[];
+  otherFeatures?: FeatureConfigQuickNavigationItem[];
 }
 
 /** 首页分类栏选中引用（固定 3 个；name = Category.metadata.name，快照含名称/封面/排序/文章数，
  * 数组顺序 = 展示排序；app 端直接按快照渲染，不发请求） */
-export interface GeneralConfigCategoryItem {
+export interface FeatureConfigCategoryItem {
   name?: string;
   /** 分类名称（展示用冗余快照） */
   displayName?: string;
@@ -761,14 +755,14 @@ export interface GeneralConfigCategoryItem {
   postCount?: number;
 }
 
-export interface GeneralConfigAssets {
+export interface FeatureConfigAssets {
   /** 加载中的图片 */
   loadingGifUrl?: string;
   /** 加载失败图片 */
   loadingErrUrl?: string;
 }
 
-export interface GeneralConfigPreferences {
+export interface FeatureConfigPreferences {
   /** 首页列表布局（L0 默认，客户端 layout.home.listLayout）：single 单列 / double 双列 */
   homeListLayout?: "single" | "double";
   /** 首页卡片样式（L0 默认，客户端 layout.home.cardType） */
@@ -786,21 +780,16 @@ export interface GeneralConfigPreferences {
 }
 
 /** 恋爱模块（恋爱日记入口仅密码状态无开关；三模块入口自身即 app 端入口列表数据） */
-export interface GeneralConfigLove {
-  /** 恋爱页图片（仅背景图） */
-  pageImages?: {
-    /** 背景图片 */
-    bgImageUrl?: string;
-  };
+export interface FeatureConfigLove {
   /** 恋爱日记入口（恋爱页本身，仅密码设置无 enabled 开关；入口显隐由
    * 页面设置-快捷导航/关于页功能入口注册表控制） */
-  loveDiary?: GeneralConfigLoveModule;
+  loveDiary?: FeatureConfigLoveModule;
   /** 恋爱故事模块入口（数据在「恋爱管理-恋爱故事」维护） */
-  ourStory?: GeneralConfigLoveModule;
+  ourStory?: FeatureConfigLoveModule;
   /** 恋爱相册模块入口（数据在「恋爱管理-恋爱相册」维护） */
-  lovePhoto?: GeneralConfigLoveModule;
+  lovePhoto?: FeatureConfigLoveModule;
   /** 恋爱清单模块入口（数据在「恋爱管理-恋爱清单」维护） */
-  loveDaily?: GeneralConfigLoveModule;
+  loveDaily?: FeatureConfigLoveModule;
   /** 恋爱信息（纪念日 + 恋人信息，配置于恋爱设置-恋爱信息 tab，
    * 经 getConfigs 下发 loveConfig.loveInfo） */
   loveInfo?: {
@@ -817,6 +806,14 @@ export interface GeneralConfigLove {
     /** 女生头像 */
     girlAvatar?: string;
   };
+  /** 恋爱日记页面设置（配置于恋爱设置-页面设置 tab；app 端输出 shape 不变，
+   * 仍为 pageConfig.loveDiaryConfig） */
+  diaryPage?: {
+    /** 页面标题（留空客户端回退内置标题） */
+    pageTitle?: string;
+    /** 恋爱页背景图（留空客户端内置回退） */
+    bgImageUrl?: string;
+  };
 }
 
 /**
@@ -828,7 +825,7 @@ export interface GeneralConfigLove {
  * title/subTitle/titleColor/subTitleColor/iconBgColor/path/priority
  * （app 端直接按模块 key 渲染入口，无需本地硬编码）。
  */
-export interface GeneralConfigLoveModule {
+export interface FeatureConfigLoveModule {
   /** 是否在恋爱页展示该模块入口（loveDiary 不使用：入口显隐由快捷导航/功能入口注册表控制） */
   enabled?: boolean;
   /** 入口名称（app 端入口列表标题） */
@@ -856,7 +853,7 @@ export interface GeneralConfigLoveModule {
 /** 维护模式：维护页标题/富文本说明与排期窗口；实际状态由服务端
  * 按 enabled + startTime/endTime 与当前时间计算（scheduled/active 时 getConfigs
  * 顶层下发 maintenance 键，enabled=false 或到点自动结束则不输出，键缺失即未维护） */
-export interface GeneralConfigMaintenance {
+export interface FeatureConfigMaintenance {
   /** 安排开关：开启后按时间窗口即时生效（startTime 为空/已过 = 立即进入维护中） */
   enabled?: boolean;
   /** 维护页标题（默认「站点维护中」） */

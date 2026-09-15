@@ -7,8 +7,8 @@ import RiDeleteBinLine from "~icons/ri/delete-bin-6-line";
 import RiImageLine from "~icons/ri/image-line";
 import RichTextEditorField from "@/components/common/RichTextEditorField.vue";
 import AuditCandidatesModal from "@/components/audit-config/AuditCandidatesModal.vue";
-import FeatureEntryCandidatesModal from "@/components/general-config/FeatureEntryCandidatesModal.vue";
-import {GeneralConfigFormKey} from "@/views/general-config/form-context";
+import FeatureEntryCandidatesModal from "@/components/feature-config/FeatureEntryCandidatesModal.vue";
+import {FeatureConfigFormKey} from "@/views/feature-config/form-context";
 import {
   DEFAULT_MY_PAGE_COMMON_KEYS,
   DEFAULT_MY_PAGE_OTHER_KEYS,
@@ -19,9 +19,9 @@ import {
 } from "@/constant/feature-entries";
 import type {
   AuditDataRef,
-  GeneralConfigCategoryItem,
-  GeneralConfigMyPage,
-  GeneralConfigQuickNavigationItem,
+  FeatureConfigCategoryItem,
+  FeatureConfigMyPage,
+  FeatureConfigQuickNavigationItem,
 } from "@/types";
 
 /**
@@ -31,13 +31,13 @@ import type {
  */
 defineProps<{ subTab: string }>();
 
-const { formState } = inject(GeneralConfigFormKey)!;
+const { formState } = inject(FeatureConfigFormKey)!;
 
 /**
  * 快捷导航默认 5 项（由注册表显式 key 列表派生——
- * archives/vote/disclaimers/love/contact-blogger，与 app 端 uh-home-quick-nav 默认一致）
+ * love/contact-blogger/favorites/friend-links/about，与 app 端 uh-home-quick-nav 默认一致）
  */
-const DEFAULT_QUICK_NAVIGATION: GeneralConfigQuickNavigationItem[] =
+const DEFAULT_QUICK_NAVIGATION: FeatureConfigQuickNavigationItem[] =
   featureEntriesByKeys(DEFAULT_QUICK_NAV_KEYS).map(toQuickNavigationItem);
 
 /** 首页快捷导航「添加」候选弹窗（统一清单：展示全部注册表条目，已配置置灰禁选，确认后追加） */
@@ -46,7 +46,7 @@ const quickNavModalVisible = ref(false);
 /** 快捷导航项列表（写回 formState；VueDraggable 需要非 undefined 数组） */
 const homeQuickNavigation = computed({
   get: () => formState.value.spec.pages.homeConfig.quickNavigation || [],
-  set: (value: GeneralConfigQuickNavigationItem[]) => {
+  set: (value: FeatureConfigQuickNavigationItem[]) => {
     formState.value.spec.pages.homeConfig.quickNavigation = value;
   },
 });
@@ -62,7 +62,7 @@ const handleQuickNavConfirm = (selected: FeatureEntry[]) => {
 };
 
 /** 删除某项快捷导航 */
-const removeQuickNavItem = (item: GeneralConfigQuickNavigationItem) => {
+const removeQuickNavItem = (item: FeatureConfigQuickNavigationItem) => {
   const list = formState.value.spec.pages.homeConfig.quickNavigation || [];
   formState.value.spec.pages.homeConfig.quickNavigation = list.filter(
     (it) => it.key !== item.key
@@ -89,7 +89,7 @@ function restoreQuickNavigationDefaults() {
 
 const categoryModalVisible = ref(false);
 
-/** 首页分类栏已选引用（GeneralConfigCategoryItem：name + displayName + cover 快照） */
+/** 首页分类栏已选引用（FeatureConfigCategoryItem：name + displayName + cover 快照） */
 const homeCategories = computed(
   () => formState.value.spec.pages.homeConfig.categories || []
 );
@@ -108,7 +108,7 @@ const categoryModalSelected = computed<AuditDataRef[]>(() =>
 /** 分类栏已选快照列表（写回 formState；VueDraggable 拖拽排序，顺序 = 展示顺序） */
 const homeCategoriesSortable = computed({
   get: () => formState.value.spec.pages.homeConfig.categories || [],
-  set: (value: GeneralConfigCategoryItem[]) => {
+  set: (value: FeatureConfigCategoryItem[]) => {
     formState.value.spec.pages.homeConfig.categories = value;
   },
 });
@@ -125,7 +125,7 @@ const handleCategoryConfirm = (selected: AuditDataRef[]) => {
   categoryModalVisible.value = false;
 };
 
-const removeCategory = (item: GeneralConfigCategoryItem) => {
+const removeCategory = (item: FeatureConfigCategoryItem) => {
   const list = formState.value.spec.pages.homeConfig.categories || [];
   formState.value.spec.pages.homeConfig.categories = list.filter(
     (it) => it.name !== item.name
@@ -140,14 +140,14 @@ function toColorInput(value?: string): string {
 }
 
 /** FormKit type="color" 选色（format="hex8" 输出 #rrggbbaa 含透明度）写回 color（文字颜色，app 端直接读该色值渲染文字/图标） */
-function onNavColor(item: GeneralConfigQuickNavigationItem, value: unknown) {
+function onNavColor(item: FeatureConfigQuickNavigationItem, value: unknown) {
   if (typeof value === "string") {
     item.color = value;
   }
 }
 
 /** FormKit type="color" 选色（format="hex8" 输出 #rrggbbaa 含透明度）写回 bgColor（图标背景色，app 端直接读该色值渲染） */
-function onNavBgColor(item: GeneralConfigQuickNavigationItem, value: unknown) {
+function onNavBgColor(item: FeatureConfigQuickNavigationItem, value: unknown) {
   if (typeof value === "string") {
     item.bgColor = value;
   }
@@ -156,21 +156,21 @@ function onNavBgColor(item: GeneralConfigQuickNavigationItem, value: unknown) {
 // ===== 我的页面功能入口（常用功能/其他功能两组） =====
 
 /** 我的页面 myPageConfig 安全访问（defaultSpec 已含两组默认，旧数据可能缺失） */
-const myPageConfig = computed<GeneralConfigMyPage>(
+const myPageConfig = computed<FeatureConfigMyPage>(
   () => formState.value.spec.pages.myPageConfig || {commonFeatures: [], otherFeatures: []}
 );
 
 /** 两组列表（写回 formState；VueDraggable 需要非 undefined 数组） */
 const myPageCommonFeatures = computed({
   get: () => myPageConfig.value.commonFeatures || [],
-  set: (value: GeneralConfigQuickNavigationItem[]) => {
+  set: (value: FeatureConfigQuickNavigationItem[]) => {
     myPageConfig.value.commonFeatures = value;
   },
 });
 
 const myPageOtherFeatures = computed({
   get: () => myPageConfig.value.otherFeatures || [],
-  set: (value: GeneralConfigQuickNavigationItem[]) => {
+  set: (value: FeatureConfigQuickNavigationItem[]) => {
     myPageConfig.value.otherFeatures = value;
   },
 });
@@ -193,7 +193,7 @@ const handleMyPageConfirm = (selected: FeatureEntry[], group: "common" | "other"
 };
 
 /** 删除对应分组中的某项 */
-const removeMyPageFeature = (group: "common" | "other", item: GeneralConfigQuickNavigationItem) => {
+const removeMyPageFeature = (group: "common" | "other", item: FeatureConfigQuickNavigationItem) => {
   const list = group === "common"
     ? myPageCommonFeatures.value
     : myPageOtherFeatures.value;
@@ -621,12 +621,6 @@ function restoreMyPageDefaults(group: "common" | "other") {
       小程序端「免责声明」页面展示的内容（支持图文混排）；留空则不展示该页面。
     </p>
     <RichTextEditorField v-model="formState.spec.pages.disclaimers!.content" placeholder="输入免责声明内容，支持图文混排……留空则不展示免责声明页" />
-  </template>
-
-  <!-- 页面与排版 → 恋爱日记页（页面标题 + 恋爱页背景图） -->
-  <template v-if="subTab === 'loveDiary'">
-    <FormKit v-model="formState.spec.pages.loveDiaryConfig!.pageTitle" name="love_diary_page_title" label="页面标题" type="text" help="恋爱日记页展示标题，留空使用默认" />
-    <FormKit v-model="formState.spec.pages.loveDiaryConfig!.bgImageUrl" name="love_diary_bg_image" label="恋爱页背景图" type="attachment" :accepts="['image/*']" help="恋爱页（恋爱日记）顶部背景图，留空使用内置回退" />
   </template>
 
   <!-- 页面与排版 → 联系博主页（暂仅页面标题，留空使用默认） -->

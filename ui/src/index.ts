@@ -47,14 +47,14 @@ export default definePlugin({
     {
       parentName: 'Root',
       route: {
-        path: baseRoutePath('/general-config'),
-        name: 'GeneralConfig',
-        component: () => import('@/views/general-config/GeneralConfigView.vue'),
+        path: baseRoutePath('/feature-config'),
+        name: 'FeatureConfig',
+        component: () => import('@/views/feature-config/FeatureConfigView.vue'),
         meta: {
           title: '功能设置',
           searchable: true,
           hideFooter: false,
-          permissions: ['plugin:uni-halo:general-config:view'],
+          permissions: ['plugin:uni-halo:feature-config:view'],
           menu: {
             name: '功能设置',
             group: GROUP_NAME,

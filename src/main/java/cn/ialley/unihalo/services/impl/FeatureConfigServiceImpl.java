@@ -4,47 +4,50 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import cn.ialley.unihalo.constants.Constants;
-import cn.ialley.unihalo.scheme.GeneralConfig;
-import cn.ialley.unihalo.scheme.GeneralConfig.About;
-import cn.ialley.unihalo.scheme.GeneralConfig.AboutProjectPage;
-import cn.ialley.unihalo.scheme.GeneralConfig.ArchivesPage;
-import cn.ialley.unihalo.scheme.GeneralConfig.Assets;
-import cn.ialley.unihalo.scheme.GeneralConfig.AuditMode;
-import cn.ialley.unihalo.scheme.GeneralConfig.Blogger;
-import cn.ialley.unihalo.scheme.GeneralConfig.CategoryPage;
-import cn.ialley.unihalo.scheme.GeneralConfig.ContactPage;
-import cn.ialley.unihalo.scheme.GeneralConfig.Copyright;
-import cn.ialley.unihalo.scheme.GeneralConfig.DataVisualPage;
-import cn.ialley.unihalo.scheme.GeneralConfig.Disclaimer;
-import cn.ialley.unihalo.scheme.GeneralConfig.FavoritesPage;
-import cn.ialley.unihalo.scheme.GeneralConfig.FriendLinksPage;
-import cn.ialley.unihalo.scheme.GeneralConfig.Gallery;
-import cn.ialley.unihalo.scheme.GeneralConfig.Home;
-import cn.ialley.unihalo.scheme.GeneralConfig.LinkInfo;
-import cn.ialley.unihalo.scheme.GeneralConfig.Love;
-import cn.ialley.unihalo.scheme.GeneralConfig.LoveDiaryPage;
-import cn.ialley.unihalo.scheme.GeneralConfig.LoveInfo;
-import cn.ialley.unihalo.scheme.GeneralConfig.Maintenance;
-import cn.ialley.unihalo.scheme.GeneralConfig.MomentPage;
-import cn.ialley.unihalo.scheme.GeneralConfig.ModuleSwitch;
-import cn.ialley.unihalo.scheme.GeneralConfig.MyPage;
-import cn.ialley.unihalo.scheme.GeneralConfig.NoticePage;
-import cn.ialley.unihalo.scheme.GeneralConfig.Pages;
-import cn.ialley.unihalo.scheme.GeneralConfig.PostDetail;
-import cn.ialley.unihalo.scheme.GeneralConfig.Profile;
-import cn.ialley.unihalo.scheme.GeneralConfig.QuickNavigationItem;
-import cn.ialley.unihalo.scheme.GeneralConfig.SearchPage;
-import cn.ialley.unihalo.scheme.GeneralConfig.SettingPage;
-import cn.ialley.unihalo.scheme.GeneralConfig.Social;
-import cn.ialley.unihalo.scheme.GeneralConfig.SocialItem;
-import cn.ialley.unihalo.scheme.GeneralConfig.Spec;
-import cn.ialley.unihalo.scheme.GeneralConfig.VotePage;
-import cn.ialley.unihalo.services.GeneralConfigService;
+import cn.ialley.unihalo.scheme.FeatureConfig;
+import cn.ialley.unihalo.scheme.LegacyGeneralConfig;
+import cn.ialley.unihalo.scheme.FeatureConfig.About;
+import cn.ialley.unihalo.scheme.FeatureConfig.AboutProjectPage;
+import cn.ialley.unihalo.scheme.FeatureConfig.ArchivesPage;
+import cn.ialley.unihalo.scheme.FeatureConfig.Assets;
+import cn.ialley.unihalo.scheme.FeatureConfig.AuditMode;
+import cn.ialley.unihalo.scheme.FeatureConfig.Blogger;
+import cn.ialley.unihalo.scheme.FeatureConfig.CategoryPage;
+import cn.ialley.unihalo.scheme.FeatureConfig.ContactPage;
+import cn.ialley.unihalo.scheme.FeatureConfig.Copyright;
+import cn.ialley.unihalo.scheme.FeatureConfig.DataVisualPage;
+import cn.ialley.unihalo.scheme.FeatureConfig.Disclaimer;
+import cn.ialley.unihalo.scheme.FeatureConfig.FavoritesPage;
+import cn.ialley.unihalo.scheme.FeatureConfig.FriendLinksPage;
+import cn.ialley.unihalo.scheme.FeatureConfig.Gallery;
+import cn.ialley.unihalo.scheme.FeatureConfig.Home;
+import cn.ialley.unihalo.scheme.FeatureConfig.LinkInfo;
+import cn.ialley.unihalo.scheme.FeatureConfig.Love;
+import cn.ialley.unihalo.scheme.FeatureConfig.LoveDiaryPage;
+import cn.ialley.unihalo.scheme.FeatureConfig.LoveInfo;
+import cn.ialley.unihalo.scheme.FeatureConfig.Maintenance;
+import cn.ialley.unihalo.scheme.FeatureConfig.MomentPage;
+import cn.ialley.unihalo.scheme.FeatureConfig.ModuleSwitch;
+import cn.ialley.unihalo.scheme.FeatureConfig.MyPage;
+import cn.ialley.unihalo.scheme.FeatureConfig.NoticePage;
+import cn.ialley.unihalo.scheme.FeatureConfig.Pages;
+import cn.ialley.unihalo.scheme.FeatureConfig.PostDetail;
+import cn.ialley.unihalo.scheme.FeatureConfig.Profile;
+import cn.ialley.unihalo.scheme.FeatureConfig.QuickNavigationItem;
+import cn.ialley.unihalo.scheme.FeatureConfig.SearchPage;
+import cn.ialley.unihalo.scheme.FeatureConfig.SettingPage;
+import cn.ialley.unihalo.scheme.FeatureConfig.Social;
+import cn.ialley.unihalo.scheme.FeatureConfig.SocialItem;
+import cn.ialley.unihalo.scheme.FeatureConfig.Spec;
+import cn.ialley.unihalo.scheme.FeatureConfig.VotePage;
+import cn.ialley.unihalo.services.FeatureConfigService;
 import cn.ialley.unihalo.utils.MaintenanceResolver;
 import reactor.core.publisher.Mono;
 import run.halo.app.extension.Metadata;
@@ -56,7 +59,7 @@ import tools.jackson.databind.node.JsonNodeFactory;
 import tools.jackson.databind.node.ObjectNode;
 
 /**
- * 通用配置服务实现（单例）。
+ * 功能设置服务实现（单例）。
  *
  * <p>默认值对齐 setting.yaml 的 value 缺省；存量配置组
  * （basicConfig/pageConfig/authorConfig/imagesConfig）在单例尚未创建时合并进
@@ -64,9 +67,15 @@ import tools.jackson.databind.node.ObjectNode;
  *
  * @author 小莫唐尼
  */
+@Slf4j
 @Service
 @RequiredArgsConstructor
-public class GeneralConfigServiceImpl implements GeneralConfigService {
+public class FeatureConfigServiceImpl implements FeatureConfigService {
+
+    /**
+     * TODO-TEMPORARY-MIGRATION：旧「通用配置」单例名（改名前 general-config）。
+     */
+    private static final String LEGACY_GENERAL_CONFIG_SINGLETON_NAME = "general-config";
 
     /**
      * 参与导入的存量设置组
@@ -90,37 +99,39 @@ public class GeneralConfigServiceImpl implements GeneralConfigService {
     private final ReactiveSettingFetcher settingFetcher;
 
     @Override
-    public Mono<GeneralConfig> get() {
-        return client.fetch(GeneralConfig.class, Constants.GENERAL_CONFIG_SINGLETON_NAME)
-                .switchIfEmpty(Mono.defer(this::defaultWithLegacy))
+    public Mono<FeatureConfig> get() {
+        return fetchOrMigrate()
                 // 恋爱模块入口密码一律脱敏（哈希不回显；passwordEnabled 由哈希派生）
                 .map(this::maskLovePasswords);
     }
 
     @Override
-    public Mono<GeneralConfig> save(GeneralConfig config) {
-        GeneralConfig body = config == null ? new GeneralConfig() : config;
+    public Mono<FeatureConfig> save(FeatureConfig config) {
+        FeatureConfig body = config == null ? new FeatureConfig() : config;
         // 写入前合并：默认值 → 存量配置值 → 请求体非空字段，防丢字段/防空写。
-        // 先取现有单例（可能不存在）以保留恋爱模块入口密码哈希。
-        return client.fetch(GeneralConfig.class, Constants.GENERAL_CONFIG_SINGLETON_NAME)
-                .defaultIfEmpty(new GeneralConfig())
-                .flatMap(existing -> legacyOverlay().map(overlay -> {
+        // 先取现有单例（可能不存在，走 fetchOrMigrate 兜旧数据迁移）以保留恋爱模块入口密码哈希。
+        return fetchOrMigrate()
+                .map(Optional::of)
+                .defaultIfEmpty(Optional.<FeatureConfig>empty())
+                .flatMap(existingOpt -> legacyOverlay().map(overlay -> {
                     ObjectNode merged = merge(defaultSpecTree(), overlay);
                     if (body.getSpec() != null) {
                         merged = merge(merged,
                                 (ObjectNode) objectMapper.valueToTree(body.getSpec()));
                     }
-                    GeneralConfig target = new GeneralConfig();
+                    FeatureConfig target = new FeatureConfig();
                     target.setSpec(treeToValue(merged));
                     // 恋爱模块入口密码：新密码=重设并启用；passwordRemoved=清除；否则保持原哈希
                     applyLovePasswords(target.getSpec().getLove(),
-                            existing.getSpec() != null ? existing.getSpec().getLove() : null);
+                            existingOpt.map(FeatureConfig::getSpec)
+                                    .map(Spec::getLove).orElse(null));
                     validateMaintenance(target.getSpec().getMaintenance());
                     return target;
                 }).flatMap(target -> {
-                    if (existing.getMetadata() == null) {
+                    FeatureConfig existing = existingOpt.orElse(null);
+                    if (existing == null || existing.getMetadata() == null) {
                         Metadata metadata = new Metadata();
-                        metadata.setName(Constants.GENERAL_CONFIG_SINGLETON_NAME);
+                        metadata.setName(Constants.FEATURE_CONFIG_SINGLETON_NAME);
                         metadata.setCreationTimestamp(Instant.now());
                         target.setMetadata(metadata);
                         return client.create(target);
@@ -155,12 +166,92 @@ public class GeneralConfigServiceImpl implements GeneralConfigService {
     /**
      * 读取原始单例（未经脱敏，含恋爱模块密码哈希），供解锁/锁定判断使用。
      */
-    private Mono<GeneralConfig> fetchRaw() {
-        return client.fetch(GeneralConfig.class, Constants.GENERAL_CONFIG_SINGLETON_NAME)
-                .switchIfEmpty(Mono.defer(this::defaultWithLegacy));
+    private Mono<FeatureConfig> fetchRaw() {
+        return fetchOrMigrate();
     }
 
-    private static ModuleSwitch findLoveModule(GeneralConfig config, String module) {
+    /**
+     * TODO-TEMPORARY-MIGRATION：统一读取入口 —— 新单例存在直接返回；
+     * 不存在且旧「通用配置」单例（general-config）存在时，把旧 spec 原样复制
+     * 创建为新单例（feature-config）后返回；两边都没有则回落默认值+存量导入。
+     * 迁移为幂等：创建成功即写新单例，后续读取不再走旧数据。
+     * 迁移完成经用户确认后，本方法与 LegacyGeneralConfig 一并删除。
+     */
+    private Mono<FeatureConfig> fetchOrMigrate() {
+        return client.fetch(FeatureConfig.class, Constants.FEATURE_CONFIG_SINGLETON_NAME)
+                .switchIfEmpty(Mono.defer(this::migrateFromLegacy)
+                        .switchIfEmpty(Mono.defer(this::defaultWithLegacy)));
+    }
+
+    /**
+     * TODO-TEMPORARY-MIGRATION：从旧单例复制创建新单例；旧单例不存在时返回空。
+     * 复制前对旧 spec 做树级搬移（见 {@link #migrateLoveDiaryPageTree(JsonNode)}）。
+     */
+    private Mono<FeatureConfig> migrateFromLegacy() {
+        return client.fetch(LegacyGeneralConfig.class, LEGACY_GENERAL_CONFIG_SINGLETON_NAME)
+                .flatMap(legacy -> {
+                    JsonNode legacySpec = legacy.getSpec() != null
+                            ? migrateLoveDiaryPageTree(toJackson3(legacy.getSpec()))
+                            : null;
+                    FeatureConfig config = new FeatureConfig();
+                    Metadata metadata = new Metadata();
+                    metadata.setName(Constants.FEATURE_CONFIG_SINGLETON_NAME);
+                    metadata.setCreationTimestamp(
+                            legacy.getMetadata() != null && legacy.getMetadata().getCreationTimestamp() != null
+                                    ? legacy.getMetadata().getCreationTimestamp()
+                                    : Instant.now());
+                    config.setMetadata(metadata);
+                    config.setSpec(legacySpec != null
+                            ? objectMapper.convertValue(legacySpec, Spec.class)
+                            : treeToValue(defaultSpecTree()));
+                    log.info("【UniHalo】已从旧通用配置（general-config）迁移功能设置（feature-config）");
+                    return client.create(config);
+                });
+    }
+
+    /**
+     * TODO-TEMPORARY-MIGRATION：Jackson 2→3 桥接。旧单例 spec 由 Halo Extension
+     * 存取层（Jackson 2）反序列化，本类内部树操作统一用 Jackson 3，经 JSON 字符串
+     * 重建节点。随迁移代码一并删除。
+     */
+    private tools.jackson.databind.JsonNode toJackson3(com.fasterxml.jackson.databind.JsonNode v2Node) {
+        return objectMapper.readTree(v2Node.toString());
+    }
+
+    /**
+     * TODO-TEMPORARY-MIGRATION：旧 spec 树级搬移恋爱日记页配置
+     * {@code pages.loveDiaryConfig → love.diaryPage}（新位置已有值时旧值忽略），
+     * 搬移后删除旧节点，再整体反序列化为新 Spec（该字段已从模型删除）。
+     * 随迁移代码一并删除。
+     */
+    private JsonNode migrateLoveDiaryPageTree(JsonNode spec) {
+        if (spec == null || !spec.isObject()) {
+            return spec;
+        }
+        JsonNode pages = spec.get("pages");
+        JsonNode legacyPage = pages != null && pages.isObject()
+                ? pages.get("loveDiaryConfig") : null;
+        if (legacyPage == null || !legacyPage.isObject() || legacyPage.isEmpty()) {
+            return spec;
+        }
+        ObjectNode mutable = (ObjectNode) spec;
+        JsonNode love = mutable.get("love");
+        if (love == null || !love.isObject()) {
+            love = objectMapper.createObjectNode();
+            mutable.set("love", love);
+        }
+        JsonNode diaryPage = love.get("diaryPage");
+        boolean diaryPageEmpty = diaryPage == null || diaryPage.isNull()
+                || (diaryPage.path("pageTitle").asString("").isEmpty()
+                        && diaryPage.path("bgImageUrl").asString("").isEmpty());
+        if (diaryPageEmpty) {
+            ((ObjectNode) love).set("diaryPage", legacyPage.deepCopy());
+        }
+        ((ObjectNode) pages).remove("loveDiaryConfig");
+        return mutable;
+    }
+
+    private static ModuleSwitch findLoveModule(FeatureConfig config, String module) {
         if (config == null || config.getSpec() == null || config.getSpec().getLove() == null) {
             return null;
         }
@@ -179,12 +270,11 @@ public class GeneralConfigServiceImpl implements GeneralConfigService {
     /**
      * 默认结构（不落库）：默认值 + 存量配置值合并。
      */
-    private Mono<GeneralConfig> defaultWithLegacy() {
+    private Mono<FeatureConfig> defaultWithLegacy() {
         return legacyOverlay().map(overlay -> {
-            GeneralConfig config = new GeneralConfig();
-            Metadata metadata = new Metadata();
-            metadata.setName(Constants.GENERAL_CONFIG_SINGLETON_NAME);
-            config.setMetadata(metadata);
+            FeatureConfig config = new FeatureConfig();
+            // 不设置 metadata：save() 以「metadata 为空」判定未落库、走 create 分支；
+            // 兜底默认结构一旦带上 metadata 会被误判为已存在单例（update 不存在的资源）。
             config.setSpec(treeToValue(merge(defaultSpecTree(), overlay)));
             return config;
         });
@@ -266,7 +356,7 @@ public class GeneralConfigServiceImpl implements GeneralConfigService {
                     // spec.love，兼容 featureConfig.loveConfig 与旧顶层键 loveConfig
                     // 两种旧结构；仅显式挑选仍有效的字段（模块 enabled），
                     // 旧 iconUrl/waveImageUrl/heartImageUrl/loveEnabled/pageImages
-                    // 等字段不再导入（背景图由 pages.loveDiaryConfig.bgImageUrl 承担）。
+                    // 等字段不再导入（背景图由 spec.love.diaryPage.bgImageUrl 承担）。
                     JsonNode love = values.get("loveConfig");
                     if (love == null || !love.isObject()) {
                         JsonNode feature = values.get("featureConfig");
@@ -400,15 +490,15 @@ public class GeneralConfigServiceImpl implements GeneralConfigService {
     private static LinkInfo buildDefaultLinkInfo() {
         LinkInfo linkInfo = new LinkInfo();
         linkInfo.setSubmissionEnabled(true);
-        linkInfo.setMiniInfo(new GeneralConfig.MiniInfo());
-        linkInfo.setSiteInfo(new GeneralConfig.SiteInfo());
+        linkInfo.setMiniInfo(new FeatureConfig.MiniInfo());
+        linkInfo.setSiteInfo(new FeatureConfig.SiteInfo());
         return linkInfo;
     }
 
-    private static GeneralConfig.Preferences buildDefaultPreferences() {
+    private static FeatureConfig.Preferences buildDefaultPreferences() {
         // 与客户端内置默认对齐：首页/归档 single + image_bottom，
         // 文章列表 double + image_bottom；卡片样式统一组件 layout 值（image_*）
-        GeneralConfig.Preferences preferences = new GeneralConfig.Preferences();
+        FeatureConfig.Preferences preferences = new FeatureConfig.Preferences();
         preferences.setHomeListLayout("single");
         preferences.setHomeCardType("image_bottom");
         preferences.setArticlesListLayout("double");
@@ -422,7 +512,7 @@ public class GeneralConfigServiceImpl implements GeneralConfigService {
     private static Profile buildDefaultProfile() {
         Profile profile = new Profile();
 
-        GeneralConfig.AppInfo appInfo = new GeneralConfig.AppInfo();
+        FeatureConfig.AppInfo appInfo = new FeatureConfig.AppInfo();
         appInfo.setName("uni-halo");
         // 应用图标默认引用插件内置静态资源（ReverseProxy：/plugins/uni-halo/assets/static/**）
         appInfo.setLogo("/plugins/uni-halo/assets/static/logo.png");
@@ -487,11 +577,11 @@ public class GeneralConfigServiceImpl implements GeneralConfigService {
         int priority = 1;
         for (Map.Entry<String, String> entry : names.entrySet()) {
             JsonNode value = oldSocial.get(entry.getKey());
-            if (value == null || value.isNull() || value.asText().isBlank()) {
+            if (value == null || value.isNull() || value.asString().isBlank()) {
                 continue;
             }
             SocialItem item = socialItem(entry.getValue(),
-                    value.asText(), "#8a8a8a", "#8a8a8a1A", priority++);
+                    value.asString(), "#8a8a8a", "#8a8a8a1A", priority++);
             items.set(entry.getKey(),
                     JsonNodeFactory.instance.pojoNode(item));
         }
@@ -535,12 +625,6 @@ public class GeneralConfigServiceImpl implements GeneralConfigService {
         pages.setMomentConfig(momentPage);
 
         // 其余功能页面标题（默认留空，客户端回退内置标题）
-        LoveDiaryPage loveDiaryPage = new LoveDiaryPage();
-        loveDiaryPage.setPageTitle("");
-        // 恋爱页背景图（默认留空客户端内置回退）
-        loveDiaryPage.setBgImageUrl("");
-        pages.setLoveDiaryConfig(loveDiaryPage);
-
         ContactPage contactPage = new ContactPage();
         contactPage.setPageTitle("");
         pages.setContactConfig(contactPage);
@@ -672,25 +756,32 @@ public class GeneralConfigServiceImpl implements GeneralConfigService {
     }
 
     /**
-     * 默认快捷导航 5 项（对齐客户端 uh-home-quick-nav 默认 navList；
-     * 控制台可配置，visible 默认全部显示，站长可逐项隐藏）。
+     * 默认快捷导航 5 项（顺序：恋爱日记/联系博主/我的收藏/友情链接/关于项目；
+     * 与前端注册表 DEFAULT_QUICK_NAV_KEYS 默认一致，控制台可配置，
+     * visible 默认全部显示，站长可逐项隐藏）。
      */
     private static List<QuickNavigationItem> defaultQuickNavigation() {
         List<QuickNavigationItem> items = new ArrayList<>();
-        // 文章归档带副标题「全部文章」（对标 app 端 rightText）
-        QuickNavigationItem archives = navItem("archives", "文章归档", "#03A9F4",
-                "#03A9F424", "uhemoji2-icon", "-mask",
-                "/pages-blog/archives/archives");
-        archives.setSubTitle("全部文章");
-        items.add(archives);
-        items.add(navItem("vote", "投票中心", "#00BCD4", "#00BCD424",
-                "uhemoji2-icon", "-confused", "/pages-blog/votes/votes"));
-        items.add(navItem("disclaimers", "友情链接", "#009688", "#00968824",
-                "uhemoji2-icon", "-wink", "/pages-blog/friend-links/friend-links"));
-        items.add(navItem("love", "恋爱日记", "#FF4C67", "#FF4C6724",
-                "uhemoji2-icon", "-in-love", "/pages-blog/love/love"));
-        items.add(navItem("contact-blogger", "联系博主", "#FF9800", "#FF980024",
-                "uhemoji2-icon", "-cool", "/pages-blog/contact/contact"));
+        QuickNavigationItem love = navItem("love", "恋爱日记", "#FF4C67", "#FF4C6724",
+                "uhemoji2-icon", "-in-love", "/pages-blog/love/love");
+        love.setSubTitle("博主的恋爱日记");
+        items.add(love);
+        QuickNavigationItem contactBlogger = navItem("contact-blogger", "联系博主", "#FF9800",
+                "#FF980024", "uhemoji2-icon", "-wink", "/pages-blog/contact/contact");
+        contactBlogger.setSubTitle("博主常用联系方式");
+        items.add(contactBlogger);
+        QuickNavigationItem favorites = navItem("favorites", "我的收藏", "#FFB300",
+                "#FFB30024", "uhemoji2-icon", "-smiling", "/pages-blog/favorites/favorites");
+        favorites.setSubTitle("文章和瞬间收藏");
+        items.add(favorites);
+        QuickNavigationItem friendLinks = navItem("friend-links", "友情链接", "#009688",
+                "#00968824", "uhemoji2-icon", "-cool", "/pages-blog/friend-links/friend-links");
+        friendLinks.setSubTitle("看看博主朋友们吧");
+        items.add(friendLinks);
+        QuickNavigationItem about = navItem("about", "关于项目", "#607D8B",
+                "#607D8B24", "uhemoji2-icon", "-happy-", "/pages-blog/about/about");
+        about.setSubTitle("小莫唐尼的开源项目");
+        items.add(about);
         return items;
     }
 
@@ -724,7 +815,7 @@ public class GeneralConfigServiceImpl implements GeneralConfigService {
      * 默认 love：恋爱日记入口仅密码（无 enabled 开关，入口显隐由页面设置-
      * 快捷导航/关于页功能入口注册表控制）；三模块入口默认值对齐 app 端 love.vue
      * 硬编码（title/subTitle 文案 + 颜色/图标背景色/跳转路径，priority 1/2/3）。
-     * 恋爱页背景图由 pages.loveDiaryConfig.bgImageUrl 承担（默认留空）。
+     * 恋爱页背景图由 spec.love.diaryPage.bgImageUrl 承担（默认留空）。
      */
     private static Love buildDefaultLove() {
         Love love = new Love();
@@ -751,6 +842,9 @@ public class GeneralConfigServiceImpl implements GeneralConfigService {
 
         // 恋爱信息（纪念日 + 恋人信息）：默认留空（前端/输出端回退默认标题）
         love.setLoveInfo(new LoveInfo());
+
+        // 恋爱日记页面设置（页面标题 + 背景图，默认留空客户端内置回退）
+        love.setDiaryPage(new LoveDiaryPage());
         return love;
     }
 
@@ -830,11 +924,11 @@ public class GeneralConfigServiceImpl implements GeneralConfigService {
      * passwordEnabled 按哈希是否为空派生（前端据此展示「已设置密码」状态）。
      * 返回深拷贝后的脱敏对象，不改动原始对象（save 场景避免污染落库入参）。
      */
-    private GeneralConfig maskLovePasswords(GeneralConfig config) {
+    private FeatureConfig maskLovePasswords(FeatureConfig config) {
         if (config == null || config.getSpec() == null) {
             return config;
         }
-        GeneralConfig copy = objectMapper.convertValue(config, GeneralConfig.class);
+        FeatureConfig copy = objectMapper.convertValue(config, FeatureConfig.class);
         Love love = copy.getSpec() != null ? copy.getSpec().getLove() : null;
         if (love != null) {
             maskModulePassword(love.getLoveDiary());

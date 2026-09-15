@@ -11,7 +11,7 @@ import org.springframework.web.reactive.function.server.ServerResponse;
 import cn.ialley.unihalo.constants.Constants;
 import cn.ialley.unihalo.enums.CandidateType;
 import cn.ialley.unihalo.services.AuditDataService;
-import cn.ialley.unihalo.services.GeneralConfigService;
+import cn.ialley.unihalo.services.FeatureConfigService;
 import reactor.core.publisher.Mono;
 import run.halo.app.core.extension.endpoint.CustomEndpoint;
 import run.halo.app.extension.GroupVersion;
@@ -19,7 +19,7 @@ import run.halo.app.extension.GroupVersion;
 /**
  * 审核模式公开接口（app 端/小程序端，匿名可访问）。
  *
- * <p>联动通用配置「应用设置-审核模式」开关（GeneralConfig.spec.auditMode.enabled）：
+ * <p>联动功能设置「应用设置-审核模式」开关（FeatureConfig.spec.auditMode.enabled）：
  * enabled=true 时返回剔除失效引用后的选中列表（小程序端据此过滤真实数据展示），
  * 并附带 {@code categoryDetails}
  * （分类完整快照：name/title/cover/priority/postCount，剔除失效、按配置顺序），供 app 端
@@ -32,12 +32,12 @@ import run.halo.app.extension.GroupVersion;
 public class AuditDataPublicEndpoint implements CustomEndpoint {
 
     private final AuditDataService auditDataService;
-    private final GeneralConfigService generalConfigService;
+    private final FeatureConfigService featureConfigService;
 
     public AuditDataPublicEndpoint(AuditDataService auditDataService,
-            GeneralConfigService generalConfigService) {
+            FeatureConfigService featureConfigService) {
         this.auditDataService = auditDataService;
-        this.generalConfigService = generalConfigService;
+        this.featureConfigService = featureConfigService;
     }
 
     @Override
@@ -53,7 +53,7 @@ public class AuditDataPublicEndpoint implements CustomEndpoint {
     }
 
     private Mono<ServerResponse> getAuditData(ServerRequest request) {
-        return generalConfigService.get().flatMap(config -> {
+        return featureConfigService.get().flatMap(config -> {
             boolean enabled = config.getSpec() != null
                     && config.getSpec().getAuditMode() != null
                     && Boolean.TRUE.equals(config.getSpec().getAuditMode().getEnabled());

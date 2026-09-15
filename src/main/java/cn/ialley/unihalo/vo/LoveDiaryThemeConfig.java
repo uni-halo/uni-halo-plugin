@@ -11,7 +11,7 @@ import lombok.Data;
  *
  * <h3>v1.5 起刻意「不在这里」的东西</h3>
  * <ul>
- *   <li><b>背景图</b> → 取通用配置 {@code generalConfig.spec.pages.loveDiaryConfig.bgImageUrl}
+ *   <li><b>背景图</b> → 取功能设置 {@code featureConfig.spec.love.diaryPage.bgImageUrl}
  *       （与小程序端同一处配置，站长只需维护一份）；</li>
  *   <li><b>正文排版 / 代码高亮 / 灯箱 / 宽表格</b> → 不再提供开关。正文一律用主题
  *       自己的排版根类 {@code .prose} 渲染（见设计文档 §12），组件级行为固定。</li>

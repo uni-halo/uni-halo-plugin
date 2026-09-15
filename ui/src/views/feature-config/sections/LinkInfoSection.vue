@@ -1,17 +1,17 @@
 <script setup lang="ts">
 import { computed, inject } from "vue";
 import { VSwitch } from "@halo-dev/components";
-import { GeneralConfigFormKey } from "../form-context";
+import { FeatureConfigFormKey } from "../form-context";
 
 /**
- * 友链信息分区：
- * 基本配置（公开提交申请开关）/
+ * 友链设置分区：
+ * 基本设置（公开提交申请开关）/
  * 站点信息（本站站点名片，字段对齐 Halo 官方友链提交 API）/
  * 小程序信息（申请信息弹窗展示）。
  */
 defineProps<{ subTab: string }>();
 
-const { formState } = inject(GeneralConfigFormKey)!;
+const { formState } = inject(FeatureConfigFormKey)!;
 
 /** 站点信息订阅地址（textarea 换行分隔 ↔ 数组，对齐官方 feedUrls 字段） */
 const feedUrlsText = computed({
@@ -30,7 +30,7 @@ const feedUrlsText = computed({
 </script>
 
 <template>
-  <!-- 友链信息 → 基本配置（公开提交申请开关） -->
+  <!-- 友链设置 → 基本设置（公开提交申请开关） -->
   <template v-if="subTab === 'basic'">
     <div class=":uno: flex items-center justify-between gap-4 border-b border-gray-100 pb-3">
       <div>
@@ -41,7 +41,7 @@ const feedUrlsText = computed({
     </div>
   </template>
 
-  <!-- 友链信息 → 站点信息 -->
+  <!-- 友链设置 → 站点信息 -->
   <template v-if="subTab === 'site'">
     <p class=":uno: mb-3 text-xs text-gray-400">
       配置本站站点名片信息，字段对齐 Halo 官方链接管理插件，供展示与友链申请使用。
@@ -54,7 +54,7 @@ const feedUrlsText = computed({
     <FormKit v-model="feedUrlsText" name="link_site_feed_urls" label="订阅地址" type="textarea" placeholder="每行一个 RSS/Atom 地址" help="RSS/Atom 订阅地址，每行一个（存储为数组，对齐官方 feedUrls 字段）" />
   </template>
 
-  <!-- 友链信息 → 小程序信息 -->
+  <!-- 友链设置 → 小程序信息 -->
   <template v-if="subTab === 'info'">
     <p class=":uno: mb-3 text-xs text-gray-400">
       配置你自己的小程序展示信息，用于 app 小程序端「申请信息」弹窗展示。

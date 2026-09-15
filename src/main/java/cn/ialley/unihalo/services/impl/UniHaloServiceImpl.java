@@ -13,9 +13,9 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
-import cn.ialley.unihalo.scheme.GeneralConfig;
+import cn.ialley.unihalo.scheme.FeatureConfig;
 import cn.ialley.unihalo.scheme.QRCodeInfo;
-import cn.ialley.unihalo.services.GeneralConfigService;
+import cn.ialley.unihalo.services.FeatureConfigService;
 import cn.ialley.unihalo.services.QRCodeInfoService;
 import cn.ialley.unihalo.services.UniHaloService;
 import cn.ialley.unihalo.utils.PublicConfigAssembler;
@@ -45,7 +45,7 @@ public class UniHaloServiceImpl implements UniHaloService {
 
     private final QRCodeInfoService qrCodeInfoService;
     private final ReactiveSettingFetcher settingFetcher;
-    private final GeneralConfigService generalConfigService;
+    private final FeatureConfigService featureConfigService;
     private final TokenManager tokenManager;
     private final AttachmentService attachmentService;
     private final ExternalLinkProcessor externalLinkProcessor;
@@ -63,9 +63,9 @@ public class UniHaloServiceImpl implements UniHaloService {
     public Mono<Map<String, JsonNode>> getAppConfigs() {
         return settingFetcher.getSettingValues()
                 .defaultIfEmpty(Map.of())
-                .flatMap(settings -> generalConfigService.get()
-                        .map(generalConfig -> toMap(
-                                publicConfigAssembler.assemble(settings, generalConfig))));
+                .flatMap(settings -> featureConfigService.get()
+                        .map(featureConfig -> toMap(
+                                publicConfigAssembler.assemble(settings, featureConfig))));
     }
 
     /*
@@ -78,9 +78,9 @@ public class UniHaloServiceImpl implements UniHaloService {
     public Mono<JsonNode> getAppConfigsByGroupName(String groupName) {
         return settingFetcher.getSettingValues()
                 .defaultIfEmpty(Map.of())
-                .flatMap(settings -> generalConfigService.get()
-                        .map(generalConfig -> {
-                            JsonNode root = publicConfigAssembler.assemble(settings, generalConfig);
+                .flatMap(settings -> featureConfigService.get()
+                        .map(featureConfig -> {
+                            JsonNode root = publicConfigAssembler.assemble(settings, featureConfig);
                             JsonNode group = root.get(groupName);
                             return group == null ? JsonNodeFactory.instance.objectNode() : group;
                         }));
@@ -97,13 +97,13 @@ public class UniHaloServiceImpl implements UniHaloService {
     /**
      * 内部专用原始读取（不经公开过滤）。
      *
-     * <p>应用信息（名称/图标）存于通用配置模型（应用资料.appInfo）；
+     * <p>应用信息（名称/图标）存于功能设置模型（应用资料.appInfo）；
      * 此处读取该节点供海报流程降级使用（凭证字段缺失时不再执行，
      * 见 getAccessToken / uploadMedia）。</p>
      */
     private Mono<JsonNode> rawAppConfig() {
-        return generalConfigService.get().map(config -> {
-            GeneralConfig.AppInfo appInfo = config.getSpec() != null
+        return featureConfigService.get().map(config -> {
+            FeatureConfig.AppInfo appInfo = config.getSpec() != null
                     && config.getSpec().getProfile() != null
                             ? config.getSpec().getProfile().getAppInfo() : null;
             if (appInfo == null) {

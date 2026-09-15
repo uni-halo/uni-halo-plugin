@@ -4,7 +4,8 @@ import cn.ialley.unihalo.scheme.AppInfo;
 import cn.ialley.unihalo.scheme.AppVersion;
 import cn.ialley.unihalo.scheme.AuditDataConfig;
 import cn.ialley.unihalo.scheme.Banner;
-import cn.ialley.unihalo.scheme.GeneralConfig;
+import cn.ialley.unihalo.scheme.FeatureConfig;
+import cn.ialley.unihalo.scheme.LegacyGeneralConfig;
 import cn.ialley.unihalo.scheme.LoveAlbum;
 import cn.ialley.unihalo.scheme.LoveDailyItem;
 import cn.ialley.unihalo.scheme.LoveStory;
@@ -16,7 +17,9 @@ import cn.ialley.unihalo.scheme.NoticeType;
 import cn.ialley.unihalo.scheme.QRCodeInfo;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+import run.halo.app.extension.Extension;
 import run.halo.app.extension.SchemeManager;
+import run.halo.app.extension.exception.SchemeNotFoundException;
 import run.halo.app.extension.index.IndexSpecs;
 import run.halo.app.plugin.BasePlugin;
 import run.halo.app.plugin.PluginContext;
@@ -72,7 +75,13 @@ public class UniHaloPlugin extends BasePlugin {
             // 单例模型，无需额外索引
         });
 
-        schemeManager.register(GeneralConfig.class, indexSpecs -> {
+        schemeManager.register(FeatureConfig.class, indexSpecs -> {
+            // 单例模型，无需额外索引
+        });
+
+        // TODO-TEMPORARY-MIGRATION：旧「通用配置」scheme，仅供 feature-config 迁移读取；
+        // 迁移完成经用户确认后与迁移代码一并删除
+        schemeManager.register(LegacyGeneralConfig.class, indexSpecs -> {
             // 单例模型，无需额外索引
         });
 
@@ -171,22 +180,34 @@ public class UniHaloPlugin extends BasePlugin {
 
     @Override
     public void stop() {
-
-        schemeManager.unregister(schemeManager.get(QRCodeInfo.class));
-        schemeManager.unregister(schemeManager.get(AppInfo.class));
-        schemeManager.unregister(schemeManager.get(AppVersion.class));
-        schemeManager.unregister(schemeManager.get(AuditDataConfig.class));
-        schemeManager.unregister(schemeManager.get(GeneralConfig.class));
-        schemeManager.unregister(schemeManager.get(LoveAlbum.class));
-        schemeManager.unregister(schemeManager.get(LoveDailyItem.class));
-        schemeManager.unregister(schemeManager.get(LoveStory.class));
-        schemeManager.unregister(schemeManager.get(Notice.class));
-        schemeManager.unregister(schemeManager.get(NoticeType.class));
-        schemeManager.unregister(schemeManager.get(Banner.class));
-        schemeManager.unregister(schemeManager.get(MiniProgramLink.class));
-        schemeManager.unregister(schemeManager.get(MiniProgramLinkGroup.class));
-        schemeManager.unregister(schemeManager.get(MiniProgramLinkSubmission.class));
+        // 防御式清理：start() 中途失败时部分 scheme 可能尚未注册，
+        // schemeManager.get 未命中会抛 SchemeNotFoundException，
+        // 掩盖真正的启动错误（pf4j start 失败 → 调 stop 清理）。
+        unregisterQuietly(QRCodeInfo.class);
+        unregisterQuietly(AppInfo.class);
+        unregisterQuietly(AppVersion.class);
+        unregisterQuietly(AuditDataConfig.class);
+        unregisterQuietly(FeatureConfig.class);
+        // TODO-TEMPORARY-MIGRATION：随迁移代码一并删除
+        unregisterQuietly(LegacyGeneralConfig.class);
+        unregisterQuietly(LoveAlbum.class);
+        unregisterQuietly(LoveDailyItem.class);
+        unregisterQuietly(LoveStory.class);
+        unregisterQuietly(Notice.class);
+        unregisterQuietly(NoticeType.class);
+        unregisterQuietly(Banner.class);
+        unregisterQuietly(MiniProgramLink.class);
+        unregisterQuietly(MiniProgramLinkGroup.class);
+        unregisterQuietly(MiniProgramLinkSubmission.class);
 
         log.info("【UniHalo】插件停止！");
+    }
+
+    private <E extends Extension> void unregisterQuietly(Class<E> type) {
+        try {
+            schemeManager.unregister(schemeManager.get(type));
+        } catch (SchemeNotFoundException e) {
+            log.debug("【UniHalo】scheme {} 未注册（start 未完成），跳过清理", type.getSimpleName());
+        }
     }
 }

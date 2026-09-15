@@ -10,10 +10,10 @@ import lombok.Data;
  * <p>字段来源：</p>
  * <ul>
  *   <li>{@link #loveDateTitle} / {@link #loveDate} / 恋人昵称与头像
- *       ← {@code GeneralConfig.Love.loveInfo}；</li>
+ *       ← {@code FeatureConfig.Love.loveInfo}；</li>
  *   <li>{@link #modules} ← 三个模块入口（已按 {@code priority} 降序、已剔除无路由者）；</li>
- *   <li>{@link #bgImageUrl} ← <b>通用配置</b>
- *       {@code generalConfig.spec.pages.loveDiaryConfig.bgImageUrl}（与小程序端同一处配置）。</li>
+ *   <li>{@link #bgImageUrl} ← <b>功能设置</b>
+ *       {@code featureConfig.spec.love.diaryPage.bgImageUrl}（与小程序端同一处配置）。</li>
  * </ul>
  *
  * @author 小莫唐尼
@@ -50,7 +50,7 @@ public class LoveConfigVo {
     /** 女生头像 */
     private String girlAvatar;
 
-    /** 恋爱页背景图（来自通用配置，可为空 = 用主题背景） */
+    /** 恋爱页背景图（来自功能设置，可为空 = 用主题背景） */
     private String bgImageUrl;
 
     /** 模块入口（已按 priority 降序，且只含已注册路由的模块） */

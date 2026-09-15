@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { inject } from "vue";
-import { GeneralConfigFormKey } from "../form-context";
+import { FeatureConfigFormKey } from "../form-context";
 
 /**
  * 偏好设置分区：
@@ -8,7 +8,7 @@ import { GeneralConfigFormKey } from "../form-context";
  */
 defineProps<{ subTab: string }>();
 
-const { formState } = inject(GeneralConfigFormKey)!;
+const { formState } = inject(FeatureConfigFormKey)!;
 
 /** 卡片样式选项（组件 layout 值） */
 const CARD_STYLE_OPTIONS = [

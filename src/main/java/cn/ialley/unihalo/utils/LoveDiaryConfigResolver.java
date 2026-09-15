@@ -22,7 +22,7 @@ import cn.ialley.unihalo.vo.LoveDiaryThemeConfig;
  * {@code enabled != true} 一律返回 {@link LoveDiaryThemeConfig#disabled()}，
  * 插件据此不注册路由、不注入资源。</p>
  *
- * <p>v1.5 起本组只剩「路由 / 外壳 / 强调色 / 首页摘要」四件事：背景图移到通用配置，
+ * <p>v1.5 起本组只剩「路由 / 外壳 / 强调色 / 首页摘要」四件事：背景图移到功能设置，
  * 正文排版与代码高亮不再可配（见 {@link LoveDiaryThemeConfig} 的类注释）。</p>
  *
  * @author 小莫唐尼
@@ -86,13 +86,13 @@ public class LoveDiaryConfigResolver {
         config.setEnabled(node.path("enabled").asBoolean(false));
 
         JsonNode routes = node.path("routes");
-        config.setRawRouteHome(routes.path("home").asText(DEFAULT_ROUTE_HOME));
-        config.setRawRouteStories(routes.path("stories").asText(DEFAULT_ROUTE_STORIES));
-        config.setRawRouteAlbums(routes.path("albums").asText(DEFAULT_ROUTE_ALBUMS));
-        config.setRawRouteDaily(routes.path("daily").asText(DEFAULT_ROUTE_DAILY));
+        config.setRawRouteHome(routes.path("home").asString(DEFAULT_ROUTE_HOME));
+        config.setRawRouteStories(routes.path("stories").asString(DEFAULT_ROUTE_STORIES));
+        config.setRawRouteAlbums(routes.path("albums").asString(DEFAULT_ROUTE_ALBUMS));
+        config.setRawRouteDaily(routes.path("daily").asString(DEFAULT_ROUTE_DAILY));
 
-        config.setLayoutMode(oneOf(node.path("layoutMode").asText("auto"), LAYOUT_MODES, "auto"));
-        config.setPrimaryColor(color(node.path("primaryColor").asText(DEFAULT_PRIMARY_COLOR)));
+        config.setLayoutMode(oneOf(node.path("layoutMode").asString("auto"), LAYOUT_MODES, "auto"));
+        config.setPrimaryColor(color(node.path("primaryColor").asString(DEFAULT_PRIMARY_COLOR)));
         config.setShowOverview(node.path("showOverview").asBoolean(true));
         return config;
     }
