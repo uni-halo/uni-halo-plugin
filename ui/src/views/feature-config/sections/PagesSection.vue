@@ -160,6 +160,14 @@ const myPageConfig = computed<FeatureConfigMyPage>(
   () => formState.value.spec.pages.myPageConfig || {commonFeatures: [], otherFeatures: []}
 );
 
+/** 常用功能显示方式（grid=宫格 / list=列表；旧数据字段缺失时表单回显 grid，与 app 端兜底一致） */
+const commonFeaturesMode = computed({
+  get: () => formState.value.spec.pages.aboutConfig.commonFeaturesMode || "grid",
+  set: (value: "grid" | "list") => {
+    formState.value.spec.pages.aboutConfig.commonFeaturesMode = value;
+  },
+});
+
 /** 两组列表（写回 formState；VueDraggable 需要非 undefined 数组） */
 const myPageCommonFeatures = computed({
   get: () => myPageConfig.value.commonFeatures || [],
@@ -206,7 +214,7 @@ const removeMyPageFeature = (group: "common" | "other", item: FeatureConfigQuick
 };
 
 /** 恢复默认：恢复为注册表对应组的默认配置（全部快照字段、排序/visible 一并恢复；
- * 对齐 app 端 about.vue navList：常用 7 项 / 其他 3 项，由显式 key 列表派生） */
+ * 对齐 app 端 about.vue navList：常用 8 项 / 其他 3 项，由显式 key 列表派生） */
 function restoreMyPageDefaults(group: "common" | "other") {
   const label = group === "common" ? "常用功能" : "其他功能";
   Dialog.warning({
@@ -419,6 +427,21 @@ function restoreMyPageDefaults(group: "common" | "other") {
       <p class=":uno: mb-3 text-xs text-gray-400">
         「我的」页面（about）展示的功能入口，分组配置；拖拽排序，顺序即展示顺序。
       </p>
+
+      <!-- 常用功能显示方式（grid=宫格 / list=列表，控制 app 端关于页常用功能布局） -->
+      <div class=":uno: mb-4 rounded-lg bg-white p-3">
+        <FormKit
+          v-model="commonFeaturesMode"
+          name="about_common_features_mode"
+          label="常用功能显示方式"
+          type="radio"
+          :options="[
+            {label: '网格（宫格图标）', value: 'grid'},
+            {label: '列表（分行条目）', value: 'list'},
+          ]"
+          help="控制 app 端「我的/关于页」常用功能的展示布局；切换为列表时常用于功能较多、需要展示副标题的场景。"
+        />
+      </div>
 
       <!-- 常用功能（原「博客功能」改名） -->
       <div class=":uno: rounded-lg bg-white p-3">

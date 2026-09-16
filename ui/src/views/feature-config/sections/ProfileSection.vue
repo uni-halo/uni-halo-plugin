@@ -11,7 +11,7 @@ import { FeatureConfigFormKey } from "../form-context";
 /**
  * 应用设置分区：
  * 应用信息 / 博主资料 / 社交信息 / 页脚版权 子 tab 表单。
- * 数据经 provide/inject 共享 formState，直接改嵌套属性触发父级 deep watch → dirty。
+ * 数据经 provide/inject 共享 formState，直接改嵌套属性。
  */
 defineProps<{ subTab: string }>();
 

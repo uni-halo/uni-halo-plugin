@@ -87,6 +87,12 @@ public class Constants {
     public static final String WECHAT_REGISTRATION_ID = "wechat-miniprogram";
 
     /**
+     * Halo 匿名身份的用户名（AnonymousAuthenticationToken#getName）。
+     * 写操作端点据此显式拒绝匿名调用（fail-closed），不做无害空转。
+     */
+    public static final String ANONYMOUS_USER = "anonymousUser";
+
+    /**
      * 微信自动注册用户名的默认前缀。最终用户名 = 前缀 + 两位序号，如 {@code unihalo01}。
      */
     public static final String DEFAULT_WECHAT_USERNAME_PREFIX = "unihalo";

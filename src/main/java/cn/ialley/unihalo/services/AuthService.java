@@ -87,4 +87,12 @@ public interface AuthService {
      * @param username 当前登录用户
      */
     Mono<WechatBindingVo> myWechatBinding(String username);
+
+    /**
+     * 解除当前登录用户的微信绑定（移动端「我的信息」页用，幂等：未绑定时同样成功）。
+     * 仅删除 {@link UserConnection}，不删 Halo 用户，解绑后可重新绑定或改用密码登录。
+     *
+     * @param username 当前登录用户
+     */
+    Mono<Void> unbindMyWechat(String username);
 }

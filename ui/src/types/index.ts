@@ -641,6 +641,8 @@ export interface FeatureConfigPages {
     pageTitle?: string;
     bgImageUrl?: string;
     waveImageUrl?: string;
+    /** 常用功能显示方式（grid=宫格 / list=列表，控制 app 端「我的/关于页」常用功能布局；缺省网格） */
+    commonFeaturesMode?: "grid" | "list";
     /** 页脚版权（显示于关于页页脚） */
     copyrightConfig?: {
       enabled?: boolean;

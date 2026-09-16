@@ -2,7 +2,7 @@
 import { Toast, VCard, VPageHeader, VSpace, VTabbar } from "@halo-dev/components";
 import { useQuery, useQueryClient } from "@tanstack/vue-query";
 import { cloneDeep } from "lodash-es";
-import { computed, nextTick, provide, ref, watch } from "vue";
+import { computed, provide, ref, watch } from "vue";
 import SubmitButton from "@/components/button/SubmitButton.vue";
 import { featureConfigApi } from "@/api";
 import {
@@ -145,10 +145,11 @@ function defaultSpec(): FeatureConfigSpec {
         pageTitle: "关于博主",
         bgImageUrl: "/plugins/uni-halo/assets/static/uni_halo_profile_bg.jpg",
         waveImageUrl: "/plugins/uni-halo/assets/static/uni_halo_about_wave.gif",
+        commonFeaturesMode: "grid",
         copyrightConfig: { enabled: true, content: "「 2022 uni-halo 丨 开源项目@小莫唐尼 」" },
       },
       // 我的页面功能入口：默认填充注册表条目，对齐 app 端 about.vue navList
-      // （常用 7 项 / 其他 3 项，与后端 FeatureConfigServiceImpl 默认一致）
+      // （常用 8 项 / 其他 3 项，与后端 FeatureConfigServiceImpl 默认一致）
       myPageConfig: {
         commonFeatures: featureEntriesByKeys(DEFAULT_MY_PAGE_COMMON_KEYS).map(toQuickNavigationItem),
         otherFeatures: featureEntriesByKeys(DEFAULT_MY_PAGE_OTHER_KEYS).map(toQuickNavigationItem),
@@ -256,9 +257,6 @@ function defaultSpec(): FeatureConfigSpec {
   };
 }
 
-/** 回显/加载期间抑制脏标记；加载完成后开启变更追踪 */
-let suppressDirty = true;
-
 watch(
   () => config.value,
   (value) => {
@@ -268,26 +266,9 @@ watch(
     const loaded = cloneDeep(value);
     loaded.spec = deepMerge(defaultSpec(), loaded.spec || {});
     loaded.metadata = { name: "feature-config", ...loaded.metadata };
-    suppressDirty = true;
     formState.value = loaded;
-    dirty.value = false;
-    nextTick(() => {
-      suppressDirty = false;
-    });
   },
   { immediate: true }
-);
-
-const dirty = ref(false);
-
-watch(
-  formState,
-  () => {
-    if (!suppressDirty) {
-      dirty.value = true;
-    }
-  },
-  { deep: true }
 );
 
 function deepMerge<T>(base: T, overlay: object): T {
@@ -334,14 +315,13 @@ const handleSave = async () => {
   try {
     await featureConfigApi.save(formState.value);
     Toast.success("保存成功");
-    dirty.value = false;
     queryClient.invalidateQueries({ queryKey: ["uni-halo:feature-config"] });
   } catch (error) {
     Toast.error((error as Error).message);
   }
 };
 
-// 共享表单上下文：子组件（各 Section）直接改 formState 嵌套属性触发 deep watch → dirty；
+// 共享表单上下文：子组件（各 Section）直接改 formState 嵌套属性；
 // save 供子组件触发整表单保存（如维护「提前结束维护」）
 provide(FeatureConfigFormKey, { formState, save: handleSave });
 </script>
@@ -351,7 +331,7 @@ provide(FeatureConfigFormKey, { formState, save: handleSave });
     <template #actions>
       <div class=":uno: flex items-center">
         <VSpace>
-          <SubmitButton type="secondary" :loading="isLoading" :disabled="!dirty" text="保存" @submit="handleSave" />
+          <SubmitButton type="secondary" :loading="isLoading" text="保存设置" @submit="handleSave" />
         </VSpace>
       </div>
     </template>

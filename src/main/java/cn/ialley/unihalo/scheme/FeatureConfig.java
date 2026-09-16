@@ -276,6 +276,8 @@ public class FeatureConfig extends AbstractExtension {
         private String bgImageUrl;
         /** 资料卡波浪图 */
         private String waveImageUrl;
+        /** 常用功能显示方式（grid=宫格 / list=列表，app 端「我的/关于页」常用功能布局；缺省网格） */
+        private String commonFeaturesMode;
     }
 
     /** 恋爱日记页（客户端 pageConfig.loveDiaryConfig） */

@@ -386,6 +386,8 @@ public class FeatureConfigServiceImpl implements FeatureConfigService {
         about.setPageTitle("关于博主");
         about.setBgImageUrl("/plugins/uni-halo/assets/static/uni_halo_profile_bg.jpg");
         about.setWaveImageUrl("/plugins/uni-halo/assets/static/uni_halo_about_wave.gif");
+        // 常用功能显示方式：grid=宫格 / list=列表（app 端 mine 页消费，缺省网格）
+        about.setCommonFeaturesMode("grid");
         // 页脚版权由应用资料 profile.copyrightConfig 承担（见 buildDefaultProfile）
         pages.setAboutConfig(about);
 
@@ -406,7 +408,7 @@ public class FeatureConfigServiceImpl implements FeatureConfigService {
         pages.setPostDetailConfig(postDetail);
 
         // 我的页面功能入口：默认填充注册表条目——常用功能=home 组、其他功能=other 组，
-        // 与前端 ui/src/constant/feature-entries.ts 注册表对齐（常用 7 项 / 其他 3 项）
+        // 与前端 ui/src/constant/feature-entries.ts 注册表对齐（常用 8 项 / 其他 3 项）
         MyPage myPage = new MyPage();
         myPage.setCommonFeatures(defaultMyPageCommonFeatures());
         myPage.setOtherFeatures(defaultMyPageOtherFeatures());
@@ -415,8 +417,8 @@ public class FeatureConfigServiceImpl implements FeatureConfigService {
     }
 
     /**
-     * 我的页面-常用功能默认 7 项（对齐 app 端 about.vue navList：
-     * 联系博主/我的收藏/恋爱日记/友情链接/文章归档/投票中心/数据看板，顺序即展示顺序；
+     * 我的页面-常用功能默认 8 项（对齐 app 端 about.vue navList：
+     * 联系博主/通知公告/我的收藏/恋爱日记/友情链接/文章归档/投票中心/数据看板，顺序即展示顺序；
      * bgColor 用品牌深色 hex8（app 端 about.vue 经 toLightBg 渲染为浅底）；
      * subTitle 对齐 app 端本地默认 rightText（favorites 无副标题）。
      */
@@ -426,6 +428,10 @@ public class FeatureConfigServiceImpl implements FeatureConfigService {
                 "uhemoji2-icon", "-wink", "/pages-blog/contact/contact");
         contactBlogger.setSubTitle("博主常用联系方式");
         items.add(contactBlogger);
+        QuickNavigationItem notice = navItem("notice", "通知公告", "#9C27B0", "#9C27B0F2",
+                "uhemoji-icon", "-sleeping", "/pages-blog/notice/notice");
+        notice.setSubTitle("站点公告与通知");
+        items.add(notice);
         items.add(navItem("favorites", "我的收藏", "#FFB300", "#FFB300F2",
                 "uhemoji2-icon", "-smiling", "/pages-blog/favorites/favorites"));
         QuickNavigationItem love = navItem("love", "恋爱日记", "#FF4C67", "#FF4C67F2",

@@ -34,6 +34,9 @@ import RiThumbUpLine from '~icons/ri/thumb-up-line'
 import RiNotificationLine from '~icons/ri/notification-line'
 import RiBookmarkLine from '~icons/ri/bookmark-line'
 import RiArticleLine from '~icons/ri/article-line'
+import RiLoginCircleLine from '~icons/ri/login-circle-line'
+import RiEditBoxLine from '~icons/ri/edit-box-line'
+import RiToolsLine from '~icons/ri/tools-line'
 
 import mpPng from '@/assets/mp.png'
 import qqqunPng from '@/assets/qqqun.png'
@@ -62,7 +65,7 @@ const consoleFeatures = [
   {
     icon: RiSettingsLine,
     title: '通用配置',
-    description: '应用资料、偏好设置、页面排版、恋爱友链等全局配置',
+    description: '应用资料、偏好设置、页面排版、移动端登录、恋爱友链等全局配置',
     color: '#368FEF',
   },
   {
@@ -74,8 +77,14 @@ const consoleFeatures = [
   {
     icon: RiHeartLine,
     title: '恋爱管理',
-    description: '恋爱配置、恋爱相册、恋爱清单、恋爱故事管理',
+    description: '恋爱相册（支持查看密码锁定）、恋爱清单、我们的故事管理',
     color: '#EC4899',
+  },
+  {
+    icon: RiLayoutLine,
+    title: '恋爱日记模板',
+    description: '内置前台模板，主题可整页接管或仅覆盖页头页脚，零成本展示恋爱日记',
+    color: '#DB2777',
   },
   {
     icon: RiMegaphoneLine,
@@ -181,6 +190,24 @@ const mobileFeatures = [
     description: '恋爱故事、恋爱相册、恋爱清单',
     color: '#EC4899',
   },
+  {
+    icon: RiLoginCircleLine,
+    title: '登录',
+    description: '账号密码登录、微信一键登录、注册与微信绑定',
+    color: '#2D7AD6',
+  },
+  {
+    icon: RiEditBoxLine,
+    title: '内容管理',
+    description: '恋爱相册 / 日记 / 故事、瞬间管理，需管理员权限',
+    color: '#F97316',
+  },
+  {
+    icon: RiToolsLine,
+    title: '维护模式',
+    description: '站点维护期间统一展示维护提示页',
+    color: '#64748B',
+  },
 ]
 
 const steps = [
@@ -245,7 +272,7 @@ const contacts = [
           class="inline-flex items-center gap-2 bg-white/80 backdrop-blur-sm border rounded-full px-4 py-2 mb-8 shadow-sm"
           style="border-color: rgb(185 228 36 / 0.47)">
           <RiSparklingLine class="w-4 h-4 text-[#B9E424]" />
-          <span class="text-sm font-medium text-[#B9E424]">v3.x AGPL3.0</span>
+          <span class="text-sm font-medium text-[#B9E424]">v3.x Apache License 2.0</span>
         </div>
 
         <h1 class="text-5xl sm:text-6xl lg:text-7xl font-extrabold mb-6">
@@ -254,7 +281,7 @@ const contacts = [
         </h1>
 
         <p class="text-lg sm:text-xl text-slate-500 max-w-2xl mx-auto mb-10 leading-relaxed">
-          为免费开源的 UniHalo v3.x 微信小程序/App提供配套的配置插件
+          免费开源的 UniHalo v3.x 跨平台移动端配套配置插件
         </p>
 
         <div class="flex flex-wrap justify-center gap-4 mb-10">
@@ -287,11 +314,11 @@ const contacts = [
         <!-- 统计数据 -->
         <div class="flex justify-center gap-10 sm:gap-16 mb-10">
           <div class="text-center">
-            <div class="text-3xl sm:text-4xl font-bold" style="color: #B9E424">7+</div>
+            <div class="text-3xl sm:text-4xl font-bold" style="color: #B9E424">8+</div>
             <div class="text-sm text-slate-500 mt-1">管理模块</div>
           </div>
           <div class="text-center">
-            <div class="text-3xl sm:text-4xl font-bold" style="color: #B9E424">12+</div>
+            <div class="text-3xl sm:text-4xl font-bold" style="color: #B9E424">40+</div>
             <div class="text-sm text-slate-500 mt-1">移动端页面</div>
           </div>
           <div class="text-center">
@@ -368,6 +395,79 @@ const contacts = [
         <div class="flex items-center justify-center gap-2 mt-8 text-slate-400 text-sm">
           <RiMoneyCnyCircleLine class="w-4 h-4" />
           <span>您的支持是作者持续维护的动力</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Highlights Section -->
+    <section class="py-16 sm:py-20 bg-white">
+      <div class="max-w-5xl mx-auto px-4">
+        <div class="text-center mb-12">
+          <h2 class="text-3xl sm:text-4xl font-bold text-slate-800 mb-4">亮点功能</h2>
+          <p class="text-lg text-slate-500">为你的站点带来温度与安全感</p>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <!-- 恋爱日记 -->
+          <div
+            class="relative overflow-hidden bg-white rounded-3xl p-8 shadow-sm border border-slate-100 hover:shadow-lg transition-all duration-300">
+            <div class="absolute top-0 right-0 w-40 h-40 rounded-full blur-3xl pointer-events-none"
+              style="background: rgba(236, 72, 153, 0.12)"></div>
+            <div
+              class="w-12 h-12 rounded-2xl flex items-center justify-center text-white mb-5"
+              style="background: linear-gradient(135deg, #EC4899 0%, #DB2777 100%)">
+              <RiHeartLine class="w-6 h-6" />
+            </div>
+            <h3 class="text-xl font-bold text-slate-800 mb-2">恋爱日记</h3>
+            <p class="text-slate-500 text-sm leading-relaxed mb-5">
+              移动端与插件端双端管理，前台模板开箱即用。相册支持查看密码（页内解锁、服务端保证），记录只属于你们的故事。
+            </p>
+            <div class="flex flex-wrap gap-2">
+              <span class="px-3 py-1 text-xs font-medium rounded-full"
+                style="background: rgba(236, 72, 153, 0.10); color: #EC4899">恋爱相册 · 密码锁定</span>
+              <span class="px-3 py-1 text-xs font-medium rounded-full"
+                style="background: rgba(236, 72, 153, 0.10); color: #EC4899">恋爱清单</span>
+              <span class="px-3 py-1 text-xs font-medium rounded-full"
+                style="background: rgba(236, 72, 153, 0.10); color: #EC4899">我们的故事</span>
+              <span class="px-3 py-1 text-xs font-medium rounded-full"
+                style="background: rgba(236, 72, 153, 0.10); color: #EC4899">前台模板 · 主题可接管</span>
+              <span class="px-3 py-1 text-xs font-medium rounded-full"
+                style="background: rgba(236, 72, 153, 0.10); color: #EC4899">移动端直接管理</span>
+            </div>
+          </div>
+
+          <!-- 登录管理 -->
+          <div
+            class="relative overflow-hidden bg-white rounded-3xl p-8 shadow-sm border border-slate-100 hover:shadow-lg transition-all duration-300">
+            <div class="absolute top-0 right-0 w-40 h-40 rounded-full blur-3xl pointer-events-none"
+              style="background: rgba(45, 122, 214, 0.12)"></div>
+            <div
+              class="w-12 h-12 rounded-2xl flex items-center justify-center text-white mb-5"
+              style="background: linear-gradient(135deg, #368FEF 0%, #2D7AD6 100%)">
+              <RiShieldCheckLine class="w-6 h-6" />
+            </div>
+            <h3 class="text-xl font-bold text-slate-800 mb-2">登录管理</h3>
+            <p class="text-slate-500 text-sm leading-relaxed mb-5">
+              账号密码登录、注册、微信一键登录与绑定，登录后下发 Halo 原生 PAT 令牌，内置登录限流与 RBAC 权限控制。
+            </p>
+            <div class="flex flex-wrap gap-2 mb-5">
+              <span class="px-3 py-1 text-xs font-medium rounded-full"
+                style="background: rgba(45, 122, 214, 0.10); color: #2D7AD6">账号密码登录</span>
+              <span class="px-3 py-1 text-xs font-medium rounded-full"
+                style="background: rgba(45, 122, 214, 0.10); color: #2D7AD6">微信一键登录</span>
+              <span class="px-3 py-1 text-xs font-medium rounded-full"
+                style="background: rgba(45, 122, 214, 0.10); color: #2D7AD6">注册与绑定</span>
+              <span class="px-3 py-1 text-xs font-medium rounded-full"
+                style="background: rgba(45, 122, 214, 0.10); color: #2D7AD6">PAT 令牌</span>
+              <span class="px-3 py-1 text-xs font-medium rounded-full"
+                style="background: rgba(45, 122, 214, 0.10); color: #2D7AD6">RBAC 权限</span>
+            </div>
+            <a href="https://uni-halo-doc.ialley.cn/plugin/mobile-login" target="_blank"
+              class="inline-flex items-center gap-1 text-sm font-medium" style="color: #2D7AD6">
+              查看登录配置文档
+              <RiArrowRightSLine class="w-4 h-4" />
+            </a>
+          </div>
         </div>
       </div>
     </section>

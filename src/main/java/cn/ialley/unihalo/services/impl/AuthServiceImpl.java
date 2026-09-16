@@ -189,6 +189,19 @@ public class AuthServiceImpl implements AuthService {
                 .defaultIfEmpty(WechatBindingVo.unbound(username));
     }
 
+    @Override
+    public Mono<Void> unbindMyWechat(String username) {
+        return client.list(UserConnection.class,
+                        connection -> connection.getSpec() != null
+                                && Constants.WECHAT_REGISTRATION_ID.equals(
+                                        connection.getSpec().getRegistrationId())
+                                && username.equals(connection.getSpec().getUsername()),
+                        null)
+                .next()
+                .flatMap(client::delete)
+                .then();
+    }
+
     // ---------- 内部实现 ----------
 
     /**

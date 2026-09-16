@@ -58,6 +58,7 @@ public class AuthEndpoint implements CustomEndpoint {
                 .POST(Constants.AUTH_API_BASE_PATH + "/logout", this::logout)
                 .GET(Constants.AUTH_API_BASE_PATH + "/profile", this::profile)
                 .GET(Constants.AUTH_API_BASE_PATH + "/my/wechat-binding", this::myWechatBinding)
+                .DELETE(Constants.AUTH_API_BASE_PATH + "/my/wechat-binding", this::unbindWechat)
                 .build();
     }
 
@@ -152,6 +153,21 @@ public class AuthEndpoint implements CustomEndpoint {
         return currentIdentity()
                 .flatMap(identity -> authService.myWechatBinding(identity.username()))
                 .flatMap(result -> ServerResponse.ok().bodyValue(result))
+                .onErrorResume(AuthEndpoint::handleFailure);
+    }
+
+    /**
+     * 移动端解除自己的微信绑定（幂等：未绑定时同样返回成功）。
+     * 该组 API 虽对匿名放行（role-anonymous 全量），但解绑是写操作，
+     * 匿名身份一律拒绝，不做无害空转。
+     */
+    private Mono<ServerResponse> unbindWechat(ServerRequest request) {
+        return currentIdentity()
+                .filter(identity -> !Constants.ANONYMOUS_USER.equals(identity.username()))
+                .switchIfEmpty(Mono.error(
+                        new AuthException("UNAUTHENTICATED", "未登录")))
+                .flatMap(identity -> authService.unbindMyWechat(identity.username()))
+                .then(ServerResponse.ok().bodyValue(Map.of("success", true)))
                 .onErrorResume(AuthEndpoint::handleFailure);
     }
 
