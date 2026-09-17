@@ -54,6 +54,8 @@ export interface MiniProgramLinkItem {
 export interface MiniInfo {
   displayName?: string;
   miniProgramCode?: string;
+  appId?: string;
+  path?: string;
   link?: string;
   description?: string;
   applyRemark?: string;

@@ -112,6 +112,14 @@ const preview = (url?: string) => {
 
     <!-- 详情字段 -->
     <div class=":uno: grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
+      <div>
+        <span class=":uno: text-gray-500">小程序 AppID：</span>
+        <span class=":uno: break-all text-gray-800">{{ spec.appId || "未填写" }}</span>
+      </div>
+      <div v-if="spec.path">
+        <span class=":uno: text-gray-500">跳转页面路径：</span>
+        <span class=":uno: break-all text-gray-800">{{ spec.path }}</span>
+      </div>
       <div v-if="spec.link" class=":uno: col-span-2">
         <span class=":uno: text-gray-500">应用地址：</span>
         <span class=":uno: break-all text-gray-800">{{ spec.link }}</span>

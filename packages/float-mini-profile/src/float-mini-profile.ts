@@ -57,6 +57,8 @@ interface MiniDotDrag {
 const BASIC_FIELDS: ApplyField[] = [
   { key: "displayName", label: "应用名称", required: true },
   { key: "miniProgramCode", label: "太阳码（图片地址）", required: true },
+  { key: "appId", label: "小程序 AppID", required: true, placeholder: "小程序 AppID，如 wx1234567890abcdef" },
+  { key: "path", label: "跳转页面路径", required: false, placeholder: "如 pages/index/index" },
   { key: "link", label: "应用地址", required: false, placeholder: "#小程序://xxx" },
   { key: "description", label: "应用描述", required: false, type: "textarea" },
   { key: "applyRemark", label: "申请说明", required: false, type: "textarea" },
@@ -972,6 +974,8 @@ export class FloatMiniProfileElement extends LitElement {
     const miniRows: LinkInfoRow[] = [
       { label: "小程序名称", value: this.miniInfo?.displayName },
       { label: "太阳码地址", value: normalizeImageUrl(this.miniInfo?.miniProgramCode) },
+      { label: "小程序 AppID", value: this.miniInfo?.appId },
+      { label: "跳转页面路径", value: this.miniInfo?.path },
       { label: "小程序地址", value: this.miniInfo?.link },
       { label: "小程序描述", value: this.miniInfo?.description, textarea: true },
       { label: "申请说明", value: this.miniInfo?.applyRemark, textarea: true, copyable: false },
@@ -1099,6 +1103,8 @@ export class FloatMiniProfileElement extends LitElement {
     const mini = this.miniInfo;
     push("小程序名称", mini?.displayName);
     push("太阳码地址", normalizeImageUrl(mini?.miniProgramCode));
+    push("小程序 AppID", mini?.appId);
+    push("跳转页面路径", mini?.path);
     push("小程序地址", mini?.link);
     push("描述", mini?.description);
     push("申请说明", mini?.applyRemark);

@@ -24,7 +24,7 @@ export const FEATURE_ENTRY_REGISTRY: FeatureEntry[] = [
   // ===== 我的页面-其他功能（默认 3 项，顺序即展示顺序）=====
   {key: "setting", title: "偏好设置", subTitle: "首页布局、卡片样式等设置", color: "#7986CB", bgColor: "#7986CB24", iconPrefix: "uhemoji2-icon", icon: "-tired", path: "/pages-blog/setting/setting", visible: true, group: "other"},
   {key: "disclaimers", title: "免责声明", subTitle: "博客内容免责声明", color: "#795548", bgColor: "#79554824", iconPrefix: "uhemoji2-icon", icon: "-smirking", path: "/pages-blog/disclaimers/disclaimers", visible: true, group: "other"},
-  {key: "about", title: "关于项目", subTitle: "小莫唐尼的开源项目", color: "#607D8B", bgColor: "#607D8B24", iconPrefix: "uhemoji2-icon", icon: "-happy-", path: "/pages-blog/about/about", visible: true, group: "other"},
+  {key: "about", title: "关于项目", subTitle: "小莫唐尼的开源项目", color: "#607D8B", bgColor: "#607D8B24", iconPrefix: "uhemoji2-icon", icon: "-happy-", path: "/pages-blog/about-project/about-project", visible: true, group: "other"},
 ];
 
 /**

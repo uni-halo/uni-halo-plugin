@@ -320,6 +320,10 @@ export interface MiniProgramLinkSpec {
   displayName?: string;
   /** 太阳码（小程序码图片 URL，必填） */
   miniProgramCode?: string;
+  /** 小程序 AppID（wx 开头，必填） */
+  appId?: string;
+  /** 跳转页面路径（非必填） */
+  path?: string;
   /** 小程序地址（非必填） */
   link?: string;
   /** 作者昵称 */
@@ -393,6 +397,10 @@ export type SubmissionStatus = "PENDING" | "APPROVED" | "REJECTED";
 export interface MiniProgramLinkSubmissionSpec {
   displayName?: string;
   miniProgramCode?: string;
+  /** 小程序 AppID（wx 开头，必填） */
+  appId?: string;
+  /** 跳转页面路径（非必填） */
+  path?: string;
   link?: string;
   authorName?: string;
   avatar?: string;
@@ -555,6 +563,10 @@ export interface FeatureConfigMiniInfo {
   displayName?: string;
   /** 太阳码/小程序码图片 */
   miniProgramCode?: string;
+  /** 小程序 AppID（wx 开头，必填） */
+  appId?: string;
+  /** 跳转页面路径（非必填） */
+  path?: string;
   /** 跳转地址 */
   link?: string;
   /** 小程序描述 */
@@ -622,10 +634,40 @@ export interface FeatureConfigSocialItem {
   visible?: boolean;
 }
 
+/** 全站页面标题（页面设置-页面标题 tab 统一维护；app 端传入各页面 uh-navbar default-title，留空回退内置默认） */
+export interface FeatureConfigPageTitles {
+  home?: string;
+  gallery?: string;
+  category?: string;
+  moments?: string;
+  blogger?: string;
+  articles?: string;
+  archives?: string;
+  /** 文章详情页导航栏默认标题（滚动后仍显示文章题目） */
+  postDetail?: string;
+  categoryArticles?: string;
+  tags?: string;
+  tagDetail?: string;
+  search?: string;
+  favorites?: string;
+  friendLinks?: string;
+  notice?: string;
+  noticeDetail?: string;
+  votes?: string;
+  voteDetail?: string;
+  contact?: string;
+  setting?: string;
+  aboutProject?: string;
+  disclaimers?: string;
+  dataVisual?: string;
+  login?: string;
+  register?: string;
+}
+
 export interface FeatureConfigPages {
+  /** 全站页面标题 */
+  titles?: FeatureConfigPageTitles;
   homeConfig: {
-    /** 首页标题（控制台不再提供配置项，保留字段由客户端读取默认） */
-    pageTitle?: string;
     useQuickNavigation?: boolean;
     /** 快捷导航项列表（每项可配置名称/排序/显示隐藏，排序=数组顺序） */
     quickNavigation?: FeatureConfigQuickNavigationItem[];
@@ -633,31 +675,19 @@ export interface FeatureConfigPages {
     /** 首页分类栏展示的分类引用（固定 3 个，数据在「分类管理」维护） */
     categories?: FeatureConfigCategoryItem[];
   };
-  galleryConfig: {
-    /** 图库页标题 */
-    pageTitle?: string;
-  };
+  /** 博主页（资料卡视觉 + 常用功能布局） */
   aboutConfig: {
-    pageTitle?: string;
     bgImageUrl?: string;
     waveImageUrl?: string;
-    /** 常用功能显示方式（grid=宫格 / list=列表，控制 app 端「我的/关于页」常用功能布局；缺省网格） */
+    /** 常用功能显示方式（grid=宫格 / list=列表，控制 app 端博主页常用功能布局；缺省网格） */
     commonFeaturesMode?: "grid" | "list";
-    /** 页脚版权（显示于关于页页脚） */
+    /** 页脚版权（显示于博主页页脚） */
     copyrightConfig?: {
       enabled?: boolean;
       content?: string;
     };
   };
-  /** 分类页（分类页标题，客户端 pageConfig.categoryConfig） */
-  categoryConfig?: {
-    pageTitle?: string;
-  };
-  /** 瞬间页（瞬间页标题，客户端 pageConfig.momentConfig） */
-  momentConfig?: {
-    pageTitle?: string;
-  };
-  /** 我的页面功能入口（常用功能/其他功能两组，配置并入「关于页」tab，
+  /** 我的页面功能入口（常用功能/其他功能两组，配置并入「博主页」tab，
    * 经 getConfigs 下发 pageConfig.myPageConfig） */
   myPageConfig?: FeatureConfigMyPage;
   /** 免责声明页（不再需要启用开关，仅内容） */
@@ -671,46 +701,6 @@ export interface FeatureConfigPages {
     copyrightAuthor?: string;
     copyrightDesc?: string;
     copyrightViolation?: string;
-  };
-  /** 联系博主页（页面标题，客户端 pageConfig.contactConfig） */
-  contactConfig?: {
-    pageTitle?: string;
-  };
-  /** 我的收藏页（页面标题，客户端 pageConfig.favoritesConfig） */
-  favoritesConfig?: {
-    pageTitle?: string;
-  };
-  /** 友情链接页（页面标题，客户端 pageConfig.friendLinksConfig） */
-  friendLinksConfig?: {
-    pageTitle?: string;
-  };
-  /** 文章归档页（页面标题，客户端 pageConfig.archivesConfig） */
-  archivesConfig?: {
-    pageTitle?: string;
-  };
-  /** 投票中心页（页面标题，客户端 pageConfig.voteConfig） */
-  voteConfig?: {
-    pageTitle?: string;
-  };
-  /** 数据看板页（页面标题，客户端 pageConfig.dataVisualConfig） */
-  dataVisualConfig?: {
-    pageTitle?: string;
-  };
-  /** 偏好设置页（页面标题，客户端 pageConfig.settingConfig） */
-  settingConfig?: {
-    pageTitle?: string;
-  };
-  /** 关于项目页（页面标题，客户端 pageConfig.aboutProjectConfig） */
-  aboutProjectConfig?: {
-    pageTitle?: string;
-  };
-  /** 公告中心页（页面标题，客户端 pageConfig.noticeConfig） */
-  noticeConfig?: {
-    pageTitle?: string;
-  };
-  /** 搜索页面（页面标题，客户端 pageConfig.searchConfig） */
-  searchConfig?: {
-    pageTitle?: string;
   };
 }
 
@@ -779,6 +769,14 @@ export interface FeatureConfigPreferences {
   archivesCardType?: "image_top" | "image_right" | "image_bottom" | "image_left";
   /** 评论头像是否圆角（L0 默认，客户端 isAvatarRadius） */
   avatarRadius?: boolean;
+  /** 友情链接页展示偏好（小程序打开模式等） */
+  linkPage?: FeatureConfigLinkPage;
+}
+
+/** 友情链接页展示偏好 */
+export interface FeatureConfigLinkPage {
+  /** 小程序打开模式：fullscreen 全屏（navigateToMiniProgram，默认）/ halfScreen 半屏（openEmbeddedMiniProgram） */
+  miniProgramOpenMode?: "fullscreen" | "halfScreen";
 }
 
 /** 恋爱模块（恋爱日记入口仅密码状态无开关；三模块入口自身即 app 端入口列表数据） */

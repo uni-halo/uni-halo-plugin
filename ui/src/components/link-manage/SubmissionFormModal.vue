@@ -20,6 +20,8 @@ const formState = ref<MiniProgramLinkSubmission>({
   spec: {
     displayName: "",
     miniProgramCode: "",
+    appId: "",
+    path: "",
     link: "",
     avatar: "",
     authorName: "",
@@ -100,6 +102,23 @@ const handleSave = async () => {
         validation="required"
         :validation-messages="{ required: '太阳码不能为空' }"
         help="小程序码图片，从附件库选择或直接输入图片地址"
+      />
+      <FormKit
+        v-model="formState.spec.appId"
+        name="appId"
+        label="小程序 AppID"
+        type="text"
+        validation="required"
+        :validation-messages="{ required: '小程序 AppID 不能为空' }"
+        placeholder="小程序 AppID，如 wx1234567890abcdef"
+      />
+      <FormKit
+        v-model="formState.spec.path"
+        name="path"
+        label="跳转页面路径"
+        type="text"
+        help="跳转页面路径（可选）"
+        placeholder="如 pages/index/index"
       />
       <FormKit
         v-model="formState.spec.link"

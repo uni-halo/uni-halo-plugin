@@ -97,4 +97,22 @@ const CARD_STYLE_OPTIONS = [
       help="文章归档卡片中封面图与文字的位置关系"
     />
   </template>
+
+  <!-- 偏好设置 → 友情链接页 -->
+  <template v-if="subTab === 'linkPage'">
+    <p class=":uno: mb-3 text-xs text-gray-400">
+      以下为友情链接页展示偏好；小程序打开模式决定用户点击小程序链接时的打开方式。
+    </p>
+    <FormKit
+      v-model="formState.spec.preferences.linkPage!.miniProgramOpenMode"
+      name="pref_link_page_open_mode"
+      label="小程序打开模式"
+      type="select"
+      :options="[
+        {label: '全屏', value: 'fullscreen'},
+        {label: '半屏', value: 'halfScreen'},
+      ]"
+      help="全屏 = navigateToMiniProgram；半屏 = openEmbeddedMiniProgram（基础库 2.20.1+，部分小程序不支持半屏打开）"
+    />
+  </template>
 </template>

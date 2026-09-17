@@ -13,9 +13,9 @@ spec:
   repo: https://github.com/uni-halo/uni-halo-plugin
   issues: https://github.com/uni-halo/uni-halo-plugin/issues
   displayName: "Uni Halo"
-  description: "为 UniHalo v3.x 移动端提供配置管理。"
+  description: "免费开源的 UniHalo v3.x 跨平台移动端配套配置插件。"
   settingName: uni-halo-plugin-settings
   configMapName: uni-halo-plugin-configmap
   license:
-    - name: "GPL-3.0"
+    - name: "Apache-2.0"
       url: "https://github.com/uni-halo/uni-halo-plugin/blob/main/LICENSE"

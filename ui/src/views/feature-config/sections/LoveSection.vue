@@ -237,8 +237,6 @@ function cancelRemovalOnTyping(module: FeatureConfigLoveModule) {
                 @update:model-value="onModuleIconBgColor(formState.spec.love[itemKey]!, $event)"
                 outer-class=":uno: w-12 shrink-0 !pt-0" />
             </div>
-            <FormKit v-model="formState.spec.love[itemKey]!.path" :name="`love_${itemKey}_path`" label="跳转路径"
-              type="text" placeholder="app 端进入该模块页面的路径" />
           </div>
 
           <div class=":uno: mt-6">

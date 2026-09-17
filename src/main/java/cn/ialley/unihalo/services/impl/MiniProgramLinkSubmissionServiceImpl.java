@@ -197,6 +197,8 @@ public class MiniProgramLinkSubmissionServiceImpl implements MiniProgramLinkSubm
         MiniProgramLink.MiniProgramLinkSpec spec = new MiniProgramLink.MiniProgramLinkSpec();
         var source = submission.getSpec();
         spec.setDisplayName(source.getDisplayName());
+        spec.setAppId(source.getAppId());
+        spec.setPath(source.getPath());
         spec.setMiniProgramCode(source.getMiniProgramCode());
         spec.setLink(source.getLink());
         spec.setAuthorName(source.getAuthorName());
@@ -227,6 +229,9 @@ public class MiniProgramLinkSubmissionServiceImpl implements MiniProgramLinkSubm
         }
         if (isBlank(spec.getDisplayName())) {
             return Mono.error(new IllegalArgumentException("小程序名称不能为空"));
+        }
+        if (isBlank(spec.getAppId())) {
+            return Mono.error(new IllegalArgumentException("小程序 AppID 不能为空"));
         }
         if (isBlank(spec.getMiniProgramCode())) {
             return Mono.error(new IllegalArgumentException("太阳码不能为空"));

@@ -3,6 +3,8 @@ import {Dialog, Toast, VButton, VEmpty, VSpace, VSwitch} from "@halo-dev/compone
 import {computed, inject, ref} from "vue";
 import {VueDraggable} from "vue-draggable-plus";
 import RiDragMove2Line from "~icons/ri/drag-move-2-line";
+import RiArrowDownSLine from "~icons/ri/arrow-down-s-line";
+import RiArrowUpSLine from "~icons/ri/arrow-up-s-line";
 import RiDeleteBinLine from "~icons/ri/delete-bin-6-line";
 import RiImageLine from "~icons/ri/image-line";
 import RichTextEditorField from "@/components/common/RichTextEditorField.vue";
@@ -26,12 +28,101 @@ import type {
 
 /**
  * 页面设置分区
- * 首页（快捷导航逐项配置 + 分类栏固定 3 个）/ 图库页 / 分类页 / 瞬间页 / 关于页
- * （含页脚版权与功能入口两组）/ 文章详情页 / 免责声明页。
+ * 页面标题（全站页面标题统一维护）/ 首页（快捷导航逐项配置 + 分类栏固定 3 个）/
+ * 博主页（资料卡视觉与功能入口两组）/ 文章详情页 / 免责声明页。
  */
 defineProps<{ subTab: string }>();
 
 const { formState } = inject(FeatureConfigFormKey)!;
+
+/** 页面标题分组定义（key → 标题项列表；group=分组名，展示顺序即数组顺序） */
+const PAGE_TITLE_GROUPS: Array<{ key: string; label: string; desc: string; items: Array<{ key: keyof typeof pageTitleBindings; label: string }> }> = [
+  {
+    key: 'tabbar',
+    label: '主导航页面',
+    desc: '底部主导航 5 个页面',
+    items: [
+      { key: 'home', label: '首页' },
+      { key: 'gallery', label: '图库页' },
+      { key: 'category', label: '分类页' },
+      { key: 'moments', label: '瞬间页' },
+      { key: 'blogger', label: '博主页' },
+    ],
+  },
+  {
+    key: 'blog',
+    label: '博客页面',
+    desc: '博客内容相关页面',
+    items: [
+      { key: 'articles', label: '文章列表页' },
+      { key: 'archives', label: '文章归档页' },
+      { key: 'postDetail', label: '文章详情页' },
+      { key: 'categoryArticles', label: '分类文章列表页' },
+      { key: 'tags', label: '标签列表页' },
+      { key: 'tagDetail', label: '标签文章列表页' },
+      { key: 'search', label: '搜索页' },
+      { key: 'favorites', label: '我的收藏页' },
+      { key: 'friendLinks', label: '友情链接页' },
+      { key: 'notice', label: '公告中心页' },
+      { key: 'noticeDetail', label: '公告详情页' },
+      { key: 'votes', label: '投票中心页' },
+      { key: 'voteDetail', label: '投票详情页' },
+      { key: 'contact', label: '联系博主页' },
+    ],
+  },
+  {
+    key: 'admin',
+    label: '管理页面',
+    desc: '偏好、数据与项目信息等管理类页面',
+    items: [
+      { key: 'setting', label: '偏好设置页' },
+      { key: 'aboutProject', label: '关于项目页' },
+      { key: 'disclaimers', label: '免责声明页' },
+      { key: 'dataVisual', label: '数据看板页' },
+      { key: 'login', label: '登录页' },
+      { key: 'register', label: '注册页' },
+    ],
+  },
+];
+
+/** 页面标题绑定取值器（key → spec.pages.titles 字段访问路径；formState 为 ref，取值须经 .value） */
+const pageTitleBindings = {
+  home: () => formState.value.spec.pages.titles?.home,
+  gallery: () => formState.value.spec.pages.titles?.gallery,
+  category: () => formState.value.spec.pages.titles?.category,
+  moments: () => formState.value.spec.pages.titles?.moments,
+  blogger: () => formState.value.spec.pages.titles?.blogger,
+  articles: () => formState.value.spec.pages.titles?.articles,
+  archives: () => formState.value.spec.pages.titles?.archives,
+  postDetail: () => formState.value.spec.pages.titles?.postDetail,
+  categoryArticles: () => formState.value.spec.pages.titles?.categoryArticles,
+  tags: () => formState.value.spec.pages.titles?.tags,
+  tagDetail: () => formState.value.spec.pages.titles?.tagDetail,
+  search: () => formState.value.spec.pages.titles?.search,
+  favorites: () => formState.value.spec.pages.titles?.favorites,
+  friendLinks: () => formState.value.spec.pages.titles?.friendLinks,
+  notice: () => formState.value.spec.pages.titles?.notice,
+  noticeDetail: () => formState.value.spec.pages.titles?.noticeDetail,
+  votes: () => formState.value.spec.pages.titles?.votes,
+  voteDetail: () => formState.value.spec.pages.titles?.voteDetail,
+  contact: () => formState.value.spec.pages.titles?.contact,
+  setting: () => formState.value.spec.pages.titles?.setting,
+  aboutProject: () => formState.value.spec.pages.titles?.aboutProject,
+  disclaimers: () => formState.value.spec.pages.titles?.disclaimers,
+  dataVisual: () => formState.value.spec.pages.titles?.dataVisual,
+  login: () => formState.value.spec.pages.titles?.login,
+  register: () => formState.value.spec.pages.titles?.register,
+} as const;
+
+/** 各分组折叠状态（group key → 是否折叠；默认全部折叠） */
+const collapsedTitleGroups = ref<Record<string, boolean>>(
+  Object.fromEntries(PAGE_TITLE_GROUPS.map((group) => [group.key, true]))
+);
+
+/** 切换某分组卡片的折叠状态 */
+function toggleTitleGroupCollapse(key: string) {
+  collapsedTitleGroups.value[key] = !collapsedTitleGroups.value[key];
+}
 
 /**
  * 快捷导航默认 5 项（由注册表显式 key 列表派生——
@@ -238,6 +329,43 @@ function restoreMyPageDefaults(group: "common" | "other") {
 </script>
 
 <template>
+  <!-- 页面与排版 → 页面标题（全站页面标题统一维护，app 端传入各页面 uh-navbar default-title，留空回退内置默认；
+       分组折叠交互对齐恋爱设置-模块入口） -->
+  <template v-if="subTab === 'pageTitles'">
+    <div class=":uno: space-y-3">
+      <div v-for="group in PAGE_TITLE_GROUPS" :key="group.key" class=":uno: rounded-lg bg-gray-50 p-4">
+        <div class=":uno: flex items-center justify-between gap-4 border-b border-gray-100 pb-3">
+          <div>
+            <div class=":uno: text-sm font-bold text-gray-700">{{ group.label }}</div>
+            <div class=":uno: mt-0.5 text-xs text-gray-400">{{ group.desc }}</div>
+          </div>
+          <VButton size="sm" type="secondary" plain class=":uno: !py-1.5 !px-3 rounded-full"
+            :title="collapsedTitleGroups[group.key] ? '展开配置' : '折叠配置'"
+            @click="toggleTitleGroupCollapse(group.key)">
+            <span class=":uno: flex items-center justify-center gap-x-1 my-auto">
+              <span>{{ collapsedTitleGroups[group.key] ? '展开配置' : '折叠配置' }} </span>
+              <RiArrowDownSLine v-if="collapsedTitleGroups[group.key]" class=":uno: text-base" />
+              <RiArrowUpSLine v-else class=":uno: text-base" />
+            </span>
+          </VButton>
+        </div>
+
+        <div v-show="!collapsedTitleGroups[group.key]" class=":uno: pt-1">
+          <FormKit
+            v-for="item in group.items"
+            :key="item.key"
+            :model-value="pageTitleBindings[item.key]()"
+            :name="`titles_${item.key}`"
+            :label="item.label"
+            type="text"
+            help="留空使用默认标题"
+            @update:model-value="(value: unknown) => { const titles = formState.spec.pages.titles as Record<string, string | undefined> | undefined; if (titles) { titles[item.key] = typeof value === 'string' ? value : undefined } }"
+          />
+        </div>
+      </div>
+    </div>
+  </template>
+
   <!-- 页面与排版 → 首页 -->
   <template v-if="subTab === 'home'">
     <div class=":uno: flex items-center justify-between gap-4 border-b border-gray-100 py-3">
@@ -394,24 +522,8 @@ function restoreMyPageDefaults(group: "common" | "other") {
     </div>
   </template>
 
-  <!-- 页面与排版 → 图库页（瀑布流由 app 端默认） -->
-  <template v-if="subTab === 'gallery'">
-    <FormKit v-model="formState.spec.pages.galleryConfig.pageTitle" name="gallery_page_title" label="页面标题" type="text" help="图库页展示标题，留空使用默认" />
-  </template>
-
-  <!-- 页面与排版 → 分类页 -->
-  <template v-if="subTab === 'categoryPage'">
-    <FormKit v-model="formState.spec.pages.categoryConfig!.pageTitle" name="category_page_title" label="页面标题" type="text" help="分类页展示标题，留空使用默认" />
-  </template>
-
-  <!-- 页面与排版 → 瞬间页 -->
-  <template v-if="subTab === 'momentPage'">
-    <FormKit v-model="formState.spec.pages.momentConfig!.pageTitle" name="moment_page_title" label="页面标题" type="text" help="瞬间页展示标题，留空使用默认" />
-  </template>
-
-  <!-- 页面与排版 → 关于页 -->
+  <!-- 页面与排版 → 博主页（资料卡视觉 + 功能入口布局） -->
   <template v-if="subTab === 'aboutPage'">
-    <FormKit v-model="formState.spec.pages.aboutConfig.pageTitle" name="about_page_title" label="页面标题" type="text" />
     <div class=":uno: flex flex-col gap-y-4 gap-x-12 md:flex-row">
       <div class=":uno: min-w-0 shrink-0">
         <FormKit v-model="formState.spec.pages.aboutConfig.bgImageUrl" name="about_bg_image" label="资料卡背景图" type="attachment" :accepts="['image/*']" />
@@ -644,56 +756,6 @@ function restoreMyPageDefaults(group: "common" | "other") {
       小程序端「免责声明」页面展示的内容（支持图文混排）；留空则不展示该页面。
     </p>
     <RichTextEditorField v-model="formState.spec.pages.disclaimers!.content" placeholder="输入免责声明内容，支持图文混排……留空则不展示免责声明页" />
-  </template>
-
-  <!-- 页面与排版 → 联系博主页（暂仅页面标题，留空使用默认） -->
-  <template v-if="subTab === 'contactBlogger'">
-    <FormKit v-model="formState.spec.pages.contactConfig!.pageTitle" name="contact_page_title" label="页面标题" type="text" help="联系博主页展示标题，留空使用默认" />
-  </template>
-
-  <!-- 页面与排版 → 我的收藏页（暂仅页面标题，留空使用默认） -->
-  <template v-if="subTab === 'favorites'">
-    <FormKit v-model="formState.spec.pages.favoritesConfig!.pageTitle" name="favorites_page_title" label="页面标题" type="text" help="我的收藏页展示标题，留空使用默认" />
-  </template>
-
-  <!-- 页面与排版 → 友情链接页（暂仅页面标题，留空使用默认） -->
-  <template v-if="subTab === 'friendLinks'">
-    <FormKit v-model="formState.spec.pages.friendLinksConfig!.pageTitle" name="friend_links_page_title" label="页面标题" type="text" help="友情链接页展示标题，留空使用默认" />
-  </template>
-
-  <!-- 页面与排版 → 文章归档页（暂仅页面标题，留空使用默认） -->
-  <template v-if="subTab === 'archives'">
-    <FormKit v-model="formState.spec.pages.archivesConfig!.pageTitle" name="archives_page_title" label="页面标题" type="text" help="文章归档页展示标题，留空使用默认" />
-  </template>
-
-  <!-- 页面与排版 → 投票中心页（暂仅页面标题，留空使用默认） -->
-  <template v-if="subTab === 'vote'">
-    <FormKit v-model="formState.spec.pages.voteConfig!.pageTitle" name="vote_page_title" label="页面标题" type="text" help="投票中心页展示标题，留空使用默认" />
-  </template>
-
-  <!-- 页面与排版 → 数据看板页（暂仅页面标题，留空使用默认） -->
-  <template v-if="subTab === 'dataVisual'">
-    <FormKit v-model="formState.spec.pages.dataVisualConfig!.pageTitle" name="data_visual_page_title" label="页面标题" type="text" help="数据看板页展示标题，留空使用默认" />
-  </template>
-
-  <!-- 页面与排版 → 偏好设置页（暂仅页面标题，留空使用默认） -->
-  <template v-if="subTab === 'setting'">
-    <FormKit v-model="formState.spec.pages.settingConfig!.pageTitle" name="setting_page_title" label="页面标题" type="text" help="偏好设置页展示标题，留空使用默认" />
-  </template>
-
-  <!-- 页面与排版 → 关于项目页（暂仅页面标题，留空使用默认） -->
-  <template v-if="subTab === 'aboutProject'">
-    <FormKit v-model="formState.spec.pages.aboutProjectConfig!.pageTitle" name="about_project_page_title" label="页面标题" type="text" help="关于项目页展示标题，留空使用默认" />
-  </template>
-
-  <!-- 页面与排版 → 公告中心页（暂仅页面标题，留空使用默认） -->
-  <template v-if="subTab === 'notice'">
-    <FormKit v-model="formState.spec.pages.noticeConfig!.pageTitle" name="notice_page_title" label="页面标题" type="text" help="公告中心页展示标题，留空使用默认" />
-  </template>
-
-  <!-- 页面与排版 → 搜索页面（暂仅页面标题，留空使用默认） -->
-  <template v-if="subTab === 'search'">
-    <FormKit v-model="formState.spec.pages.searchConfig!.pageTitle" name="search_page_title" label="页面标题" type="text" help="搜索页面展示标题，留空使用默认" />
   </template>
 
   <!-- 首页分类栏选择（固定 3 个，复用审核模式候选弹窗） -->

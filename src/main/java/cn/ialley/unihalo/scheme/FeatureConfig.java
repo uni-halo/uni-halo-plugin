@@ -145,53 +145,86 @@ public class FeatureConfig extends AbstractExtension {
         private String copyrightViolation;
     }
 
-    /** 页面与排版：首页/图库/分类页/瞬间页/关于页/文章详情页/免责声明页视觉，
-     * 以及其余功能页面标题（恋爱日记/联系博主/我的收藏/友情链接/文章归档/投票中心/
-     * 数据看板/偏好设置/关于项目/公告中心/搜索页面，均经 getConfigs 下发
-     * pageConfig.xxxConfig，页面标题留空时客户端回退内置标题） */
+    /** 页面与排版：全站页面标题、首页/博主页/文章详情页/免责声明页视觉与功能 */
     @Data
     public static class Pages {
+        /** 全站页面标题（页面设置-页面标题 tab 统一维护） */
+        private PageTitles titles;
         private Home homeConfig;
-        private Gallery galleryConfig;
-        private About aboutConfig;
-        /** 分类页（分类页标题，客户端 pageConfig.categoryConfig） */
-        private CategoryPage categoryConfig;
-        /** 瞬间页（瞬间页标题，客户端 pageConfig.momentConfig） */
-        private MomentPage momentConfig;
-        /** 我的页面功能入口（常用功能/其他功能两组，配置并入「关于页」tab，
+        /** 博主页（资料卡视觉 + 常用功能布局，配置并入「博主页」tab） */
+        private BloggerPage aboutConfig;
+        /** 我的页面功能入口（常用功能/其他功能两组，配置并入「博主页」tab，
          * 经 getConfigs 下发 pageConfig.myPageConfig） */
         private MyPage myPageConfig;
         /** 免责声明页（不再需要启用开关，仅内容） */
         private Disclaimer disclaimers;
         /** 文章详情页内容与版权文案 */
         private PostDetail postDetailConfig;
-        /** 联系博主页（页面标题，客户端 pageConfig.contactConfig） */
-        private ContactPage contactConfig;
-        /** 我的收藏页（页面标题，客户端 pageConfig.favoritesConfig） */
-        private FavoritesPage favoritesConfig;
-        /** 友情链接页（页面标题，客户端 pageConfig.friendLinksConfig） */
-        private FriendLinksPage friendLinksConfig;
-        /** 文章归档页（页面标题，客户端 pageConfig.archivesConfig） */
-        private ArchivesPage archivesConfig;
-        /** 投票中心页（页面标题，客户端 pageConfig.voteConfig） */
-        private VotePage voteConfig;
-        /** 数据看板页（页面标题，客户端 pageConfig.dataVisualConfig） */
-        private DataVisualPage dataVisualConfig;
-        /** 偏好设置页（页面标题，客户端 pageConfig.settingConfig） */
-        private SettingPage settingConfig;
-        /** 关于项目页（页面标题，客户端 pageConfig.aboutProjectConfig） */
-        private AboutProjectPage aboutProjectConfig;
-        /** 公告中心页（页面标题，客户端 pageConfig.noticeConfig） */
-        private NoticePage noticeConfig;
-        /** 搜索页面（页面标题，客户端 pageConfig.searchConfig） */
-        private SearchPage searchConfig;
     }
 
-    /** 首页（轮播渲染参数由 app 端默认开启、快捷导航逐项可配置） */
+    /** 全站页面标题（app 端经 pageConfig.titles 读取，传入各页面 uh-navbar default-title，留空回退内置默认） */
+    @Data
+    public static class PageTitles {
+        // ===== tabbar 页 =====
+        /** 首页 */
+        private String home;
+        /** 图库页 */
+        private String gallery;
+        /** 分类页 */
+        private String category;
+        /** 瞬间页 */
+        private String moments;
+        /** 博主页 */
+        private String blogger;
+
+        // ===== 博客页 =====
+        /** 文章列表页 */
+        private String articles;
+        /** 文章归档页 */
+        private String archives;
+        /** 文章详情页导航栏默认标题（滚动后仍显示文章题目） */
+        private String postDetail;
+        /** 分类文章列表页 */
+        private String categoryArticles;
+        /** 标签列表页 */
+        private String tags;
+        /** 标签文章列表页 */
+        private String tagDetail;
+        /** 搜索页 */
+        private String search;
+        /** 我的收藏页 */
+        private String favorites;
+        /** 友情链接页 */
+        private String friendLinks;
+        /** 公告中心页 */
+        private String notice;
+        /** 公告详情页 */
+        private String noticeDetail;
+        /** 投票中心页 */
+        private String votes;
+        /** 投票详情页 */
+        private String voteDetail;
+        /** 联系博主页 */
+        private String contact;
+        /** 偏好设置页 */
+        private String setting;
+        /** 关于项目页 */
+        private String aboutProject;
+        /** 免责声明页 */
+        private String disclaimers;
+        /** 数据看板页 */
+        private String dataVisual;
+
+        // ===== 认证页 =====
+        /** 登录页 */
+        private String login;
+        /** 注册页 */
+        private String register;
+    }
+
+    /** 首页（快捷导航逐项可配置，轮播渲染参数由 app 端默认开启） */
     @Data
     public static class Home {
-        /** 首页标题（客户端默认「首页」） */
-        private String pageTitle;
         /** 是否显示快捷导航 */
         private Boolean useQuickNavigation;
         /** 快捷导航项列表（每项可配置名称/排序/显示隐藏，排序=数组顺序） */
@@ -223,8 +256,19 @@ public class FeatureConfig extends AbstractExtension {
         private Boolean visible;
     }
 
+    /** 博主页（资料卡视觉与常用功能布局） */
+    @Data
+    public static class BloggerPage {
+        /** 资料卡背景图 */
+        private String bgImageUrl;
+        /** 资料卡波浪图 */
+        private String waveImageUrl;
+        /** 常用功能显示方式（grid=宫格 / list=列表，app 端博主页常用功能布局；缺省网格） */
+        private String commonFeaturesMode;
+    }
+
     /** 我的页面功能入口（常用功能/其他功能两组，条目复用快捷导航项结构，
-     * app 端 about 页按组渲染） */
+     * app 端博主页按组渲染） */
     @Data
     public static class MyPage {
         /** 常用功能 */
@@ -248,38 +292,6 @@ public class FeatureConfig extends AbstractExtension {
         private Integer postCount;
     }
 
-    /** 图库页（瀑布流由 app 端默认） */
-    @Data
-    public static class Gallery {
-        private String pageTitle;
-    }
-
-    /** 分类页（客户端 pageConfig.categoryConfig） */
-    @Data
-    public static class CategoryPage {
-        /** 分类页标题 */
-        private String pageTitle;
-    }
-
-    /** 瞬间页（客户端 pageConfig.momentConfig） */
-    @Data
-    public static class MomentPage {
-        /** 瞬间页标题 */
-        private String pageTitle;
-    }
-
-    /** 关于页 */
-    @Data
-    public static class About {
-        private String pageTitle;
-        /** 资料卡背景图 */
-        private String bgImageUrl;
-        /** 资料卡波浪图 */
-        private String waveImageUrl;
-        /** 常用功能显示方式（grid=宫格 / list=列表，app 端「我的/关于页」常用功能布局；缺省网格） */
-        private String commonFeaturesMode;
-    }
-
     /** 恋爱日记页（客户端 pageConfig.loveDiaryConfig） */
     @Data
     public static class LoveDiaryPage {
@@ -287,76 +299,6 @@ public class FeatureConfig extends AbstractExtension {
         private String pageTitle;
         /** 恋爱页背景图（客户端内置回退） */
         private String bgImageUrl;
-    }
-
-    /** 联系博主页（客户端 pageConfig.contactConfig） */
-    @Data
-    public static class ContactPage {
-        /** 页面标题 */
-        private String pageTitle;
-    }
-
-    /** 我的收藏页（客户端 pageConfig.favoritesConfig） */
-    @Data
-    public static class FavoritesPage {
-        /** 页面标题 */
-        private String pageTitle;
-    }
-
-    /** 友情链接页（客户端 pageConfig.friendLinksConfig） */
-    @Data
-    public static class FriendLinksPage {
-        /** 页面标题 */
-        private String pageTitle;
-    }
-
-    /** 文章归档页（客户端 pageConfig.archivesConfig） */
-    @Data
-    public static class ArchivesPage {
-        /** 页面标题 */
-        private String pageTitle;
-    }
-
-    /** 投票中心页（客户端 pageConfig.voteConfig） */
-    @Data
-    public static class VotePage {
-        /** 页面标题 */
-        private String pageTitle;
-    }
-
-    /** 数据看板页（客户端 pageConfig.dataVisualConfig） */
-    @Data
-    public static class DataVisualPage {
-        /** 页面标题 */
-        private String pageTitle;
-    }
-
-    /** 偏好设置页（客户端 pageConfig.settingConfig） */
-    @Data
-    public static class SettingPage {
-        /** 页面标题 */
-        private String pageTitle;
-    }
-
-    /** 关于项目页（客户端 pageConfig.aboutProjectConfig） */
-    @Data
-    public static class AboutProjectPage {
-        /** 页面标题 */
-        private String pageTitle;
-    }
-
-    /** 公告中心页（客户端 pageConfig.noticeConfig） */
-    @Data
-    public static class NoticePage {
-        /** 页面标题 */
-        private String pageTitle;
-    }
-
-    /** 搜索页面（客户端 pageConfig.searchConfig） */
-    @Data
-    public static class SearchPage {
-        /** 页面标题 */
-        private String pageTitle;
     }
 
     /** 资源与兜底：加载占位图片（仅 loading/error 两图，客户端内置回退兜底） */
@@ -390,6 +332,15 @@ public class FeatureConfig extends AbstractExtension {
         private String archivesCardType;
         /** 评论头像是否圆角（客户端 isAvatarRadius） */
         private Boolean avatarRadius;
+        /** 友情链接页展示偏好（小程序打开模式等） */
+        private LinkPage linkPage;
+    }
+
+    /** 友情链接页展示偏好 */
+    @Data
+    public static class LinkPage {
+        /** 小程序打开模式：fullscreen 全屏（默认，navigateToMiniProgram）/ halfScreen 半屏（openEmbeddedMiniProgram） */
+        private String miniProgramOpenMode;
     }
 
     /** 恋爱模块（getConfigs 输出由装配器映射回旧顶层 loveConfig shape；
@@ -500,6 +451,10 @@ public class FeatureConfig extends AbstractExtension {
         private String displayName;
         /** 太阳码/小程序码图片 */
         private String miniProgramCode;
+        /** 小程序 AppID（wx 开头，必填） */
+        private String appId;
+        /** 跳转页面路径（非必填） */
+        private String path;
         /** 跳转地址 */
         private String link;
         /** 小程序描述 */

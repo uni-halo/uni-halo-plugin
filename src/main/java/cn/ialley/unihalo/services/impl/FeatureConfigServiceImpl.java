@@ -12,40 +12,28 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import cn.ialley.unihalo.constants.Constants;
 import cn.ialley.unihalo.scheme.FeatureConfig;
-import cn.ialley.unihalo.scheme.FeatureConfig.About;
-import cn.ialley.unihalo.scheme.FeatureConfig.AboutProjectPage;
-import cn.ialley.unihalo.scheme.FeatureConfig.ArchivesPage;
 import cn.ialley.unihalo.scheme.FeatureConfig.Assets;
 import cn.ialley.unihalo.scheme.FeatureConfig.AuditMode;
 import cn.ialley.unihalo.scheme.FeatureConfig.Blogger;
-import cn.ialley.unihalo.scheme.FeatureConfig.CategoryPage;
-import cn.ialley.unihalo.scheme.FeatureConfig.ContactPage;
+import cn.ialley.unihalo.scheme.FeatureConfig.BloggerPage;
 import cn.ialley.unihalo.scheme.FeatureConfig.Copyright;
-import cn.ialley.unihalo.scheme.FeatureConfig.DataVisualPage;
 import cn.ialley.unihalo.scheme.FeatureConfig.Disclaimer;
-import cn.ialley.unihalo.scheme.FeatureConfig.FavoritesPage;
-import cn.ialley.unihalo.scheme.FeatureConfig.FriendLinksPage;
-import cn.ialley.unihalo.scheme.FeatureConfig.Gallery;
 import cn.ialley.unihalo.scheme.FeatureConfig.Home;
 import cn.ialley.unihalo.scheme.FeatureConfig.LinkInfo;
 import cn.ialley.unihalo.scheme.FeatureConfig.Love;
 import cn.ialley.unihalo.scheme.FeatureConfig.LoveDiaryPage;
 import cn.ialley.unihalo.scheme.FeatureConfig.LoveInfo;
 import cn.ialley.unihalo.scheme.FeatureConfig.Maintenance;
-import cn.ialley.unihalo.scheme.FeatureConfig.MomentPage;
 import cn.ialley.unihalo.scheme.FeatureConfig.ModuleSwitch;
 import cn.ialley.unihalo.scheme.FeatureConfig.MyPage;
-import cn.ialley.unihalo.scheme.FeatureConfig.NoticePage;
+import cn.ialley.unihalo.scheme.FeatureConfig.PageTitles;
 import cn.ialley.unihalo.scheme.FeatureConfig.Pages;
 import cn.ialley.unihalo.scheme.FeatureConfig.PostDetail;
 import cn.ialley.unihalo.scheme.FeatureConfig.Profile;
 import cn.ialley.unihalo.scheme.FeatureConfig.QuickNavigationItem;
-import cn.ialley.unihalo.scheme.FeatureConfig.SearchPage;
-import cn.ialley.unihalo.scheme.FeatureConfig.SettingPage;
 import cn.ialley.unihalo.scheme.FeatureConfig.Social;
 import cn.ialley.unihalo.scheme.FeatureConfig.SocialItem;
 import cn.ialley.unihalo.scheme.FeatureConfig.Spec;
-import cn.ialley.unihalo.scheme.FeatureConfig.VotePage;
 import cn.ialley.unihalo.services.FeatureConfigService;
 import cn.ialley.unihalo.utils.MaintenanceResolver;
 import reactor.core.publisher.Mono;
@@ -257,6 +245,10 @@ public class FeatureConfigServiceImpl implements FeatureConfigService {
         preferences.setArchivesListLayout("single");
         preferences.setArchivesCardType("image_bottom");
         preferences.setAvatarRadius(true);
+        FeatureConfig.LinkPage linkPage = new FeatureConfig.LinkPage();
+        // 与客户端内置默认对齐：全屏打开小程序（navigateToMiniProgram）
+        linkPage.setMiniProgramOpenMode("fullscreen");
+        preferences.setLinkPage(linkPage);
         return preferences;
     }
 
@@ -317,8 +309,36 @@ public class FeatureConfigServiceImpl implements FeatureConfigService {
         private static Pages buildDefaultPages() {
         Pages pages = new Pages();
 
+        // 全站页面标题（页面设置-页面标题 tab 统一维护；留空时客户端回退内置标题）
+        PageTitles titles = new PageTitles();
+        titles.setHome("首页");
+        titles.setGallery("图库");
+        titles.setCategory("");
+        titles.setMoments("");
+        titles.setBlogger("关于博主");
+        titles.setArticles("");
+        titles.setArchives("");
+        titles.setPostDetail("");
+        titles.setCategoryArticles("");
+        titles.setTags("");
+        titles.setTagDetail("");
+        titles.setSearch("");
+        titles.setFavorites("");
+        titles.setFriendLinks("");
+        titles.setNotice("");
+        titles.setNoticeDetail("");
+        titles.setVotes("");
+        titles.setVoteDetail("");
+        titles.setContact("");
+        titles.setSetting("");
+        titles.setAboutProject("");
+        titles.setDisclaimers("");
+        titles.setDataVisual("");
+        titles.setLogin("");
+        titles.setRegister("");
+        pages.setTitles(titles);
+
         Home home = new Home();
-        home.setPageTitle("首页");
         home.setUseQuickNavigation(true);
         // 快捷导航默认 5 项（对齐客户端 uh-home-quick-nav 默认 navList，
         // 控制台可逐项配置）
@@ -328,68 +348,13 @@ public class FeatureConfigServiceImpl implements FeatureConfigService {
         home.setCategories(List.of());
         pages.setHomeConfig(home);
 
-        Gallery gallery = new Gallery();
-        gallery.setPageTitle("图库");
-        pages.setGalleryConfig(gallery);
-
-        // 分类页/瞬间页标题（默认留空，客户端回退内置标题）
-        CategoryPage categoryPage = new CategoryPage();
-        categoryPage.setPageTitle("");
-        pages.setCategoryConfig(categoryPage);
-
-        MomentPage momentPage = new MomentPage();
-        momentPage.setPageTitle("");
-        pages.setMomentConfig(momentPage);
-
-        // 其余功能页面标题（默认留空，客户端回退内置标题）
-        ContactPage contactPage = new ContactPage();
-        contactPage.setPageTitle("");
-        pages.setContactConfig(contactPage);
-
-        FavoritesPage favoritesPage = new FavoritesPage();
-        favoritesPage.setPageTitle("");
-        pages.setFavoritesConfig(favoritesPage);
-
-        FriendLinksPage friendLinksPage = new FriendLinksPage();
-        friendLinksPage.setPageTitle("");
-        pages.setFriendLinksConfig(friendLinksPage);
-
-        ArchivesPage archivesPage = new ArchivesPage();
-        archivesPage.setPageTitle("");
-        pages.setArchivesConfig(archivesPage);
-
-        VotePage votePage = new VotePage();
-        votePage.setPageTitle("");
-        pages.setVoteConfig(votePage);
-
-        DataVisualPage dataVisualPage = new DataVisualPage();
-        dataVisualPage.setPageTitle("");
-        pages.setDataVisualConfig(dataVisualPage);
-
-        SettingPage settingPage = new SettingPage();
-        settingPage.setPageTitle("");
-        pages.setSettingConfig(settingPage);
-
-        AboutProjectPage aboutProjectPage = new AboutProjectPage();
-        aboutProjectPage.setPageTitle("");
-        pages.setAboutProjectConfig(aboutProjectPage);
-
-        NoticePage noticePage = new NoticePage();
-        noticePage.setPageTitle("");
-        pages.setNoticeConfig(noticePage);
-
-        SearchPage searchPage = new SearchPage();
-        searchPage.setPageTitle("");
-        pages.setSearchConfig(searchPage);
-
-        About about = new About();
-        about.setPageTitle("关于博主");
-        about.setBgImageUrl("/plugins/uni-halo/assets/static/uni_halo_profile_bg.jpg");
-        about.setWaveImageUrl("/plugins/uni-halo/assets/static/uni_halo_about_wave.gif");
-        // 常用功能显示方式：grid=宫格 / list=列表（app 端 mine 页消费，缺省网格）
-        about.setCommonFeaturesMode("grid");
+        BloggerPage blogger = new BloggerPage();
+        blogger.setBgImageUrl("/plugins/uni-halo/assets/static/uni_halo_profile_bg.jpg");
+        blogger.setWaveImageUrl("/plugins/uni-halo/assets/static/uni_halo_about_wave.gif");
+        // 常用功能显示方式：grid=宫格 / list=列表（app 端博主页消费，缺省网格）
+        blogger.setCommonFeaturesMode("grid");
         // 页脚版权由应用资料 profile.copyrightConfig 承担（见 buildDefaultProfile）
-        pages.setAboutConfig(about);
+        pages.setAboutConfig(blogger);
 
         // 免责声明页（不再需要启用开关，仅内容，默认留空）
         Disclaimer disclaimer = new Disclaimer();
@@ -472,7 +437,7 @@ public class FeatureConfigServiceImpl implements FeatureConfigService {
         disclaimers.setSubTitle("博客内容免责声明");
         items.add(disclaimers);
         QuickNavigationItem about = navItem("about", "关于项目", "#607D8B", "#607D8BF2",
-                "uhemoji2-icon", "-happy-", "/pages-blog/about/about");
+                "uhemoji2-icon", "-happy-", "/pages-blog/about-project/about-project");
         about.setSubTitle("小莫唐尼开源项目");
         items.add(about);
         return items;
@@ -502,7 +467,7 @@ public class FeatureConfigServiceImpl implements FeatureConfigService {
         friendLinks.setSubTitle("看看博主朋友们吧");
         items.add(friendLinks);
         QuickNavigationItem about = navItem("about", "关于项目", "#607D8B",
-                "#607D8B24", "uhemoji2-icon", "-happy-", "/pages-blog/about/about");
+                "#607D8B24", "uhemoji2-icon", "-happy-", "/pages-blog/about-project/about-project");
         about.setSubTitle("小莫唐尼的开源项目");
         items.add(about);
         return items;

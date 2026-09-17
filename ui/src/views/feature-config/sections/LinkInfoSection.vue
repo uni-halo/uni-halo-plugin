@@ -61,6 +61,8 @@ const feedUrlsText = computed({
     </p>
     <FormKit v-model="formState.spec.linkInfo.miniInfo!.displayName" name="link_display_name" label="小程序名称" type="text" placeholder="如「UniHalo 博客」" />
     <FormKit v-model="formState.spec.linkInfo.miniInfo!.miniProgramCode" name="link_mini_program_code" label="太阳码/小程序码" type="attachment" :accepts="['image/*']" placeholder="选择或粘贴小程序码图片地址" help="小程序码图片，弹窗中点击可预览" />
+    <FormKit v-model="formState.spec.linkInfo.miniInfo!.appId" name="link_app_id" label="小程序 AppID" type="text" validation="required" :validation-messages="{ required: '小程序 AppID 不能为空' }" placeholder="小程序 AppID，如 wx1234567890abcdef" />
+    <FormKit v-model="formState.spec.linkInfo.miniInfo!.path" name="link_path" label="跳转页面路径" type="text" placeholder="如 pages/index/index" help="跳转页面路径" />
     <FormKit v-model="formState.spec.linkInfo.miniInfo!.link" name="link_url" label="跳转地址" type="text" placeholder="如 #小程序://小莫唐尼/AGLiOpse2vi6QJC" help="说明：微信打开小程序，点击右上角三个点找到复制链接。" />
     <FormKit v-model="formState.spec.linkInfo.miniInfo!.description" name="link_description" label="小程序描述" type="textarea" placeholder="一句话介绍你的小程序，如「记录生活与技术的个人博客」" />
     <FormKit v-model="formState.spec.linkInfo.miniInfo!.applyRemark" name="link_apply_remark" label="申请说明" type="textarea" placeholder="如「欢迎友链互换，请附上你的网站信息」" help="弹窗中「申请说明」栏展示的文案" />

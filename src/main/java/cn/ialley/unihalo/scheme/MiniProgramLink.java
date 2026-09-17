@@ -42,6 +42,16 @@ public class MiniProgramLink extends AbstractExtension {
         private String miniProgramCode;
 
         /**
+         * 小程序 AppID（wx 开头，必填，如 wx1234567890abcdef）
+         */
+        private String appId;
+
+        /**
+         * 跳转页面路径（非必填）
+         */
+        private String path;
+
+        /**
          * 小程序地址（非必填，跳转链接）
          */
         private String link;
