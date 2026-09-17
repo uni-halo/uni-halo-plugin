@@ -19,15 +19,15 @@ import static cn.ialley.unihalo.constants.Constants.PLUGIN_API_VERSION;
  *       社交信息、页脚版权、免责声明、关于项目与文章详情版权文案；</li>
  *   <li>{@link Pages} pages：首页（含轮播图渲染参数）、图库、关于页的视觉配置；</li>
  *   <li>{@link Assets} assets：全局默认图片/封面/头像/加载占位等兜底资源；</li>
- *   <li>{@link Preferences} preferences：站点级展示偏好默认（L0，经 getConfigs 顶层
- *       {@code preferences} 下发，与客户端 layout.home/cardType/isAvatarRadius 对齐）；</li>
+ *   <li>{@link Preferences} preferences：站点级展示偏好默认（L0，
+ *       与客户端 layout.home/cardType/isAvatarRadius 对齐）；</li>
  *   <li>{@link Love} love：恋爱模块——总开关、恋爱页图片与恋爱故事/相册/清单模块入口开关；</li>
  *   <li>{@link Maintenance} maintenance：维护模式——维护页标题/富文本说明
  *       与排期窗口，状态由服务端按时间窗口计算。</li>
  * </ul>
  *
- * <p>本模型是控制台「功能设置」页的写端事实源；小程序端仍通过 {@code getConfigs}
- * 读取（由服务端输出合成层把本模型映射回旧 shape，见 UniHaloServiceImpl）。</p>
+ * <p>本模型是控制台「功能设置」页的写端事实源；小程序端经 {@code getConfigs}
+ * 读取（{@code featureConfig} 键整体下发本模型 spec，密码字段脱敏）。</p>
  *
  * @author 小莫唐尼
  */
@@ -46,13 +46,13 @@ public class FeatureConfig extends AbstractExtension {
         private Assets assets;
         private Preferences preferences;
         private Love love;
-        /** 友链信息：站长小程序展示信息，经 getConfigs 覆盖
-         * pluginConfig.linksSubmitPlugin 对应键下发，供小程序端「申请信息」弹窗展示 */
+        /** 友链信息：站长小程序展示信息（featureConfig.linkInfo 下发），
+         * 供小程序端「申请信息」弹窗展示 */
         private LinkInfo linkInfo;
         /** 维护模式 */
         private Maintenance maintenance;
         /** 审核模式：开启后关闭小程序部分数据展示，小程序提交审核时建议开启；
-         * 公开 getConfigs 由装配器重建回 {@code auditConfig.auditModeEnabled} 形态下发 */
+         * 随 {@code featureConfig.auditMode} 下发 */
         private AuditMode auditMode;
     }
 
@@ -82,7 +82,7 @@ public class FeatureConfig extends AbstractExtension {
         private String logo;
     }
 
-    /** 博主信息（原 authorConfig.blogger） */
+    /** 博主信息（昵称/头像/邮箱/简介/主页/介绍） */
     @Data
     public static class Blogger {
         private String nickname;
@@ -154,7 +154,7 @@ public class FeatureConfig extends AbstractExtension {
         /** 博主页（资料卡视觉 + 常用功能布局，配置并入「博主页」tab） */
         private BloggerPage aboutConfig;
         /** 我的页面功能入口（常用功能/其他功能两组，配置并入「博主页」tab，
-         * 经 getConfigs 下发 pageConfig.myPageConfig） */
+         * 随 {@code featureConfig.pages.myPageConfig} 下发） */
         private MyPage myPageConfig;
         /** 免责声明页（不再需要启用开关，仅内容） */
         private Disclaimer disclaimers;
@@ -162,7 +162,7 @@ public class FeatureConfig extends AbstractExtension {
         private PostDetail postDetailConfig;
     }
 
-    /** 全站页面标题（app 端经 pageConfig.titles 读取，传入各页面 uh-navbar default-title，留空回退内置默认） */
+    /** 全站页面标题（app 端经 pages.titles 读取，传入各页面 uh-navbar default-title，留空回退内置默认） */
     @Data
     public static class PageTitles {
         // ===== tabbar 页 =====
@@ -292,7 +292,7 @@ public class FeatureConfig extends AbstractExtension {
         private Integer postCount;
     }
 
-    /** 恋爱日记页（客户端 pageConfig.loveDiaryConfig） */
+    /** 恋爱日记页（页面标题 + 恋爱页背景图，随 featureConfig.love.diaryPage 下发） */
     @Data
     public static class LoveDiaryPage {
         /** 页面标题 */
@@ -312,7 +312,7 @@ public class FeatureConfig extends AbstractExtension {
 
     /**
      * 站点级展示偏好默认（L0；客户端本地偏好可覆盖）。
-     * getConfigs 顶层 {@code preferences} 原样下发本结构，客户端 collectSiteDefaults
+     * 随 {@code featureConfig.preferences} 下发，客户端 collectSiteDefaults
      * 按字段名映射到本地 layout.home/articles/archives。
      */
     @Data
@@ -343,9 +343,8 @@ public class FeatureConfig extends AbstractExtension {
         private String miniProgramOpenMode;
     }
 
-    /** 恋爱模块（getConfigs 输出由装配器映射回旧顶层 loveConfig shape；
-     * 恋爱日记入口密码在「页面入口」tab 配置、无 enabled 开关（入口显隐由
-     * 页面设置-快捷导航/关于页功能入口注册表控制）；
+    /** 恋爱模块（恋爱日记入口密码在「页面入口」tab 配置、无 enabled 开关
+     * （入口显隐由页面设置-快捷导航/关于页功能入口注册表控制）；
      * 三模块入口（故事/相册/清单）在「模块入口」tab 配置，自身即 app 端
      * 入口列表数据（title/subTitle/颜色/图标背景色/path/priority）） */
     @Data
@@ -362,7 +361,7 @@ public class FeatureConfig extends AbstractExtension {
         /** 恋爱信息（纪念日 + 恋人信息，配置在功能设置-恋爱设置-恋爱信息 tab） */
         private LoveInfo loveInfo;
         /** 恋爱日记页面设置（页面标题 + 恋爱页背景图，配置在功能设置-恋爱设置-页面设置
-         * tab；app 端输出 shape 不变：经 getConfigs 仍以 pageConfig.loveDiaryConfig 下发） */
+         * tab；随 {@code featureConfig.love.diaryPage} 下发） */
         private LoveDiaryPage diaryPage;
     }
 
@@ -432,7 +431,7 @@ public class FeatureConfig extends AbstractExtension {
      *   <li>{@link SiteInfo} 站点信息：本站站点名片，字段对齐 Halo 官方友链提交 API
      *       （plugin-links {@code link-applications} 请求体：displayName/url/logo/description/backlink/feedUrls）。</li>
      * </ul>
-     * getConfigs 输出经装配器直接下发 {@code pluginConfig.linkInfo}。
+     * 随 {@code featureConfig.linkInfo} 下发客户端。
      */
     @Data
     public static class LinkInfo {

@@ -223,8 +223,8 @@ public class FeatureConfigServiceImpl implements FeatureConfigService {
 
     /**
      * 默认友链信息：基本配置（submissionEnabled 默认 true）+ 两个子配置
-     * （miniInfo/siteInfo）全部留空；站长配置后经 getConfigs 直接下发
-     * {@code pluginConfig.linkInfo}，不再使用 linksSubmitPlugin。
+     * （miniInfo/siteInfo）全部留空；站长配置后随 {@code featureConfig.linkInfo}
+     * 下发客户端。
      */
     private static LinkInfo buildDefaultLinkInfo() {
         LinkInfo linkInfo = new LinkInfo();

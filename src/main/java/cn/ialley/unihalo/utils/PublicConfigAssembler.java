@@ -131,20 +131,16 @@ public class PublicConfigAssembler {
 
     /**
      * 登录配置公开输出脱敏（getConfigs loginConfig 组）：
-     * 仅输出 passwordLoginEnabled / wechatLoginEnabled 两个开关，
-     * 供小程序端决定登录页展示哪些入口；wechatSecretName（Secret 资源名）、
-     * 令牌有效期与注册策略（Halo 系统设置的「允许注册」「默认角色」）
-     * 属于服务端决策，全部不下发。
+     * 仅输出 passwordLoginEnabled / wechatLoginEnabled 两个开关（扁平结构，
+     * 客户端经 loginConfig.passwordLoginEnabled 直读），供小程序端决定登录页展示
+     * 哪些入口；wechatSecretName（Secret 资源名）、令牌有效期与注册策略
+     * （Halo 系统设置的「允许注册」「默认角色」）属于服务端决策，全部不下发。
      */
     private static JsonNode sanitizeLogin(JsonNode node) {
         ObjectNode out = JsonNodeFactory.instance.objectNode();
         JsonNode login = node.get("loginConfig");
         if (login != null && login.isObject()) {
-            ObjectNode loginOut = JsonNodeFactory.instance.objectNode();
-            pick(login, loginOut, "passwordLoginEnabled", "wechatLoginEnabled");
-            if (loginOut.size() > 0) {
-                out.set("loginConfig", loginOut);
-            }
+            pick(login, out, "passwordLoginEnabled", "wechatLoginEnabled");
         }
         return out;
     }
