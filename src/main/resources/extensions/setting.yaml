@@ -429,7 +429,7 @@ spec:
       label: 移动端登录
       formSchema:
         - $formkit: group
-          name: loginConfig
+          name: client
           label: 登录方式
           children:
             - $formkit: switch
@@ -437,13 +437,13 @@ spec:
               id: passwordLoginEnabled
               label: 账号密码登录
               value: true
-              help: 使用 Halo 账号密码登录，这里仅控制小程序端是否显示登录界面。
+              help: 使用 Halo 账号密码登录。
             - $formkit: switch
               name: wechatLoginEnabled
               id: wechatLoginEnabled
-              label: 微信小程序一键登录
+              label: 小程序一键登录
               value: false
-              help: 需要先在下方配置小程序密钥。首次登录的微信用户能否自动注册、注册为什么角色，由 Halo 系统设置-用户设置的「允许注册」与「默认角色」决定。
+              help: 微信小程序一键登录。由 Halo 系统设置-用户设置的「允许注册」与「默认角色」决定。
             - $formkit: secret
               if: "$get(wechatLoginEnabled).value === true"
               name: wechatSecretName

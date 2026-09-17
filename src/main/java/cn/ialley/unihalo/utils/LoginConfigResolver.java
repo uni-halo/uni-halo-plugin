@@ -15,7 +15,7 @@ import tools.jackson.databind.JsonNode;
 /**
  * 登录配置与微信凭据读取。
  *
- * <p>设置页 loginConfig 组下的单个子对象 {@code loginConfig}（两个登录开关、
+ * <p>设置页 loginConfig 组下的单个子对象 {@code client}（两个登录开关、
  * Secret 名称、令牌有效期）。注册策略不在此配置——沿用 Halo 系统设置-用户设置的
  * 「允许注册」与「默认角色」。两个开关全关即登录能力整体不可用（fail closed）。</p>
  *
@@ -30,7 +30,7 @@ import tools.jackson.databind.JsonNode;
 public class LoginConfigResolver {
 
     private static final String GROUP = "loginConfig";
-    private static final String SUB_LOGIN = "loginConfig";
+    private static final String SUB_LOGIN = "client";
 
     private final ReactiveSettingFetcher settingFetcher;
     private final ReactiveExtensionClient client;
