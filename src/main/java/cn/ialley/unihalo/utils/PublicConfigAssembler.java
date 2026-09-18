@@ -12,19 +12,13 @@ import tools.jackson.databind.node.ObjectNode;
 /**
  * 公开配置输出合成器（getConfigs 出口，只读）。
  *
- * <p>输出 = setting.yaml 活组白名单 + 功能设置单例 spec（脱敏）+ 服务端计算态：</p>
- * <ul>
- *   <li>{@code featureConfig}：功能设置单例 {@link FeatureConfig} spec 整体下发。
- *       入参约定经 {@code featureConfigService.get()} 脱敏；此处再防御式剔除恋爱模块
- *       {@code passwordHash / password / passwordRemoved}，密码相关字段绝不出服务端；</li>
- *   <li>{@code safetyConfig / integrationConfig / themeConfig}：设置组白名单透传；</li>
- *   <li>{@code loginConfig}：仅输出登录方式开关，wechatSecretName（Secret 资源名）、
- *       令牌有效期与注册策略属于服务端决策，不外发；</li>
- *   <li>{@code maintenance}（additive 顶层键）：按 spec.maintenance 时间窗口与当前时刻
- *       计算状态，仅 scheduled/active 时输出；enabled=false 或已到点自动结束 → 键缺失
- *       （客户端视为未维护）；</li>
- *   <li>其余设置组（含历史残留组）一律不透传——白名单制，新增组须同步此处。</li>
- * </ul>
+ * <p>输出 = setting.yaml 活组白名单 + 功能设置单例 spec（脱敏）+ 服务端计算态：
+ * {@code featureConfig} 为 {@link FeatureConfig} spec 整体下发（密码相关字段
+ * {@code passwordHash/password/passwordRemoved} 绝不出服务端）；{@code safetyConfig /
+ * integrationConfig / themeConfig} 白名单透传；{@code loginConfig} 仅输出登录方式开关，
+ * Secret 资源名、令牌有效期与注册策略不外发；{@code maintenance} 为 additive 顶层键，
+ * 按 spec.maintenance 时间窗口计算，仅 scheduled/active 时输出（键缺失 = 未维护）。
+ * 其余设置组一律不透传——白名单制，新增组须同步此处。</p>
  *
  * @author 小莫唐尼
  */

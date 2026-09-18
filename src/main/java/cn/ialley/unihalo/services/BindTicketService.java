@@ -5,21 +5,12 @@ import java.time.Instant;
 import reactor.core.publisher.Mono;
 
 /**
- * 微信扫码绑定票据（BindTicket）服务。
+ * 微信扫码绑定票据（BindTicket）服务。PC 端 UC 用户（浏览器无微信授权能力）通过扫码
+ * 绑定微信：服务端签发一次性票据并锁定 UC 用户名（二维码内容 {@code uh-bindwx-{ticket}}），
+ * 小程序端扫码确认后调 confirm，服务端校验票据并绑定到创建时锁定的用户。
  *
- * <p>PC 端 UC 用户（浏览器环境，无微信授权能力）通过扫码绑定微信：
- * 服务端先签发一次性票据并锁定 UC 用户名，二维码内容为
- * {@code uh-bindwx-{ticket}}（前缀约定见 Constants）；
- * 小程序端扫码确认后携带 {@code wx.login()} 的 code 调 confirm，
- * 服务端校验票据并把该微信身份绑定到票据创建时锁定的用户。</p>
- *
- * <p>安全约束：</p>
- * <ol>
- *   <li><b>单次消费</b>：confirm 成功即标记已用，重放返回失败；</li>
- *   <li><b>时效</b>：5 分钟过期，过期后只能重新生成；</li>
- *   <li><b>用户名锁定</b>：绑定目标在创建票据时已确定，confirm 不接受客户端指定，
- *       扫码者无法把微信绑到别的账号。</li>
- * </ol>
+ * <p>安全约束：单次消费（confirm 成功即标记已用，重放失败）；5 分钟时效；
+ * 绑定目标在创建票据时已确定，confirm 不接受客户端指定，扫码者无法绑到别的账号。</p>
  *
  * @author 小莫唐尼
  */

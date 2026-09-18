@@ -41,19 +41,12 @@ import cn.ialley.unihalo.vo.LoveStoryVo;
 /**
  * 恋爱日记 Finder 实现。
  *
- * <h3>锁语义（与公开 API 完全一致，且更严格）</h3>
- * <ol>
- *   <li><b>两层独立</b>：模块锁（ourStory / lovePhoto / loveDaily / loveDiary）与
- *       相册锁互不通用，token 也不通用；</li>
- *   <li><b>锁定即零数据</b>：模块锁定时对应列表方法<b>不调用 service</b>，
- *       直接返回 {@code page/size/0/[]} —— 连"有几条"都不泄露；</li>
- *   <li><b>fail-closed</b>：锁状态读取失败一律按「已锁定」处理（宁可站长看到解锁表单，
- *       也不能漏内容），且不抛 5xx。</li>
- * </ol>
+ * <p>锁语义（与公开 API 一致且更严格）：模块锁与相册锁两层独立、token 不通用；
+ * 模块锁定时对应列表方法不调用 service，直接返回空结果（连条数都不泄露）；
+ * 锁状态读取失败一律按「已锁定」处理（fail-closed），不抛 5xx。</p>
  *
- * <p>SSR 页面无法像小程序那样在 URL 上带 {@code ?token=}，故本层<b>不消费解锁 token</b>：
- * 锁定页只渲染表单；校验通过后由前端 JS 带 token 调公开 API 取数据并原地替换。
- * 这样即使 F12 删掉整个表单，也什么都看不到。</p>
+ * <p>本层不消费解锁 token：SSR 锁定页只渲染表单，校验通过后由前端 JS 带 token
+ * 调公开 API 取数据并原地替换 —— 即使删掉表单也看不到任何内容。</p>
  *
  * @author 小莫唐尼
  */

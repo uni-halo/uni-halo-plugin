@@ -9,20 +9,12 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.springframework.stereotype.Component;
 
 /**
- * 登录失败限流（内存固定窗口计数）。
+ * 登录失败限流（内存固定窗口计数）。按用户名（{@value #MAX_USERNAME_FAILURES} 次）
+ * 与来源 IP（{@value #MAX_IP_FAILURES} 次）两个维度计数，任一超限锁定一个窗口
+ * （{@value #WINDOW_MINUTES} 分钟），窗口结束后自然作废，无需人工解锁。
  *
- * <p>密码登录在补齐限流之前是一条「裸校验」接口，可被无限次尝试。这里按两个维度计数：</p>
- * <ul>
- *   <li><b>用户名</b>：{@value #MAX_USERNAME_FAILURES} 次失败即锁定一个窗口 —— 拦定向爆破；</li>
- *   <li><b>来源 IP</b>：{@value #MAX_IP_FAILURES} 次失败即锁定一个窗口 —— 拦换着用户名扫号。</li>
- * </ul>
- *
- * <p>锁定采用固定窗口：窗口（{@value #WINDOW_MINUTES} 分钟）结束后计数自然作废，无需人工解锁，
- * 也不会因为一次误输就把账号永久锁死。</p>
- *
- * <p><b>已知边界</b>：计数在内存中，多实例部署时各算各的；Halo 通常单实例，可接受。
- * IP 取 TCP 源地址（{@code remoteAddress}），反代后是反代 IP —— 这是刻意的取舍：
- * {@code X-Forwarded-For} 可由客户端伪造，用它做限流等于没做。</p>
+ * <p>已知边界：计数在内存中，多实例部署时各算各的（Halo 通常单实例，可接受）；
+ * IP 取 TCP 源地址而非可伪造的 {@code X-Forwarded-For}，反代后为反代 IP —— 刻意取舍。</p>
  *
  * @author 小莫唐尼
  */

@@ -11,23 +11,13 @@ import static cn.ialley.unihalo.constants.Constants.BASIC_DOMAIN_NAME;
 import static cn.ialley.unihalo.constants.Constants.PLUGIN_API_VERSION;
 
 /**
- * 功能设置（单例，metadata.name 固定为 feature-config）。
+ * 功能设置（单例，metadata.name 固定为 feature-config），承载小程序通用内容与外观配置。
+ * 区块：{@link Profile} 应用资料、{@link Pages} 首页/图库/关于页视觉、{@link Assets}
+ * 兜底资源、{@link Preferences} 站点级展示偏好默认（L0）、{@link Love} 恋爱模块开关、
+ * {@link Maintenance} 维护模式排期。
  *
- * <p>承载小程序通用内容与外观配置，分为以下区块：</p>
- * <ul>
- *   <li>{@link Profile} profile：应用资料——应用信息（名称/图标）、博主信息、
- *       社交信息、页脚版权、免责声明、关于项目与文章详情版权文案；</li>
- *   <li>{@link Pages} pages：首页（含轮播图渲染参数）、图库、关于页的视觉配置；</li>
- *   <li>{@link Assets} assets：全局默认图片/封面/头像/加载占位等兜底资源；</li>
- *   <li>{@link Preferences} preferences：站点级展示偏好默认（L0，
- *       与客户端 layout.home/cardType/avatarShape 对齐）；</li>
- *   <li>{@link Love} love：恋爱模块——总开关、恋爱页图片与恋爱故事/相册/清单模块入口开关；</li>
- *   <li>{@link Maintenance} maintenance：维护模式——维护页标题/富文本说明
- *       与排期窗口，状态由服务端按时间窗口计算。</li>
- * </ul>
- *
- * <p>本模型是控制台「功能设置」页的写端事实源；小程序端经 {@code getConfigs}
- * 读取（{@code featureConfig} 键整体下发本模型 spec，密码字段脱敏）。</p>
+ * <p>本模型是控制台「功能设置」页的写端事实源；小程序端经 {@code getConfigs} 读取
+ * （{@code featureConfig} 键整体下发本模型 spec，密码字段脱敏）。</p>
  *
  * @author 小莫唐尼
  */
@@ -325,7 +315,7 @@ public class FeatureConfig extends AbstractExtension {
         /** 文章列表页列表布局（客户端 layout.articles.listLayout）：single / double */
         private String articlesListLayout;
         /** 文章列表页卡片样式（客户端 layout.articles.cardType） */
-        private String articleCardType;
+        private String articlesCardType;
         /** 文章归档页列表布局（客户端 layout.archives.listLayout）：single / double */
         private String archivesListLayout;
         /** 文章归档页卡片样式（客户端 layout.archives.cardType） */

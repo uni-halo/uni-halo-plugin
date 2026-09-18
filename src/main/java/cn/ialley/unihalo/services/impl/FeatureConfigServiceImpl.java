@@ -235,13 +235,13 @@ public class FeatureConfigServiceImpl implements FeatureConfigService {
     }
 
     private static FeatureConfig.Preferences buildDefaultPreferences() {
-        // 与客户端内置默认对齐：首页/归档 single + image_bottom，
-        // 文章列表 double + image_bottom；卡片样式统一组件 layout 值（image_*）
+        // 与客户端内置默认对齐：三个列表页统一 single + image_bottom；
+        // 卡片样式统一组件 layout 值（image_*）
         FeatureConfig.Preferences preferences = new FeatureConfig.Preferences();
         preferences.setHomeListLayout("single");
         preferences.setHomeCardType("image_bottom");
-        preferences.setArticlesListLayout("double");
-        preferences.setArticleCardType("image_bottom");
+        preferences.setArticlesListLayout("single");
+        preferences.setArticlesCardType("image_bottom");
         preferences.setArchivesListLayout("single");
         preferences.setArchivesCardType("image_bottom");
         // 与客户端内置默认对齐：头像外观默认方形（square/circle）

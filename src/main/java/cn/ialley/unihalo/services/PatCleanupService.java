@@ -17,22 +17,12 @@ import run.halo.app.extension.ReactiveExtensionClient;
 import run.halo.app.security.PersonalAccessToken;
 
 /**
- * 登录令牌（PAT）过期清理。
+ * 登录令牌（PAT）过期清理。每次登录都新建一条 PAT，清理只回收存储，低频扫描即可。
  *
- * <p>每次登录都会新建一条 PAT，高频登录会持续产生扩展记录。令牌的「失效」由 JWT 的
- * {@code exp} 保证（Halo 的 {@code PatAuthenticationManager} 不校验 spec.expiresAt），
- * 清理只是回收存储，因此低频扫描即可。</p>
- *
- * <p><b>只回收本插件签发的令牌</b>：创建时打了
- * {@code unihalo.ialley.cn/managed-by=uni-halo} 标签，用户在「个人中心 → 个人令牌」
- * 手动创建的令牌不带该标签，永远不会被删除。</p>
- *
- * <p>回收条件（需同时满足归属标签）：</p>
- * <ul>
- *   <li>已过期：{@code spec.expiresAt} 早于当前时间；</li>
- *   <li>已吊销且超过保留期：{@code spec.revokesAt + 7 天} 早于当前时间（保留一段时间
- *       便于追溯，且避免与正在进行的请求竞态）。</li>
- * </ul>
+ * <p><b>只回收本插件签发的令牌</b>：创建时打了 {@code unihalo.ialley.cn/managed-by=uni-halo}
+ * 标签，用户手动创建的令牌不带该标签，永远不会被删除。回收条件（需同时满足归属标签）：
+ * 已过期（{@code spec.expiresAt} 早于当前时间），或已吊销超过 7 天保留期
+ * （保留便于追溯，避免与进行中请求竞态）。</p>
  *
  * @author 小莫唐尼
  */

@@ -81,7 +81,7 @@ const CARD_STYLE_OPTIONS = [
       help="笔记列表页默认展示方式"
     />
     <FormKit
-      v-model="formState.spec.preferences.articleCardType"
+      v-model="formState.spec.preferences.articlesCardType"
       name="pref_articles_card_type"
       label="笔记列表卡片样式"
       type="select"

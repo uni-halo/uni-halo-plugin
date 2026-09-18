@@ -5,21 +5,11 @@ import lombok.Data;
 /**
  * 恋爱日记主题页配置（已解析、已校验、不可变的运行时视图）。
  *
- * <p>来源：setting.yaml 的 {@code themeConfig.loveDiaryTheme} 组。本类只承载
- * <b>已归一化</b>的字段：非法值一律回落到默认值，保证下游（路由注册 / 模板 /
- * HeadProcessor）拿到的一定是合法值。</p>
- *
- * <h3>v1.5 起刻意「不在这里」的东西</h3>
- * <ul>
- *   <li><b>背景图</b> → 取功能设置 {@code featureConfig.spec.love.diaryPage.bgImageUrl}
- *       （与小程序端同一处配置，站长只需维护一份）；</li>
- *   <li><b>正文排版 / 代码高亮 / 灯箱 / 宽表格</b> → 不再提供开关。正文一律用主题
- *       自己的排版根类 {@code .prose} 渲染（见设计文档 §12），组件级行为固定。</li>
- * </ul>
- *
- * <p>路由相关字段保留<b>原始配置文本</b>（{@code rawRoute*}），解析为完整路径由
- * {@link LoveRoutePlan} 负责 —— 因为解析需要异步读取 Halo 已占用的 permalink，
- * 属两件事，不混在一个 VO 里。</p>
+ * <p>来源：setting.yaml 的 {@code themeConfig.loveDiaryTheme} 组。只承载已归一化的字段，
+ * 非法值一律回落默认值，保证下游拿到的一定是合法值。v1.5 起刻意不在此处：背景图取
+ * {@code featureConfig.spec.love.diaryPage.bgImageUrl}（站长只维护一份）；正文排版/
+ * 高亮/灯箱不提供开关，一律用主题 {@code .prose} 渲染。路由字段保留原始配置文本，
+ * 解析为完整路径由 {@link LoveRoutePlan} 负责（解析需异步读取 permalink，不混在一个 VO 里）。</p>
  *
  * @author 小莫唐尼
  */

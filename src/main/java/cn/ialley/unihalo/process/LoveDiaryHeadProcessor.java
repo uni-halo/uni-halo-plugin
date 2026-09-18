@@ -25,27 +25,13 @@ import cn.ialley.unihalo.vo.LoveDiaryThemeConfig;
 /**
  * 恋爱日记主题页 Head 注入处理器。
  *
- * <h3>注入门槛（fail-closed，两条都要满足）</h3>
- * <ol>
- *   <li>当前模板的 {@code _templateId} 以 {@code plugin:uni-halo:love} 开头
- *       —— 只对恋爱日记四页生效，绝不污染文章/单页/其它插件页面；</li>
- *   <li>{@code themeConfig.loveDiaryTheme.enabled == true} 且配置读取成功
- *       —— 关闭或配置异常时<b>一个字节都不注入</b>。</li>
- * </ol>
+ * <p>注入门槛（fail-closed，两条都要满足）：模板 {@code _templateId} 以
+ * {@code plugin:uni-halo:love} 开头，且 {@code themeConfig.loveDiaryTheme.enabled == true}
+ * 且配置读取成功 —— 关闭或配置异常时一个字节都不注入。样式/脚本走同源静态前缀而非 CDN，
+ * 避免离线/内网白屏、CSP 坑与版本漂移。</p>
  *
- * <h3>为什么样式/脚本走同源静态前缀而不是 CDN</h3>
- * <p>见设计报告 §4.6：① 离线/内网站点不会白屏；② 资源与 Halo 主机同源，无 CSP 坑；
- * ③ CDN 版本漂移 = 线上视觉漂移；而省下的带宽只有 1.6KB 量级，换不到任何东西。</p>
- *
- * <h3>注入内容</h3>
- * <ul>
- *   <li>页面配置（端点位、验证码双 scope 开关、主题色、路线图）→
- *       {@code window.__UNI_HALO_LOVE_DIARY__}，供 {@code love-diary.js} 消费；</li>
- *   <li>CSS：设计 token/布局层、正文层补充（主题 {@code .prose} 之外补的编辑器节点）、
- *       hljs 配色、品牌图标字体；</li>
- *   <li>JS：{@code love-diary.js}（defer）。hljs 包体积大，由 JS 按需加载 ——
- *       页面已有 Shiki/hljs 时直接复用，不重复下载。</li>
- * </ul>
+ * <p>注入内容：页面配置 → {@code window.__UNI_HALO_LOVE_DIARY__}；设计 token/正文层 CSS、
+ * hljs 配色、图标字体；{@code love-diary.js}（defer，hljs 由 JS 按需加载）。</p>
  *
  * @author 小莫唐尼
  */

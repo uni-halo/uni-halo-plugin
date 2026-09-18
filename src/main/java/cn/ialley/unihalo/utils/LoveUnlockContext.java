@@ -9,28 +9,12 @@ import reactor.core.publisher.Mono;
 /**
  * 「本次渲染已解锁哪些模块」的 Reactor Context 载体。
  *
- * <h3>为什么需要它</h3>
- * <p>SSR 页面没法像小程序那样在 URL 上长期带 {@code ?token=}（会被收藏、进 referrer、进日志），
- * 所以锁定页服务端渲染的是<b>页内解锁表单</b>，一个业务字段都不下发。</p>
+ * <p>SSR 页面不能在 URL 上长期带 {@code ?token=}，因此锁定页渲染页内解锁表单；解锁成功后
+ * 由前端 JS 带 {@value #HEADER} 头重新请求当前文档，服务端校验后把解锁状态写入 Reactor
+ * Context，Finder 据此返回数据 —— 只有一套模板，锁语义仍由服务端裁决。渲染结果依请求头
+ * 而变，调用方须置 {@code ModelConst.NO_CACHE} 避免中间缓存污染。</p>
  *
- * <p>但解锁成功后如果让前端 JS 「自己按接口数据再拼一遍 HTML」，就等于把四页模板
- * 在 JS 里重写一遍 —— 两套 markup 必然漂移，且每加一个字段都要改两处。
- * 这里改用<b>一次带凭证的文档请求</b>：</p>
- *
- * <pre>
- *   ① 用户在页内表单提交密码 → POST /love-modules/unlock → {token}
- *   ② JS：fetch(当前 URL, { headers: { 'X-UniHalo-Love-Token': token } })
- *   ③ 服务端：校验 token → 把「该模块已解锁」写进 Reactor Context → Finder 据此不返回空列表
- *   ④ JS：把返回 HTML 里的内容区替换进当前页（不刷新、不跳转）
- * </pre>
- *
- * <p>于是<b>只有一套模板</b>，锁语义仍然由服务端裁决（前端删掉表单也没用）；
- * 并且因为渲染结果依请求头而变，{@code LoveDiaryRouter} 会同时置
- * {@code ModelConst.NO_CACHE}，避免中间缓存把「解锁版」缓存给所有人。</p>
- *
- * <h3>为什么用 Reactor Context 而不是改 Finder 签名</h3>
- * <p>Finder 的方法是<b>主题集成契约</b>（已冻结）。把解锁上下文放进 Reactor Context，
- * 可以让 Finder 的签名、返回类型一字不改，锁定判定仍然全部发生在 Finder 内部。</p>
+ * <p>用 Reactor Context 而非改 Finder 签名：Finder 方法是已冻结的主题集成契约。</p>
  *
  * @author 小莫唐尼
  */

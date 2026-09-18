@@ -29,24 +29,12 @@ import static run.halo.app.extension.index.query.Queries.isNull;
 /**
  * 恋爱日记路由解析与冲突检测。
  *
- * <h3>路径契约</h3>
- * <ul>
- *   <li><b>以 {@code /} 开头</b> → 绝对完整路径，原样使用；</li>
- *   <li><b>否则</b> → 相对 {@code home} 的子段，解析为 {@code <home>/<子段>}；</li>
- *   <li><b>留空</b> → 该页不注册。</li>
- * </ul>
+ * <p>路径契约：以 {@code /} 开头为绝对路径原样使用；否则解析为 {@code <home>/<子段>}；
+ * 留空则该页不注册。</p>
  *
- * <h3>冲突检测（逐条 fail-closed：冲突的那一条不注册，不影响其余）</h3>
- * <ol>
- *   <li><b>路径合法性</b>：空段、非法字符、以及使用保留段 {@code page}（会与自身
- *       {@code /page/{page}} 分页路径歧义）一律拒绝；</li>
- *   <li><b>Halo 保留根段</b>：首页/归档/分类/标签/作者/单页/控制台/API 等系统根命名空间；</li>
- *   <li><b>已占用路径</b>：读取 Halo 现有内容的<b>实际 permalink 值</b>
- *       （{@code Post}/{@code Category}/{@code Tag} 取 {@code status.permalink}，
- *       单页取 {@code status.permalink} 回落到 {@code spec.slug}）——
- *       比对"现值"而非"模板"，因此站长改过 permalink 规则也依然准确；</li>
- *   <li><b>自身重复</b>：四条路由解析后不得互相重复。</li>
- * </ol>
+ * <p>冲突检测逐条 fail-closed（冲突的那一条不注册，不影响其余）：非法路径/保留段
+ * {@code page}、Halo 保留根段、已占用路径（比对现有内容的实际 permalink 值而非模板，
+ * 站长改过 permalink 规则也准确）、四条路由解析后自身重复。</p>
  *
  * @author 小莫唐尼
  */

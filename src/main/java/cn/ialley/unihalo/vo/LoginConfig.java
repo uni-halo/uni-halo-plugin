@@ -7,16 +7,11 @@ import cn.ialley.unihalo.constants.Constants;
 /**
  * 移动端登录配置（设置页 loginConfig 组）。
  *
- * <p>{@code wechatSecretName} 只保存 Secret 资源名称，不含任何密钥明文；
- * 真实凭据由 {@code LoginConfigResolver} 在服务端按名称读取。</p>
- *
- * <p>密码登录与微信登录是两条互相独立的能力，各自有自己的开关，不存在从属关系，
- * 也没有「登录能力总开关」——两个开关全关即登录能力整体不可用。
- * 微信一键登录固定为「已绑定则登录、未绑定则自动注册并登录」，没有「必须先注册」的中间态；
- * 老用户想复用已有账号时走 {@code /auth/bind/wechat} 主动关联。</p>
- *
- * <p>注册策略完全沿用 Halo 系统设置-用户设置：能否注册由「允许注册」决定，
- * 新用户角色由「默认角色」决定；令牌权限恒等于用户在 Halo 已有的角色（不提权也不裁剪）。</p>
+ * <p>{@code wechatSecretName} 只保存 Secret 资源名称，不含密钥明文，真实凭据由服务端读取。
+ * 密码登录与微信登录是两条独立能力，无「登录能力总开关」，两个开关全关即整体不可用；
+ * 微信一键登录固定为「已绑定则登录、未绑定则自动注册并登录」，老用户复用已有账号走
+ * {@code /auth/bind/wechat} 主动关联。注册策略沿用 Halo 系统设置（允许注册 + 默认角色），
+ * 令牌权限恒等于用户在 Halo 已有的角色，不提权也不裁剪。</p>
  *
  * @param passwordLoginEnabled 账号密码登录开关
  * @param wechatLoginEnabled   微信一键登录开关

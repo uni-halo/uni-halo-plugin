@@ -4,20 +4,12 @@ import java.time.Instant;
 import java.time.format.DateTimeParseException;
 
 /**
- * 维护模式状态判定工具（纯函数，无副作用）。
+ * 维护模式状态判定工具（纯函数，无副作用，stateless：无定时任务、不物理清库）。
  *
- * <p>维护状态由「enabled 安排开关 + startTime/endTime 时间窗口（RFC3339 UTC 字符串，
- * 均可空）」与当前时间计算得出（stateless：无定时任务、不物理清库，
- * 「到点自动结束」即输出端判定为 {@link MaintenanceStatus#NONE}）。规则：</p>
- * <ul>
- *   <li>{@code enabled != true} → NONE（未维护）；</li>
- *   <li>{@code endTime} 已到（now ≥ endTime）→ NONE（本次维护已按计划自动结束）；</li>
- *   <li>{@code startTime} 在未来（now &lt; startTime）→ SCHEDULED（维护预告，倒计时至开始）；</li>
- *   <li>其余（startTime 为空/已到，endTime 为空/未到）→ ACTIVE（维护中）。</li>
- * </ul>
- *
- * <p>边界语义：到 {@code startTime} 整点即视为开始、到 {@code endTime} 整点即视为结束（含等号）。
- * 时间字符串非法（非 RFC3339）时按未设置处理，公开输出不因脏数据抛错。</p>
+ * <p>由 enabled + startTime/endTime 时间窗口（RFC3339 UTC 字符串，均可空）与当前时间计算：
+ * {@code enabled != true} 或 endTime 已到 → {@link MaintenanceStatus#NONE}（未维护/已自动结束）；
+ * startTime 在未来 → SCHEDULED；其余 → ACTIVE。到点整点即开始/结束（含等号）；
+ * 时间字符串非法时按未设置处理，公开输出不因脏数据抛错。</p>
  *
  * @author 小莫唐尼
  */

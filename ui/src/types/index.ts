@@ -762,7 +762,7 @@ export interface FeatureConfigPreferences {
   /** 文章列表页列表布局（L0 默认，客户端 layout.articles.listLayout）：single / double */
   articlesListLayout?: "single" | "double";
   /** 文章列表页卡片样式（L0 默认，客户端 layout.articles.cardType） */
-  articleCardType?: "image_top" | "image_right" | "image_bottom" | "image_left";
+  articlesCardType?: "image_top" | "image_right" | "image_bottom" | "image_left";
   /** 文章归档页列表布局（L0 默认，客户端 layout.archives.listLayout）：single / double */
   archivesListLayout?: "single" | "double";
   /** 文章归档页卡片样式（L0 默认，客户端 layout.archives.cardType） */

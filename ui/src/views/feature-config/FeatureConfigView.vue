@@ -185,8 +185,8 @@ function defaultSpec(): FeatureConfigSpec {
     preferences: {
       homeListLayout: "single",
       homeCardType: "image_bottom",
-      articlesListLayout: "double",
-      articleCardType: "image_bottom",
+      articlesListLayout: "single",
+      articlesCardType: "image_bottom",
       archivesListLayout: "single",
       archivesCardType: "image_bottom",
       avatarShape: "square",

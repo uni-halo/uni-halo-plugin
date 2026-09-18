@@ -35,25 +35,15 @@ import run.halo.app.security.PersonalAccessToken;
 import run.halo.app.security.authentication.CryptoService;
 
 /**
- * 自签 PAT 实现（方案 A）。
+ * 自签 PAT 实现。Halo 的 PAT 本质是 RS256 JWT，claims 契约见
+ * {@code PatServiceImpl#generateToken}；签名密钥来自 {@link CryptoService#getJwk()}，
+ * 签出的令牌与官方「个人中心 → 个人令牌」完全等价。
  *
- * <p>Halo 的 PAT 本质是一个 RS256 JWT，claims 契约见
- * {@code PatServiceImpl#generateToken}：{@code iss} / {@code jti}(= spec.tokenId) /
- * {@code sub}(= username) / {@code iat} / {@code pat_name}，可选 {@code exp}。
- * 签名密钥来自 {@link CryptoService#getJwk()}（{@code RsaKeyService} 暴露的 JWK 含私钥），
- * 因此本实现签出的令牌与官方「个人中心 → 个人令牌」创建的完全等价。</p>
- *
- * <p>两点关键约束：</p>
- * <ol>
- *   <li>JWS 头的 {@code kid} 必须取 {@code jwk.getKeyID()}（而非
- *       {@code cryptoService.getKeyId()}），否则 Halo 的 JWKSource 按 kid 匹配不到密钥，
- *       验签直接失败；</li>
- *   <li>过期只由 JWT {@code exp} 保证——{@code PatAuthenticationManager} 不校验
- *       {@code spec.expiresAt}，因此调用方务必传入 expiresAt。</li>
- * </ol>
- *
- * <p>启动时做一次自签自检（签完立即用公钥验签），失败则 {@link #available()} 返回
- * false，登录能力应据此 fail closed。</p>
+ * <p>关键约束：① JWS 头的 {@code kid} 必须取 {@code jwk.getKeyID()}（而非
+ * {@code cryptoService.getKeyId()}），否则 JWKSource 匹配不到密钥，验签失败；
+ * ② 过期只由 JWT {@code exp} 保证（{@code PatAuthenticationManager} 不校验
+ * {@code spec.expiresAt}），调用方务必传入 expiresAt。启动时做一次自签自检，
+ * 失败则 {@link #available()} 返回 false，登录能力应据此 fail closed。</p>
  *
  * @author 小莫唐尼
  */

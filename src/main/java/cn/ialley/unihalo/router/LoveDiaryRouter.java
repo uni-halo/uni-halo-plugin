@@ -39,24 +39,15 @@ import cn.ialley.unihalo.vo.LovePageVo;
 import cn.ialley.unihalo.vo.LoveRoutePlan;
 
 /**
- * 恋爱日记主题页路由。
+ * 恋爱日记主题页路由：一个谓词 + 一个 handler。
  *
- * <h3>为什么是「一条谓词 + 一个 handler」而不是 7 条静态路由</h3>
- * <p>路由路径由站长在设置里配置，而 {@code @Bean RouterFunction} 只在插件上下文启动时
- * 构建一次 —— 若把配置读进 {@code path()}，站长改路径就必须重载插件。<br>
- * 这里改为：<b>一个谓词</b>按 {@link LoveRouteResolver#snapshot()}（同步 volatile 快照）
- * 判断「这个 GET 路径是不是我们已注册的页面」，是则交给同一个 handler —— 于是
- * <b>改配置 30s 内自动生效</b>，无需重载插件。</p>
+ * <p>路由路径由站长配置，而 {@code @Bean RouterFunction} 只在插件启动时构建一次，
+ * 若读进 {@code path()} 则改路径必须重载插件。改为按 {@link LoveRouteResolver#snapshot()}
+ * （同步 volatile 快照）判断 GET 路径是否已注册，是则交给同一 handler ——
+ * 改配置 30s 内自动生效。谓词只匹配已通过冲突检测的精确路径，冲突路径不匹配 → 404。</p>
  *
- * <h3>冲突时为什么宁可 404</h3>
- * <p>谓词只匹配 {@code snapshot} 里<b>已通过冲突检测</b>的精确路径（及列表页
- * {@code /page/N}）。与 Halo 内置主题路由的先后顺序无论如何，都不会顶掉别人的页面；
- * 被判定冲突的路径直接不匹配 → 404，站长在设置页/日志里看到原因。</p>
- *
- * <h3>分页范式</h3>
- * <p>用 Halo 官方路径段式 {@code /page/N}（{@code PageUrlUtils}），并兼容 {@code ?page=N}。
- * Finder 返回裸 {@code ListResult}，由本层包成 {@link UrlContextListResult}，
- * 模板因此可以直接用 {@code ${stories.prevUrl}} / {@code ${stories.nextUrl}}。</p>
+ * <p>分页用 Halo 官方路径段式 {@code /page/N} 并兼容 {@code ?page=N}；Finder 返回裸
+ * {@code ListResult}，由本层包成 {@link UrlContextListResult} 供模板使用。</p>
  *
  * @author 小莫唐尼
  */
