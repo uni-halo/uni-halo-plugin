@@ -244,7 +244,8 @@ public class FeatureConfigServiceImpl implements FeatureConfigService {
         preferences.setArticleCardType("image_bottom");
         preferences.setArchivesListLayout("single");
         preferences.setArchivesCardType("image_bottom");
-        preferences.setAvatarRadius(true);
+        // 与客户端内置默认对齐：头像外观默认方形（square/circle）
+        preferences.setAvatarShape("square");
         FeatureConfig.LinkPage linkPage = new FeatureConfig.LinkPage();
         // 与客户端内置默认对齐：全屏打开小程序（navigateToMiniProgram）
         linkPage.setMiniProgramOpenMode("fullscreen");

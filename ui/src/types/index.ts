@@ -767,8 +767,8 @@ export interface FeatureConfigPreferences {
   archivesListLayout?: "single" | "double";
   /** 文章归档页卡片样式（L0 默认，客户端 layout.archives.cardType） */
   archivesCardType?: "image_top" | "image_right" | "image_bottom" | "image_left";
-  /** 评论头像是否圆角（L0 默认，客户端 isAvatarRadius） */
-  avatarRadius?: boolean;
+  /** 头像外观（L0 默认，客户端 preferences.avatarShape）：square 方形 / circle 圆形；应用于文章卡片(上文下图)与瞬间卡片 */
+  avatarShape?: "square" | "circle";
   /** 友情链接页展示偏好（小程序打开模式等） */
   linkPage?: FeatureConfigLinkPage;
 }

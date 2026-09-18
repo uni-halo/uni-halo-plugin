@@ -20,7 +20,7 @@ import static cn.ialley.unihalo.constants.Constants.PLUGIN_API_VERSION;
  *   <li>{@link Pages} pages：首页（含轮播图渲染参数）、图库、关于页的视觉配置；</li>
  *   <li>{@link Assets} assets：全局默认图片/封面/头像/加载占位等兜底资源；</li>
  *   <li>{@link Preferences} preferences：站点级展示偏好默认（L0，
- *       与客户端 layout.home/cardType/isAvatarRadius 对齐）；</li>
+ *       与客户端 layout.home/cardType/avatarShape 对齐）；</li>
  *   <li>{@link Love} love：恋爱模块——总开关、恋爱页图片与恋爱故事/相册/清单模块入口开关；</li>
  *   <li>{@link Maintenance} maintenance：维护模式——维护页标题/富文本说明
  *       与排期窗口，状态由服务端按时间窗口计算。</li>
@@ -330,8 +330,9 @@ public class FeatureConfig extends AbstractExtension {
         private String archivesListLayout;
         /** 文章归档页卡片样式（客户端 layout.archives.cardType） */
         private String archivesCardType;
-        /** 评论头像是否圆角（客户端 isAvatarRadius） */
-        private Boolean avatarRadius;
+        /** 头像外观（客户端 preferences.avatarShape）：square 方形（默认）/ circle 圆形；
+         * 应用于文章卡片（上文下图）与瞬间卡片的用户头像 */
+        private String avatarShape;
         /** 友情链接页展示偏好（小程序打开模式等） */
         private LinkPage linkPage;
     }

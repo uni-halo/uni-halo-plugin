@@ -4,7 +4,7 @@ import { FeatureConfigFormKey } from "../form-context";
 
 /**
  * 偏好设置分区：
- * 首页 / 文章页面 / 归档页面 三个子 tab（L0 站点默认偏好，用户可在小程序端覆盖）。
+ * 通用功能 / 首页 / 文章页面 / 归档页面 / 友情链接页 子 tab（L0 站点默认偏好，用户可在小程序端覆盖）。
  */
 defineProps<{ subTab: string }>();
 
@@ -20,6 +20,24 @@ const CARD_STYLE_OPTIONS = [
 </script>
 
 <template>
+  <!-- 偏好设置 → 通用功能 -->
+  <template v-if="subTab === 'general'">
+    <p class=":uno: mb-3 text-xs text-gray-400">
+      以下为通用功能默认偏好，与小程序端「偏好设置-功能-通用功能」分组对齐；用户可在小程序端覆盖。
+    </p>
+    <FormKit
+      v-model="formState.spec.preferences.avatarShape"
+      name="pref_avatar_shape"
+      label="头像外观"
+      type="select"
+      :options="[
+        {label: '方形', value: 'square'},
+        {label: '圆形', value: 'circle'},
+      ]"
+      help="应用于文章卡片（上文下图）与瞬间卡片的用户头像"
+    />
+  </template>
+
   <!-- 偏好设置 → 首页 -->
   <template v-if="subTab === 'home'">
     <p class=":uno: mb-3 text-xs text-gray-400">
@@ -106,13 +124,12 @@ const CARD_STYLE_OPTIONS = [
     <FormKit
       v-model="formState.spec.preferences.linkPage!.miniProgramOpenMode"
       name="pref_link_page_open_mode"
-      label="小程序打开模式"
+      label="小程序友链打开模式"
       type="select"
       :options="[
         {label: '全屏', value: 'fullscreen'},
         {label: '半屏', value: 'halfScreen'},
       ]"
-      help="全屏 = navigateToMiniProgram；半屏 = openEmbeddedMiniProgram（基础库 2.20.1+，部分小程序不支持半屏打开）"
     />
   </template>
 </template>

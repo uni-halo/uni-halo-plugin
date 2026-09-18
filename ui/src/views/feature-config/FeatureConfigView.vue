@@ -45,6 +45,7 @@ const SUB_TABS: Record<BigGroup, Array<{ id: string; label: string }>> = {
     { id: "copyright", label: "页脚版权" },
   ],
   preferences: [
+    { id: "general", label: "通用功能" },
     { id: "home", label: "首页" },
     { id: "articles", label: "笔记页面" },
     { id: "archives", label: "归档页面" },
@@ -188,7 +189,7 @@ function defaultSpec(): FeatureConfigSpec {
       articleCardType: "image_bottom",
       archivesListLayout: "single",
       archivesCardType: "image_bottom",
-      avatarRadius: true,
+      avatarShape: "square",
       linkPage: {
         miniProgramOpenMode: "fullscreen",
       },
