@@ -137,7 +137,7 @@ spec:
                 - $el: div
                   attrs:
                     class: "formkit-help text-xs mt-2 text-gray-500 flex items-center mb-1 cursor-pointer"
-                    innerHTML: "说明：来自【作者：<a href='https://blog.muyin.site' title='前往作者博客' target='_blank' class='text-blue-500 hover:text-blue-700'>柳意梧情</a>】的<a href='https://auth.muyin.site/docs/PluginTools' title='前往获取Tools工具箱插件' target='_blank' class='text-blue-500 hover:text-blue-700'>Tools工具箱插件</a>，用于开启支持文章加密访问。"
+                    innerHTML: "说明：来自【作者：<a href='https://blog.muyin.site' title='前往作者博客' target='_blank' class='text-blue-500 hover:text-blue-700'>柳意梧情</a>】的<a href='https://auth.muyin.site/docs/PluginTools' title='前往获取Tools工具箱插件' target='_blank' class='text-blue-500 hover:text-blue-700'>Tools工具箱插件</a>，用于开启支持笔记加密访问。"
                 - $formkit: select
                   name: enabled
                   id: toolsPluginEnabled
@@ -183,7 +183,7 @@ spec:
                       value: scan
                     - label: 小程序广告获取
                       value: advert
-                  help: 验证码获取方式，可以前往文章单独设置验证码获取方式。
+                  help: 验证码获取方式，可以前往笔记单独设置验证码获取方式。
                   validation: required
                 - $formkit: attachment
                   if: "$get(verifyCodeType).value === 'scan'"
@@ -274,7 +274,7 @@ spec:
               id: floatingWindowPagePatterns
               label: 路径模式
               value: ""
-              help: 每行一个路径模式，匹配当前页面 pathname。* 匹配任意非 / 字符，** 匹配任意字符（含 /）；留空或只写 / 表示仅首页。例如 /archives/** 匹配文章详情页。
+              help: 每行一个路径模式，匹配当前页面 pathname。* 匹配任意非 / 字符，** 匹配任意字符（含 /）；留空或只写 / 表示仅首页。例如 /archives/** 匹配笔记详情页。
             - $formkit: select
               name: position
               id: floatingWindowPosition

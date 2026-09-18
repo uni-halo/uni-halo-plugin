@@ -107,7 +107,7 @@ const consoleFeatures = [
   {
     icon: RiSlideshowLine,
     title: '轮播管理',
-    description: '首页轮播配置、文章同步、自定义轮播内容',
+    description: '首页轮播配置、笔记同步、自定义轮播内容',
     color: '#8B5CF6',
   },
 ]
@@ -116,14 +116,14 @@ const mobileFeatures = [
   {
     icon: RiHomeLine,
     title: '首页',
-    description: '轮播展示、文章列表、快捷导航、分类推荐',
+    description: '轮播展示、笔记列表、快捷导航、分类推荐',
     color: '#368FEF',
     tab: true,
   },
   {
     icon: RiLayoutLine,
     title: '分类',
-    description: '文章分类浏览、分类详情、标签筛选',
+    description: '笔记分类浏览、分类详情、标签筛选',
     color: '#10B981',
     tab: true,
   },
@@ -150,20 +150,20 @@ const mobileFeatures = [
   },
   {
     icon: RiArticleLine,
-    title: '文章',
-    description: '文章详情阅读、评论互动、收藏分享',
+    title: '笔记',
+    description: '笔记详情阅读、评论互动、收藏分享',
     color: '#F59E0B',
   },
   {
     icon: RiArchiveLine,
     title: '归档',
-    description: '文章按时间归档、历史文章检索',
+    description: '笔记按时间归档、历史笔记检索',
     color: '#368FEF',
   },
   {
     icon: RiBookmarkLine,
     title: '收藏',
-    description: '文章收藏管理、阅读历史记录',
+    description: '笔记收藏管理、阅读历史记录',
     color: '#10B981',
   },
   {

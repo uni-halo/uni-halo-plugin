@@ -29,7 +29,7 @@ type BigGroup = "profile" | "preferences" | "pages" | "assets" | "love" | "linkI
 const GROUP_ITEMS: Array<{ id: BigGroup; label: string; desc: string }> = [
   { id: "profile", label: "应用设置", desc: "应用信息 / 博主 / 社交" },
   { id: "preferences", label: "偏好设置", desc: "首页/列表/归档布局与卡片样式" },
-  { id: "pages", label: "页面设置", desc: "各页面标题 / 首页 / 图库 / 关于页 / 文章详情" },
+  { id: "pages", label: "页面设置", desc: "各页面标题 / 首页 / 图库 / 关于页 / 笔记详情" },
   { id: "assets", label: "资源设置", desc: "加载占位" },
   { id: "love", label: "恋爱设置", desc: "恋爱页图片与模块入口" },
   { id: "linkInfo", label: "友链设置", desc: "站点信息 / 小程序信息" },
@@ -46,14 +46,14 @@ const SUB_TABS: Record<BigGroup, Array<{ id: string; label: string }>> = {
   ],
   preferences: [
     { id: "home", label: "首页" },
-    { id: "articles", label: "文章页面" },
+    { id: "articles", label: "笔记页面" },
     { id: "archives", label: "归档页面" },
     { id: "linkPage", label: "友情链接页" },
   ],
   pages: [
     { id: "pageTitles", label: "页面标题" },
     { id: "home", label: "首页" },
-    { id: "postDetail", label: "文章详情页" },
+    { id: "postDetail", label: "笔记详情页" },
     { id: "aboutPage", label: "博主页" },
     { id: "disclaimersPage", label: "免责声明页" },
   ],
@@ -172,7 +172,7 @@ function defaultSpec(): FeatureConfigSpec {
         copyrightEnabled: true,
         copyrightAuthor: "uni-halo",
         copyrightDesc:
-          "使用《非商业性使用-相同方式共享 4.0 国际 (CC BY-NC-SA 4.0)》协议授权，文章来源于网上收集或者原创，若未在文章内说明的均为原创文章",
+          "使用《非商业性使用-相同方式共享 4.0 国际 (CC BY-NC-SA 4.0)》协议授权，笔记来源于网上收集或者原创，若未在笔记内说明的均为原创笔记",
         copyrightViolation:
           "若侵害到您的权利，请您及时联系我，在收到通知后第一时间处理，邮箱：xxxx@xx.com",
       },

@@ -54,12 +54,12 @@ const PAGE_TITLE_GROUPS: Array<{ key: string; label: string; desc: string; items
     label: '博客页面',
     desc: '博客内容相关页面',
     items: [
-      { key: 'articles', label: '文章列表页' },
-      { key: 'archives', label: '文章归档页' },
-      { key: 'postDetail', label: '文章详情页' },
-      { key: 'categoryArticles', label: '分类文章列表页' },
+      { key: 'articles', label: '笔记列表页' },
+      { key: 'archives', label: '笔记归档页' },
+      { key: 'postDetail', label: '笔记详情页' },
+      { key: 'categoryArticles', label: '分类笔记列表页' },
       { key: 'tags', label: '标签列表页' },
-      { key: 'tagDetail', label: '标签文章列表页' },
+      { key: 'tagDetail', label: '标签笔记列表页' },
       { key: 'search', label: '搜索页' },
       { key: 'favorites', label: '我的收藏页' },
       { key: 'friendLinks', label: '友情链接页' },
@@ -732,21 +732,21 @@ function restoreMyPageDefaults(group: "common" | "other") {
     <div class=":uno: flex items-center justify-between gap-4 border-b border-gray-100 pb-3">
       <div>
         <div class=":uno: text-sm text-gray-700">显示评论</div>
-        <div class=":uno: mt-0.5 text-xs text-gray-400">文章详情页是否展示评论相关功能</div>
+        <div class=":uno: mt-0.5 text-xs text-gray-400">笔记详情页是否展示评论相关功能</div>
       </div>
       <VSwitch v-model="formState.spec.pages.postDetailConfig!.showComment" />
     </div>
     <div class=":uno: mt-4 flex items-center justify-between gap-4 border-b border-gray-100 pb-3">
       <div>
-        <div class=":uno: text-sm text-gray-700">文章版权</div>
-        <div class=":uno: mt-0.5 text-xs text-gray-400">文章底部是否展示版权声明</div>
+        <div class=":uno: text-sm text-gray-700">笔记版权</div>
+        <div class=":uno: mt-0.5 text-xs text-gray-400">笔记底部是否展示版权声明</div>
       </div>
       <VSwitch v-model="formState.spec.pages.postDetailConfig!.copyrightEnabled" />
     </div>
     <div class=":uno: mt-4 rounded-lg bg-gray-50 p-4">
-      <FormKit v-model="formState.spec.pages.postDetailConfig!.copyrightAuthor" name="post_copyright_author" label="文章版权作者" type="text" />
-      <FormKit v-model="formState.spec.pages.postDetailConfig!.copyrightDesc" name="post_copyright_desc" label="文章版权描述" type="textarea" />
-      <FormKit v-model="formState.spec.pages.postDetailConfig!.copyrightViolation" name="post_copyright_violation" label="文章侵权说明" type="textarea" />
+      <FormKit v-model="formState.spec.pages.postDetailConfig!.copyrightAuthor" name="post_copyright_author" label="笔记版权作者" type="text" />
+      <FormKit v-model="formState.spec.pages.postDetailConfig!.copyrightDesc" name="post_copyright_desc" label="笔记版权描述" type="textarea" />
+      <FormKit v-model="formState.spec.pages.postDetailConfig!.copyrightViolation" name="post_copyright_violation" label="笔记侵权说明" type="textarea" />
     </div>
   </template>
 

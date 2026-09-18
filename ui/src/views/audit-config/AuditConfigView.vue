@@ -43,7 +43,7 @@ const BLOCKS: BlockDef[] = [
   {
     type: "post",
     title: "文章",
-    desc: "审核模式下首页 / 文章列表 / 归档仅展示选中的文章（建议不超过 20 篇）· 依赖：Halo 核心",
+    desc: "审核模式下首页 / 笔记列表 / 归档仅展示选中的笔记（建议不超过 20 篇）· 依赖：Halo 核心",
     icon: RiArticleLine,
   },
   {
