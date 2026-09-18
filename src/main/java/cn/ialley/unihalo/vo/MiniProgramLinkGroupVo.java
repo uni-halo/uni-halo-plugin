@@ -8,9 +8,9 @@ import cn.ialley.unihalo.scheme.MiniProgramLink;
 /**
  * 小程序链接分组视图（公开接口 grouped=true 返回，对标 plugin-links LinkGroupVo）。
  *
- * <p>groupName 为分组 metadata.name（空=未分组），displayName 为分组显示名
+ * groupName 为分组 metadata.name（空=未分组），displayName 为分组显示名
  * （分组不存在或未分组时为空，消费端兜底「未分组」）；组内 links 按 priority
- * 倒序 + 创建时间倒序。</p>
+ * 倒序 + 创建时间倒序。
  *
  * @author 小莫唐尼
  */

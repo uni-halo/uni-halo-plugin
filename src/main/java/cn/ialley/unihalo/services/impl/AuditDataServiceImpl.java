@@ -35,9 +35,9 @@ import static run.halo.app.extension.index.query.Queries.isNull;
 /**
  * 审核模式服务实现（单例模型 audit-data-config）。
  *
- * <p>选中引用以 {@link AuditDataConfig.AuditDataRef} 快照存储（name + 展示字段）；
+ * 选中引用以 {@link AuditDataConfig.AuditDataRef} 快照存储（name + 展示字段）；
  * 候选数据按类型映射到外部扩展 GVK（通过本地同 GVK 引用类查询，插件未安装时
- * 返回 pluginMissing 标记）；保存时校验并剔除失效引用。</p>
+ * 返回 pluginMissing 标记）；保存时校验并剔除失效引用。
  *
  * @author 小莫唐尼
  */

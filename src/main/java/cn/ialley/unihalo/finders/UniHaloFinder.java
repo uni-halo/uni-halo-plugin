@@ -12,12 +12,12 @@ import run.halo.app.extension.ListResult;
 /**
  * 恋爱日记主题页 Finder（模板只读数据源，版本化契约，破坏兼容须升主版本）。
  *
- * <p>全部方法只读、不抛异常、空结果返回空 {@code ListResult}；锁判定在本层完成，
- * 模块锁定时返回空结果，绝不把业务字段交给模板；返回展示用脱敏 VO，不含敏感字段。</p>
+ * 全部方法只读、不抛异常、空结果返回空 {@code ListResult}；锁判定在本层完成，
+ * 模块锁定时返回空结果，绝不把业务字段交给模板；返回展示用脱敏 VO，不含敏感字段。
  *
- * <p>返回裸 {@code ListResult}（对齐 Halo 官方 Finder）：Finder 不碰 HTTP，拼 URL 是
+ * 返回裸 {@code ListResult}（对齐 Halo 官方 Finder）：Finder 不碰 HTTP，拼 URL 是
  * {@code LoveDiaryRouter} 的职责，它把结果包成 {@code UrlContextListResult} 放进 model，
- * 模板侧 {@code prevUrl}/{@code nextUrl} 等用法照旧可用。</p>
+ * 模板侧 {@code prevUrl}/{@code nextUrl} 等用法照旧可用。
  *
  * @author 小莫唐尼
  */
@@ -26,8 +26,8 @@ public interface UniHaloFinder {
     /**
      * 恋爱页配置（纪念日/恋人信息/模块入口列表）。
      *
-     * <p>模块入口只包含<b>已注册路由</b>且 {@code enabled=true} 的模块，按
-     * {@code priority} 降序；因此模板可以直接遍历，不需要再判"这个链接能不能点"。</p>
+     * 模块入口只包含已注册路由且 {@code enabled=true} 的模块，按
+     * {@code priority} 降序；因此模板可以直接遍历，不需要再判"这个链接能不能点"。
      */
     Mono<LoveConfigVo> loveConfig();
 
@@ -43,13 +43,13 @@ public interface UniHaloFinder {
     /**
      * 首页模型 = 配置 + 摘要 + 路由表 + 访问状态。
      *
-     * <p>恋爱日记入口本身设了密码时，返回的对象里 {@code config}/{@code overview}
-     * 为 null，只有 {@code access.locked=true} 与 {@code routes}。</p>
+     * 恋爱日记入口本身设了密码时，返回的对象里 {@code config}/{@code overview}
+     * 为 null，只有 {@code access.locked=true} 与 {@code routes}。
      */
     Mono<LovePageVo> loveHome();
 
     /**
-     * 故事列表（模块锁定时返回空 {@code ListResult}，<b>不查库</b>）。
+     * 故事列表（模块锁定时返回空 {@code ListResult}，不查库）。
      */
     Mono<ListResult<LoveStoryVo>> listLoveStories(Integer page, Integer size);
 

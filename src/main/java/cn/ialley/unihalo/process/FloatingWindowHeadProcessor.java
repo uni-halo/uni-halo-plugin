@@ -18,16 +18,14 @@ import tools.jackson.databind.node.ObjectNode;
 import cn.ialley.unihalo.utils.SettingGroupResolver;
 
 /**
- * 主题悬浮窗注入处理器 注入小程序太阳码展示窗口。
+ * 主题悬浮窗注入处理器：向主题页 {@code <head>} 注入小程序太阳码展示窗口。
  *
- * <p>向主题页面 {@code <head>} 注入：内联配置块 {@code window.__UNI_HALO_FLOAT_MINI_PROFILE__} +
- * 静态样式/脚本（经插件 ReverseProxy 暴露，带插件版本号防缓存）。所有展示与交互
- * （9 向定位/偏移/拖拽/关闭/贴边隐藏/页面显示范围）由前端 {@code float-mini-profile.js} 完成，服务端
- * 只负责读取设置并按开关 fail closed（关闭/配置异常/未选太阳码均不注入，页面零残留）。</p>
- *
- * <p>配置存放：setting.yaml 的 {@code themeConfig} 域（Tab「主题展示」）下的
- * {@code floatingWindow} 组，经 {@link SettingGroupResolver#group} 读取（域路径优先、
- * 旧顶层键回退）。</p>
+ * 注入内联配置块 {@code window.__UNI_HALO_FLOAT_MINI_PROFILE__} + 静态样式/脚本
+ * （经插件 ReverseProxy 暴露，带版本号防缓存）。展示与交互全部由前端
+ * {@code float-mini-profile.js} 完成，服务端只读取设置并按开关 fail closed
+ * （关闭/配置异常/未选太阳码均不注入，页面零残留）。配置位于 setting.yaml
+ * {@code themeConfig.floatingWindow} 组，经 {@link SettingGroupResolver#group} 读取
+ * （域路径优先、旧顶层键回退）。
  *
  * @author 小莫唐尼
  */

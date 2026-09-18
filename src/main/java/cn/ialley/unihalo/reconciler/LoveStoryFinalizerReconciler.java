@@ -7,7 +7,7 @@ import run.halo.app.extension.ExtensionClient;
 /**
  * {@link LoveStory} 统一删除语义 Reconciler。
  *
- * <p>删除故事走基类统一删除流程（删除中过渡默认 1s），清理钩子默认空。</p>
+ * 删除故事走基类统一删除流程（删除中过渡默认 1s），清理钩子默认空。
  *
  * @author 小莫唐尼
  */

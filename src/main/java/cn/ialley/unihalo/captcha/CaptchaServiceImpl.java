@@ -12,11 +12,11 @@ import tools.jackson.databind.node.JsonNodeFactory;
 /**
  * 验证码业务服务实现。
  *
- * <p>配置读取自设置页 {@code captchaConfig} 分组：enabled（默认开）、scope
+ * 配置读取自设置页 {@code captchaConfig} 分组：enabled（默认开）、scope
  * （生效范围：linkSubmission / loveAlbumUnlock，接口侧按范围生效，
  * 缺省视为开启）、type（默认 ALPHANUMERIC）、captchaLength（默认 4）、
  * arithmeticRange（默认 10）。总开关关闭或对应 scope 关闭时
- * {@link #requireValid(ServerRequest, CaptchaScope)} 直接放行。</p>
+ * {@link #requireValid(ServerRequest, CaptchaScope)} 直接放行。
  *
  * @author 小莫唐尼
  */

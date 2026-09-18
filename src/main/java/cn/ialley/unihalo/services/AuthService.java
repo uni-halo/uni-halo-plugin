@@ -9,10 +9,10 @@ import cn.ialley.unihalo.vo.WechatBindingVo;
 /**
  * 移动端登录服务。
  *
- * <p>所有登录方式最终都收敛为「签发一枚 Halo 原生 PAT」，因此移动端可直连
- * Halo 原生 API，插件无需为每一项能力再包一层代理接口。</p>
+ * 所有登录方式最终都收敛为「签发一枚 Halo 原生 PAT」，因此移动端可直连
+ * Halo 原生 API，插件无需为每一项能力再包一层代理接口。
  *
- * <p>密码登录与微信登录是两条互相独立的能力：各自有开关，互不为前提。</p>
+ * 密码登录与微信登录是两条互相独立的能力：各自有开关，互不为前提。
  *
  * @author 小莫唐尼
  */
@@ -45,8 +45,8 @@ public interface AuthService {
     /**
      * 为 UC 用户签发扫码绑定票据（UC 侧「扫码绑定微信」入口）。
      *
-     * <p>二维码内容为 {@code Constants.QR_BIND_WECHAT_PREFIX + ticket}，
-     * 小程序端按前缀识别并引导到确认页。</p>
+     * 二维码内容为 {@code Constants.QR_BIND_WECHAT_PREFIX + ticket}，
+     * 小程序端按前缀识别并引导到确认页。
      *
      * @param username 创建票据时锁定的 UC 用户名
      */
@@ -76,7 +76,7 @@ public interface AuthService {
     Mono<Void> logout(String patName, String username);
 
     /**
-     * 当前登录用户的资料与权限。只读，<b>不签发新令牌</b>。
+     * 当前登录用户的资料与权限。只读，不签发新令牌。
      */
     Mono<ProfileVo> profile(String username);
 

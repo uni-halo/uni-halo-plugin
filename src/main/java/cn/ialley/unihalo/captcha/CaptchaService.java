@@ -6,9 +6,9 @@ import reactor.core.publisher.Mono;
 /**
  * 验证码业务服务：生成（公开接口）与校验（受保护公开写接口接入点）。
  *
- * <p>校验规则：设置页 captchaConfig 开关关闭时直接放行；开启时仅对
+ * 校验规则：设置页 captchaConfig 开关关闭时直接放行；开启时仅对
  * {@link CaptchaScope} 对应 scope 开启的功能要求携带 query 参数
- * {@code captchaId} + {@code captchaCode}，校验通过后作废（一次性）。</p>
+ * {@code captchaId} + {@code captchaCode}，校验通过后作废（一次性）。
  *
  * @author 小莫唐尼
  */
@@ -31,9 +31,9 @@ public interface CaptchaService {
     /**
      * 该 scope 当前是否需要验证码（总开关开启 且 该 scope 开启）。
      *
-     * <p>供服务端模板据此决定是否渲染验证码输入框 —— 与
+     * 供服务端模板据此决定是否渲染验证码输入框 —— 与
      * {@link #requireValid(ServerRequest, CaptchaScope)} 的判定条件必须保持一致，
-     * 否则会出现「模板不渲染验证码但接口强制要求」的死锁。</p>
+     * 否则会出现「模板不渲染验证码但接口强制要求」的死锁。
      */
     Mono<Boolean> requiredFor(CaptchaScope scope);
 }

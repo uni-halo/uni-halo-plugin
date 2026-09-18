@@ -10,8 +10,8 @@ import run.halo.app.extension.GVK;
 /**
  * 跨插件查询引用（content.halo.run/v1alpha1 Post，Halo 核心扩展）。
  *
- * <p>仅用于按 GVK 查询候选数据（审核模式-选择文章），非本插件 Scheme，
- * 不要在 {@code UniHaloPlugin} 中注册。</p>
+ * 仅用于按 GVK 查询候选数据（审核模式-选择文章），非本插件 Scheme，
+ * 不要在 {@code UniHaloPlugin} 中注册。
  *
  * @author 小莫唐尼
  */

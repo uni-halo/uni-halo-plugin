@@ -9,13 +9,10 @@ import lombok.Data;
 /**
  * 恋爱故事公开视图（脱敏）。
  *
- * <p>{@link #content} 为站长在 Halo 富文本编辑器写的 HTML（可信来源），
- * 模板用 {@code th:utext} 渲染并套 {@code prose uh-love-content} 容器
- * （{@code .prose} 交给主题排版，{@code .uh-love-content} 是插件补位的锚点，见设计文档 §12）。
- * 与 app 端一致，不额外做前端净化。</p>
- *
- * <p><b>锁定态下本对象根本不会被构造</b>：模块锁定时 Finder 直接返回空
- * {@code ListResult}（total=0），连标题都不查库。</p>
+ * {@link #content} 为站长在 Halo 富文本编辑器写的 HTML（可信来源），模板用
+ * {@code th:utext} 渲染并套 {@code prose uh-love-content} 容器（{@code .prose} 交给
+ * 主题排版，{@code .uh-love-content} 是插件补位锚点）；与 app 端一致，不额外做前端净化。
+ * 锁定态下本对象根本不会被构造：模块锁定时 Finder 直接返回空 {@code ListResult}。
  *
  * @author 小莫唐尼
  */

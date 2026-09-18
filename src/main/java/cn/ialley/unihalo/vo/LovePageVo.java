@@ -7,11 +7,11 @@ import lombok.Data;
 /**
  * 恋爱日记首页模型（{@code myFinder.loveHome()} 的返回值）。
  *
- * <h3>锁定态（恋爱日记入口本身设了密码）</h3>
- * <p>{@link #access} 为 locked，且 {@link #config} 与 {@link #overview}
- * <b>保持 null</b> —— 模板检测到 {@code access.locked} 后只渲染解锁表单，
+ * 【锁定态（恋爱日记入口本身设了密码）】
+ * {@link #access} 为 locked，且 {@link #config} 与 {@link #overview}
+ * 保持 null —— 模板检测到 {@code access.locked} 后只渲染解锁表单，
  * 页面 HTML 中不含昵称/头像/纪念日/摘要等任何业务字段。
- * {@link #routes} 仍会下发（它是路径而非内容，且模板渲染导航需要）。</p>
+ * {@link #routes} 仍会下发（它是路径而非内容，且模板渲染导航需要）。
  *
  * @author 小莫唐尼
  */
@@ -29,7 +29,7 @@ public class LovePageVo {
 
     /**
      * 实际注册成功的路由：{@code home/stories/albums/daily} → 路径。
-     * 模板内一切站内链接都从这里取，<b>不硬编码</b>（站长改了路径也能对上）。
+     * 模板内一切站内链接都从这里取，不硬编码（站长改了路径也能对上）。
      */
     private Map<String, String> routes = Map.of();
 }

@@ -28,9 +28,9 @@ import static run.halo.app.extension.index.query.Queries.isNull;
 /**
  * 首页轮播图服务实现
  *
- * <p>source 按 postId 非空自动判定并强制覆盖；文章模式保存时服务端
+ * source 按 postId 非空自动判定并强制覆盖；文章模式保存时服务端
  * 拉取 Post/User 回填快照字段（title/cover/date/authorName/authorAvatar），并清空
- * content，User 缺失时作者昵称回退 owner 用户名。</p>
+ * content，User 缺失时作者昵称回退 owner 用户名。
  *
  * @author 小莫唐尼
  */

@@ -13,8 +13,8 @@ import static cn.ialley.unihalo.constants.Constants.PLUGIN_API_VERSION;
 /**
  * 恋爱相册（自研，不再依赖系统图库分组）。
  *
- * <p>相册支持查看密码：密码以 BCrypt 哈希存储于 spec.passwordHash，任何读取接口
- * 均不回显；公开接口通过 unlock 校验后签发 HMAC 签名 token 换取照片数据。</p>
+ * 相册支持查看密码：密码以 BCrypt 哈希存储于 spec.passwordHash，任何读取接口
+ * 均不回显；公开接口通过 unlock 校验后签发 HMAC 签名 token 换取照片数据。
  *
  * @author 小莫唐尼
  */

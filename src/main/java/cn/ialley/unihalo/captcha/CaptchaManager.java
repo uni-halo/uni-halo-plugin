@@ -5,8 +5,8 @@ import reactor.core.publisher.Mono;
 /**
  * 验证码管理：生成 / 校验 / 作废。
  *
- * <p>验证码为一次性（校验通过后 {@link #invalidate(String)} 作废，防重放），
- * 有效期 1 分钟、容量上限 100（超出先清理过期项）。</p>
+ * 验证码为一次性（校验通过后 {@link #invalidate(String)} 作废，防重放），
+ * 有效期 1 分钟、容量上限 100（超出先清理过期项）。
  *
  * @author 小莫唐尼
  */

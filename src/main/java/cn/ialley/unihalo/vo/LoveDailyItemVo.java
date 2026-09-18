@@ -9,11 +9,11 @@ import lombok.Data;
 /**
  * 恋爱清单条目公开视图（脱敏）。
  *
- * <p>{@link #status} 取值固定为 {@code wait}（未开始）/ {@code doing}（进行中）/
- * {@code complete}（已完成）—— 文案映射放在模板，不在 VO 里做本地化。</p>
+ * {@link #status} 取值固定为 {@code wait}（未开始）/ {@code doing}（进行中）/
+ * {@code complete}（已完成）—— 文案映射放在模板，不在 VO 里做本地化。
  *
- * <p><b>锁定态下本对象根本不会被构造</b>：模块锁定时 Finder 直接返回空
- * {@code ListResult}（total=0）。</p>
+ * 锁定态下本对象根本不会被构造：模块锁定时 Finder 直接返回空
+ * {@code ListResult}（total=0）。
  *
  * @author 小莫唐尼
  */

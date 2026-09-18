@@ -6,10 +6,10 @@ import java.time.format.DateTimeParseException;
 /**
  * 维护模式状态判定工具（纯函数，无副作用，stateless：无定时任务、不物理清库）。
  *
- * <p>由 enabled + startTime/endTime 时间窗口（RFC3339 UTC 字符串，均可空）与当前时间计算：
+ * 由 enabled + startTime/endTime 时间窗口（RFC3339 UTC 字符串，均可空）与当前时间计算：
  * {@code enabled != true} 或 endTime 已到 → {@link MaintenanceStatus#NONE}（未维护/已自动结束）；
  * startTime 在未来 → SCHEDULED；其余 → ACTIVE。到点整点即开始/结束（含等号）；
- * 时间字符串非法时按未设置处理，公开输出不因脏数据抛错。</p>
+ * 时间字符串非法时按未设置处理，公开输出不因脏数据抛错。
  *
  * @author 小莫唐尼
  */

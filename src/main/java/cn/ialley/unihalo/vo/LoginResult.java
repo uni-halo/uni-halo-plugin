@@ -7,9 +7,9 @@ import java.util.Set;
 /**
  * 登录结果。
  *
- * <p>{@code token} 为 {@code pat_} 前缀的 Halo 原生个人访问令牌，客户端按
+ * {@code token} 为 {@code pat_} 前缀的 Halo 原生个人访问令牌，客户端按
  * {@code Authorization: Bearer <token>} 携带即可访问 Halo 原生 API 与本插件接口。
- * {@code permissions} 供小程序做菜单/按钮级显隐控制。</p>
+ * {@code permissions} 供小程序做菜单/按钮级显隐控制。
  *
  * @author 小莫唐尼
  */

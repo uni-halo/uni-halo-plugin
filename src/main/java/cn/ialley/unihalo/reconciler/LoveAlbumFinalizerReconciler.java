@@ -7,8 +7,8 @@ import run.halo.app.extension.ExtensionClient;
 /**
  * {@link LoveAlbum} 统一删除语义 Reconciler。
  *
- * <p>照片内嵌于 spec（非子资源），删除相册即整体删除，走基类统一删除流程；
- * 删除中过渡默认 1s，清理钩子默认空。</p>
+ * 照片内嵌于 spec（非子资源），删除相册即整体删除，走基类统一删除流程；
+ * 删除中过渡默认 1s，清理钩子默认空。
  *
  * @author 小莫唐尼
  */

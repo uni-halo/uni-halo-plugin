@@ -27,9 +27,9 @@ import tools.jackson.databind.ObjectMapper;
 /**
  * 通知公告公开接口（app 端，匿名可访问）。
  *
- * <p>只暴露已发布（published）公告；列表脱敏不返回 content 正文，
+ * 只暴露已发布（published）公告；列表脱敏不返回 content 正文，
  * 详情才返回完整 HTML（含内嵌类型标签 typeDisplayName/typeColor）
- * ；latest 无数据返回 200 + null。</p>
+ * ；latest 无数据返回 200 + null。
  *
  * @author 小莫唐尼
  */

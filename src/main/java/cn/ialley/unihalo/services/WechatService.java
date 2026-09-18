@@ -5,8 +5,8 @@ import reactor.core.publisher.Mono;
 /**
  * 微信小程序登录能力。
  *
- * <p>目标地址固定为 {@code https://api.weixin.qq.com}，不接受任何用户自定义基础地址，
- * 避免 SSRF；凭据只在目标确认后作为 query 参数附带。</p>
+ * 目标地址固定为 {@code https://api.weixin.qq.com}，不接受任何用户自定义基础地址，
+ * 避免 SSRF；凭据只在目标确认后作为 query 参数附带。
  *
  * @author 小莫唐尼
  */

@@ -21,11 +21,11 @@ import tools.jackson.databind.node.ObjectNode;
 /**
  * 审核结果邮件通知。
  *
- * <p>复用 Halo 内置邮件通知器的 SMTP 配置：读取 Secret
+ * 复用 Halo 内置邮件通知器的 SMTP 配置：读取 Secret
  * {@code notifier-setting-secret} 的 {@code default-email-notifier.json}
  * （sender.host/port/username/password/displayName/encryption），不重复提供
  * SMTP 配置页。发送开关由插件设置 {@code linkConfig.sendEmail} 控制；
- * 发送失败仅记日志，不阻塞审核流程。</p>
+ * 发送失败仅记日志，不阻塞审核流程。
  *
  * @author 小莫唐尼
  */

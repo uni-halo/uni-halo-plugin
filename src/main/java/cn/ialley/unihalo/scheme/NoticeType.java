@@ -11,8 +11,8 @@ import static cn.ialley.unihalo.constants.Constants.PLUGIN_API_VERSION;
 /**
  * 公告类型。
  *
- * <p>公告通过 spec.typeName 引用本模型的 metadata.name；删除类型不影响已关联公告
- * （公开接口中类型不存在时忽略标签展示）。</p>
+ * 公告通过 spec.typeName 引用本模型的 metadata.name；删除类型不影响已关联公告
+ * （公开接口中类型不存在时忽略标签展示）。
  *
  * @author 小莫唐尼
  */

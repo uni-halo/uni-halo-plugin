@@ -11,10 +11,10 @@ import static cn.ialley.unihalo.constants.Constants.PLUGIN_API_VERSION;
 /**
  * 通知公告（多条）。
  *
- * <p>状态：draft 草稿 / published 已发布（唯一对 app 端可见）/ offline 已下线。
+ * 状态：draft 草稿 / published 已发布（唯一对 app 端可见）/ offline 已下线。
  * content 为富文本 HTML；summary 摘要手填优先、为空时服务端保存自动剥离生成；
  * typeName 引用 {@link NoticeType} 的 metadata.name；publishTime 在
- * 状态变更为 published 时由服务端自动记录。</p>
+ * 状态变更为 published 时由服务端自动记录。
  *
  * @author 小莫唐尼
  */

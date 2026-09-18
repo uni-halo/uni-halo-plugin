@@ -5,13 +5,10 @@ import lombok.Data;
 /**
  * 恋爱模块入口（首页三卡片）。
  *
- * <h3>与 app 端数据契约的唯一有意差异</h3>
- * <p>app 端 {@code ModuleSwitch.path} 是<b>小程序页面路由</b>；主题端链接必须是
- * <b>Halo 路径</b>，故本模型用 {@link #url} 承载已注册的 Halo 路由，
- * 并且<b>物理上不提供 {@code path} 字段</b> —— 防止模板作者误用小程序路由。</p>
- *
- * <p>路由未注册（留空 / 冲突 / 未启用）的模块<b>不会被下发</b>，因此模板里的
- * {@code modules} 列表恒为「点得开的入口」，不需要额外判空兜底。</p>
+ * 与 app 端数据契约的有意差异：app 端 {@code ModuleSwitch.path} 是小程序页面路由，
+ * 主题端链接必须是 Halo 路径，故本模型用 {@link #url} 承载已注册的 Halo 路由，
+ * 且物理上不提供 {@code path} 字段，防止模板作者误用。路由未注册（留空/冲突/未启用）
+ * 的模块不会被下发，模板里的 {@code modules} 列表恒为「点得开的入口」，无需判空兜底。
  *
  * @author 小莫唐尼
  */
@@ -44,7 +41,7 @@ public class LoveModuleVo {
 
     /**
      * 主题端链接（Halo 路由，来自 {@link LoveRoutePlan#getPaths()}）。
-     * 模板链接一律取它，<b>不得硬编码</b>。
+     * 模板链接一律取它，不得硬编码。
      */
     private String url;
 

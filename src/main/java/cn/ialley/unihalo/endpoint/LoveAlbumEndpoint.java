@@ -19,7 +19,7 @@ import run.halo.app.extension.GroupVersion;
 /**
  * 恋爱相册接口（控制台，需登录）。
  *
- * <p>密码语义：password 空 = 保持原密码；明文 = 重设；passwordRemoved = true = 清除。</p>
+ * 密码语义：password 空 = 保持原密码；明文 = 重设；passwordRemoved = true = 清除。
  *
  * @author 小莫唐尼
  */

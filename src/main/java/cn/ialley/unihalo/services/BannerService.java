@@ -12,8 +12,8 @@ import run.halo.app.extension.ListResult;
 /**
  * 首页轮播图服务（归一化条目模型）。
  *
- * <p>source 由服务端按 postId 非空自动判定；文章模式服务端拉取
- * Post/User 回填快照字段；公开列表脱敏不含 content/remark。</p>
+ * source 由服务端按 postId 非空自动判定；文章模式服务端拉取
+ * Post/User 回填快照字段；公开列表脱敏不含 content/remark。
  *
  * @author 小莫唐尼
  */

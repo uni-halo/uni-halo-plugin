@@ -13,8 +13,8 @@ import org.springframework.stereotype.Component;
  * 与来源 IP（{@value #MAX_IP_FAILURES} 次）两个维度计数，任一超限锁定一个窗口
  * （{@value #WINDOW_MINUTES} 分钟），窗口结束后自然作废，无需人工解锁。
  *
- * <p>已知边界：计数在内存中，多实例部署时各算各的（Halo 通常单实例，可接受）；
- * IP 取 TCP 源地址而非可伪造的 {@code X-Forwarded-For}，反代后为反代 IP —— 刻意取舍。</p>
+ * 已知边界：计数在内存中，多实例部署时各算各的（Halo 通常单实例，可接受）；
+ * IP 取 TCP 源地址而非可伪造的 {@code X-Forwarded-For}，反代后为反代 IP —— 刻意取舍。
  *
  * @author 小莫唐尼
  */

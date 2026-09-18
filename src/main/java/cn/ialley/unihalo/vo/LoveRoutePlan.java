@@ -8,12 +8,12 @@ import lombok.Data;
 /**
  * 恋爱日记路由解析结果。
  *
- * <p>{@link #paths} 为 key → 已解析的完整路径，<b>只含可安全注册的路由</b>；
+ * {@link #paths} 为 key → 已解析的完整路径，只含可安全注册的路由；
  * {@link #conflicts} 为 key → 冲突原因（该条不注册，fail-closed）；
- * {@link #skipped} 为未配置（留空）而未注册的 key。</p>
+ * {@link #skipped} 为未配置（留空）而未注册的 key。
  *
- * <p>key 取值固定为 {@code home} / {@code stories} / {@code albums} / {@code daily}，
- * 与设置项 {@code routes.*} 及模板 model 中的 {@code routes} 一致。</p>
+ * key 取值固定为 {@code home} / {@code stories} / {@code albums} / {@code daily}，
+ * 与设置项 {@code routes.*} 及模板 model 中的 {@code routes} 一致。
  *
  * @author 小莫唐尼
  */

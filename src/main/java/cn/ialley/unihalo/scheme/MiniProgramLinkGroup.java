@@ -11,8 +11,8 @@ import static cn.ialley.unihalo.constants.Constants.PLUGIN_API_VERSION;
 /**
  * 友情链接-分组（对标 plugin-links 的 LinkGroup）。
  *
- * <p>链接通过 {@link MiniProgramLink} 的 spec.groupName 引用本模型 metadata.name；
- * 删除分组不影响已关联链接（公开接口中分组不存在时按未分组展示）。</p>
+ * 链接通过 {@link MiniProgramLink} 的 spec.groupName 引用本模型 metadata.name；
+ * 删除分组不影响已关联链接（公开接口中分组不存在时按未分组展示）。
  *
  * @author 小莫唐尼
  */

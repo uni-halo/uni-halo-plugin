@@ -7,7 +7,7 @@ import cn.ialley.unihalo.scheme.Banner;
 /**
  * 轮播图公开详情视图。
  *
- * <p>在列表脱敏字段基础上追加 content 富文本正文；仍不含 remark 备注。</p>
+ * 在列表脱敏字段基础上追加 content 富文本正文；仍不含 remark 备注。
  *
  * @author 小莫唐尼
  */

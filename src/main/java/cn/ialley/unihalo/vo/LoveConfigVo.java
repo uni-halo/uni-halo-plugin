@@ -7,14 +7,10 @@ import lombok.Data;
 /**
  * 恋爱日记页配置视图（已解析、已脱敏；模板只读）。
  *
- * <p>字段来源：</p>
- * <ul>
- *   <li>{@link #loveDateTitle} / {@link #loveDate} / 恋人昵称与头像
- *       ← {@code FeatureConfig.Love.loveInfo}；</li>
- *   <li>{@link #modules} ← 三个模块入口（已按 {@code priority} 降序、已剔除无路由者）；</li>
- *   <li>{@link #bgImageUrl} ← <b>功能设置</b>
- *       {@code featureConfig.spec.love.diaryPage.bgImageUrl}（与小程序端同一处配置）。</li>
- * </ul>
+ * 字段来源：{@link #loveDateTitle}/{@link #loveDate}/恋人昵称与头像 ←
+ * {@code FeatureConfig.Love.loveInfo}；{@link #modules} ← 三个模块入口（已按
+ * {@code priority} 降序、已剔除无路由者）；{@link #bgImageUrl} ← 功能设置
+ * {@code featureConfig.spec.love.diaryPage.bgImageUrl}（与小程序端同一处配置）。
  *
  * @author 小莫唐尼
  */
@@ -33,8 +29,8 @@ public class LoveConfigVo {
     /**
      * 恋爱天数（纪念日当天 = 第 1 天，服务端计算）。
      *
-     * <p>给倒计时一个 <b>SSR 初值</b>：无 JS / 首屏时也能看到「第 N 天」而不是占位符；
-     * JS 加载后接管，每秒刷新天/时/分/秒。日期非法或无纪念日时为 {@code null}。</p>
+     * 给倒计时一个 SSR 初值：无 JS / 首屏时也能看到「第 N 天」而不是占位符；
+     * JS 加载后接管，每秒刷新天/时/分/秒。日期非法或无纪念日时为 {@code null}。
      */
     private Integer loveDays;
 

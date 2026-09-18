@@ -97,9 +97,9 @@ public class UniHaloServiceImpl implements UniHaloService {
     /**
      * 内部专用原始读取（不经公开过滤）。
      *
-     * <p>应用信息（名称/图标）存于功能设置模型（应用资料.appInfo）；
+     * 应用信息（名称/图标）存于功能设置模型（应用资料.appInfo）；
      * 此处读取该节点供海报流程降级使用（凭证字段缺失时不再执行，
-     * 见 getAccessToken / uploadMedia）。</p>
+     * 见 getAccessToken / uploadMedia）。
      */
     private Mono<JsonNode> rawAppConfig() {
         return featureConfigService.get().map(config -> {

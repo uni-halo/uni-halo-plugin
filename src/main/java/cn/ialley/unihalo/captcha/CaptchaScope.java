@@ -3,9 +3,9 @@ package cn.ialley.unihalo.captcha;
 /**
  * 验证码生效范围（对应设置页 captchaConfig.scope 的子开关）。
  *
- * <p>接口侧按范围生效：总开关 {@code captchaConfig.enabled} 开启后，
+ * 接口侧按范围生效：总开关 {@code captchaConfig.enabled} 开启后，
  * 仅对 scope 开启的功能要求输入验证码（scope 缺省视为开启，行为与旧"总开关统一
- * 判定"一致）。</p>
+ * 判定"一致）。
  *
  * @author 小莫唐尼
  */

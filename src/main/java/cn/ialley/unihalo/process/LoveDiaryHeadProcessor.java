@@ -25,13 +25,13 @@ import cn.ialley.unihalo.vo.LoveDiaryThemeConfig;
 /**
  * 恋爱日记主题页 Head 注入处理器。
  *
- * <p>注入门槛（fail-closed，两条都要满足）：模板 {@code _templateId} 以
+ * 注入门槛（fail-closed，两条都要满足）：模板 {@code _templateId} 以
  * {@code plugin:uni-halo:love} 开头，且 {@code themeConfig.loveDiaryTheme.enabled == true}
  * 且配置读取成功 —— 关闭或配置异常时一个字节都不注入。样式/脚本走同源静态前缀而非 CDN，
- * 避免离线/内网白屏、CSP 坑与版本漂移。</p>
+ * 避免离线/内网白屏、CSP 坑与版本漂移。
  *
- * <p>注入内容：页面配置 → {@code window.__UNI_HALO_LOVE_DIARY__}；设计 token/正文层 CSS、
- * hljs 配色、图标字体；{@code love-diary.js}（defer，hljs 由 JS 按需加载）。</p>
+ * 注入内容：页面配置 → {@code window.__UNI_HALO_LOVE_DIARY__}；设计 token/正文层 CSS、
+ * hljs 配色、图标字体；{@code love-diary.js}（defer，hljs 由 JS 按需加载）。
  *
  * @author 小莫唐尼
  */

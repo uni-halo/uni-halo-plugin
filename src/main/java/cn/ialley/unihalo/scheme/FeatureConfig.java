@@ -16,8 +16,8 @@ import static cn.ialley.unihalo.constants.Constants.PLUGIN_API_VERSION;
  * 兜底资源、{@link Preferences} 站点级展示偏好默认（L0）、{@link Love} 恋爱模块开关、
  * {@link Maintenance} 维护模式排期。
  *
- * <p>本模型是控制台「功能设置」页的写端事实源；小程序端经 {@code getConfigs} 读取
- * （{@code featureConfig} 键整体下发本模型 spec，密码字段脱敏）。</p>
+ * 本模型是控制台「功能设置」页的写端事实源；小程序端经 {@code getConfigs} 读取
+ * （{@code featureConfig} 键整体下发本模型 spec，密码字段脱敏）。
  *
  * @author 小莫唐尼
  */
@@ -417,11 +417,9 @@ public class FeatureConfig extends AbstractExtension {
 
     /**
      * 友链信息：
-     * <ul>
-     *   <li>{@link MiniInfo} 小程序信息：小程序端「申请信息」弹窗（uh-links-mini-info）展示；</li>
-     *   <li>{@link SiteInfo} 站点信息：本站站点名片，字段对齐 Halo 官方友链提交 API
-     *       （plugin-links {@code link-applications} 请求体：displayName/url/logo/description/backlink/feedUrls）。</li>
-     * </ul>
+ *   - {@link MiniInfo} 小程序信息：小程序端「申请信息」弹窗（uh-links-mini-info）展示；
+ *   - {@link SiteInfo} 站点信息：本站站点名片，字段对齐 Halo 官方友链提交 API
+     *       （plugin-links {@code link-applications} 请求体：displayName/url/logo/description/backlink/feedUrls）。
      * 随 {@code featureConfig.linkInfo} 下发客户端。
      */
     @Data

@@ -12,9 +12,9 @@ import tools.jackson.databind.ObjectMapper;
 /**
  * 微信 code2Session 实现。
  *
- * <p>出站目标硬编码为 {@code api.weixin.qq.com}，不提供自定义地址；响应体大小与
+ * 出站目标硬编码为 {@code api.weixin.qq.com}，不提供自定义地址；响应体大小与
  * 超时均设上限，避免长期占用事件循环。日志只记录 errcode，不记录完整响应体
- * （响应中可能包含会话密钥相关的敏感信息）。</p>
+ * （响应中可能包含会话密钥相关的敏感信息）。
  *
  * @author 小莫唐尼
  */

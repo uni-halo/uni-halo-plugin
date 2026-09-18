@@ -19,14 +19,10 @@ import static run.halo.app.extension.ExtensionUtil.removeFinalizers;
 /**
  * 统一删除语义的 finalizer Reconciler 抽象基类。
  *
- * <p>目标 Scheme 删除流程统一为：管理端 DELETE 打上 {@code metadata.deletionTimestamp}
- * （软标记，不物理删除）→ 本 Reconciler 在删除分支等待 {@link #deletionDelay()}（默认 1s，
- * 复现 plugin-vote「删除中 → 自动刷新消失」过渡体验）→ 执行清理钩子 {@link #cleanUp(T)}
- * （默认空，子类按需覆写级联清理）→ {@code removeFinalizers} → 框架物理删除。</p>
- *
- * <p>仅处理 finalizer 生命周期，不掺业务逻辑；业务删除前置校验仍在各 Service 层保留。
- * 控制器注册机制同 plugin-vote 的 VoteReconciler（{@link #setupWith(ControllerBuilder)}），
- * 无需在插件入口手动注册。</p>
+ * 删除流程：DELETE 打软标记 → 等待 {@link #deletionDelay()}（默认 1s，复现
+ * plugin-vote 的过渡体验）→ 清理钩子 {@link #cleanUp(T)}（默认空，子类按需覆写）→
+ * {@code removeFinalizers} → 框架物理删除。仅处理 finalizer 生命周期，业务删除前置
+ * 校验仍在各 Service 层；注册机制同 plugin-vote（{@link #setupWith(ControllerBuilder)}）。
  *
  * @param <T> 目标 Scheme 类型
  * @author 小莫唐尼

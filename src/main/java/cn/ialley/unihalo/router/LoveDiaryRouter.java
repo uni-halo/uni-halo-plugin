@@ -41,13 +41,13 @@ import cn.ialley.unihalo.vo.LoveRoutePlan;
 /**
  * 恋爱日记主题页路由：一个谓词 + 一个 handler。
  *
- * <p>路由路径由站长配置，而 {@code @Bean RouterFunction} 只在插件启动时构建一次，
+ * 路由路径由站长配置，而 {@code @Bean RouterFunction} 只在插件启动时构建一次，
  * 若读进 {@code path()} 则改路径必须重载插件。改为按 {@link LoveRouteResolver#snapshot()}
  * （同步 volatile 快照）判断 GET 路径是否已注册，是则交给同一 handler ——
- * 改配置 30s 内自动生效。谓词只匹配已通过冲突检测的精确路径，冲突路径不匹配 → 404。</p>
+ * 改配置 30s 内自动生效。谓词只匹配已通过冲突检测的精确路径，冲突路径不匹配 → 404。
  *
- * <p>分页用 Halo 官方路径段式 {@code /page/N} 并兼容 {@code ?page=N}；Finder 返回裸
- * {@code ListResult}，由本层包成 {@link UrlContextListResult} 供模板使用。</p>
+ * 分页用 Halo 官方路径段式 {@code /page/N} 并兼容 {@code ?page=N}；Finder 返回裸
+ * {@code ListResult}，由本层包成 {@link UrlContextListResult} 供模板使用。
  *
  * @author 小莫唐尼
  */
@@ -66,10 +66,10 @@ public class LoveDiaryRouter {
     /**
      * {@code layoutMode=standalone} 时统一使用的模板名。
      *
-     * <p>独立外壳不调用主题的 {@code layout :: html(...)} 契约，自带完整
+     * 独立外壳不调用主题的 {@code layout :: html(...)} 契约，自带完整
      * {@code <head>}/{@code <body>}；四页正文共用同一批片段，故只需一个外壳文件，
      * 内部按 {@code pageKey} 分派。主题若要覆盖独立外壳，放
-     * {@code templates/standalone/love.html}。</p>
+     * {@code templates/standalone/love.html}。
      */
     private static final String STANDALONE_TEMPLATE = "standalone/love";
 
@@ -111,11 +111,11 @@ public class LoveDiaryRouter {
     /**
      * 同步谓词：仅 GET，且路径命中已注册路由（含列表页 {@code /page/N}）。
      *
-     * <p>注意：谓词是<b>同步</b>的，只能读快照，不能 block 数据库。</p>
+     * 注意：谓词是同步的，只能读快照，不能 block 数据库。
      *
-     * <p>未命中且快照已过期时，顺带触发一次异步重算（fire-and-forget）—— 这样
+     * 未命中且快照已过期时，顺带触发一次异步重算（fire-and-forget）—— 这样
      * 「站长刚配好新路径」的场景最多只需刷新两次页面；由于每次刷新都会顺延 TTL，
-     * 随机 404 不会把它放大成全站扫描风暴。</p>
+     * 随机 404 不会把它放大成全站扫描风暴。
      */
     private boolean isLovePage(ServerRequest request) {
         if (!HttpMethod.GET.equals(request.method())) {
@@ -192,12 +192,12 @@ public class LoveDiaryRouter {
     /**
      * 从请求头里识别「这次渲染已经解锁了哪些模块」。
      *
-     * <p>只有本插件自己的 JS 在解锁成功后会用同源 fetch 带上这个头 —— 普通导航不带，
+     * 只有本插件自己的 JS 在解锁成功后会用同源 fetch 带上这个头 —— 普通导航不带，
      * 所以锁定页照旧只出解锁表单（HTML 里零业务字段）；带上之后同一次渲染就能直出内容，
-     * 于是<b>四页模板只有一套，不需要在前端重写一遍 markup</b>。</p>
+     * 于是四页模板只有一套，不需要在前端重写一遍 markup。
      *
-     * <p>token 由 {@link LoveModuleTokenManager} 校验（HMAC + 30 分钟有效期），
-     * 逐个模块试配：一个 token 只对它自己的 scope 生效，跨模块不通用。</p>
+     * token 由 {@link LoveModuleTokenManager} 校验（HMAC + 30 分钟有效期），
+     * 逐个模块试配：一个 token 只对它自己的 scope 生效，跨模块不通用。
      */
     private Set<String> unlockedModules(ServerRequest request) {
         String token = request.headers().firstHeader(LoveUnlockContext.HEADER);
@@ -258,8 +258,8 @@ public class LoveDiaryRouter {
     /**
      * 相册锁 scope 是否需要验证码。
      *
-     * <p>读取失败时<b>按 true（fail-closed）</b>：多渲染一个验证码框最多是「填了没用」，
-     * 而少渲染一个框会让解锁接口在 {@code requireValid} 处直接 403，用户永远解不开。</p>
+     * 读取失败时按 true（fail-closed）：多渲染一个验证码框最多是「填了没用」，
+     * 而少渲染一个框会让解锁接口在 {@code requireValid} 处直接 403，用户永远解不开。
      */
     private Mono<Boolean> albumCaptchaRequired() {
         return captchaService.requiredFor(CaptchaScope.LOVE_ALBUM_UNLOCK)
@@ -273,13 +273,13 @@ public class LoveDiaryRouter {
     /**
      * 首页：把 {@code loveHome()} 的四个部分摊进 model。
      *
-     * <p>恋爱日记入口加密时 {@code pageVo.getConfig()}/{@code overview} 为 null，
-     * 模板据 {@code access.locked} 只渲染解锁表单。</p>
+     * 恋爱日记入口加密时 {@code pageVo.getConfig()}/{@code overview} 为 null，
+     * 模板据 {@code access.locked} 只渲染解锁表单。
      *
-     * <p><b>⚠️ 安全要点</b>：这里<b>不能</b>在锁定态回落到外层那份「路由层配置」。
+     * ⚠️ 安全要点：这里不能在锁定态回落到外层那份「路由层配置」。
      * {@link UniHaloFinder#loveConfig()} 不感知锁状态，它带着昵称/头像/纪念日/模块入口，
      * 一旦回落，锁定首页的 HTML 里就会重新出现这些业务字段 —— 与
-     * {@link LovePageVo} 的「锁定态零业务字段」契约直接冲突。故锁定时显式置 null。</p>
+     * {@link LovePageVo} 的「锁定态零业务字段」契约直接冲突。故锁定时显式置 null。
      */
     private Mono<Map<String, Object>> homeModel(Map<String, Object> model) {
         return uniHaloFinder.loveHome().map(page -> {
@@ -370,9 +370,9 @@ public class LoveDiaryRouter {
     /**
      * 模块 key → 是否锁定。
      *
-     * <p>首页摘要在锁定模块上返回的是<b>空列表</b>（连条数都不给），但 UI 需要区分
+     * 首页摘要在锁定模块上返回的是空列表（连条数都不给），但 UI 需要区分
      * 「暂无内容」与「已加密」——前者是空状态文案，后者必须是锁占位。
-     * 光看列表长度无法区分，故把锁标记单独下发一份给模板。</p>
+     * 光看列表长度无法区分，故把锁标记单独下发一份给模板。
      */
     private static Map<String, Boolean> moduleLocks(LoveConfigVo config) {
         if (config == null || config.getModules() == null || config.getModules().isEmpty()) {

@@ -190,8 +190,8 @@ public class NoticeServiceImpl implements NoticeService {
     /**
      * HTML 剥离为纯文本并截断 200 字。
      *
-     * <p>优先用 jsoup（Halo 传递依赖）解析；异常时退化为正则剔除
-     * script/style 与标签。</p>
+     * 优先用 jsoup（Halo 传递依赖）解析；异常时退化为正则剔除
+     * script/style 与标签。
      */
     private static String toPlainText(String html) {
         if (isBlank(html)) {

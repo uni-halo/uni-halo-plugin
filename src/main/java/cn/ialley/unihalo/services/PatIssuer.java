@@ -9,12 +9,12 @@ import reactor.core.publisher.Mono;
 /**
  * PAT 签发器（移动端登录的 token 出口）。
  *
- * <p>把「创建 PersonalAccessToken 扩展 + 用 Halo 私钥签 JWT」两步封装在单一接口后，
+ * 把「创建 PersonalAccessToken 扩展 + 用 Halo 私钥签 JWT」两步封装在单一接口后，
  * 便于未来 Halo 变更 PAT 的 JWT claims 契约时整体切换到反射调用官方
- * {@code PatService}（方案 B），而不影响登录流程其余部分。</p>
+ * {@code PatService}（方案 B），而不影响登录流程其余部分。
  *
- * <p>实现必须 fail closed：自检未通过时 {@link #issue} 直接报错，
- * 绝不签发一个 Halo 无法识别的令牌。</p>
+ * 实现必须 fail closed：自检未通过时 {@link #issue} 直接报错，
+ * 绝不签发一个 Halo 无法识别的令牌。
  *
  * @author 小莫唐尼
  */

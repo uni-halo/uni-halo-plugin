@@ -13,7 +13,7 @@ import static cn.ialley.unihalo.constants.Constants.PLUGIN_API_VERSION;
 /**
  * 恋爱清单条目（原 loveDaily.list[] 数组抽离为独立模型）。
  *
- * <p>状态：wait 未开始 / doing 进行中 / complete 已完成（此时 completeDate 必填）。</p>
+ * 状态：wait 未开始 / doing 进行中 / complete 已完成（此时 completeDate 必填）。
  *
  * @author 小莫唐尼
  */

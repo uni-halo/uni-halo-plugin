@@ -59,11 +59,9 @@ public class MiniProgramLinkSubmissionServiceImpl implements MiniProgramLinkSubm
 
     /**
      * sort 参数解析为内存排序比较器（审核待办优先）：
-     * <ul>
-     *   <li>空/默认：待审核优先（PENDING 在前），其余按申请时间倒序</li>
-     *   <li>submittedAt / reviewedAt / status：字段倒序（白名单，防止任意字段排序）</li>
-     *   <li>statusFirst:{STATUS}：目标状态优先（如 statusFirst:PENDING），其余按申请时间倒序</li>
-     * </ul>
+ *   - 空/默认：待审核优先（PENDING 在前），其余按申请时间倒序
+ *   - submittedAt / reviewedAt / status：字段倒序（白名单，防止任意字段排序）
+ *   - statusFirst:{STATUS}：目标状态优先（如 statusFirst:PENDING），其余按申请时间倒序
      */
     private static Comparator<MiniProgramLinkSubmission> sortComparator(String sort) {
         String statusFirst = statusFirstOf(sort);

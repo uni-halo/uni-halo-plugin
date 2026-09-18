@@ -22,9 +22,9 @@ import run.halo.app.extension.GroupVersion;
 /**
  * 移动端登录公开接口（匿名可访问，由 role-anonymous.yaml 全量放行）。
  *
- * <p>登录成功后返回 Halo 原生 PAT（{@code pat_} 前缀），客户端按
+ * 登录成功后返回 Halo 原生 PAT（{@code pat_} 前缀），客户端按
  * {@code Authorization: Bearer <token>} 携带即可访问 Halo 原生 API 与本插件接口。
- * 令牌权限由设置页「移动端登录 → 登录权限」决定，且不会超过用户在 Halo 已有的角色。</p>
+ * 令牌权限由设置页「移动端登录 → 登录权限」决定，且不会超过用户在 Halo 已有的角色。
  *
  * @author 小莫唐尼
  */
@@ -192,10 +192,10 @@ public class AuthEndpoint implements CustomEndpoint {
     /**
      * 认证接口的统一错误出口。
      *
-     * <p>{@link AuthException} 按自带状态码返回（凭据类 401、限流 429）。<b>其余异常一律收敛</b>：
+     * {@link AuthException} 按自带状态码返回（凭据类 401、限流 429）。其余异常一律收敛：
      * 不加这道兜底，Halo 内部异常会以原始 problem detail 漏给客户端 —— 例如
      * {@code {"detail":"User unihalo01 was not found","status":404}}，既暴露内部用户名，
-     * 又破坏了本接口 {@code {code,message}} 的契约，客户端也没法按 code 分支。</p>
+     * 又破坏了本接口 {@code {code,message}} 的契约，客户端也没法按 code 分支。
      */
     private static Mono<ServerResponse> handleFailure(Throwable e) {
         if (e instanceof AuthException auth) {

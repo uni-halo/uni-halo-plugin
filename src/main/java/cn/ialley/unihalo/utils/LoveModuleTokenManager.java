@@ -12,10 +12,10 @@ import org.springframework.stereotype.Component;
 /**
  * 恋爱模块入口解锁 token 工具（HMAC-SHA256 无状态签名）。
  *
- * <p>与相册 {@link AlbumTokenManager} 同一模式，独立实现：
+ * 与相册 {@link AlbumTokenManager} 同一模式，独立实现：
  * token 格式 base64url(scope).expiry.hex(signature)，scope 为恋爱模块入口名
  * （ourStory / lovePhoto / loveDaily），verify 校验模块匹配、签名一致且未过期
- * （默认有效期 30 分钟）。</p>
+ * （默认有效期 30 分钟）。
  *
  * @author 小莫唐尼
  */

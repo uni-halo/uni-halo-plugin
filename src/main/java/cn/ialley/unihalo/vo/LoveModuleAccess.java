@@ -3,20 +3,14 @@ package cn.ialley.unihalo.vo;
 import lombok.Data;
 
 /**
- * 恋爱模块访问状态（供锁定页渲染<b>页内解锁表单</b>）。
+ * 恋爱模块访问状态（供锁定页渲染页内解锁表单）。
  *
- * <h3>安全约束（红线）</h3>
- * <p>本模型只承载「锁状态 + 表单文案」，<b>绝不包含任何业务字段</b>：
- * 没有标题、没有日期、没有地点、没有图片 URL、没有条数。
- * 模块锁定时 Finder 只把这个对象交给模板，页面 HTML 里因此不存在任何可被
- * F12 挖出的内容 —— 这是「页内表单而非弹窗/遮罩」方案的成立前提。</p>
+ * 安全红线：只承载「锁状态 + 表单文案」，绝不含任何业务字段（标题/日期/地点/图片/
+ * 条数），锁定页 HTML 里没有任何可被 F12 挖出的内容。{@link #moduleTitle} 取自功能设置
+ * 的模块名称（本就经公开 {@code getConfigs} 下发），仅用于表单标题文案。
  *
- * <p>{@link #moduleTitle} 取自站长在功能设置里填写的模块名称（该字段本就经公开
- * {@code getConfigs} 下发），仅用于「XX 模块已加密」这类表单标题文案，不构成内容泄露。</p>
- *
- * <p>注意：本类用 Lombok {@code @Data}（生成 {@code isLocked()}/{@code getModule()}），
- * <b>不用 record</b> —— Thymeleaf + SpEL 的属性访问只认 JavaBean getter，
- * record 的 {@code locked()} 取不到值，模板里 {@code ${access.locked}} 会直接炸。</p>
+ * 注意：必须用 Lombok {@code @Data} 而非 record —— Thymeleaf + SpEL 只认 JavaBean
+ * getter，record 的 {@code locked()} 取不到值，模板里 {@code ${access.locked}} 会炸。
  *
  * @author 小莫唐尼
  */

@@ -21,9 +21,9 @@ import run.halo.app.extension.ReactiveExtensionClient;
 /**
  * 首页轮播图接口（控制台，需登录）。
  *
- * <p>source 由服务端判定，不接受前端提交；/order、/candidates 必须注册在
+ * source 由服务端判定，不接受前端提交；/order、/candidates 必须注册在
  * /{name} 之前，避免 "order"/"candidates" 被当作 name 匹配。
- * custom 模式作者信息默认取当前登录用户，post 模式由服务端按文章快照。</p>
+ * custom 模式作者信息默认取当前登录用户，post 模式由服务端按文章快照。
  *
  * @author 小莫唐尼
  */

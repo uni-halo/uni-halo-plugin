@@ -19,10 +19,10 @@ import run.halo.app.security.PersonalAccessToken;
 /**
  * 登录令牌（PAT）过期清理。每次登录都新建一条 PAT，清理只回收存储，低频扫描即可。
  *
- * <p><b>只回收本插件签发的令牌</b>：创建时打了 {@code unihalo.ialley.cn/managed-by=uni-halo}
+ * 只回收本插件签发的令牌：创建时打了 {@code unihalo.ialley.cn/managed-by=uni-halo}
  * 标签，用户手动创建的令牌不带该标签，永远不会被删除。回收条件（需同时满足归属标签）：
  * 已过期（{@code spec.expiresAt} 早于当前时间），或已吊销超过 7 天保留期
- * （保留便于追溯，避免与进行中请求竞态）。</p>
+ * （保留便于追溯，避免与进行中请求竞态）。
  *
  * @author 小莫唐尼
  */

@@ -4,11 +4,9 @@ import java.time.Instant;
 import java.util.Set;
 
 /**
- * 签发的访问令牌（Halo 原生 PAT 形态）。
- *
- * <p>{@code token} 为 {@code pat_} + RS256 JWT，可被 Halo 全局过滤链直接识别，
- * 等价于用户在「个人中心 → 个人令牌」中手动创建的令牌。客户端按
- * {@code Authorization: Bearer <token>} 携带即可访问 Halo 原生 API 与本插件接口。</p>
+ * 签发的访问令牌（Halo 原生 PAT 形态）。{@code token} 为 {@code pat_} + RS256 JWT，
+ * 可被 Halo 全局过滤链直接识别，等价于用户手动创建的个人令牌；客户端按
+ * {@code Authorization: Bearer <token>} 携带即可访问 Halo 原生 API 与本插件接口。
  *
  * @param token     带 {@code pat_} 前缀的令牌串
  * @param patName   对应 PersonalAccessToken 扩展的 metadata.name（用于吊销/续期）

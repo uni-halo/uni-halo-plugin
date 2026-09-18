@@ -9,12 +9,12 @@ import reactor.core.publisher.Mono;
 /**
  * 「本次渲染已解锁哪些模块」的 Reactor Context 载体。
  *
- * <p>SSR 页面不能在 URL 上长期带 {@code ?token=}，因此锁定页渲染页内解锁表单；解锁成功后
+ * SSR 页面不能在 URL 上长期带 {@code ?token=}，因此锁定页渲染页内解锁表单；解锁成功后
  * 由前端 JS 带 {@value #HEADER} 头重新请求当前文档，服务端校验后把解锁状态写入 Reactor
  * Context，Finder 据此返回数据 —— 只有一套模板，锁语义仍由服务端裁决。渲染结果依请求头
- * 而变，调用方须置 {@code ModelConst.NO_CACHE} 避免中间缓存污染。</p>
+ * 而变，调用方须置 {@code ModelConst.NO_CACHE} 避免中间缓存污染。
  *
- * <p>用 Reactor Context 而非改 Finder 签名：Finder 方法是已冻结的主题集成契约。</p>
+ * 用 Reactor Context 而非改 Finder 签名：Finder 方法是已冻结的主题集成契约。
  *
  * @author 小莫唐尼
  */

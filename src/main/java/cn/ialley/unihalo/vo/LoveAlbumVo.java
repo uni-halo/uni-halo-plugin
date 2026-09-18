@@ -9,7 +9,7 @@ import cn.ialley.unihalo.utils.LoveDates;
 /**
  * 恋爱相册公开视图（脱敏）。
  *
- * <p>加密相册（locked=true）不返回 photos；passwordHash 已由服务层屏蔽，永不外泄。</p>
+ * 加密相册（locked=true）不返回 photos；passwordHash 已由服务层屏蔽，永不外泄。
  *
  * @author 小莫唐尼
  */
@@ -29,8 +29,8 @@ public class LoveAlbumVo {
     /**
      * 相册创建日期（{@code yyyy-MM-dd}，服务端派生自 {@code metadata.creationTimestamp}）。
      *
-     * <p>主题页相册卡片要展示创建日期；派生在服务端，模板无需依赖 {@code #temporals}
-     * 的时区/格式化能力。为 null 时模板不渲染该行。</p>
+     * 主题页相册卡片要展示创建日期；派生在服务端，模板无需依赖 {@code #temporals}
+     * 的时区/格式化能力。为 null 时模板不渲染该行。
      */
     private String createDate;
 

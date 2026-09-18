@@ -12,8 +12,8 @@ import reactor.core.scheduler.Schedulers;
 /**
  * 验证码管理实现（轻量内存缓存，零第三方依赖）。
  *
- * <p>缓存为 ConcurrentHashMap（key = 验证码 id），1 分钟过期（写入时记录
- * 过期时间戳，读取/生成时惰性清理），容量上限 100（超出先清理过期项）。</p>
+ * 缓存为 ConcurrentHashMap（key = 验证码 id），1 分钟过期（写入时记录
+ * 过期时间戳，读取/生成时惰性清理），容量上限 100（超出先清理过期项）。
  *
  * @author 小莫唐尼
  */

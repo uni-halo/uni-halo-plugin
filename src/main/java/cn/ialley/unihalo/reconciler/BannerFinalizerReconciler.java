@@ -7,9 +7,9 @@ import run.halo.app.extension.ExtensionClient;
 /**
  * {@link Banner} 统一删除语义 Reconciler。
  *
- * <p>删除轮播图条目时：管理端 DELETE 打 {@code deletionTimestamp} → 本 Reconciler 等待
+ * 删除轮播图条目时：管理端 DELETE 打 {@code deletionTimestamp} → 本 Reconciler 等待
  * {@link #deletionDelay()}（默认 1s，前端 1s 条件轮询可见「删除中」）→ 移除 finalizer →
- * 物理删除。当前无级联子资源，清理钩子使用基类默认空实现。</p>
+ * 物理删除。当前无级联子资源，清理钩子使用基类默认空实现。
  *
  * @author 小莫唐尼
  */

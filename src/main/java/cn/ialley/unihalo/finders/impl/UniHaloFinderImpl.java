@@ -41,12 +41,12 @@ import cn.ialley.unihalo.vo.LoveStoryVo;
 /**
  * 恋爱日记 Finder 实现。
  *
- * <p>锁语义（与公开 API 一致且更严格）：模块锁与相册锁两层独立、token 不通用；
+ * 锁语义（与公开 API 一致且更严格）：模块锁与相册锁两层独立、token 不通用；
  * 模块锁定时对应列表方法不调用 service，直接返回空结果（连条数都不泄露）；
- * 锁状态读取失败一律按「已锁定」处理（fail-closed），不抛 5xx。</p>
+ * 锁状态读取失败一律按「已锁定」处理（fail-closed），不抛 5xx。
  *
- * <p>本层不消费解锁 token：SSR 锁定页只渲染表单，校验通过后由前端 JS 带 token
- * 调公开 API 取数据并原地替换 —— 即使删掉表单也看不到任何内容。</p>
+ * 本层不消费解锁 token：SSR 锁定页只渲染表单，校验通过后由前端 JS 带 token
+ * 调公开 API 取数据并原地替换 —— 即使删掉表单也看不到任何内容。
  *
  * @author 小莫唐尼
  */
@@ -208,9 +208,9 @@ public class UniHaloFinderImpl implements UniHaloFinder {
     /**
      * 四个模块的锁状态。任一读取失败 → 该模块按「已锁定」处理（fail-closed）。
      *
-     * <p>最后叠加 {@link LoveUnlockContext} 的覆盖表：带凭证的那次文档请求里，
+     * 最后叠加 {@link LoveUnlockContext} 的覆盖表：带凭证的那次文档请求里，
      * 已解锁模块直接按「未锁定」参与后续构建 —— 于是同一个 Finder 既能渲染
-     * 锁定页（无凭证）也能渲染解锁后的内容（带凭证），未改任何签名。</p>
+     * 锁定页（无凭证）也能渲染解锁后的内容（带凭证），未改任何签名。
      */
     private Mono<Map<String, Boolean>> lockFlags() {
         List<String> modules = List.of(Constants.LOVE_MODULE_DIARY, Constants.LOVE_MODULE_OUR_STORY,
@@ -257,7 +257,7 @@ public class UniHaloFinderImpl implements UniHaloFinder {
     }
 
     /**
-     * 模块入口列表：<b>只保留 enabled=true 且路由已注册的模块</b>，按 priority 降序。
+     * 模块入口列表：只保留 enabled=true 且路由已注册的模块，按 priority 降序。
      */
     private List<LoveModuleVo> buildModules(Ctx ctx, FeatureConfig.Love love) {
         List<LoveModuleVo> modules = new ArrayList<>();
@@ -291,7 +291,7 @@ public class UniHaloFinderImpl implements UniHaloFinder {
     /**
      * 首页摘要：各模块最新 {@value #OVERVIEW_SIZE} 条。
      *
-     * <p>锁定模块<b>不查库</b>，直接给空列表；{@code showOverview=false} 时三个列表全空。</p>
+     * 锁定模块不查库，直接给空列表；{@code showOverview=false} 时三个列表全空。
      */
     private Mono<LoveOverviewVo> buildOverview(Ctx ctx, boolean showOverview) {
         LoveOverviewVo overview = new LoveOverviewVo();
@@ -342,12 +342,12 @@ public class UniHaloFinderImpl implements UniHaloFinder {
     }
 
     /**
-     * 恋爱页背景图：取自<b>功能设置</b>
+     * 恋爱页背景图：取自功能设置
      * {@code spec.love.diaryPage.bgImageUrl} —— 与小程序端同一处配置，
      * 站长只维护一份。
      *
-     * <p>v1.5 起刻意<b>不再</b>回落主题页自己的配置：恋爱日记主题页已删除
-     * {@code bgImageUrl} 设置项，避免同一个背景图要在两个地方各填一次。</p>
+     * v1.5 起刻意不再回落主题页自己的配置：恋爱日记主题页已删除
+     * {@code bgImageUrl} 设置项，避免同一个背景图要在两个地方各填一次。
      */
     private static String loveBgImage(FeatureConfig config) {
         if (config == null || config.getSpec() == null || config.getSpec().getLove() == null) {

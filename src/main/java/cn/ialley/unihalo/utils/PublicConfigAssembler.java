@@ -12,13 +12,13 @@ import tools.jackson.databind.node.ObjectNode;
 /**
  * 公开配置输出合成器（getConfigs 出口，只读）。
  *
- * <p>输出 = setting.yaml 活组白名单 + 功能设置单例 spec（脱敏）+ 服务端计算态：
+ * 输出 = setting.yaml 活组白名单 + 功能设置单例 spec（脱敏）+ 服务端计算态：
  * {@code featureConfig} 为 {@link FeatureConfig} spec 整体下发（密码相关字段
  * {@code passwordHash/password/passwordRemoved} 绝不出服务端）；{@code safetyConfig /
  * integrationConfig / themeConfig} 白名单透传；{@code loginConfig} 仅输出登录方式开关，
  * Secret 资源名、令牌有效期与注册策略不外发；{@code maintenance} 为 additive 顶层键，
  * 按 spec.maintenance 时间窗口计算，仅 scheduled/active 时输出（键缺失 = 未维护）。
- * 其余设置组一律不透传——白名单制，新增组须同步此处。</p>
+ * 其余设置组一律不透传——白名单制，新增组须同步此处。
  *
  * @author 小莫唐尼
  */

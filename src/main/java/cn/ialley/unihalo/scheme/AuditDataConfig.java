@@ -13,12 +13,12 @@ import static cn.ialley.unihalo.constants.Constants.PLUGIN_API_VERSION;
 /**
  * 审核模式（单例，metadata.name 固定为 audit-data-config）。
  *
- * <p>承载「审核模式模拟数据」的选中引用：审核模式开启后，小程序端仅展示
+ * 承载「审核模式模拟数据」的选中引用：审核模式开启后，小程序端仅展示
  * 此处挑选的站内真实数据。每条引用以 {@link AuditDataRef} 存储（name 为
  * 扩展 metadata.name，title/cover 等为展示字段快照，便于控制台直接渲染，
  * 小程序端二期仍按 name 过滤真实数据）。功能设置-应用设置-审核模式开关
  * （FeatureConfig.spec.auditMode.enabled）保留不动，本模型只管「展示哪些数据」；
- * 引用对象被删除后保存时服务端校验并剔除失效项。</p>
+ * 引用对象被删除后保存时服务端校验并剔除失效项。
  *
  * @author 小莫唐尼
  */

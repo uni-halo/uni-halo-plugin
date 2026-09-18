@@ -23,8 +23,8 @@ import static run.halo.app.extension.index.query.Queries.isNull;
 /**
  * 恋爱相册服务实现（自研相册，含 BCrypt 密码）
  *
- * <p>所有对外返回的相册实体均执行 {@link #maskPassword(LoveAlbum)}：
- * passwordHash 置空不回显，并计算 status.photoCount。</p>
+ * 所有对外返回的相册实体均执行 {@link #maskPassword(LoveAlbum)}：
+ * passwordHash 置空不回显，并计算 status.photoCount。
  *
  * @author 小莫唐尼
  */

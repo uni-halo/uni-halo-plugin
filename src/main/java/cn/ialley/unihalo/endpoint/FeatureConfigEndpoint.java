@@ -17,8 +17,8 @@ import run.halo.app.extension.GroupVersion;
 /**
  * 功能设置接口（控制台，需登录）。
  *
- * <p>单例读写：GET 不存在时返回默认结构（默认值与存量配置合并），
- * PUT 写入前做非空合并并保存（见 {@link FeatureConfigService}）。</p>
+ * 单例读写：GET 不存在时返回默认结构（默认值与存量配置合并），
+ * PUT 写入前做非空合并并保存（见 {@link FeatureConfigService}）。
  *
  * @author 小莫唐尼
  */

@@ -36,18 +36,13 @@ import run.halo.app.extension.Metadata;
 import run.halo.app.extension.ReactiveExtensionClient;
 
 /**
- * 移动端登录实现。
- *
- * <p>三种登录方式（密码 / 微信 / 已登录绑定微信）最终都收敛到
+ * 移动端登录实现。三种登录方式（密码 / 微信 / 已登录绑定微信）最终都收敛到
  * {@link #issueFor(User, LoginConfig)}：以用户在 Halo 已有的角色签发一枚 Halo 原生 PAT，
- * 最后把角色模板展开成 RBAC 规则一并返回。注册开关与默认角色沿用 Halo 系统设置。</p>
+ * 并把角色模板展开成 RBAC 规则一并返回。注册开关与默认角色沿用 Halo 系统设置。
  *
- * <p>两点安全约束：</p>
- * <ol>
- *   <li><b>防提权</b>：{@code intersect} 模式下只授予「配置角色 ∩ 用户已有角色」，
- *       Halo 官方 PAT 也是这个语义（{@code PatServiceImpl#hasSufficientRoles}）；</li>
- *   <li><b>不绕过二次验证</b>：开启 2FA 的账号拒绝密码登录，否则等于绕过第二因子。</li>
- * </ol>
+ * 安全约束：① 防提权 —— intersect 模式下只授予「配置角色 ∩ 用户已有角色」
+ * （与 Halo 官方 {@code PatServiceImpl#hasSufficientRoles} 同语义）；② 开启 2FA 的账号
+ * 拒绝密码登录，不绕过二次验证。
  *
  * @author 小莫唐尼
  */
@@ -207,8 +202,8 @@ public class AuthServiceImpl implements AuthService {
     /**
      * 限流闸门：用户名维度或来源 IP 维度任一处于锁定窗口内即拒绝。
      *
-     * <p>用 429 而非 401 —— 凭据错与太频繁是两种语义，客户端应当区分：前者不该重试，
-     * 后者应当退避后再试。</p>
+     * 用 429 而非 401 —— 凭据错与太频繁是两种语义，客户端应当区分：前者不该重试，
+     * 后者应当退避后再试。
      */
     private Mono<Void> requireNotLocked(String username, String clientIp) {
         var remaining = attemptGuard.usernameLockRemaining(username);
@@ -263,13 +258,13 @@ public class AuthServiceImpl implements AuthService {
     /**
      * 取绑定关系指向的用户。
      *
-     * <p><b>孤儿绑定自愈</b>：{@code UserConnection} 存在但 Halo 用户已被删除时（站长清理用户、
-     * 早期版本残留等），如果直接抛 404，这个微信就会<strong>永久卡死</strong> —— 既登不进来，
+     * 孤儿绑定自愈：{@code UserConnection} 存在但 Halo 用户已被删除时（站长清理用户、
+     * 早期版本残留等），如果直接抛 404，这个微信就会永久卡死 —— 既登不进来，
      * 也走不到注册分支。这里改为清掉脏绑定、返回空，让上层按新用户重新注册。
-     * 由于 {@code nextSequence} 会复用已释放的序号，用户一般能拿回原来的用户名。</p>
+     * 由于 {@code nextSequence} 会复用已释放的序号，用户一般能拿回原来的用户名。
      *
-     * <p>用 {@code client.fetch} 而非 {@code userService.getUser}：前者「查不到」返回空 Mono，
-     * 后者抛异常 —— 这里需要的正是「可选」语义。</p>
+     * 用 {@code client.fetch} 而非 {@code userService.getUser}：前者「查不到」返回空 Mono，
+     * 后者抛异常 —— 这里需要的正是「可选」语义。
      */
     private Mono<User> loadBoundUser(UserConnection connection) {
         var username = connection.getSpec().getUsername();
@@ -295,8 +290,8 @@ public class AuthServiceImpl implements AuthService {
     /**
      * 禁用账号不得登录（P0）。
      *
-     * <p>与 {@link #authenticate} 保持一致的语义：少了这一步，站长在后台禁用某个微信用户后，
-     * 对方仍能一键登录进来，禁用功能对移动端形同虚设。</p>
+     * 与 {@link #authenticate} 保持一致的语义：少了这一步，站长在后台禁用某个微信用户后，
+     * 对方仍能一键登录进来，禁用功能对移动端形同虚设。
      */
     private Mono<User> requireEnabledUser(User user) {
         if (Boolean.TRUE.equals(user.getSpec().getDisabled())) {
@@ -374,8 +369,8 @@ public class AuthServiceImpl implements AuthService {
     /**
      * 扫描现有「前缀 + 纯数字」的用户名取最大序号，返回下一个可用的起始序号。
      *
-     * <p>只做一次探测是不够的（并发下两个请求可能拿到同一序号），因此结果仅作为起点，
-     * 真正防重由 {@link #tryCreate} 的占用探测 + 多序号重试兜底。</p>
+     * 只做一次探测是不够的（并发下两个请求可能拿到同一序号），因此结果仅作为起点，
+     * 真正防重由 {@link #tryCreate} 的占用探测 + 多序号重试兜底。
      */
     private Mono<Integer> nextSequence(String prefix) {
         return client.list(User.class,
@@ -419,9 +414,9 @@ public class AuthServiceImpl implements AuthService {
     /**
      * 按微信身份查绑定关系：优先 unionid，未命中再回落 openid。
      *
-     * <p>回落是必需的：站点早期未绑定开放平台时只拿得到 openid，老用户存的是 openid；
+     * 回落是必需的：站点早期未绑定开放平台时只拿得到 openid，老用户存的是 openid；
      * 后期绑定开放平台后 code2Session 开始返回 unionid，只按 unionid 查会漏掉这批老用户，
-     * 把他们当成新用户再注册一个号。</p>
+     * 把他们当成新用户再注册一个号。
      */
     private Mono<UserConnection> findConnection(WechatService.WechatSession session) {
         var unionid = session.unionid();
@@ -457,12 +452,12 @@ public class AuthServiceImpl implements AuthService {
     /**
      * 微信登录路径的兜底映射：除 {@link AuthException} 外一律收敛为业务错误。
      *
-     * <p>不做兜底会让 Halo 内部异常以原始 problem detail 漏给客户端 —— 例如
+     * 不做兜底会让 Halo 内部异常以原始 problem detail 漏给客户端 —— 例如
      * {@code {"detail":"User unihalo01 was not found","status":404}}，既暴露内部用户名，
-     * 又不符合本接口 {@code {code,message}} 的契约。</p>
+     * 又不符合本接口 {@code {code,message}} 的契约。
      *
-     * <p>已知的微信侧失败保留原始消息（code 无效、密钥未配置），站长据此可自助排查；
-     * 其余只记日志、对外给通用提示，避免把内部细节透出去。</p>
+     * 已知的微信侧失败保留原始消息（code 无效、密钥未配置），站长据此可自助排查；
+     * 其余只记日志、对外给通用提示，避免把内部细节透出去。
      */
     private AuthException unexpectedWechatFailure(Throwable e) {
         if (isWechatFailure(e)) {

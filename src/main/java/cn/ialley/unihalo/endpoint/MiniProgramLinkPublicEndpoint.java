@@ -25,9 +25,9 @@ import run.halo.app.extension.GroupVersion;
 /**
  * 友情链接-小程序链接公开接口（app 端，匿名可访问）。
  *
- * <p>仅返回可见（visible=true）的链接（D8）；支持 grouped=true 按类型分组返回
+ * 仅返回可见（visible=true）的链接（D8）；支持 grouped=true 按类型分组返回
  * （D3）；公开提交申请（D6），提交接口校验必填项并落库为待审核；功能设置
- * 友链信息-基本配置 submissionEnabled 关闭时提交申请返回提示。</p>
+ * 友链信息-基本配置 submissionEnabled 关闭时提交申请返回提示。
  *
  * @author 小莫唐尼
  */

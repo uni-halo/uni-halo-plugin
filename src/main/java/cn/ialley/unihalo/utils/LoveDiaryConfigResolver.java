@@ -15,15 +15,11 @@ import cn.ialley.unihalo.constants.Constants;
 import cn.ialley.unihalo.vo.LoveDiaryThemeConfig;
 
 /**
- * 恋爱日记主题页配置解析器。
- *
- * <p>从 setting.yaml 的 {@code themeConfig.loveDiaryTheme} 组读取配置并归一化。
- * <b>fail-closed</b>：任何字段非法只回落该字段默认值；整组缺失 / 读取异常 /
- * {@code enabled != true} 一律返回 {@link LoveDiaryThemeConfig#disabled()}，
- * 插件据此不注册路由、不注入资源。</p>
- *
- * <p>v1.5 起本组只剩「路由 / 外壳 / 强调色 / 首页摘要」四件事：背景图移到功能设置，
- * 正文排版与代码高亮不再可配（见 {@link LoveDiaryThemeConfig} 的类注释）。</p>
+ * 恋爱日记主题页配置解析器：从 setting.yaml 的 {@code themeConfig.loveDiaryTheme}
+ * 组读取配置并归一化。fail-closed：单个字段非法只回落该字段默认值；整组缺失 /
+ * 读取异常 / {@code enabled != true} 一律返回 {@link LoveDiaryThemeConfig#disabled()}，
+ * 插件据此不注册路由、不注入资源。v1.5 起本组只剩「路由 / 外壳 / 强调色 / 首页摘要」
+ * 四件事（背景图移到功能设置，正文排版与高亮不再可配）。
  *
  * @author 小莫唐尼
  */

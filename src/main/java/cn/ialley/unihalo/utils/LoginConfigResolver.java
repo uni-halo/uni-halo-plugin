@@ -15,13 +15,11 @@ import tools.jackson.databind.JsonNode;
 /**
  * 登录配置与微信凭据读取。
  *
- * <p>设置页 loginConfig 组下的单个子对象 {@code client}（两个登录开关、
- * Secret 名称、令牌有效期）。注册策略不在此配置——沿用 Halo 系统设置-用户设置的
- * 「允许注册」与「默认角色」。两个开关全关即登录能力整体不可用（fail closed）。</p>
- *
- * <p>微信凭据按 {@code wechatSecretName} 从 Secret 扩展读取：优先 {@code stringData}
- * （Console 创建 Secret 的写入方式），回落 {@code data}（base64 编码的字节）。
- * 未配置或字段缺失一律报错，由调用方关闭微信登录。</p>
+ * 读取设置页 loginConfig 组的 {@code client} 子对象（两个登录开关、Secret 名称、
+ * 令牌有效期）；注册策略不在此配置，沿用 Halo 系统设置。两个开关全关即登录能力
+ * 整体不可用（fail closed）。微信凭据按 {@code wechatSecretName} 从 Secret 读取：
+ * 优先 {@code stringData}，回落 {@code data}（base64）；未配置或字段缺失一律报错，
+ * 由调用方关闭微信登录。
  *
  * @author 小莫唐尼
  */

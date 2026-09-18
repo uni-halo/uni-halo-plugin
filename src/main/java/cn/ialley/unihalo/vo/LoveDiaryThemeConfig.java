@@ -5,11 +5,11 @@ import lombok.Data;
 /**
  * 恋爱日记主题页配置（已解析、已校验、不可变的运行时视图）。
  *
- * <p>来源：setting.yaml 的 {@code themeConfig.loveDiaryTheme} 组。只承载已归一化的字段，
+ * 来源：setting.yaml 的 {@code themeConfig.loveDiaryTheme} 组。只承载已归一化的字段，
  * 非法值一律回落默认值，保证下游拿到的一定是合法值。v1.5 起刻意不在此处：背景图取
  * {@code featureConfig.spec.love.diaryPage.bgImageUrl}（站长只维护一份）；正文排版/
  * 高亮/灯箱不提供开关，一律用主题 {@code .prose} 渲染。路由字段保留原始配置文本，
- * 解析为完整路径由 {@link LoveRoutePlan} 负责（解析需异步读取 permalink，不混在一个 VO 里）。</p>
+ * 解析为完整路径由 {@link LoveRoutePlan} 负责（解析需异步读取 permalink，不混在一个 VO 里）。
  *
  * @author 小莫唐尼
  */

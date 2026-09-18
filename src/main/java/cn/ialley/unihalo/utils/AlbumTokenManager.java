@@ -12,8 +12,8 @@ import org.springframework.stereotype.Component;
 /**
  * 恋爱相册解锁 token 工具（HMAC-SHA256 无状态签名）。
  *
- * <p>token 格式：base64url(albumName).expiry.hex(signature)。verify 时校验
- * 相册名匹配、签名一致且未过期（默认有效期 30 分钟）。</p>
+ * token 格式：base64url(albumName).expiry.hex(signature)。verify 时校验
+ * 相册名匹配、签名一致且未过期（默认有效期 30 分钟）。
  *
  * @author 小莫唐尼
  */

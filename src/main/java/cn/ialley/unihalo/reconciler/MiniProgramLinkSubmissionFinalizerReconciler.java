@@ -7,8 +7,8 @@ import run.halo.app.extension.ExtensionClient;
 /**
  * {@link MiniProgramLinkSubmission} 统一删除语义 Reconciler。
  *
- * <p>删除公开投稿走基类统一删除流程（删除中过渡默认 1s），清理钩子默认空；
- * 注意删除中窗口内公开接口须排除该对象（读路径过滤规则）。</p>
+ * 删除公开投稿走基类统一删除流程（删除中过渡默认 1s），清理钩子默认空；
+ * 注意删除中窗口内公开接口须排除该对象（读路径过滤规则）。
  *
  * @author 小莫唐尼
  */

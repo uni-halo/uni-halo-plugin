@@ -29,12 +29,12 @@ import static run.halo.app.extension.index.query.Queries.isNull;
 /**
  * 恋爱日记路由解析与冲突检测。
  *
- * <p>路径契约：以 {@code /} 开头为绝对路径原样使用；否则解析为 {@code <home>/<子段>}；
- * 留空则该页不注册。</p>
+ * 路径契约：以 {@code /} 开头为绝对路径原样使用；否则解析为 {@code <home>/<子段>}；
+ * 留空则该页不注册。
  *
- * <p>冲突检测逐条 fail-closed（冲突的那一条不注册，不影响其余）：非法路径/保留段
+ * 冲突检测逐条 fail-closed（冲突的那一条不注册，不影响其余）：非法路径/保留段
  * {@code page}、Halo 保留根段、已占用路径（比对现有内容的实际 permalink 值而非模板，
- * 站长改过 permalink 规则也准确）、四条路由解析后自身重复。</p>
+ * 站长改过 permalink 规则也准确）、四条路由解析后自身重复。
  *
  * @author 小莫唐尼
  */
@@ -67,10 +67,10 @@ public class LoveRouteResolver {
     /**
      * 路由计划的短期缓存时长。
      *
-     * <p>{@link #collectOccupied()} 会列举全站 Post/Category/Tag/SinglePage ——
+     * {@link #collectOccupied()} 会列举全站 Post/Category/Tag/SinglePage ——
      * 每次页面渲染都跑一遍是不可接受的。路由只在「配置变更 / 内容 permalink 变更」时
      * 才需要重算，故此处做 30s 短缓存：最坏情况下新内容占用我们路径后 30s 内仍可能
-     * 被插件路由抢先，之后自动收敛；路由注册路径用 {@link #freshPlan()} 不吃缓存。</p>
+     * 被插件路由抢先，之后自动收敛；路由注册路径用 {@link #freshPlan()} 不吃缓存。
      */
     private static final long CACHE_TTL_MILLIS = 30_000L;
 
@@ -81,12 +81,12 @@ public class LoveRouteResolver {
     private volatile CachedPlan cache;
 
     /**
-     * <b>同步</b>读取当前路由快照（可能为空计划；永不返回 null）。
+     * 同步读取当前路由快照（可能为空计划；永不返回 null）。
      *
-     * <p>存在的唯一理由：Spring WebFlux 的 {@code RequestPredicate#test} 是<b>同步</b>的，
+     * 存在的唯一理由：Spring WebFlux 的 {@code RequestPredicate#test} 是同步的，
      * 而 Reactor Netty 的事件循环线程上调用 {@code block()} 会直接抛
      * {@code IllegalStateException}。所以路由匹配谓词只能读这个 volatile 快照，
-     * 不能现算。</p>
+     * 不能现算。
      */
     public LoveRoutePlan snapshot() {
         CachedPlan cached = cache;
@@ -96,9 +96,9 @@ public class LoveRouteResolver {
     /**
      * 快照是否已过期（或尚未生成）。
      *
-     * <p>供同步的路由谓词在「未命中」时决定「是否值得触发一次异步重算」——
+     * 供同步的路由谓词在「未命中」时决定「是否值得触发一次异步重算」——
      * 由于任何一次刷新都会把过期时间往后推一个 TTL，所以最坏也只是每个 TTL 窗口
-     * 触发一次全站扫描，不会被随机 404 放大成 DoS。</p>
+     * 触发一次全站扫描，不会被随机 404 放大成 DoS。
      */
     public boolean isStale() {
         CachedPlan cached = cache;
@@ -106,10 +106,10 @@ public class LoveRouteResolver {
     }
 
     /**
-     * 解析配置并产出路由计划（含冲突检测）。配置未启用时返回<b>空计划</b>
+     * 解析配置并产出路由计划（含冲突检测）。配置未启用时返回空计划
      * （不是 {@code Mono.empty()}，调用方用 {@link LoveRoutePlan#isEmpty()} 判空）。
      *
-     * <p>带 30s 短缓存，适合页面渲染路径反复调用。</p>
+     * 带 30s 短缓存，适合页面渲染路径反复调用。
      */
     public Mono<LoveRoutePlan> resolvePlan() {
         CachedPlan cached = cache;
@@ -122,8 +122,8 @@ public class LoveRouteResolver {
     /**
      * 强制重新解析并写入快照（跳过缓存）。
      *
-     * <p>调用时机：插件启动、{@code PluginConfigUpdatedEvent}（设置保存）到达时。
-     * 冲突与未配置项会在此处打日志，站长可在 Halo 日志里看到「哪条路为什么不注册」。</p>
+     * 调用时机：插件启动、{@code PluginConfigUpdatedEvent}（设置保存）到达时。
+     * 冲突与未配置项会在此处打日志，站长可在 Halo 日志里看到「哪条路为什么不注册」。
      */
     public Mono<LoveRoutePlan> refresh() {
         return freshPlan().doOnNext(plan -> {
@@ -274,8 +274,8 @@ public class LoveRouteResolver {
     /**
      * 收集 Halo 已占用的路径。
      *
-     * <p>只保留「归一化后的路径字符串」，内存为 O(1) 量级的字符串集合；
-     * 但 {@code listAll} 会实例化全部内容对象，故仅在功能启用时执行一次。</p>
+     * 只保留「归一化后的路径字符串」，内存为 O(1) 量级的字符串集合；
+     * 但 {@code listAll} 会实例化全部内容对象，故仅在功能启用时执行一次。
      */
     private Mono<Set<String>> collectOccupied() {
         ListOptions alive = ListOptions.builder()

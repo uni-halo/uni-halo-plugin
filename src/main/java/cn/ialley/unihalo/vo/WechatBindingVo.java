@@ -5,9 +5,9 @@ import java.time.Instant;
 /**
  * 用户详情「微信绑定」选项卡的数据。
  *
- * <p>{@code providerUserId} 是微信侧的 openid / unionid。这里输出原值而不脱敏：
- * 该接口位于 console 组，访问受 RBAC 保护，而管理员排查「用户说微信登不上」时
- * 恰恰需要拿这个标识去核对；openid 本身不能用于登录，泄露风险有限。</p>
+ * {@code providerUserId} 是微信侧 openid/unionid，输出原值不脱敏：本接口在 console
+ * 组受 RBAC 保护，且管理员排查「微信登不上」正需要此标识核对；openid 不能用于登录，
+ * 泄露风险有限。
  *
  * @param username       Halo 用户名
  * @param bound          是否已绑定微信

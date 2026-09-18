@@ -9,8 +9,8 @@ import reactor.core.publisher.Mono;
  * 绑定微信：服务端签发一次性票据并锁定 UC 用户名（二维码内容 {@code uh-bindwx-{ticket}}），
  * 小程序端扫码确认后调 confirm，服务端校验票据并绑定到创建时锁定的用户。
  *
- * <p>安全约束：单次消费（confirm 成功即标记已用，重放失败）；5 分钟时效；
- * 绑定目标在创建票据时已确定，confirm 不接受客户端指定，扫码者无法绑到别的账号。</p>
+ * 安全约束：单次消费（confirm 成功即标记已用，重放失败）；5 分钟时效；
+ * 绑定目标在创建票据时已确定，confirm 不接受客户端指定，扫码者无法绑到别的账号。
  *
  * @author 小莫唐尼
  */
@@ -69,8 +69,8 @@ public interface BindTicketService {
     /**
      * 消费票据（confirm 时调用，原子单次）。
      *
-     * <p>成功返回 {@code success=true} 并携带锁定用户名；票据不存在、已过期、
-     * 已消费均返回失败（reason 面向小程序端展示）。</p>
+     * 成功返回 {@code success=true} 并携带锁定用户名；票据不存在、已过期、
+     * 已消费均返回失败（reason 面向小程序端展示）。
      */
     Mono<ConsumeResult> consume(String ticket);
 }

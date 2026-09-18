@@ -39,11 +39,11 @@ import run.halo.app.security.authentication.CryptoService;
  * {@code PatServiceImpl#generateToken}；签名密钥来自 {@link CryptoService#getJwk()}，
  * 签出的令牌与官方「个人中心 → 个人令牌」完全等价。
  *
- * <p>关键约束：① JWS 头的 {@code kid} 必须取 {@code jwk.getKeyID()}（而非
+ * 关键约束：① JWS 头的 {@code kid} 必须取 {@code jwk.getKeyID()}（而非
  * {@code cryptoService.getKeyId()}），否则 JWKSource 匹配不到密钥，验签失败；
  * ② 过期只由 JWT {@code exp} 保证（{@code PatAuthenticationManager} 不校验
  * {@code spec.expiresAt}），调用方务必传入 expiresAt。启动时做一次自签自检，
- * 失败则 {@link #available()} 返回 false，登录能力应据此 fail closed。</p>
+ * 失败则 {@link #available()} 返回 false，登录能力应据此 fail closed。
  *
  * @author 小莫唐尼
  */

@@ -7,8 +7,8 @@ import run.halo.app.extension.ExtensionClient;
 /**
  * {@link AppInfo} 统一删除语义 Reconciler。
  *
- * <p>删除前置业务校验（已有已发布 AppVersion 时 400）在 Service 层保留；
- * 校验通过后走基类统一删除流程（删除中过渡默认 1s）。无级联子资源，清理钩子默认空。</p>
+ * 删除前置业务校验（已有已发布 AppVersion 时 400）在 Service 层保留；
+ * 校验通过后走基类统一删除流程（删除中过渡默认 1s）。无级联子资源，清理钩子默认空。
  *
  * @author 小莫唐尼
  */

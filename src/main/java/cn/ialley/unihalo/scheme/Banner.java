@@ -11,10 +11,10 @@ import static cn.ialley.unihalo.constants.Constants.PLUGIN_API_VERSION;
 /**
  * 首页轮播图（多条，归一化条目模型）。
  *
- * <p>所有条目统一数据格式：来源 {@code source} 由服务端按 {@code postId} 非空自动
+ * 所有条目统一数据格式：来源 {@code source} 由服务端按 {@code postId} 非空自动
  * 判定（post=文章快照 / custom=自定义），保存时强制覆盖、不手动设置。
  * 文章模式仅快照 title/cover/date/authorName/authorAvatar/postId，content 恒为空，
- * 点击直接跳转文章详情；自定义模式 content 为富文本 HTML。</p>
+ * 点击直接跳转文章详情；自定义模式 content 为富文本 HTML。
  *
  * @author 小莫唐尼
  */

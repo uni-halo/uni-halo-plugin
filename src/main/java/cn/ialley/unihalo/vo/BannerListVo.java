@@ -6,8 +6,8 @@ import cn.ialley.unihalo.scheme.Banner;
 /**
  * 轮播图公开列表视图（脱敏）。
  *
- * <p>不返回 content 富文本正文与 remark 备注（仅管理端可见），
- * 详情接口才返回完整 HTML。source/postId 供小程序端区分跳转行为。</p>
+ * 不返回 content 富文本正文与 remark 备注（仅管理端可见），
+ * 详情接口才返回完整 HTML。source/postId 供小程序端区分跳转行为。
  *
  * @author 小莫唐尼
  */

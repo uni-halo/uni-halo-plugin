@@ -8,9 +8,9 @@ import tools.jackson.databind.node.JsonNodeFactory;
 /**
  * 设置组读取工具。
  *
- * <p>插件设置合并为三个功能域组后，原模块级配置（如 loveConfig / linkConfig /
+ * 插件设置合并为三个功能域组后，原模块级配置（如 loveConfig / linkConfig /
  * captchaConfig）成为域组下的子对象（如 featureConfig.loveConfig）。本工具按
- * 「新路径优先、旧顶层键回退」读取，兼容旧结构 ConfigMap。</p>
+ * 「新路径优先、旧顶层键回退」读取，兼容旧结构 ConfigMap。
  *
  * @author 小莫唐尼
  */
