@@ -334,11 +334,11 @@ const activeUiPreviewTab = ref('main')
             <RiGithubLine class="w-5 h-5" />
             <span>GitHub</span>
           </a>
-          <a href="https://www.halo.run/store/apps/app-ryemX"
+          <a href="https://uni-halo.ialley.cn"
             class="inline-flex items-center gap-2 border-slate-300 bg-white hover:bg-slate-50 text-slate-700 font-semibold px-7 py-3.5 rounded-xl border  transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5"
             target="_blank">
             <RiStoreLine class="w-5 h-5" />
-            <span>插件市场</span>
+            <span>官网主页</span>
           </a>
           <a href="https://github.com/ialley-workshop-open/uni-halo/issues/23"
             class="inline-flex items-center gap-2 text-[#b9e424] border-[#b9e424]/50 bg-white hover:bg-slate-50 font-semibold px-7 py-3.5 rounded-xl border transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5"
@@ -685,7 +685,7 @@ const activeUiPreviewTab = ref('main')
             <RiArrowRightSLine class="w-4 h-4 text-slate-300 flex-shrink-0" />
           </a>
 
-          <a href="https://www.halo.run/store/apps/app-ryemX"
+          <a href="https://uni-halo.ialley.cn"
             class="flex items-center gap-4 bg-white rounded-xl p-4 border border-slate-100 hover:shadow-md transition-all duration-200"
             target="_blank">
             <div class="w-10 h-10 rounded-lg flex items-center justify-center text-white flex-shrink-0"
@@ -693,8 +693,8 @@ const activeUiPreviewTab = ref('main')
               <RiStoreLine class="w-5 h-5" />
             </div>
             <div class="flex-1 min-w-0">
-              <div class="font-semibold text-slate-800 text-sm">Halo 插件市场</div>
-              <div class="text-xs text-slate-400 truncate">在线安装 UniHalo 配置插件</div>
+              <div class="font-semibold text-slate-800 text-sm">官网主页</div>
+              <div class="text-xs text-slate-400 truncate">快速访问官网主页</div>
             </div>
             <RiArrowRightSLine class="w-4 h-4 text-slate-300 flex-shrink-0" />
           </a>
