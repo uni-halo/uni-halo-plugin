@@ -56,5 +56,6 @@ halo {
     version = '2.26'
     port = 8090
     debug = true
-    externalUrl = "http://192.168.1.2:8090"
+// 开发的时候，如果需要真机调试需要使用你自己的ip
+// externalUrl = "http://192.168.1.2:8090"
 }
