@@ -20,9 +20,13 @@ public interface NoticeService {
             int page, int size, String sort);
 
     /**
-     * 公开列表（仅 published，排除删除中对象，默认排序）。公开读路径专用。
+     * 公开列表（仅 published，排除删除中对象）。公开读路径专用。
+     *
+     * @param type 公告分类 metadata.name，为空表示全部分类
+     * @param sort 排序键：date_desc 最新在前（默认，置顶优先）/ date_asc 最早在前 /
+     *            type 按类型分组；未识别值回落默认排序
      */
-    Mono<ListResult<Notice>> listPublic(int page, int size);
+    Mono<ListResult<Notice>> listPublic(String type, String sort, int page, int size);
 
     /**
      * 按 name 查询；不存在时抛 {@link cn.ialley.unihalo.exception.NotFoundException}。

@@ -77,13 +77,22 @@ public class NoticePublicEndpoint implements CustomEndpoint {
     }
 
     /**
-     * 已发布公告分页列表（脱敏：不含 content，默认排序）。
+     * 已发布公告分页列表（脱敏：不含 content）。
      * 走公开专用查询：仅 published 且排除删除中对象。
+     *
+     * <p>query 参数：
+     * <ul>
+     *   <li>{@code type}：公告分类 metadata.name，为空表示全部分类</li>
+     *   <li>{@code sort}：date_desc 最新在前（默认，置顶优先）/ date_asc 最早在前 /
+     *       type 按类型分组；未识别值回落默认排序</li>
+     * </ul>
      */
     private Mono<ServerResponse> listNotices(ServerRequest request) {
         int page = queryPage(request);
         int size = querySize(request);
-        return noticeService.listPublic(page, size)
+        String type = request.queryParam("type").orElse("").trim();
+        String sort = request.queryParam("sort").orElse("").trim();
+        return noticeService.listPublic(type, sort, page, size)
                 .flatMap(result -> Flux.fromIterable(result.getItems())
                         .flatMap(this::toListVo)
                         .collectList()

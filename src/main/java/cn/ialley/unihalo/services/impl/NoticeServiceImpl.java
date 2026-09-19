@@ -16,6 +16,7 @@ import run.halo.app.extension.ListOptions;
 import run.halo.app.extension.ListResult;
 import run.halo.app.extension.Metadata;
 import run.halo.app.extension.ReactiveExtensionClient;
+import run.halo.app.extension.index.query.Condition;
 
 import static run.halo.app.extension.index.query.Queries.and;
 import static run.halo.app.extension.index.query.Queries.equal;
@@ -59,17 +60,28 @@ public class NoticeServiceImpl implements NoticeService {
     }
 
     @Override
-    public Mono<ListResult<Notice>> listPublic(int page, int size) {
-        // 公开读路径：仅 published 且排除删除中对象
+    public Mono<ListResult<Notice>> listPublic(String type, String sort, int page, int size) {
+        // 公开读路径：仅 published 且排除删除中对象；type 非空时再叠加分类过滤
         return client.listAll(Notice.class,
                         ListOptions.builder()
-                                .fieldQuery(and(
-                                        equal("spec.status", STATUS_PUBLISHED),
-                                        isNull("metadata.deletionTimestamp")))
+                                .fieldQuery(publicFieldQuery(type))
                                 .build(),
-                        resolveSort(""))
+                        resolveSort(sort))
                 .collectList()
                 .map(list -> new ListResult<>(page, size, list.size(), slice(list, page, size)));
+    }
+
+    /**
+     * 公开读路径的字段查询条件：published + 未删除（+ 可选分类）。
+     */
+    private static Condition publicFieldQuery(String type) {
+        if (isBlank(type)) {
+            return and(equal("spec.status", STATUS_PUBLISHED),
+                    isNull("metadata.deletionTimestamp"));
+        }
+        return and(equal("spec.status", STATUS_PUBLISHED),
+                isNull("metadata.deletionTimestamp"),
+                equal("spec.typeName", type));
     }
 
     /**

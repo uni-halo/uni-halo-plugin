@@ -100,6 +100,22 @@ pnpm install
 pnpm dev
 ```
 
+### 开启 swagger-ui 文档
+
+- 开启后，您可以在 `http://192.168.1.2:8090/swagger-ui/index.html` 访问 swagger-ui 文档。
+
+在 `workplace` 目录下 新建 `application.yaml` 文件，内容如下：
+
+```yaml
+springdoc:
+    api-docs:
+        enabled: true
+    swagger-ui:
+        enabled: true
+    show-login-endpoint: true
+    show-actuator: true
+```
+
 ## 构建
 
 ```bash
