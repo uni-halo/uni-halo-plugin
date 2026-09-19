@@ -15,7 +15,6 @@ import RiMoneyCnyCircleLine from '~icons/ri/money-cny-circle-line'
 import RiWechatPayLine from '~icons/ri/wechat-pay-line'
 import RiAlipayLine from '~icons/ri/alipay-line'
 import RiQqLine from '~icons/ri/qq-line'
-import RiStoreLine from '~icons/ri/store-line'
 import RiCodeBoxLine from '~icons/ri/code-box-line'
 import RiSparklingLine from '~icons/ri/sparkling-line'
 import RiMailLine from '~icons/ri/mail-line'
@@ -322,7 +321,13 @@ const activeUiPreviewTab = ref('main')
         </p>
 
         <div class="flex flex-wrap justify-center gap-4 mb-10">
-          <a href="https://uni-halo.ialley.cn/"
+          <a href="https://uni-halo.ialley.cn"
+            class="inline-flex items-center gap-2 border-slate-300 bg-white hover:bg-slate-50 text-slate-700 font-semibold px-7 py-3.5 rounded-xl border  transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5"
+            target="_blank">
+            <RiBookOpenLine class="w-5 h-5" />
+            <span>官网主页</span>
+          </a>
+          <a href="https://uni-halo-doc.ialley.cn/"
             class="inline-flex items-center gap-2 text-white font-semibold px-7 py-3.5 rounded-xl transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5"
             style="background-color: #B9E424" target="_blank">
             <RiBookOpenLine class="w-5 h-5" />
@@ -333,12 +338,6 @@ const activeUiPreviewTab = ref('main')
             target="_blank">
             <RiGithubLine class="w-5 h-5" />
             <span>GitHub</span>
-          </a>
-          <a href="https://uni-halo.ialley.cn"
-            class="inline-flex items-center gap-2 border-slate-300 bg-white hover:bg-slate-50 text-slate-700 font-semibold px-7 py-3.5 rounded-xl border  transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5"
-            target="_blank">
-            <RiStoreLine class="w-5 h-5" />
-            <span>官网主页</span>
           </a>
           <a href="https://github.com/ialley-workshop-open/uni-halo/issues/23"
             class="inline-flex items-center gap-2 text-[#b9e424] border-[#b9e424]/50 bg-white hover:bg-slate-50 font-semibold px-7 py-3.5 rounded-xl border transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5"
@@ -450,8 +449,7 @@ const activeUiPreviewTab = ref('main')
             class="relative overflow-hidden bg-white rounded-3xl p-8 shadow-sm border border-slate-100 hover:shadow-lg transition-all duration-300">
             <div class="absolute top-0 right-0 w-40 h-40 rounded-full blur-3xl pointer-events-none"
               style="background: rgba(236, 72, 153, 0.12)"></div>
-            <div
-              class="w-12 h-12 rounded-2xl flex items-center justify-center text-white mb-5"
+            <div class="w-12 h-12 rounded-2xl flex items-center justify-center text-white mb-5"
               style="background: linear-gradient(135deg, #EC4899 0%, #DB2777 100%)">
               <RiHeartLine class="w-6 h-6" />
             </div>
@@ -478,8 +476,7 @@ const activeUiPreviewTab = ref('main')
             class="relative overflow-hidden bg-white rounded-3xl p-8 shadow-sm border border-slate-100 hover:shadow-lg transition-all duration-300">
             <div class="absolute top-0 right-0 w-40 h-40 rounded-full blur-3xl pointer-events-none"
               style="background: rgba(45, 122, 214, 0.12)"></div>
-            <div
-              class="w-12 h-12 rounded-2xl flex items-center justify-center text-white mb-5"
+            <div class="w-12 h-12 rounded-2xl flex items-center justify-center text-white mb-5"
               style="background: linear-gradient(135deg, #368FEF 0%, #2D7AD6 100%)">
               <RiShieldCheckLine class="w-6 h-6" />
             </div>
@@ -593,7 +590,8 @@ const activeUiPreviewTab = ref('main')
 
         <!-- 截图展示 -->
         <div v-for="group in uiPreviewGroups" v-show="activeUiPreviewTab === group.key" :key="group.key">
-          <div class="grid grid-cols-2 sm:grid-cols-3 gap-5" :class="group.items.length % 2 === 0 ? 'lg:grid-cols-4' : 'lg:grid-cols-5'">
+          <div class="grid grid-cols-2 sm:grid-cols-3 gap-5"
+            :class="group.items.length % 2 === 0 ? 'lg:grid-cols-4' : 'lg:grid-cols-5'">
             <figure v-for="item in group.items" :key="item.name" class="flex flex-col items-center gap-3">
               <img :src="SCREENSHOT_CDN_BASE + item.file" :alt="item.name" loading="lazy"
                 class="w-full rounded-2xl border border-slate-100 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300" />
@@ -604,7 +602,8 @@ const activeUiPreviewTab = ref('main')
 
         <p class="mt-8 text-center text-sm text-slate-400">
           更多页面截图与功能演示，请访问
-          <a href="https://uni-halo-doc.ialley.cn/design/pages" target="_blank" class="font-medium" style="color: #2D7AD6">官方文档 · 界面预览</a>
+          <a href="https://uni-halo-doc.ialley.cn/design/pages" target="_blank" class="font-medium"
+            style="color: #2D7AD6">官方文档 · 界面预览</a>
         </p>
       </div>
     </section>
@@ -643,7 +642,7 @@ const activeUiPreviewTab = ref('main')
         </div>
 
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          <a href="https://uni-halo.ialley.cn/"
+          <a href="https://uni-halo-doc.ialley.cn/"
             class="flex items-center gap-4 bg-white rounded-xl p-4 border border-slate-100 hover:shadow-md transition-all duration-200"
             target="_blank">
             <div class="w-10 h-10 rounded-lg flex items-center justify-center text-white flex-shrink-0"
@@ -690,7 +689,7 @@ const activeUiPreviewTab = ref('main')
             target="_blank">
             <div class="w-10 h-10 rounded-lg flex items-center justify-center text-white flex-shrink-0"
               style="background: linear-gradient(135deg, #10B981 0%, #059669 100%)">
-              <RiStoreLine class="w-5 h-5" />
+              <RiBookOpenLine class="w-5 h-5" />
             </div>
             <div class="flex-1 min-w-0">
               <div class="font-semibold text-slate-800 text-sm">官网主页</div>
