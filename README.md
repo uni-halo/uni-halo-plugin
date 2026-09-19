@@ -1,4 +1,4 @@
-# UniHalo v3.x 配置插件
+# Uni Halo 配置插件
 
 > 为免费开源的 `uni-halo v3.x` 多端应用提供配套的配置插件。
 
@@ -36,9 +36,9 @@
 
 ### 2、页面截图
 
-|                                             首页                                              |                                             分类                                              |                                             我的                                              |
+|                                             首页                                              |                                             分类                                              |                                             博主                                              |
 | :-------------------------------------------------------------------------------------------: | :-------------------------------------------------------------------------------------------: | :-------------------------------------------------------------------------------------------: |
-| ![首页](https://gcore.jsdelivr.net/gh/uni-halo/uni-halo-static/screenshots/app/v3.x/首页.png) | ![分类](https://gcore.jsdelivr.net/gh/uni-halo/uni-halo-static/screenshots/app/v3.x/分类.jpg) | ![我的](https://gcore.jsdelivr.net/gh/uni-halo/uni-halo-static/screenshots/app/v3.x/关于.jpg) |
+| ![首页](https://gcore.jsdelivr.net/gh/uni-halo/uni-halo-static/screenshots/app/v3.x/首页.png) | ![分类](https://gcore.jsdelivr.net/gh/uni-halo/uni-halo-static/screenshots/app/v3.x/分类.png) | ![博主](https://gcore.jsdelivr.net/gh/uni-halo/uni-halo-static/screenshots/app/v3.x/博主.png) |
 
 ### 恋爱日记
 
@@ -65,19 +65,21 @@
 
 **恋爱日记**：精心设计的秀恩爱模块 —— 恋爱相册（支持查看密码，页内解锁、服务端保证安全）、恋爱清单、我们的故事；内容在插件控制台维护，管理员也可以直接在移动端 App 内管理；插件同时内置前台模板，任何主题零成本接入，详见[官方文档](https://uni-halo-doc.ialley.cn/plugin/love-template)。
 
-**登录管理**：为移动端提供账号密码登录、注册、微信小程序一键登录与微信绑定能力，登录后下发 Halo 原生个人访问令牌（PAT），内置登录限流保护，并基于角色返回 RBAC 权限列表供 App 端做菜单/按钮级显隐控制。
+**登录管理**：为移动端提供账号密码登录、注册、微信小程序一键登录与微信绑定能力，登录后使用 Halo 原生令牌访问接口，内置登录限流保护，并按角色控制菜单/按钮的可见性。
 
 ### 2、使用方式
 
 - 1、下载 `uni-halo v3.x` 小程序源码，参考：https://uni-halo-doc.ialley.cn/guide/introduction 部署指南将项目在本地运行起来。
-- 2、在 Halo 插件市场搜索 `UniHalo 配置` 插件下载安装，或者通过 `github` 仓库 [点这里](https://github.com/uni-halo/uni-halo-plugin/releases) 找到发布包下载安装。
+- 2、在 Halo 插件市场搜索 `Uni Halo` 插件下载安装，或者通过 `github` 仓库 [点这里](https://github.com/uni-halo/uni-halo-plugin/releases) 找到发布包下载安装。
 - 3、安装完成并且启动插件，进入插件配置页面，配置相关参数即可。
 
 ### 3、相关文档
 
-- [移动端登录 · 使用与配置文档](.docs/mobile-login-setup.md)：站点管理员如何开通与配置登录能力
-- [移动端登录 · 接口文档](.docs/mobile-login-api.md)：App / 小程序端如何对接
-- [登录认证调研报告](.docs/login-auth-research.md)：技术选型与 Halo 内部机制分析
+- [插件配置](https://uni-halo-doc.ialley.cn/deploy/config)：插件设置（安全控制、平台接入、主题悬浮窗、移动端登录）说明
+- [控制台功能](https://uni-halo-doc.ialley.cn/plugin/console)：内容管理（横幅、公告、友链、恋爱日记等）使用说明
+- [移动端登录 · 使用与配置](https://uni-halo-doc.ialley.cn/plugin/mobile-login)：站点管理员如何开通与配置登录能力
+- [移动端登录 · 接口文档](https://uni-halo-doc.ialley.cn/plugin/mobile-login-api)：App / 小程序端如何对接
+- [恋爱日记前台模板](https://uni-halo-doc.ialley.cn/plugin/love-template)：主题接入说明
 
 ---
 

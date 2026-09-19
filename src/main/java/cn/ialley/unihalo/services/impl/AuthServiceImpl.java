@@ -25,6 +25,7 @@ import cn.ialley.unihalo.utils.LoginConfigResolver;
 import cn.ialley.unihalo.vo.LoginConfig;
 import cn.ialley.unihalo.vo.LoginResult;
 import cn.ialley.unihalo.vo.ProfileVo;
+import cn.ialley.unihalo.vo.RegisterForm;
 import cn.ialley.unihalo.vo.WechatBindingVo;
 import run.halo.app.core.extension.User;
 import run.halo.app.core.extension.UserConnection;
@@ -56,6 +57,16 @@ public class AuthServiceImpl implements AuthService {
 
     /** 自动注册时最多连续尝试多少个序号（并发抢号 + 已存在时的兜底次数）。 */
     private static final int MAX_USERNAME_ATTEMPTS = 5;
+
+    /**
+     * 注册失败中「用户可修复」的错误码（计入限流）：
+     * 用户名重复/受限、验证码无效、邮箱被占、未同意协议。
+     * 配置类错误（站点未开放注册、默认角色未配置）不计 —— 那是站长侧问题，
+     * 客户端重试无意义，计入限流只会把配置问题变成 429 迷惑用户。
+     */
+    private static final Set<String> ACCOUNTABLE_REGISTER_CODES = Set.of(
+            "USERNAME_EXISTS", "NAME_RESTRICTED", "EMAIL_CODE_INVALID",
+            "EMAIL_ALREADY_TAKEN", "AGREEMENT_REQUIRED");
 
     private final UserService userService;
     private final RoleService roleService;
@@ -92,6 +103,40 @@ public class AuthServiceImpl implements AuthService {
                         .flatMap(session -> resolveWechatUser(session, config))
                         .onErrorMap(e -> !(e instanceof AuthException),
                                 this::unexpectedWechatFailure));
+    }
+
+    @Override
+    public Mono<LoginResult> registerByPassword(RegisterForm form, String clientIp) {
+        return Mono.defer(() -> {
+            // Bean Validation 不经过内部服务调用（那是 Web 层注解的职责），基础项自行把关，
+            // 提示语与 APP 端文案对齐；更细的格式校验（用户名 4-63 位、密码 ≥5 位、
+            // 邮箱格式/验证码、注册协议）由 Halo signUp 内部 fail closed 校验并在此映射成中文。
+            if (form == null || isBlank(form.username()) || isBlank(form.displayName())
+                    || isBlank(form.password())) {
+                return Mono.error(new AuthException("BAD_REQUEST", "请填写完整的注册信息"));
+            }
+            if (!form.password().equals(form.confirmPassword())) {
+                return Mono.error(new AuthException("BAD_REQUEST", "两次输入的密码不一致"));
+            }
+            return requireNotLocked(form.username(), clientIp)
+                    .then(configResolver.config())
+                    .flatMap(config -> userService.signUp(toSignUpData(form))
+                            .doOnSuccess(user -> attemptGuard.resetUsername(form.username()))
+                            // signUp 失败先映射再计数：只有「用户可修复」的错误计入限流，
+                            // 与登录闸门共用（用户名 5 / IP 20 → 锁 15 分钟）
+                            .onErrorMap(this::mapSignUpFailure)
+                            .doOnError(AuthException.class,
+                                    e -> recordRegisterFailure(form.username(), clientIp, e))
+                            .flatMap(user -> issueFor(user, config)));
+        });
+    }
+
+    @Override
+    public Mono<LoginResult> registerByWechat(String code) {
+        // 与微信登录同源：已绑定则登录，未绑定自动建号（signUp 内部校验注册开关，
+        // 关闭时 REGISTER_FORBIDDEN fail closed）。复用实现避免双路径漂移，
+        // 注册页按钮语义 =「没有账号就建号，有账号就登录」。
+        return loginByWechat(code);
     }
 
     @Override
@@ -240,6 +285,81 @@ public class AuthServiceImpl implements AuthService {
                                     new AuthException("BAD_CREDENTIALS", "用户名或密码错误")))
                             .thenReturn(user);
                 });
+    }
+
+    /** 表单 → Halo 注册数据（email/emailCode/agreedToTerms 原样透传，由 signUp 校验）。 */
+    private SignUpData toSignUpData(RegisterForm form) {
+        var data = new SignUpData();
+        data.setUsername(form.username().trim());
+        data.setDisplayName(form.displayName().trim());
+        data.setPassword(form.password());
+        data.setConfirmPassword(form.confirmPassword());
+        data.setEmail(isBlank(form.email()) ? null : form.email().trim());
+        data.setEmailCode(isBlank(form.emailCode()) ? null : form.emailCode().trim());
+        data.setAgreedToTerms(Boolean.TRUE.equals(form.agreedToTerms()));
+        return data;
+    }
+
+    /**
+     * Halo 注册失败 → 业务错误。
+     *
+     * {@code signUp} 的校验异常多为 application 模块私有类型（与 DuplicateNameException
+     * 同理，api 依赖里没有），无法按类型 import，只能按类名/原因文本识别 —— 与微信
+     * 自动注册路径的映射口径保持一致。消息面向用户，不暴露内部细节。
+     */
+    private AuthException mapSignUpFailure(Throwable e) {
+        if (e instanceof AuthException auth) {
+            return auth;
+        }
+        var name = e.getClass().getName();
+        if ("run.halo.app.infra.exception.DuplicateNameException".equals(name)) {
+            return new AuthException("USERNAME_EXISTS", "用户名已被占用，换一个试试",
+                    AuthException.STATUS_BAD_REQUEST);
+        }
+        if ("run.halo.app.infra.exception.RestrictedNameException".equals(name)) {
+            return new AuthException("NAME_RESTRICTED", "用户名或昵称不符合规范",
+                    AuthException.STATUS_BAD_REQUEST);
+        }
+        if ("run.halo.app.infra.exception.EmailVerificationFailed".equals(name)) {
+            return new AuthException("EMAIL_CODE_INVALID", "邮箱验证码无效或已过期",
+                    AuthException.STATUS_BAD_REQUEST);
+        }
+        if ("run.halo.app.infra.exception.EmailAlreadyTakenException".equals(name)) {
+            return new AuthException("EMAIL_ALREADY_TAKEN", "该邮箱已被其他账号占用",
+                    AuthException.STATUS_BAD_REQUEST);
+        }
+        if ("run.halo.app.infra.exception.AgreementNotAcceptedException".equals(name)) {
+            return new AuthException("AGREEMENT_REQUIRED", "请先阅读并同意用户协议",
+                    AuthException.STATUS_BAD_REQUEST);
+        }
+        if (e instanceof ServerWebInputException inputException) {
+            var reason = String.valueOf(inputException.getReason());
+            if (reason.contains("registration")) {
+                return new AuthException("REGISTER_FORBIDDEN",
+                        "站点未开放用户注册，请联系站长在 Halo 系统设置中开启「允许注册」",
+                        AuthException.STATUS_FORBIDDEN);
+            }
+            if (reason.contains("default role")) {
+                return new AuthException("REGISTER_FORBIDDEN",
+                        "站点未配置新用户默认角色，请联系站长检查 Halo 系统设置",
+                        AuthException.STATUS_FORBIDDEN);
+            }
+            return new AuthException("BAD_REQUEST", "注册信息不合法，请检查后重试",
+                    AuthException.STATUS_BAD_REQUEST);
+        }
+        log.warn("【UniHalo】账号密码注册失败", e);
+        return new AuthException("REGISTER_FAILED", "注册失败，请稍后重试");
+    }
+
+    /** 仅「用户可修复」的注册错误计入限流（见 ACCOUNTABLE_REGISTER_CODES）。 */
+    private void recordRegisterFailure(String username, String clientIp, AuthException e) {
+        if (ACCOUNTABLE_REGISTER_CODES.contains(e.getCode())) {
+            attemptGuard.recordFailure(username, clientIp);
+        }
+    }
+
+    private static boolean isBlank(String value) {
+        return value == null || value.isBlank();
     }
 
     /** 按 openid/unionid 找到已绑定的用户，否则自动注册并绑定。 */

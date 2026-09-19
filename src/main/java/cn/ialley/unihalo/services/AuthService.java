@@ -4,6 +4,7 @@ import reactor.core.publisher.Mono;
 import cn.ialley.unihalo.services.BindTicketService;
 import cn.ialley.unihalo.vo.LoginResult;
 import cn.ialley.unihalo.vo.ProfileVo;
+import cn.ialley.unihalo.vo.RegisterForm;
 import cn.ialley.unihalo.vo.WechatBindingVo;
 
 /**
@@ -33,6 +34,29 @@ public interface AuthService {
      * @param code wx.login() 得到的临时登录凭证（一次性）
      */
     Mono<LoginResult> loginByWechat(String code);
+
+    /**
+     * 账号密码注册并登录（注册即登录）：中转 Halo 注册（{@code UserService.signUp}），
+     * 成功后按登录同一出口签发 PAT，返回结构与 {@link #loginByPassword} 完全一致。
+     *
+     * 注册开关与策略沿用 Halo 系统设置（允许注册 / 默认角色 / 注册协议 / 注册邮箱验证），
+     * 均由 {@code signUp} 内部 fail closed 校验；失败计入限流（与登录共用闸门）。
+     *
+     * @param form     注册表单
+     * @param clientIp 来源 IP（TCP 源地址），用于限流；未知时传 null
+     */
+    Mono<LoginResult> registerByPassword(RegisterForm form, String clientIp);
+
+    /**
+     * 微信一键注册并登录（注册页按钮，兼做「注册 + 登录」）。
+     *
+     * 与 {@link #loginByWechat} 同源同语义：wx.login code 换身份，已绑定则直接登录，
+     * 未绑定则自动建号（建号走 {@code signUp}，注册开关关闭时 fail closed 拒绝）。
+     * 复用同一实现避免双路径漂移。
+     *
+     * @param code wx.login() 得到的临时登录凭证（一次性）
+     */
+    Mono<LoginResult> registerByWechat(String code);
 
     /**
      * 已登录用户绑定微信（老账号主动关联，绑定后可用微信一键登录进这个账号）。

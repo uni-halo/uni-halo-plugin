@@ -15,6 +15,7 @@ import org.springframework.web.reactive.function.server.ServerResponse;
 import cn.ialley.unihalo.constants.Constants;
 import cn.ialley.unihalo.exception.AuthException;
 import cn.ialley.unihalo.services.AuthService;
+import cn.ialley.unihalo.vo.RegisterForm;
 import reactor.core.publisher.Mono;
 import run.halo.app.core.extension.endpoint.CustomEndpoint;
 import run.halo.app.extension.GroupVersion;
@@ -48,6 +49,8 @@ public class AuthEndpoint implements CustomEndpoint {
         return RouterFunctions.route()
                 .POST(Constants.AUTH_API_BASE_PATH + "/login", this::loginByPassword)
                 .POST(Constants.AUTH_API_BASE_PATH + "/login/wechat", this::loginByWechat)
+                .POST(Constants.AUTH_API_BASE_PATH + "/register", this::registerByPassword)
+                .POST(Constants.AUTH_API_BASE_PATH + "/register/wechat", this::registerByWechat)
                 .POST(Constants.AUTH_API_BASE_PATH + "/bind/wechat", this::bindWechat)
                 .POST(Constants.AUTH_API_BASE_PATH + "/bind/wechat/qr/tickets",
                         this::createBindTicket)
@@ -78,6 +81,33 @@ public class AuthEndpoint implements CustomEndpoint {
                 .switchIfEmpty(Mono.error(
                         new AuthException("BAD_REQUEST", "缺少请求体")))
                 .flatMap(body -> authService.loginByWechat(body.code()))
+                .flatMap(result -> ServerResponse.ok().bodyValue(result))
+                .onErrorResume(AuthEndpoint::handleFailure);
+    }
+
+    /**
+     * 账号密码注册并登录（注册即登录）：返回结构与登录接口一致
+     * （{@code LoginResult}），APP 端注册后直接进站，无需二次登录。
+     */
+    private Mono<ServerResponse> registerByPassword(ServerRequest request) {
+        var clientIp = clientIpOf(request);
+        return request.bodyToMono(RegisterRequest.class)
+                .switchIfEmpty(Mono.error(
+                        new AuthException("BAD_REQUEST", "缺少请求体")))
+                .map(body -> new RegisterForm(body.username(), body.displayName(),
+                        body.password(), body.confirmPassword(),
+                        body.email(), body.emailCode(), body.agreedToTerms()))
+                .flatMap(form -> authService.registerByPassword(form, clientIp))
+                .flatMap(result -> ServerResponse.ok().bodyValue(result))
+                .onErrorResume(AuthEndpoint::handleFailure);
+    }
+
+    /** 微信一键注册并登录（已绑定则登录，未绑定自动建号，兼做「注册 + 登录」）。 */
+    private Mono<ServerResponse> registerByWechat(ServerRequest request) {
+        return request.bodyToMono(WechatLoginRequest.class)
+                .switchIfEmpty(Mono.error(
+                        new AuthException("BAD_REQUEST", "缺少请求体")))
+                .flatMap(body -> authService.registerByWechat(body.code()))
                 .flatMap(result -> ServerResponse.ok().bodyValue(result))
                 .onErrorResume(AuthEndpoint::handleFailure);
     }
@@ -225,6 +255,14 @@ public class AuthEndpoint implements CustomEndpoint {
 
     /** 微信登录请求体。 */
     public record WechatLoginRequest(String code) {
+    }
+
+    /**
+     * 账号密码注册请求体（字段与 {@link RegisterForm} 一致，
+     * 收到后原样映射为表单交给服务层，校验逻辑在服务端 fail closed）。
+     */
+    public record RegisterRequest(String username, String displayName, String password,
+            String confirmPassword, String email, String emailCode, Boolean agreedToTerms) {
     }
 
     private record Identity(String username, String patName) {

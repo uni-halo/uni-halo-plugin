@@ -758,6 +758,24 @@ function restoreMyPageDefaults(group: "common" | "other") {
     <RichTextEditorField v-model="formState.spec.pages.disclaimers!.content" placeholder="输入免责声明内容，支持图文混排……留空则不展示免责声明页" />
   </template>
 
+  <!-- 页面与排版 → 用户协议（注册页勾选行/协议弹窗与独立协议页共用内容） -->
+  <template v-if="subTab === 'userAgreement'">
+    <p class=":uno: mb-3 text-xs text-gray-400">
+      注册流程「我已阅读并同意」勾选行与协议弹窗、独立协议页展示的内容（支持图文混排）；
+      留空时注册页回退为静态提示文案。
+    </p>
+    <RichTextEditorField v-model="formState.spec.pages.agreement!.userAgreement" placeholder="输入用户协议内容，支持图文混排……留空时 app 端仅展示静态提示" />
+  </template>
+
+  <!-- 页面与排版 → 隐私政策（与用户协议同套路，注册流程共用勾选） -->
+  <template v-if="subTab === 'privacyPolicy'">
+    <p class=":uno: mb-3 text-xs text-gray-400">
+      注册流程「我已阅读并同意」勾选行与协议弹窗、独立协议页展示的内容（支持图文混排）；
+      留空时注册页回退为静态提示文案。
+    </p>
+    <RichTextEditorField v-model="formState.spec.pages.agreement!.privacyPolicy" placeholder="输入隐私政策内容，支持图文混排……留空时 app 端仅展示静态提示" />
+  </template>
+
   <!-- 首页分类栏选择（固定 3 个，复用审核模式候选弹窗） -->
   <AuditCandidatesModal
     v-if="categoryModalVisible"

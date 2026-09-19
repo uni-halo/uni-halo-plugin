@@ -150,6 +150,22 @@ public class FeatureConfig extends AbstractExtension {
         private Disclaimer disclaimers;
         /** 文章详情页内容与版权文案 */
         private PostDetail postDetailConfig;
+        /** 用户协议与隐私政策（页面设置-用户协议/隐私政策 tab 维护，
+         * 随 {@code featureConfig.pages.agreement} 下发，app 端注册页/协议页渲染） */
+        private Agreement agreement;
+    }
+
+    /**
+     * 用户协议与隐私政策（注册流程与独立协议页共用内容）。
+     * 内容为富文本 HTML（RichTextEditorField 编辑）；留空 = 站点未配置，
+     * app 端注册页回退为静态提示文案，协议页展示空态。
+     */
+    @Data
+    public static class Agreement {
+        /** 用户协议内容（富文本 HTML） */
+        private String userAgreement;
+        /** 隐私政策内容（富文本 HTML） */
+        private String privacyPolicy;
     }
 
     /** 全站页面标题（app 端经 pages.titles 读取，传入各页面 uh-navbar default-title，留空回退内置默认） */

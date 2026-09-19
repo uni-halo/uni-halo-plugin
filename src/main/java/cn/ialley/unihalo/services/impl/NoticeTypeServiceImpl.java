@@ -113,6 +113,10 @@ public class NoticeTypeServiceImpl implements NoticeTypeService {
     }
 
     private static <T> List<T> slice(List<T> list, int page, int size) {
+        // size <= 0 表示不分页，返回全量
+        if (size <= 0) {
+            return list;
+        }
         int from = Math.min((page - 1) * size, list.size());
         int to = Math.min(from + size, list.size());
         return list.subList(from, to);

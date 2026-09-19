@@ -62,8 +62,18 @@ public class NoticePublicEndpoint implements CustomEndpoint {
         return RouterFunctions.route()
                 .GET(Constants.NOTICE_API_BASE_PATH, this::listNotices)
                 .GET(Constants.NOTICE_API_BASE_PATH + "/latest", this::getLatestNotice)
+                .GET(Constants.NOTICE_TYPE_API_BASE_PATH, this::listNoticeTypes)
                 .GET(Constants.NOTICE_API_BASE_PATH + "/{name}", this::getNotice)
                 .build();
+    }
+
+    /**
+     * 公告分类列表（匿名可访问，按 priority 排序，app 端筛选用）。
+     * 注意：注册在 /{name} 之前，避免 notice-types 被当作公告 name 匹配。
+     */
+    private Mono<ServerResponse> listNoticeTypes(ServerRequest request) {
+        return noticeTypeService.list("", 1, 0)
+                .flatMap(result -> ServerResponse.ok().bodyValue(result));
     }
 
     /**

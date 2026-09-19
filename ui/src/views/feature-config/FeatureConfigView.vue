@@ -57,6 +57,8 @@ const SUB_TABS: Record<BigGroup, Array<{ id: string; label: string }>> = {
     { id: "postDetail", label: "笔记详情页" },
     { id: "aboutPage", label: "博主页" },
     { id: "disclaimersPage", label: "免责声明页" },
+    { id: "userAgreement", label: "用户协议" },
+    { id: "privacyPolicy", label: "隐私政策" },
   ],
   assets: [
     { id: "loading", label: "加载占位" },
@@ -168,6 +170,9 @@ function defaultSpec(): FeatureConfigSpec {
         otherFeatures: featureEntriesByKeys(DEFAULT_MY_PAGE_OTHER_KEYS).map(toQuickNavigationItem),
       },
       disclaimers: { content: "" },
+      // 用户协议与隐私政策（页面设置-用户协议/隐私政策 tab 维护，默认留空
+      // = 站点未配置，app 端注册页回退静态提示文案）
+      agreement: { userAgreement: "", privacyPolicy: "" },
       postDetailConfig: {
         showComment: true,
         copyrightEnabled: true,

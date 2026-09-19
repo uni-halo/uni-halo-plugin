@@ -237,6 +237,43 @@ const contacts = [
   { icon: RiMessage2Line, label: 'QQ 交流群', value: '加入开发者社群', href: 'https://qm.qq.com/q/Kh9QPnL6gO' },
   { icon: RiMapPinLine, label: '所在地', value: '中国·深圳', href: 'javascript:void(0)' },
 ]
+
+// 界面预览数据（分段器三大块）
+const SCREENSHOT_CDN_BASE = 'https://gcore.jsdelivr.net/gh/uni-halo/uni-halo-static/screenshots/'
+const uiPreviewGroups = [
+  {
+    key: 'main',
+    label: '主界面',
+    items: [
+      { name: '首页', file: 'app/v3.x/首页.png' },
+      { name: '分类', file: 'app/v3.x/分类.png' },
+      { name: '图库', file: 'app/v3.x/图库.png' },
+      { name: '瞬间', file: 'app/v3.x/瞬间.png' },
+      { name: '博主', file: 'app/v3.x/博主.png' },
+    ],
+  },
+  {
+    key: 'love',
+    label: '特色功能',
+    items: [
+      { name: '恋爱主页', file: 'app/v3.x/恋爱日记.png' },
+      { name: '恋爱相册', file: 'app/v3.x/恋爱相册.png' },
+      { name: '恋爱清单', file: 'app/v3.x/恋爱清单.png' },
+      { name: '我们的故事', file: 'app/v3.x/恋爱故事.png' },
+    ],
+  },
+  {
+    key: 'template',
+    label: '主题模板',
+    items: [
+      { name: '恋爱日记主页', file: 'plugin/v3.x/前台模板.png' },
+      { name: '恋爱相册', file: 'plugin/v3.x/前台模板-恋爱相册.png' },
+      { name: '恋爱清单', file: 'plugin/v3.x/前台模板-恋爱清单.png' },
+      { name: '我们的故事', file: 'plugin/v3.x/前台模板-恋爱故事.png' },
+    ],
+  },
+]
+const activeUiPreviewTab = ref('main')
 </script>
 
 <template>
@@ -448,7 +485,7 @@ const contacts = [
             </div>
             <h3 class="text-xl font-bold text-slate-800 mb-2">登录管理</h3>
             <p class="text-slate-500 text-sm leading-relaxed mb-5">
-              账号密码登录、注册、微信一键登录与绑定，登录后下发 Halo 原生 PAT 令牌，内置登录限流与 RBAC 权限控制。
+              账号密码登录、注册、微信一键登录与绑定，登录后使用 Halo 原生令牌，内置登录限流，按角色控制可见内容。
             </p>
             <div class="flex flex-wrap gap-2 mb-5">
               <span class="px-3 py-1 text-xs font-medium rounded-full"
@@ -458,9 +495,7 @@ const contacts = [
               <span class="px-3 py-1 text-xs font-medium rounded-full"
                 style="background: rgba(45, 122, 214, 0.10); color: #2D7AD6">注册与绑定</span>
               <span class="px-3 py-1 text-xs font-medium rounded-full"
-                style="background: rgba(45, 122, 214, 0.10); color: #2D7AD6">PAT 令牌</span>
-              <span class="px-3 py-1 text-xs font-medium rounded-full"
-                style="background: rgba(45, 122, 214, 0.10); color: #2D7AD6">RBAC 权限</span>
+                style="background: rgba(45, 122, 214, 0.10); color: #2D7AD6">按角色控制可见内容</span>
             </div>
             <a href="https://uni-halo-doc.ialley.cn/plugin/mobile-login" target="_blank"
               class="inline-flex items-center gap-1 text-sm font-medium" style="color: #2D7AD6">
@@ -533,6 +568,44 @@ const contacts = [
             <p class="text-slate-500 text-xs leading-relaxed">{{ feature.description }}</p>
           </div>
         </div>
+      </div>
+    </section>
+
+    <!-- 界面预览 Section -->
+    <section class="py-16 sm:py-20 bg-white">
+      <div class="max-w-6xl mx-auto px-4">
+        <div class="text-center mb-8">
+          <h2 class="text-3xl sm:text-4xl font-bold text-slate-800 mb-4">界面预览</h2>
+          <p class="text-lg text-slate-500">主界面 / 特色功能 / 主题模板，一览 uni-halo 的界面设计</p>
+        </div>
+
+        <!-- 分段器 -->
+        <div class="flex justify-center mb-10">
+          <div class="inline-flex bg-slate-100 rounded-xl p-1">
+            <button v-for="group in uiPreviewGroups" :key="group.key"
+              class="px-6 py-2.5 rounded-lg text-sm font-medium transition-all duration-200"
+              :class="activeUiPreviewTab === group.key ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-700'"
+              @click="activeUiPreviewTab = group.key">
+              {{ group.label }}
+            </button>
+          </div>
+        </div>
+
+        <!-- 截图展示 -->
+        <div v-for="group in uiPreviewGroups" v-show="activeUiPreviewTab === group.key" :key="group.key">
+          <div class="grid grid-cols-2 sm:grid-cols-3 gap-5" :class="group.items.length % 2 === 0 ? 'lg:grid-cols-4' : 'lg:grid-cols-5'">
+            <figure v-for="item in group.items" :key="item.name" class="flex flex-col items-center gap-3">
+              <img :src="SCREENSHOT_CDN_BASE + item.file" :alt="item.name" loading="lazy"
+                class="w-full rounded-2xl border border-slate-100 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300" />
+              <figcaption class="text-sm text-slate-500">{{ item.name }}</figcaption>
+            </figure>
+          </div>
+        </div>
+
+        <p class="mt-8 text-center text-sm text-slate-400">
+          更多页面截图与功能演示，请访问
+          <a href="https://uni-halo-doc.ialley.cn/design/pages" target="_blank" class="font-medium" style="color: #2D7AD6">官方文档 · 界面预览</a>
+        </p>
       </div>
     </section>
 

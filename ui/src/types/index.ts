@@ -694,6 +694,15 @@ export interface FeatureConfigPages {
   disclaimers?: {
     content?: string;
   };
+  /** 用户协议与隐私政策（页面设置-用户协议/隐私政策 tab 维护，
+   * 经 getConfigs 下发 featureConfig.pages.agreement，app 端注册页/协议页渲染；
+   * 留空 = 站点未配置，app 端回退静态提示） */
+  agreement?: {
+    /** 用户协议内容（富文本 HTML） */
+    userAgreement?: string;
+    /** 隐私政策内容（富文本 HTML） */
+    privacyPolicy?: string;
+  };
   /** 文章详情页内容与版权文案 */
   postDetailConfig?: {
     showComment?: boolean;
