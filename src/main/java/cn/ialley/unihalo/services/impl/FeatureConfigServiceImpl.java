@@ -350,7 +350,7 @@ public class FeatureConfigServiceImpl implements FeatureConfigService {
         pages.setHomeConfig(home);
 
         BloggerPage blogger = new BloggerPage();
-        blogger.setBgImageUrl("/plugins/uni-halo/assets/static/uni_halo_profile_bg.jpg");
+        blogger.setBgImageUrl("/plugins/uni-halo/assets/static/uni_halo_profile_bg.jpeg");
         blogger.setWaveImageUrl("/plugins/uni-halo/assets/static/uni_halo_about_wave.gif");
         // 常用功能显示方式：grid=宫格 / list=列表（app 端博主页消费，缺省网格）
         blogger.setCommonFeaturesMode("grid");
@@ -385,38 +385,38 @@ public class FeatureConfigServiceImpl implements FeatureConfigService {
     /**
      * 我的页面-常用功能默认 8 项（对齐 app 端 about.vue navList：
      * 联系博主/通知公告/我的收藏/恋爱日记/友情链接/文章归档/投票中心/数据看板，顺序即展示顺序；
-     * bgColor 用品牌深色 hex8（app 端 about.vue 经 toLightBg 渲染为浅底）；
+     * bgColor 用品牌色 hex8 浅底（与前端注册表 feature-entries.ts 恢复默认一致）；
      * subTitle 对齐 app 端本地默认 rightText（favorites 无副标题）。
      */
     private static List<QuickNavigationItem> defaultMyPageCommonFeatures() {
         List<QuickNavigationItem> items = new ArrayList<>();
-        QuickNavigationItem contactBlogger = navItem("contact-blogger", "联系博主", "#FF9800", "#FF9800F2",
+        QuickNavigationItem contactBlogger = navItem("contact-blogger", "联系博主", "#FF9800", "#FF980024",
                 "uhemoji2-icon", "-wink", "/pages-blog/contact/contact");
         contactBlogger.setSubTitle("博主常用联系方式");
         items.add(contactBlogger);
-        QuickNavigationItem notice = navItem("notice", "通知公告", "#9C27B0", "#9C27B0F2",
+        QuickNavigationItem notice = navItem("notice", "通知公告", "#9C27B0", "#9C27B024",
                 "uhemoji-icon", "-sleeping", "/pages-blog/notice/notice");
         notice.setSubTitle("站点公告与通知");
         items.add(notice);
-        items.add(navItem("favorites", "我的收藏", "#FFB300", "#FFB300F2",
+        items.add(navItem("favorites", "我的收藏", "#FFB300", "#FFB30024",
                 "uhemoji2-icon", "-smiling", "/pages-blog/favorites/favorites"));
-        QuickNavigationItem love = navItem("love", "恋爱日记", "#FF4C67", "#FF4C67F2",
+        QuickNavigationItem love = navItem("love", "恋爱日记", "#FF4C67", "#FF4C6724",
                 "uhemoji2-icon", "-in-love", "/pages-blog/love/love");
         love.setSubTitle("博主的恋爱日记");
         items.add(love);
-        QuickNavigationItem friendLinks = navItem("friend-links", "友情链接", "#009688", "#009688F2",
+        QuickNavigationItem friendLinks = navItem("friend-links", "友情链接", "#009688", "#00968824",
                 "uhemoji2-icon", "-cool", "/pages-blog/friend-links/friend-links");
         friendLinks.setSubTitle("看看博主朋友们吧");
         items.add(friendLinks);
-        QuickNavigationItem archives = navItem("archives", "文章归档", "#03A9F4", "#03A9F4F2",
+        QuickNavigationItem archives = navItem("archives", "文章归档", "#03A9F4", "#03A9F424",
                 "uhemoji2-icon", "-mask", "/pages-blog/archives/archives");
         archives.setSubTitle("全部文章");
         items.add(archives);
-        QuickNavigationItem vote = navItem("vote", "投票中心", "#00BCD4", "#00BCD4F2",
+        QuickNavigationItem vote = navItem("vote", "投票中心", "#00BCD4", "#00BCD424",
                 "uhemoji2-icon", "-confused", "/pages-blog/votes/votes");
         vote.setSubTitle("查看和进行投票");
         items.add(vote);
-        QuickNavigationItem dataVisual = navItem("data-visual", "数据看板", "#663CC9", "#663CC9F2",
+        QuickNavigationItem dataVisual = navItem("data-visual", "数据看板", "#663CC9", "#663CC924",
                 "uhemoji2-icon", "-surprised", "/pages-blog/data-visual/data-visual");
         dataVisual.setSubTitle("站点数据可视化");
         items.add(dataVisual);
@@ -429,15 +429,15 @@ public class FeatureConfigServiceImpl implements FeatureConfigService {
      */
     private static List<QuickNavigationItem> defaultMyPageOtherFeatures() {
         List<QuickNavigationItem> items = new ArrayList<>();
-        QuickNavigationItem setting = navItem("setting", "偏好设置", "#7986CB", "#7986CBF2",
+        QuickNavigationItem setting = navItem("setting", "偏好设置", "#7986CB", "#7986CB24",
                 "uhemoji2-icon", "-tired", "/pages-blog/setting/setting");
         setting.setSubTitle("首页布局、卡片样式等本地偏好");
         items.add(setting);
-        QuickNavigationItem disclaimers = navItem("disclaimers", "免责声明", "#795548", "#795548F2",
+        QuickNavigationItem disclaimers = navItem("disclaimers", "免责声明", "#795548", "#79554824",
                 "uhemoji2-icon", "-smirking", "/pages-blog/disclaimers/disclaimers");
         disclaimers.setSubTitle("博客内容免责声明");
         items.add(disclaimers);
-        QuickNavigationItem about = navItem("about", "关于项目", "#607D8B", "#607D8BF2",
+        QuickNavigationItem about = navItem("about", "关于项目", "#607D8B", "#607D8B24",
                 "uhemoji2-icon", "-happy-", "/pages-blog/about-project/about-project");
         about.setSubTitle("小莫唐尼开源项目");
         items.add(about);

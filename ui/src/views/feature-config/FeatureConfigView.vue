@@ -57,8 +57,8 @@ const SUB_TABS: Record<BigGroup, Array<{ id: string; label: string }>> = {
     { id: "postDetail", label: "笔记详情页" },
     { id: "aboutPage", label: "博主页" },
     { id: "disclaimersPage", label: "免责声明页" },
-    { id: "userAgreement", label: "用户协议" },
-    { id: "privacyPolicy", label: "隐私政策" },
+    { id: "userAgreement", label: "用户协议页" },
+    { id: "privacyPolicy", label: "隐私政策页" },
   ],
   assets: [
     { id: "loading", label: "加载占位" },
@@ -158,7 +158,7 @@ function defaultSpec(): FeatureConfigSpec {
         categories: [],
       },
       aboutConfig: {
-        bgImageUrl: "/plugins/uni-halo/assets/static/uni_halo_profile_bg.jpg",
+        bgImageUrl: "/plugins/uni-halo/assets/static/uni_halo_profile_bg.jpeg",
         waveImageUrl: "/plugins/uni-halo/assets/static/uni_halo_about_wave.gif",
         commonFeaturesMode: "grid",
         copyrightConfig: { enabled: true, content: "「 2022 uni-halo 丨 开源项目@小莫唐尼 」" },
