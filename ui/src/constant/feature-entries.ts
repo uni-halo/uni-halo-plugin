@@ -23,22 +23,24 @@ export const FEATURE_ENTRY_REGISTRY: FeatureEntry[] = [
   {key: "data-visual", title: "数据看板", subTitle: "站点数据可视化", color: "#663CC9", bgColor: "#663CC924", iconPrefix: "uhemoji2-icon", icon: "-surprised", path: "/pages-blog/data-visual/data-visual", visible: true, group: "common"},
   // ===== 我的页面-其他功能（默认 3 项，顺序即展示顺序）=====
   {key: "setting", title: "偏好设置", subTitle: "首页布局、卡片样式等设置", color: "#7986CB", bgColor: "#7986CB24", iconPrefix: "uhemoji2-icon", icon: "-tired", path: "/pages-blog/setting/setting", visible: true, group: "other"},
-  {key: "disclaimers", title: "免责声明", subTitle: "博客内容免责声明", color: "#795548", bgColor: "#79554824", iconPrefix: "uhemoji2-icon", icon: "-smirking", path: "/pages-blog/disclaimers/disclaimers", visible: true, group: "other"},
-  {key: "about", title: "关于项目", subTitle: "小莫唐尼的开源项目", color: "#607D8B", bgColor: "#607D8B24", iconPrefix: "uhemoji2-icon", icon: "-happy-", path: "/pages-blog/about-project/about-project", visible: true, group: "other"},
+  {key: "disclaimer", title: "免责声明", subTitle: "博客内容免责声明", color: "#795548", bgColor: "#79554824", iconPrefix: "uhemoji2-icon", icon: "-smirking", path: "/pages-blog/disclaimer/disclaimer", visible: true, group: "other"},
+  {key: "user-agreement", title: "用户协议", subTitle: "站点用户协议", color: "#8D6E63", bgColor: "#8D6E6324", iconPrefix: "uhemoji2-icon", icon: "-thinking", path: "/pages-blog/user-agreement/user-agreement", visible: true, group: "other"},
+  {key: "privacy-policy", title: "隐私政策", subTitle: "站点隐私政策", color: "#A1887F", bgColor: "#A1887F24", iconPrefix: "uhemoji2-icon", icon: "-shushing", path: "/pages-blog/privacy-policy/privacy-policy", visible: true, group: "other"},
+  {key: "aboutProject", title: "关于项目", subTitle: "小莫唐尼的开源项目", color: "#607D8B", bgColor: "#607D8B24", iconPrefix: "uhemoji2-icon", icon: "-happy-", path: "/pages-blog/about-project/about-project", visible: true, group: "other"},
 ];
 
 /**
  * 首页快捷导航默认 5 项
  */
-export const DEFAULT_QUICK_NAV_KEYS = ["love", "contact-blogger", "favorites", "friend-links", "about"];
+export const DEFAULT_QUICK_NAV_KEYS = ["love", "contact-blogger", "favorites", "friend-links", "aboutProject"];
 
 /** 我的页面-常用功能默认 8 项 */
 export const DEFAULT_MY_PAGE_COMMON_KEYS = [
   "contact-blogger", "notice", "favorites", "love", "friend-links", "archives", "vote", "data-visual",
 ];
 
-/** 我的页面-其他功能默认 3 项 key */
-export const DEFAULT_MY_PAGE_OTHER_KEYS = ["setting", "disclaimers", "about"];
+/** 我的页面-其他功能默认 key */
+export const DEFAULT_MY_PAGE_OTHER_KEYS = ["setting", "disclaimer", "aboutProject"];
 
 /** 按归属组过滤注册表（候选弹窗统一清单不用；默认配置一律走显式 key 列表） */
 export function featureEntriesByGroup(group: FeatureEntry["group"]): FeatureEntry[] {

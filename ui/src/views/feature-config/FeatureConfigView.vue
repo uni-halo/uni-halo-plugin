@@ -54,10 +54,10 @@ const SUB_TABS: Record<BigGroup, Array<{ id: string; label: string }>> = {
   pages: [
     { id: "pageTitles", label: "页面标题" },
     { id: "home", label: "首页" },
-    { id: "momentPage", label: "瞬间页" },
+    { id: "moment", label: "瞬间页" },
     { id: "postDetail", label: "笔记详情页" },
-    { id: "aboutPage", label: "博主页" },
-    { id: "disclaimersPage", label: "免责声明页" },
+    { id: "blogger", label: "博主页" },
+    { id: "disclaimer", label: "免责声明页" },
     { id: "userAgreement", label: "用户协议页" },
     { id: "privacyPolicy", label: "隐私政策页" },
   ],
@@ -127,38 +127,40 @@ function defaultSpec(): FeatureConfigSpec {
       titles: {
         home: "首页",
         gallery: "图库",
-        category: "",
-        moments: "",
-        blogger: "关于博主",
-        articles: "",
-        archives: "",
-        postDetail: "",
-        categoryArticles: "",
-        tags: "",
-        tagDetail: "",
-        search: "",
-        favorites: "",
-        friendLinks: "",
-        notice: "",
-        noticeDetail: "",
-        votes: "",
-        voteDetail: "",
-        contact: "",
-        setting: "",
-        aboutProject: "",
-        disclaimers: "",
-        dataVisual: "",
-        login: "",
-        register: "",
+        category: "分类",
+        moments: "瞬间",
+        blogger: "博主",
+        articles: "笔记",
+        archives: "笔记归档",
+        postDetail: "笔记详情",
+        categoryArticles: "分类笔记",
+        tags: "标签",
+        tagArticles: "标签笔记",
+        search: "搜索",
+        favorites: "我的收藏",
+        friendLinks: "友情链接",
+        notice: "公告中心",
+        noticeDetail: "公告详情",
+        votes: "投票中心",
+        voteDetail: "投票详情",
+        contact: "联系博主",
+        setting: "偏好设置",
+        aboutProject: "关于项目",
+        disclaimer: "免责声明",
+        dataVisual: "数据看板",
+        login: "登录",
+        register: "注册",
+        userAgreement: "用户协议",
+        privacyPolicy: "隐私政策",
       },
-      homeConfig: {
+      home: {
         useQuickNavigation: true,
         // 快捷导航默认 5 项（对齐客户端 uh-home-quick-nav 默认 navList；由注册表显式 key 列表派生）
         quickNavigation: featureEntriesByKeys(DEFAULT_QUICK_NAV_KEYS).map(toQuickNavigationItem),
         useCategory: true,
         categories: [],
       },
-      aboutConfig: {
+      blogger: {
         bgImageUrl: "/plugins/uni-halo/assets/static/uni_halo_profile_bg.jpeg",
         waveImageUrl: "/plugins/uni-halo/assets/static/uni_halo_about_wave.gif",
         commonFeaturesMode: "grid",
@@ -166,19 +168,20 @@ function defaultSpec(): FeatureConfigSpec {
       },
       // 我的页面功能入口：默认填充注册表条目，对齐 app 端 about.vue navList
       // （常用 8 项 / 其他 3 项，与后端 FeatureConfigServiceImpl 默认一致）
-      myPageConfig: {
+      mine: {
         commonFeatures: featureEntriesByKeys(DEFAULT_MY_PAGE_COMMON_KEYS).map(toQuickNavigationItem),
         otherFeatures: featureEntriesByKeys(DEFAULT_MY_PAGE_OTHER_KEYS).map(toQuickNavigationItem),
       },
-      disclaimers: { content: "" },
-      momentPageConfig: {
+      disclaimer: { content: "" },
+      moment: {
         showCommentList: true,
         enableComment: true,
       },
-      // 用户协议与隐私政策（页面设置-用户协议/隐私政策 tab 维护，默认留空
-      // = 站点未配置，app 端注册页回退静态提示文案）
-      agreement: { userAgreement: "", privacyPolicy: "" },
-      postDetailConfig: {
+      // 用户协议页/隐私政策页（独立两对象，各自启用开关；内容留空
+      // = app 端注册页回退静态提示文案）
+      userAgreement: { enabled: true, content: "" },
+      privacyPolicy: { enabled: true, content: "" },
+      postDetail: {
         showComment: true,
         copyrightEnabled: true,
         copyrightAuthor: "uni-halo",

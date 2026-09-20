@@ -647,7 +647,7 @@ export interface FeatureConfigPageTitles {
   postDetail?: string;
   categoryArticles?: string;
   tags?: string;
-  tagDetail?: string;
+  tagArticles?: string;
   search?: string;
   favorites?: string;
   friendLinks?: string;
@@ -658,16 +658,20 @@ export interface FeatureConfigPageTitles {
   contact?: string;
   setting?: string;
   aboutProject?: string;
-  disclaimers?: string;
+  disclaimer?: string;
   dataVisual?: string;
   login?: string;
   register?: string;
+  /** 用户协议页 */
+  userAgreement?: string;
+  /** 隐私政策页 */
+  privacyPolicy?: string;
 }
 
 export interface FeatureConfigPages {
   /** 全站页面标题 */
   titles?: FeatureConfigPageTitles;
-  homeConfig: {
+  home: {
     useQuickNavigation?: boolean;
     /** 快捷导航项列表（每项可配置名称/排序/显示隐藏，排序=数组顺序） */
     quickNavigation?: FeatureConfigQuickNavigationItem[];
@@ -676,7 +680,7 @@ export interface FeatureConfigPages {
     categories?: FeatureConfigCategoryItem[];
   };
   /** 博主页（资料卡视觉 + 常用功能布局） */
-  aboutConfig: {
+  blogger: {
     bgImageUrl?: string;
     waveImageUrl?: string;
     /** 常用功能显示方式（grid=宫格 / list=列表，控制 app 端博主页常用功能布局；缺省网格） */
@@ -688,28 +692,37 @@ export interface FeatureConfigPages {
     };
   };
   /** 我的页面功能入口（常用功能/其他功能两组，配置并入「博主页」tab，
-   * 经 getConfigs 下发 pageConfig.myPageConfig） */
-  myPageConfig?: FeatureConfigMyPage;
+   * 经 getConfigs 下发 featureConfig.pages.mine） */
+  mine?: FeatureConfigMinePage;
   /** 免责声明页（不再需要启用开关，仅内容） */
-  disclaimers?: {
+  disclaimer?: {
     content?: string;
   };
-  /** 用户协议与隐私政策（页面设置-用户协议/隐私政策 tab 维护，
-   * 经 getConfigs 下发 featureConfig.pages.agreement，app 端注册页/协议页渲染；
-   * 留空 = 站点未配置，app 端回退静态提示） */
-  agreement?: {
+  /** 用户协议页（页面设置-用户协议 tab 维护，
+   * 经 getConfigs 下发 featureConfig.pages.userAgreement，app 端注册页/协议页渲染；
+   * enabled=false 或留空 = 站点未启用/未配置，app 端回退静态提示） */
+  userAgreement?: {
+    /** 是否启用用户协议页面（注册页勾选行/协议入口显隐） */
+    enabled?: boolean;
     /** 用户协议内容（富文本 HTML） */
-    userAgreement?: string;
+    content?: string;
+  };
+  /** 隐私政策页（页面设置-隐私政策 tab 维护，
+   * 经 getConfigs 下发 featureConfig.pages.privacyPolicy，app 端注册页/协议页渲染；
+   * enabled=false 或留空 = 站点未启用/未配置，app 端回退静态提示） */
+  privacyPolicy?: {
+    /** 是否启用隐私政策页面（注册页勾选行/协议入口显隐） */
+    enabled?: boolean;
     /** 隐私政策内容（富文本 HTML） */
-    privacyPolicy?: string;
+    content?: string;
   };
   /** 瞬间页评论配置 */
-  momentPageConfig?: {
+  moment?: {
     showCommentList?: boolean;
     enableComment?: boolean;
   };
   /** 文章详情页内容与版权文案 */
-  postDetailConfig?: {
+  postDetail?: {
     showComment?: boolean;
     enableComment?: boolean;
     copyrightEnabled?: boolean;
@@ -741,7 +754,7 @@ export interface FeatureConfigQuickNavigationItem {
 
 /** 我的页面功能入口（常用功能/其他功能两组，条目复用快捷导航项结构，
  * app 端 about 页按组渲染） */
-export interface FeatureConfigMyPage {
+export interface FeatureConfigMinePage {
   /** 常用功能 */
   commonFeatures?: FeatureConfigQuickNavigationItem[];
   /** 其他功能 */

@@ -117,15 +117,15 @@ public class FeatureConfig extends AbstractExtension {
         private String content;
     }
 
-    /** 免责声明（不再需要启用开关，仅维护内容） */
+    /** 免责声明页（不再需要启用开关，仅维护内容） */
     @Data
-    public static class Disclaimer {
+    public static class DisclaimerPage {
         private String content;
     }
 
-    /** 文章详情内容与版权文案 */
+    /** 文章详情页内容与版权文案 */
     @Data
-    public static class PostDetail {
+    public static class PostDetailPage {
         /** 是否显示评论列表 */
         private Boolean showComment;
         /** 是否开启评论（服务端经系统设置 comment.enable 注入） */
@@ -151,34 +151,46 @@ public class FeatureConfig extends AbstractExtension {
     public static class Pages {
         /** 全站页面标题（页面设置-页面标题 tab 统一维护） */
         private PageTitles titles;
-        private Home homeConfig;
+        private HomePage home;
         /** 瞬间页评论配置 */
-        private MomentPage momentPageConfig;
+        private MomentPage moment;
         /** 博主页（资料卡视觉 + 常用功能布局，配置并入「博主页」tab） */
-        private BloggerPage aboutConfig;
+        private BloggerPage blogger;
         /** 我的页面功能入口（常用功能/其他功能两组，配置并入「博主页」tab，
-         * 随 {@code featureConfig.pages.myPageConfig} 下发） */
-        private MyPage myPageConfig;
+         * 随 {@code featureConfig.pages.mine} 下发） */
+        private MinePage mine;
         /** 免责声明页（不再需要启用开关，仅内容） */
-        private Disclaimer disclaimers;
+        private DisclaimerPage disclaimer;
         /** 文章详情页内容与版权文案 */
-        private PostDetail postDetailConfig;
-        /** 用户协议与隐私政策（页面设置-用户协议/隐私政策 tab 维护，
-         * 随 {@code featureConfig.pages.agreement} 下发，app 端注册页/协议页渲染） */
-        private Agreement agreement;
+        private PostDetailPage postDetail;
+        /** 用户协议页（页面设置-用户协议 tab 维护，
+         * 随 {@code featureConfig.pages.userAgreement} 下发，app 端注册页/协议页渲染） */
+        private UserAgreementPage userAgreement;
+        /** 隐私政策页（页面设置-隐私政策 tab 维护，
+         * 随 {@code featureConfig.pages.privacyPolicy} 下发，app 端注册页/协议页渲染） */
+        private PrivacyPolicyPage privacyPolicy;
     }
 
-    /**
-     * 用户协议与隐私政策（注册流程与独立协议页共用内容）。
-     * 内容为富文本 HTML（RichTextEditorField 编辑）；留空 = 站点未配置，
-     * app 端注册页回退为静态提示文案，协议页展示空态。
-     */
+    /** 用户协议页（注册流程与独立协议页共用内容）。内容为富文本 HTML
+     * （RichTextEditorField 编辑）；enabled=false 或留空 = 站点未启用/未配置，
+     * app 端注册页回退为静态提示文案，协议页展示空态。 */
     @Data
-    public static class Agreement {
+    public static class UserAgreementPage {
+        /** 是否启用用户协议页面（注册页勾选行/协议入口显隐） */
+        private Boolean enabled;
         /** 用户协议内容（富文本 HTML） */
-        private String userAgreement;
+        private String content;
+    }
+
+    /** 隐私政策页（注册流程与独立协议页共用内容）。内容为富文本 HTML
+     * （RichTextEditorField 编辑）；enabled=false 或留空 = 站点未启用/未配置，
+     * app 端注册页回退为静态提示文案，协议页展示空态。 */
+    @Data
+    public static class PrivacyPolicyPage {
+        /** 是否启用隐私政策页面（注册页勾选行/协议入口显隐） */
+        private Boolean enabled;
         /** 隐私政策内容（富文本 HTML） */
-        private String privacyPolicy;
+        private String content;
     }
 
     /** 全站页面标题（app 端经 pages.titles 读取，传入各页面 uh-navbar default-title，留空回退内置默认） */
@@ -208,7 +220,7 @@ public class FeatureConfig extends AbstractExtension {
         /** 标签列表页 */
         private String tags;
         /** 标签文章列表页 */
-        private String tagDetail;
+        private String tagArticles;
         /** 搜索页 */
         private String search;
         /** 我的收藏页 */
@@ -230,7 +242,7 @@ public class FeatureConfig extends AbstractExtension {
         /** 关于项目页 */
         private String aboutProject;
         /** 免责声明页 */
-        private String disclaimers;
+        private String disclaimer;
         /** 数据看板页 */
         private String dataVisual;
 
@@ -239,11 +251,15 @@ public class FeatureConfig extends AbstractExtension {
         private String login;
         /** 注册页 */
         private String register;
+        /** 用户协议页 */
+        private String userAgreement;
+        /** 隐私政策页 */
+        private String privacyPolicy;
     }
 
     /** 首页（快捷导航逐项可配置，轮播渲染参数由 app 端默认开启） */
     @Data
-    public static class Home {
+    public static class HomePage {
         /** 是否显示快捷导航 */
         private Boolean useQuickNavigation;
         /** 快捷导航项列表（每项可配置名称/排序/显示隐藏，排序=数组顺序） */
@@ -289,7 +305,7 @@ public class FeatureConfig extends AbstractExtension {
     /** 我的页面功能入口（常用功能/其他功能两组，条目复用快捷导航项结构，
      * app 端博主页按组渲染） */
     @Data
-    public static class MyPage {
+    public static class MinePage {
         /** 常用功能 */
         private List<QuickNavigationItem> commonFeatures;
         /** 其他功能 */

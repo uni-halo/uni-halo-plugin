@@ -17,23 +17,25 @@ import cn.ialley.unihalo.scheme.FeatureConfig.AuditMode;
 import cn.ialley.unihalo.scheme.FeatureConfig.Blogger;
 import cn.ialley.unihalo.scheme.FeatureConfig.BloggerPage;
 import cn.ialley.unihalo.scheme.FeatureConfig.Copyright;
-import cn.ialley.unihalo.scheme.FeatureConfig.Disclaimer;
-import cn.ialley.unihalo.scheme.FeatureConfig.Home;
+import cn.ialley.unihalo.scheme.FeatureConfig.DisclaimerPage;
+import cn.ialley.unihalo.scheme.FeatureConfig.HomePage;
 import cn.ialley.unihalo.scheme.FeatureConfig.LinkInfo;
 import cn.ialley.unihalo.scheme.FeatureConfig.Love;
 import cn.ialley.unihalo.scheme.FeatureConfig.LoveDiaryPage;
 import cn.ialley.unihalo.scheme.FeatureConfig.LoveInfo;
 import cn.ialley.unihalo.scheme.FeatureConfig.Maintenance;
 import cn.ialley.unihalo.scheme.FeatureConfig.ModuleSwitch;
-import cn.ialley.unihalo.scheme.FeatureConfig.MyPage;
+import cn.ialley.unihalo.scheme.FeatureConfig.MinePage;
 import cn.ialley.unihalo.scheme.FeatureConfig.PageTitles;
 import cn.ialley.unihalo.scheme.FeatureConfig.Pages;
-import cn.ialley.unihalo.scheme.FeatureConfig.PostDetail;
+import cn.ialley.unihalo.scheme.FeatureConfig.PostDetailPage;
+import cn.ialley.unihalo.scheme.FeatureConfig.PrivacyPolicyPage;
 import cn.ialley.unihalo.scheme.FeatureConfig.Profile;
 import cn.ialley.unihalo.scheme.FeatureConfig.QuickNavigationItem;
 import cn.ialley.unihalo.scheme.FeatureConfig.Social;
 import cn.ialley.unihalo.scheme.FeatureConfig.SocialItem;
 import cn.ialley.unihalo.scheme.FeatureConfig.Spec;
+import cn.ialley.unihalo.scheme.FeatureConfig.UserAgreementPage;
 import cn.ialley.unihalo.services.FeatureConfigService;
 import cn.ialley.unihalo.utils.MaintenanceResolver;
 import reactor.core.publisher.Mono;
@@ -81,7 +83,7 @@ public class FeatureConfigServiceImpl implements FeatureConfigService {
 
     /**
      * 系统设置「评论-启用评论」（ConfigMap system → comment.enable）注入
-     * postDetailConfig.enableComment，供客户端控制评论按钮显隐。
+     * postDetail.enableComment，供客户端控制评论按钮显隐。
      */
     private Mono<FeatureConfig> applySystemCommentEnable(FeatureConfig config) {
         return client.fetch(ConfigMap.class, "system")
@@ -98,8 +100,8 @@ public class FeatureConfigServiceImpl implements FeatureConfigService {
                     boolean enable = commentNode != null && commentNode.isObject()
                             && commentNode.path("enable").asBoolean(true);
                     if (config.getSpec() != null && config.getSpec().getPages() != null
-                            && config.getSpec().getPages().getPostDetailConfig() != null) {
-                        config.getSpec().getPages().getPostDetailConfig().setEnableComment(enable);
+                            && config.getSpec().getPages().getPostDetail() != null) {
+                        config.getSpec().getPages().getPostDetail().setEnableComment(enable);
                     }
                     return config;
                 });
@@ -338,36 +340,39 @@ public class FeatureConfigServiceImpl implements FeatureConfigService {
         private static Pages buildDefaultPages() {
         Pages pages = new Pages();
 
-        // 全站页面标题（页面设置-页面标题 tab 统一维护；留空时客户端回退内置标题）
+        // 全站页面标题（页面设置-页面标题 tab 统一维护；「原始标题」列默认值，
+        // 留空时客户端回退内置标题）
         PageTitles titles = new PageTitles();
         titles.setHome("首页");
         titles.setGallery("图库");
-        titles.setCategory("");
-        titles.setMoments("");
-        titles.setBlogger("关于博主");
-        titles.setArticles("");
-        titles.setArchives("");
-        titles.setPostDetail("");
-        titles.setCategoryArticles("");
-        titles.setTags("");
-        titles.setTagDetail("");
-        titles.setSearch("");
-        titles.setFavorites("");
-        titles.setFriendLinks("");
-        titles.setNotice("");
-        titles.setNoticeDetail("");
-        titles.setVotes("");
-        titles.setVoteDetail("");
-        titles.setContact("");
-        titles.setSetting("");
-        titles.setAboutProject("");
-        titles.setDisclaimers("");
-        titles.setDataVisual("");
-        titles.setLogin("");
-        titles.setRegister("");
+        titles.setCategory("分类");
+        titles.setMoments("瞬间");
+        titles.setBlogger("博主");
+        titles.setArticles("笔记");
+        titles.setArchives("笔记归档");
+        titles.setPostDetail("笔记详情");
+        titles.setCategoryArticles("分类笔记");
+        titles.setTags("标签");
+        titles.setTagArticles("标签笔记");
+        titles.setSearch("搜索");
+        titles.setFavorites("我的收藏");
+        titles.setFriendLinks("友情链接");
+        titles.setNotice("公告中心");
+        titles.setNoticeDetail("公告详情");
+        titles.setVotes("投票中心");
+        titles.setVoteDetail("投票详情");
+        titles.setContact("联系博主");
+        titles.setSetting("偏好设置");
+        titles.setAboutProject("关于项目");
+        titles.setDisclaimer("免责声明");
+        titles.setDataVisual("数据看板");
+        titles.setLogin("登录");
+        titles.setRegister("注册");
+        titles.setUserAgreement("用户协议");
+        titles.setPrivacyPolicy("隐私政策");
         pages.setTitles(titles);
 
-        Home home = new Home();
+        HomePage home = new HomePage();
         home.setUseQuickNavigation(true);
         // 快捷导航默认 5 项（对齐客户端 uh-home-quick-nav 默认 navList，
         // 控制台可逐项配置）
@@ -375,7 +380,7 @@ public class FeatureConfigServiceImpl implements FeatureConfigService {
         home.setUseCategory(true);
         // 首页分类栏选中引用：默认空（未选择时客户端回退内置行为），由站长挑选（固定 3 个）
         home.setCategories(List.of());
-        pages.setHomeConfig(home);
+        pages.setHome(home);
 
         BloggerPage blogger = new BloggerPage();
         blogger.setBgImageUrl("/plugins/uni-halo/assets/static/uni_halo_profile_bg.jpeg");
@@ -383,15 +388,15 @@ public class FeatureConfigServiceImpl implements FeatureConfigService {
         // 常用功能显示方式：grid=宫格 / list=列表（app 端博主页消费，缺省网格）
         blogger.setCommonFeaturesMode("grid");
         // 页脚版权由应用资料 profile.copyrightConfig 承担（见 buildDefaultProfile）
-        pages.setAboutConfig(blogger);
+        pages.setBlogger(blogger);
 
         // 免责声明页（不再需要启用开关，仅内容，默认留空）
-        Disclaimer disclaimer = new Disclaimer();
+        DisclaimerPage disclaimer = new DisclaimerPage();
         disclaimer.setContent("");
-        pages.setDisclaimers(disclaimer);
+        pages.setDisclaimer(disclaimer);
 
         // 文章详情页内容与版权文案
-        PostDetail postDetail = new PostDetail();
+        PostDetailPage postDetail = new PostDetailPage();
         postDetail.setShowComment(true);
         postDetail.setCopyrightEnabled(true);
         postDetail.setCopyrightAuthor("uni-halo");
@@ -399,14 +404,24 @@ public class FeatureConfigServiceImpl implements FeatureConfigService {
                 + "协议授权，文章来源于网上收集或者原创，若未在文章内说明的均为原创文章");
         postDetail.setCopyrightViolation("若侵害到您的权利，请您及时联系我，在收到通知后第一时间处理，"
                 + "邮箱：xxxx@xx.com");
-        pages.setPostDetailConfig(postDetail);
+        pages.setPostDetail(postDetail);
 
-        // 我的页面功能入口：默认填充注册表条目——常用功能=home 组、其他功能=other 组，
-        // 与前端 ui/src/constant/feature-entries.ts 注册表对齐（常用 8 项 / 其他 3 项）
-        MyPage myPage = new MyPage();
-        myPage.setCommonFeatures(defaultMyPageCommonFeatures());
-        myPage.setOtherFeatures(defaultMyPageOtherFeatures());
-        pages.setMyPageConfig(myPage);
+        // 我的页面功能入口：默认填充注册表条目（常用功能/其他功能），
+        // 与前端 ui/src/constant/feature-entries.ts 注册表对齐
+        MinePage mine = new MinePage();
+        mine.setCommonFeatures(defaultMineCommonFeatures());
+        mine.setOtherFeatures(defaultMineOtherFeatures());
+        pages.setMine(mine);
+
+        // 用户协议页/隐私政策页（默认启用、内容留空 = app 端回退静态提示文案）
+        UserAgreementPage userAgreement = new UserAgreementPage();
+        userAgreement.setEnabled(true);
+        userAgreement.setContent("");
+        pages.setUserAgreement(userAgreement);
+        PrivacyPolicyPage privacyPolicy = new PrivacyPolicyPage();
+        privacyPolicy.setEnabled(true);
+        privacyPolicy.setContent("");
+        pages.setPrivacyPolicy(privacyPolicy);
         return pages;
     }
 
@@ -416,7 +431,7 @@ public class FeatureConfigServiceImpl implements FeatureConfigService {
      * bgColor 用品牌色 hex8 浅底（与前端注册表 feature-entries.ts 恢复默认一致）；
      * subTitle 对齐 app 端本地默认 rightText（favorites 无副标题）。
      */
-    private static List<QuickNavigationItem> defaultMyPageCommonFeatures() {
+    private static List<QuickNavigationItem> defaultMineCommonFeatures() {
         List<QuickNavigationItem> items = new ArrayList<>();
         QuickNavigationItem contactBlogger = navItem("contact-blogger", "联系博主", "#FF9800", "#FF980024",
                 "uhemoji2-icon", "-wink", "/pages-blog/contact/contact");
@@ -452,23 +467,32 @@ public class FeatureConfigServiceImpl implements FeatureConfigService {
     }
 
     /**
-     * 我的页面-其他功能默认 3 项（对齐 app 端 about.vue navList：
-     * 偏好设置/免责声明/关于项目，顺序即展示顺序；subTitle 对齐 app 端本地默认 rightText）。
+     * 我的页面-其他功能默认 5 项（对齐 app 端 about.vue navList：
+     * 偏好设置/免责声明/用户协议/隐私政策/关于项目，顺序即展示顺序；
+     * subTitle 对齐 app 端本地默认 rightText）。
      */
-    private static List<QuickNavigationItem> defaultMyPageOtherFeatures() {
+    private static List<QuickNavigationItem> defaultMineOtherFeatures() {
         List<QuickNavigationItem> items = new ArrayList<>();
         QuickNavigationItem setting = navItem("setting", "偏好设置", "#7986CB", "#7986CB24",
                 "uhemoji2-icon", "-tired", "/pages-blog/setting/setting");
         setting.setSubTitle("首页布局、卡片样式等本地偏好");
         items.add(setting);
-        QuickNavigationItem disclaimers = navItem("disclaimers", "免责声明", "#795548", "#79554824",
-                "uhemoji2-icon", "-smirking", "/pages-blog/disclaimers/disclaimers");
-        disclaimers.setSubTitle("博客内容免责声明");
-        items.add(disclaimers);
-        QuickNavigationItem about = navItem("about", "关于项目", "#607D8B", "#607D8B24",
+        QuickNavigationItem disclaimer = navItem("disclaimer", "免责声明", "#795548", "#79554824",
+                "uhemoji2-icon", "-smirking", "/pages-blog/disclaimer/disclaimer");
+        disclaimer.setSubTitle("博客内容免责声明");
+        items.add(disclaimer);
+        QuickNavigationItem userAgreement = navItem("user-agreement", "用户协议", "#8D6E63", "#8D6E6324",
+                "uhemoji2-icon", "-thinking", "/pages-blog/user-agreement/user-agreement");
+        userAgreement.setSubTitle("站点用户协议");
+        items.add(userAgreement);
+        QuickNavigationItem privacyPolicy = navItem("privacy-policy", "隐私政策", "#A1887F", "#A1887F24",
+                "uhemoji2-icon", "-shushing", "/pages-blog/privacy-policy/privacy-policy");
+        privacyPolicy.setSubTitle("站点隐私政策");
+        items.add(privacyPolicy);
+        QuickNavigationItem aboutProject = navItem("aboutProject", "关于项目", "#607D8B", "#607D8B24",
                 "uhemoji2-icon", "-happy-", "/pages-blog/about-project/about-project");
-        about.setSubTitle("小莫唐尼开源项目");
-        items.add(about);
+        aboutProject.setSubTitle("小莫唐尼开源项目");
+        items.add(aboutProject);
         return items;
     }
 
@@ -495,10 +519,10 @@ public class FeatureConfigServiceImpl implements FeatureConfigService {
                 "#00968824", "uhemoji2-icon", "-cool", "/pages-blog/friend-links/friend-links");
         friendLinks.setSubTitle("看看博主朋友们吧");
         items.add(friendLinks);
-        QuickNavigationItem about = navItem("about", "关于项目", "#607D8B",
+        QuickNavigationItem aboutProject = navItem("aboutProject", "关于项目", "#607D8B",
                 "#607D8B24", "uhemoji2-icon", "-happy-", "/pages-blog/about-project/about-project");
-        about.setSubTitle("小莫唐尼的开源项目");
-        items.add(about);
+        aboutProject.setSubTitle("小莫唐尼的开源项目");
+        items.add(aboutProject);
         return items;
     }
 
