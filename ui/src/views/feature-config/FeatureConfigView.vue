@@ -54,6 +54,7 @@ const SUB_TABS: Record<BigGroup, Array<{ id: string; label: string }>> = {
   pages: [
     { id: "pageTitles", label: "页面标题" },
     { id: "home", label: "首页" },
+    { id: "momentPage", label: "瞬间页" },
     { id: "postDetail", label: "笔记详情页" },
     { id: "aboutPage", label: "博主页" },
     { id: "disclaimersPage", label: "免责声明页" },
@@ -170,6 +171,10 @@ function defaultSpec(): FeatureConfigSpec {
         otherFeatures: featureEntriesByKeys(DEFAULT_MY_PAGE_OTHER_KEYS).map(toQuickNavigationItem),
       },
       disclaimers: { content: "" },
+      momentPageConfig: {
+        showCommentList: true,
+        enableComment: true,
+      },
       // 用户协议与隐私政策（页面设置-用户协议/隐私政策 tab 维护，默认留空
       // = 站点未配置，app 端注册页回退静态提示文案）
       agreement: { userAgreement: "", privacyPolicy: "" },

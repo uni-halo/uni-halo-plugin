@@ -703,9 +703,15 @@ export interface FeatureConfigPages {
     /** 隐私政策内容（富文本 HTML） */
     privacyPolicy?: string;
   };
+  /** 瞬间页评论配置 */
+  momentPageConfig?: {
+    showCommentList?: boolean;
+    enableComment?: boolean;
+  };
   /** 文章详情页内容与版权文案 */
   postDetailConfig?: {
     showComment?: boolean;
+    enableComment?: boolean;
     copyrightEnabled?: boolean;
     copyrightAuthor?: string;
     copyrightDesc?: string;

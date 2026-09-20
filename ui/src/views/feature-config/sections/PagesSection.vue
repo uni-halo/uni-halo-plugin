@@ -727,6 +727,24 @@ function restoreMyPageDefaults(group: "common" | "other") {
     </div>
   </template>
 
+  <!-- 页面与排版 → 瞬间页 -->
+  <template v-if="subTab === 'momentPage'">
+    <div class=":uno: flex items-center justify-between gap-4 border-b border-gray-100 pb-3">
+      <div>
+        <div class=":uno: text-sm text-gray-700">显示评论列表</div>
+        <div class=":uno: mt-0.5 text-xs text-gray-400">瞬间详情页是否展示评论列表区域</div>
+      </div>
+      <VSwitch v-model="formState.spec.pages.momentPageConfig!.showCommentList" />
+    </div>
+    <div class=":uno: mt-4 flex items-center justify-between gap-4 border-b border-gray-100 pb-3">
+      <div>
+        <div class=":uno: text-sm text-gray-700">开启评论</div>
+        <div class=":uno: mt-0.5 text-xs text-gray-400">瞬间卡片与详情页是否展示评论入口</div>
+      </div>
+      <VSwitch v-model="formState.spec.pages.momentPageConfig!.enableComment" />
+    </div>
+  </template>
+
   <!-- 页面与排版 -->
   <template v-if="subTab === 'postDetail'">
     <div class=":uno: flex items-center justify-between gap-4 border-b border-gray-100 pb-3">

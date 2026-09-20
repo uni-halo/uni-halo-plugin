@@ -37,6 +37,7 @@ import cn.ialley.unihalo.scheme.FeatureConfig.Spec;
 import cn.ialley.unihalo.services.FeatureConfigService;
 import cn.ialley.unihalo.utils.MaintenanceResolver;
 import reactor.core.publisher.Mono;
+import run.halo.app.extension.ConfigMap;
 import run.halo.app.extension.Metadata;
 import run.halo.app.extension.ReactiveExtensionClient;
 import run.halo.app.plugin.ReactiveSettingFetcher;
@@ -74,7 +75,34 @@ public class FeatureConfigServiceImpl implements FeatureConfigService {
     public Mono<FeatureConfig> get() {
         return fetchRaw()
                 // 恋爱模块入口密码一律脱敏（哈希不回显；passwordEnabled 由哈希派生）
-                .map(this::maskLovePasswords);
+                .map(this::maskLovePasswords)
+                .flatMap(this::applySystemCommentEnable);
+    }
+
+    /**
+     * 系统设置「评论-启用评论」（ConfigMap system → comment.enable）注入
+     * postDetailConfig.enableComment，供客户端控制评论按钮显隐。
+     */
+    private Mono<FeatureConfig> applySystemCommentEnable(FeatureConfig config) {
+        return client.fetch(ConfigMap.class, "system")
+                .map(cm -> {
+                    String raw = cm.getData().get("comment");
+                    try {
+                        return raw == null ? objectMapper.nullNode() : objectMapper.readTree(raw);
+                    } catch (Exception e) {
+                        return objectMapper.nullNode();
+                    }
+                })
+                .defaultIfEmpty(objectMapper.nullNode())
+                .map(commentNode -> {
+                    boolean enable = commentNode != null && commentNode.isObject()
+                            && commentNode.path("enable").asBoolean(true);
+                    if (config.getSpec() != null && config.getSpec().getPages() != null
+                            && config.getSpec().getPages().getPostDetailConfig() != null) {
+                        config.getSpec().getPages().getPostDetailConfig().setEnableComment(enable);
+                    }
+                    return config;
+                });
     }
 
     @Override

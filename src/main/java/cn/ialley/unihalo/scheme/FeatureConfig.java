@@ -126,13 +126,24 @@ public class FeatureConfig extends AbstractExtension {
     /** 文章详情内容与版权文案 */
     @Data
     public static class PostDetail {
-        /** 是否显示评论相关（优先级高于系统评论开关） */
+        /** 是否显示评论列表 */
         private Boolean showComment;
+        /** 是否开启评论（服务端经系统设置 comment.enable 注入） */
+        private Boolean enableComment;
         /** 是否使用文章版权 */
         private Boolean copyrightEnabled;
         private String copyrightAuthor;
         private String copyrightDesc;
         private String copyrightViolation;
+    }
+
+    /** 瞬间页评论配置 */
+    @Data
+    public static class MomentPage {
+        /** 是否显示评论列表 */
+        private Boolean showCommentList;
+        /** 是否开启评论 */
+        private Boolean enableComment;
     }
 
     /** 页面与排版：全站页面标题、首页/博主页/文章详情页/免责声明页视觉与功能 */
@@ -141,6 +152,8 @@ public class FeatureConfig extends AbstractExtension {
         /** 全站页面标题（页面设置-页面标题 tab 统一维护） */
         private PageTitles titles;
         private Home homeConfig;
+        /** 瞬间页评论配置 */
+        private MomentPage momentPageConfig;
         /** 博主页（资料卡视觉 + 常用功能布局，配置并入「博主页」tab） */
         private BloggerPage aboutConfig;
         /** 我的页面功能入口（常用功能/其他功能两组，配置并入「博主页」tab，
