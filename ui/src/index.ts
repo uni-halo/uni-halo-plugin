@@ -130,7 +130,7 @@ export default definePlugin({
           title: '恋爱管理',
           searchable: false,
           hideFooter: false,
-          permissions: ['plugin:uni-halo:love:view'],
+          permissions: ['plugin:uni-halo:love-info:view', 'plugin:uni-halo:love-albums:view', 'plugin:uni-halo:love-daily:view', 'plugin:uni-halo:love-stories:view'],
           menu: {
             name: '恋爱管理',
             group: GROUP_NAME,
@@ -147,7 +147,7 @@ export default definePlugin({
               title: '恋爱信息',
               searchable: true,
               hideFooter: false,
-              permissions: ['plugin:uni-halo:love:view'],
+              permissions: ['plugin:uni-halo:love-info:view'],
               menu: {
                 name: '恋爱信息',
                 icon: markRaw(RiHeartLine),
@@ -163,7 +163,7 @@ export default definePlugin({
               title: '恋爱相册',
               searchable: true,
               hideFooter: false,
-              permissions: ['plugin:uni-halo:love:view'],
+              permissions: ['plugin:uni-halo:love-albums:view'],
               menu: {
                 name: '恋爱相册',
                 icon: markRaw(RiGalleryLine),
@@ -179,7 +179,7 @@ export default definePlugin({
               title: '恋爱清单',
               searchable: true,
               hideFooter: false,
-              permissions: ['plugin:uni-halo:love:view'],
+              permissions: ['plugin:uni-halo:love-daily:view'],
               menu: {
                 name: '恋爱清单',
                 icon: markRaw(RiCheckboxMultipleLine),
@@ -195,7 +195,7 @@ export default definePlugin({
               title: '恋爱故事',
               searchable: true,
               hideFooter: false,
-              permissions: ['plugin:uni-halo:love:view'],
+              permissions: ['plugin:uni-halo:love-stories:view'],
               menu: {
                 name: '恋爱故事',
                 icon: markRaw(RiBook2Line),

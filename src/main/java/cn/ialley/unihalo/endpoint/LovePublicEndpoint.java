@@ -79,15 +79,15 @@ public class LovePublicEndpoint implements CustomEndpoint {
     @Override
     public RouterFunction<ServerResponse> endpoint() {
         return RouterFunctions.route()
-                .GET(Constants.END_POINT_API_BASE_PATH + "/love-stories", this::listStories)
-                .GET(Constants.END_POINT_API_BASE_PATH + "/love-albums", this::listAlbums)
-                .GET(Constants.END_POINT_API_BASE_PATH + "/love-albums/{name}", this::getAlbum)
-                .POST(Constants.END_POINT_API_BASE_PATH + "/love-albums/{name}/unlock",
+                .GET(Constants.LOVE_STORY_API_BASE_PATH, this::listStories)
+                .GET(Constants.LOVE_ALBUM_API_BASE_PATH, this::listAlbums)
+                .GET(Constants.LOVE_ALBUM_API_BASE_PATH + "/{name}", this::getAlbum)
+                .POST(Constants.LOVE_ALBUM_API_BASE_PATH + "/{name}/unlock",
                         this::unlockAlbum)
-                .POST(Constants.END_POINT_API_BASE_PATH + "/love-modules/unlock",
+                .POST("love-modules/-/unlock",
                         this::unlockLoveModule)
-                .GET(Constants.END_POINT_API_BASE_PATH + "/love-daily-items", this::listDailyItems)
-                .GET(Constants.END_POINT_API_BASE_PATH + "/love-info", this::getLoveInfo)
+                .GET(Constants.LOVE_DAILY_API_BASE_PATH, this::listDailyItems)
+                .GET(Constants.LOVE_INFO_API_BASE_PATH, this::getLoveInfo)
                 .build();
     }
 

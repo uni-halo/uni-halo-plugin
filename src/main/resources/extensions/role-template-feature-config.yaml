@@ -6,15 +6,14 @@ metadata:
     halo.run/role-template: "true"
     rbac.authorization.halo.run/aggregate-to-admin: "true"
   annotations:
-    rbac.authorization.halo.run/module: "UniHalo 功能设置"
+    rbac.authorization.halo.run/module: "[UH] 功能设置"
     rbac.authorization.halo.run/display-name: "功能设置查看"
     rbac.authorization.halo.run/ui-permissions: |
       ["plugin:uni-halo:feature-config:view"]
 rules:
   - apiGroups: [ "console.api.unihalo.ialley.cn" ]
     resources:
-      - "plugins/uni-halo/feature-config"
-      - "plugins/uni-halo/feature-config/*"
+      - "feature-config"
     verbs: [ "get", "list" ]
 
 ---
@@ -29,13 +28,12 @@ metadata:
   annotations:
     rbac.authorization.halo.run/dependencies: |
       [ "uni-halo-role-template-view-feature-config" ]
-    rbac.authorization.halo.run/module: "UniHalo 功能设置"
+    rbac.authorization.halo.run/module: "[UH] 功能设置"
     rbac.authorization.halo.run/display-name: "功能设置管理"
     rbac.authorization.halo.run/ui-permissions: |
       ["plugin:uni-halo:feature-config:manage"]
 rules:
   - apiGroups: [ "console.api.unihalo.ialley.cn" ]
     resources:
-      - "plugins/uni-halo/feature-config"
-      - "plugins/uni-halo/feature-config/*"
+      - "feature-config"
     verbs: [ "create", "patch", "update", "delete", "deletecollection" ]

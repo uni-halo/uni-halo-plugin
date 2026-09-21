@@ -3,6 +3,12 @@ package cn.ialley.unihalo.constants;
 /**
  * 插件使用到的常量定义
  *
+ * <p>接口路径约定（对齐 Halo 官方角色模板规范）：自定义端点统一注册在
+ * {@code /apis/<group>/<version>/<resource>[/<name>[/<subresource>]]} 的
+ * <b>组根路径</b>（无 {@code plugins/<插件名>} 前缀段）。若在前缀里多加一段，
+ * RequestInfoFactory 会把该段解析为 resourceName、把真正的资源段解析成
+ * subresource，导致 role-template 的 resources 永远匹配不上（非管理员 403）。
+ *
  * @author 小莫唐尼
  */
 public class Constants {
@@ -12,74 +18,69 @@ public class Constants {
     public static final String PLUGIN_API_VERSION = "v1alpha1";
 
     /**
-     * endpoint 中的接口基础路径
-     */
-    public static final String END_POINT_API_BASE_PATH = "plugins/uni-halo";
-
-    /**
      * 应用升级（公开 checkVersion）接口基础路径
      */
-    public static final String UPGRADE_API_BASE_PATH = "plugins/uni-halo/upgrade";
+    public static final String UPGRADE_API_BASE_PATH = "upgrade";
 
     /**
      * 应用管理（console）接口基础路径
      */
-    public static final String APP_INFO_API_BASE_PATH = "plugins/uni-halo/apps";
+    public static final String APP_INFO_API_BASE_PATH = "apps";
 
     /**
      * 应用升级管理（console）接口基础路径
      */
-    public static final String APP_VERSION_API_BASE_PATH = "plugins/uni-halo/app-versions";
+    public static final String APP_VERSION_API_BASE_PATH = "app-versions";
 
     /**
      * 恋爱相册（console）接口基础路径
      */
-    public static final String LOVE_ALBUM_API_BASE_PATH = "plugins/uni-halo/love-albums";
+    public static final String LOVE_ALBUM_API_BASE_PATH = "love-albums";
 
     /**
      * 恋爱清单（console）接口基础路径
      */
-    public static final String LOVE_DAILY_API_BASE_PATH = "plugins/uni-halo/love-daily-items";
+    public static final String LOVE_DAILY_API_BASE_PATH = "love-daily-items";
 
     /**
      * 恋爱故事（console）接口基础路径
      */
-    public static final String LOVE_STORY_API_BASE_PATH = "plugins/uni-halo/love-stories";
+    public static final String LOVE_STORY_API_BASE_PATH = "love-stories";
 
     /**
      * 通知公告（console）接口基础路径
      */
-    public static final String NOTICE_API_BASE_PATH = "plugins/uni-halo/notices";
+    public static final String NOTICE_API_BASE_PATH = "notices";
 
     /**
      * 公告类型（console）接口基础路径
      */
-    public static final String NOTICE_TYPE_API_BASE_PATH = "plugins/uni-halo/notice-types";
+    public static final String NOTICE_TYPE_API_BASE_PATH = "notice-types";
 
     /**
      * 轮播图（console/公开）接口基础路径
      */
-    public static final String BANNER_API_BASE_PATH = "plugins/uni-halo/banners";
+    public static final String BANNER_API_BASE_PATH = "banners";
 
     /**
      * 审核模式（console/公开）接口基础路径
      */
-    public static final String AUDIT_DATA_API_BASE_PATH = "plugins/uni-halo/audit-data";
+    public static final String AUDIT_DATA_API_BASE_PATH = "audit-data";
 
     /**
      * 验证码（公开）接口基础路径
      */
-    public static final String CAPTCHA_API_BASE_PATH = "plugins/uni-halo/captcha/generate";
+    public static final String CAPTCHA_API_BASE_PATH = "captcha/generate";
 
     /**
      * 移动端登录认证（公开）接口基础路径
      */
-    public static final String AUTH_API_BASE_PATH = "plugins/uni-halo/auth";
+    public static final String AUTH_API_BASE_PATH = "auth";
 
     /**
      * 微信绑定关系（console）接口基础路径
      */
-    public static final String WECHAT_USER_API_BASE_PATH = "plugins/uni-halo/wechat-users";
+    public static final String WECHAT_USER_API_BASE_PATH = "wechat-users";
 
     /**
      * 微信绑定使用的 registrationId（UserConnection.spec.registrationId）
@@ -135,20 +136,19 @@ public class Constants {
     /**
      * 友情链接-小程序链接（console/公开）接口基础路径
      */
-    public static final String MINI_PROGRAM_LINK_API_BASE_PATH =
-        "plugins/uni-halo/mini-program-links";
+    public static final String MINI_PROGRAM_LINK_API_BASE_PATH = "mini-program-links";
 
     /**
      * 友情链接-小程序链接申请单（console/公开）接口基础路径
      */
     public static final String MINI_PROGRAM_LINK_SUBMISSION_API_BASE_PATH =
-        "plugins/uni-halo/mini-program-link-submissions";
+        "mini-program-link-submissions";
 
     /**
      * 友情链接-分组（console）接口基础路径
      */
     public static final String MINI_PROGRAM_LINK_GROUP_API_BASE_PATH =
-        "plugins/uni-halo/mini-program-link-groups";
+        "mini-program-link-groups";
 
     /**
      * 审核模式单例名称（metadata.name 固定值）
@@ -163,8 +163,7 @@ public class Constants {
     /**
      * 功能设置（console）接口基础路径
      */
-    public static final String FEATURE_CONFIG_API_BASE_PATH =
-        "plugins/uni-halo/feature-config";
+    public static final String FEATURE_CONFIG_API_BASE_PATH = "feature-config";
 
     /**
      * 恋爱信息（LoveInfo 单例）资源名（metadata.name 固定值）
@@ -174,8 +173,7 @@ public class Constants {
     /**
      * 恋爱信息（console）接口基础路径
      */
-    public static final String LOVE_INFO_API_BASE_PATH =
-        "plugins/uni-halo/love-info";
+    public static final String LOVE_INFO_API_BASE_PATH = "love-info";
 
     /**
      * 基础的域名地址
@@ -233,6 +231,7 @@ public class Constants {
     /**
      * 插件静态资源前缀（由 {@code uni-halo-reverse-proxy.yaml} 的
      * {@code /static/** → directory: static} 提供，与 Halo 主机同源，不走 CDN）。
+     * 注意：这是 Halo 静态资源代理路径，与 API 授权无关，不受端点迁移影响。
      */
     public static final String PLUGIN_STATIC_PREFIX = "/plugins/uni-halo/assets/static";
 

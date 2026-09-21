@@ -164,7 +164,7 @@ const onModalClose = () => {
           </template>
           刷新
         </VButton>
-        <VButton v-permission="['plugin:uni-halo:love:manage']" type="primary" @click="handleOpenEditingModal()">
+        <VButton v-permission="['plugin:uni-halo:love-stories:manage']" type="primary" @click="handleOpenEditingModal()">
           <template #icon>
             <IconAddCircle />
           </template>
@@ -230,7 +230,7 @@ const onModalClose = () => {
         <Transition v-if="!sortedStories.length" appear name="fade">
           <VEmpty message="记录下你们的故事，成为珍贵的回忆" title="还没有故事">
             <template #actions>
-              <VButton v-permission="['plugin:uni-halo:love:manage']" type="secondary" @click="handleOpenEditingModal()">
+              <VButton v-permission="['plugin:uni-halo:love-stories:manage']" type="secondary" @click="handleOpenEditingModal()">
                 <template #icon>
                   <IconAddCircle />
                 </template>

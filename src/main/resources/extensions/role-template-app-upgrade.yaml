@@ -6,15 +6,14 @@ metadata:
     halo.run/role-template: "true"
     rbac.authorization.halo.run/aggregate-to-admin: "true"
   annotations:
-    rbac.authorization.halo.run/module: "UniHalo 应用管理"
+    rbac.authorization.halo.run/module: "[UH] 应用管理"
     rbac.authorization.halo.run/display-name: "应用查看"
     rbac.authorization.halo.run/ui-permissions: |
       ["plugin:uni-halo:app:view"]
 rules:
   - apiGroups: [ "console.api.unihalo.ialley.cn" ]
     resources:
-      - "plugins/uni-halo/apps"
-      - "plugins/uni-halo/apps/*"
+      - "apps"
     verbs: [ "get", "list" ]
 
 ---
@@ -29,15 +28,14 @@ metadata:
   annotations:
     rbac.authorization.halo.run/dependencies: |
       [ "uni-halo-role-template-view-app" ]
-    rbac.authorization.halo.run/module: "UniHalo 应用管理"
+    rbac.authorization.halo.run/module: "[UH] 应用管理"
     rbac.authorization.halo.run/display-name: "应用管理"
     rbac.authorization.halo.run/ui-permissions: |
       ["plugin:uni-halo:app:manage"]
 rules:
   - apiGroups: [ "console.api.unihalo.ialley.cn" ]
     resources:
-      - "plugins/uni-halo/apps"
-      - "plugins/uni-halo/apps/*"
+      - "apps"
     verbs: [ "create", "patch", "update", "delete", "deletecollection" ]
 
 ---
@@ -50,15 +48,14 @@ metadata:
     halo.run/role-template: "true"
     rbac.authorization.halo.run/aggregate-to-admin: "true"
   annotations:
-    rbac.authorization.halo.run/module: "UniHalo 版本管理"
+    rbac.authorization.halo.run/module: "[UH] 版本管理"
     rbac.authorization.halo.run/display-name: "版本查看"
     rbac.authorization.halo.run/ui-permissions: |
       ["plugin:uni-halo:version:view"]
 rules:
   - apiGroups: [ "console.api.unihalo.ialley.cn" ]
     resources:
-      - "plugins/uni-halo/app-versions"
-      - "plugins/uni-halo/app-versions/*"
+      - "app-versions"
     verbs: [ "get", "list" ]
 
 ---
@@ -73,13 +70,13 @@ metadata:
   annotations:
     rbac.authorization.halo.run/dependencies: |
       [ "uni-halo-role-template-view-app-version" ]
-    rbac.authorization.halo.run/module: "UniHalo 版本管理"
+    rbac.authorization.halo.run/module: "[UH] 版本管理"
     rbac.authorization.halo.run/display-name: "版本管理"
     rbac.authorization.halo.run/ui-permissions: |
       ["plugin:uni-halo:version:manage"]
 rules:
   - apiGroups: [ "console.api.unihalo.ialley.cn" ]
     resources:
-      - "plugins/uni-halo/app-versions"
-      - "plugins/uni-halo/app-versions/*"
+      - "app-versions"
+      - "app-versions/upload"
     verbs: [ "create", "patch", "update", "delete", "deletecollection" ]

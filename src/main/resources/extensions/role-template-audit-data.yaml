@@ -6,15 +6,14 @@ metadata:
     halo.run/role-template: "true"
     rbac.authorization.halo.run/aggregate-to-admin: "true"
   annotations:
-    rbac.authorization.halo.run/module: "UniHalo 审核模式"
+    rbac.authorization.halo.run/module: "[UH] 审核模式"
     rbac.authorization.halo.run/display-name: "审核模式查看"
     rbac.authorization.halo.run/ui-permissions: |
       ["plugin:uni-halo:audit-data:view"]
 rules:
   - apiGroups: [ "console.api.unihalo.ialley.cn" ]
     resources:
-      - "plugins/uni-halo/audit-data"
-      - "plugins/uni-halo/audit-data/*"
+      - "audit-data"
     verbs: [ "get", "list" ]
 
 ---
@@ -29,13 +28,12 @@ metadata:
   annotations:
     rbac.authorization.halo.run/dependencies: |
       [ "uni-halo-role-template-view-audit-data" ]
-    rbac.authorization.halo.run/module: "UniHalo 审核模式"
+    rbac.authorization.halo.run/module: "[UH] 审核模式"
     rbac.authorization.halo.run/display-name: "审核模式管理"
     rbac.authorization.halo.run/ui-permissions: |
       ["plugin:uni-halo:audit-data:manage"]
 rules:
   - apiGroups: [ "console.api.unihalo.ialley.cn" ]
     resources:
-      - "plugins/uni-halo/audit-data"
-      - "plugins/uni-halo/audit-data/*"
+      - "audit-data"
     verbs: [ "create", "patch", "update", "delete", "deletecollection" ]

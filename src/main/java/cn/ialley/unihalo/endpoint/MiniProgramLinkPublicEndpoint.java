@@ -58,7 +58,7 @@ public class MiniProgramLinkPublicEndpoint implements CustomEndpoint {
     public RouterFunction<ServerResponse> endpoint() {
         return RouterFunctions.route()
                 .GET(Constants.MINI_PROGRAM_LINK_API_BASE_PATH + "/types", this::listTypes)
-                .POST(Constants.MINI_PROGRAM_LINK_API_BASE_PATH + "/submissions",
+                .POST(Constants.MINI_PROGRAM_LINK_API_BASE_PATH + "/-/submissions",
                         this::submitApplication)
                 .GET(Constants.MINI_PROGRAM_LINK_API_BASE_PATH, this::listLinks)
                 .GET(Constants.MINI_PROGRAM_LINK_API_BASE_PATH + "/{name}", this::getLink)

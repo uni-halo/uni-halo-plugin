@@ -21,7 +21,7 @@ import run.halo.app.core.extension.endpoint.CustomEndpoint;
 import run.halo.app.extension.GroupVersion;
 
 /**
- * 移动端登录公开接口（匿名可访问，由 role-anonymous.yaml 全量放行）。
+ * 移动端登录公开接口（匿名可访问，由 role-template-anonymous.yaml 全量放行）。
  *
  * 登录成功后返回 Halo 原生 PAT（{@code pat_} 前缀），客户端按
  * {@code Authorization: Bearer <token>} 携带即可访问 Halo 原生 API 与本插件接口。
@@ -47,9 +47,11 @@ public class AuthEndpoint implements CustomEndpoint {
     @Override
     public RouterFunction<ServerResponse> endpoint() {
         return RouterFunctions.route()
-                .POST(Constants.AUTH_API_BASE_PATH + "/login", this::loginByPassword)
+                // 两段式 POST（资源/name）会被 Halo RequestInfoFactory 降级为非资源请求，
+                // 导致 RBAC 资源规则失效；统一用 "-" 占位符构成 资源/-/动作 三段式（官方模式）
+                .POST(Constants.AUTH_API_BASE_PATH + "/-/login", this::loginByPassword)
                 .POST(Constants.AUTH_API_BASE_PATH + "/login/wechat", this::loginByWechat)
-                .POST(Constants.AUTH_API_BASE_PATH + "/register", this::registerByPassword)
+                .POST(Constants.AUTH_API_BASE_PATH + "/-/register", this::registerByPassword)
                 .POST(Constants.AUTH_API_BASE_PATH + "/register/wechat", this::registerByWechat)
                 .POST(Constants.AUTH_API_BASE_PATH + "/bind/wechat", this::bindWechat)
                 .POST(Constants.AUTH_API_BASE_PATH + "/bind/wechat/qr/tickets",
@@ -58,7 +60,7 @@ public class AuthEndpoint implements CustomEndpoint {
                         this::bindTicketStatus)
                 .POST(Constants.AUTH_API_BASE_PATH + "/bind/wechat/qr/tickets/{ticket}/confirm",
                         this::confirmBindTicket)
-                .POST(Constants.AUTH_API_BASE_PATH + "/logout", this::logout)
+                .POST(Constants.AUTH_API_BASE_PATH + "/-/logout", this::logout)
                 .GET(Constants.AUTH_API_BASE_PATH + "/profile", this::profile)
                 .GET(Constants.AUTH_API_BASE_PATH + "/my/wechat-binding", this::myWechatBinding)
                 .DELETE(Constants.AUTH_API_BASE_PATH + "/my/wechat-binding", this::unbindWechat)

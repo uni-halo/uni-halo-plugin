@@ -6,8 +6,8 @@ metadata:
     halo.run/role-template: "true"
     rbac.authorization.halo.run/aggregate-to-anonymous: "true"
   annotations:
-    rbac.authorization.halo.run/module: "UniHalo 配置管理"
-    rbac.authorization.halo.run/display-name: "配置管理（UniHalo)"
+    rbac.authorization.halo.run/module: "[UH] 配置信息"
+    rbac.authorization.halo.run/display-name: "基本配置信息"
     rbac.authorization.halo.run/ui-permissions: |
       ["plugin:uni-halo:config:view"]
 rules:

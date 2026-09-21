@@ -33,8 +33,9 @@ import type {
 
 const CONSOLE_API_GROUP = "console.api.unihalo.ialley.cn/v1alpha1";
 const PUBLIC_API_GROUP = "api.unihalo.ialley.cn/v1alpha1";
-const PLUGIN_BASE = `/apis/${CONSOLE_API_GROUP}/plugins/uni-halo`;
-const PUBLIC_BASE = `/apis/${PUBLIC_API_GROUP}/plugins/uni-halo`;
+// 端点统一注册在组根路径（无 plugins/<插件名> 前缀段），对齐 Halo 角色模板规范
+const PLUGIN_BASE = `/apis/${CONSOLE_API_GROUP}`;
+const PUBLIC_BASE = `/apis/${PUBLIC_API_GROUP}`;
 
 export const appsApi = {
   list: (query: ListQuery = {}) => http.get<PageResult<AppInfo>>(`${PLUGIN_BASE}/apps`, query),

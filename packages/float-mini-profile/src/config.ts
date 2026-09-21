@@ -14,7 +14,8 @@ export const STORAGE_KEY = "uh-fmp-closed";
 export const EDGE_TRIGGER = 80; // 距视口边缘小于该值视为贴边
 
 // 公开接口（api.unihalo.ialley.cn 分组，匿名可访问；app 端同源接口）
-export const API_BASE = "/apis/api.unihalo.ialley.cn/v1alpha1/plugins/uni-halo";
+// 端点统一注册在组根路径（无 plugins/<插件名> 前缀段），对齐 Halo 角色模板规范
+export const API_BASE = "/apis/api.unihalo.ialley.cn/v1alpha1";
 export const CAPTCHA_URL = API_BASE + "/captcha/generate";
 export const LINK_LIST_URL = API_BASE + "/mini-program-links";
 export const LINK_SUBMIT_URL = API_BASE + "/mini-program-links/submissions";

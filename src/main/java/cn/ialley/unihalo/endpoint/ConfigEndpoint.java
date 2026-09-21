@@ -36,13 +36,13 @@ public class ConfigEndpoint implements CustomEndpoint {
         final String ApiTag = Constants.PUBLIC_CUSTOM_API_GROUP_NAME + "/Config";
 
         return SpringdocRouteBuilder.route()
-            .GET(Constants.END_POINT_API_BASE_PATH + "/getConfigs", this::getAllConfigs,
+            .GET("/getConfigs", this::getAllConfigs,
                 builder -> {
                     builder.operationId("GetConfigs")
                         .description("All config.")
                         .tag(ApiTag);
                 })
-            .GET(Constants.END_POINT_API_BASE_PATH + "/getConfigs/{groupName}",
+            .GET("/getConfigs/{groupName}",
                 this::getConfigsByName, builder -> {
                     builder.operationId("GetConfigsByGroupName")
                         .description("Detail config.")
@@ -55,13 +55,13 @@ public class ConfigEndpoint implements CustomEndpoint {
                             .implementation(String.class)
                         );
                 })
-            .GET(Constants.END_POINT_API_BASE_PATH + "/getQRCodeImg/{postId}", uniHaloService::getQRCodeImg,
+            .GET("/getQRCodeImg/{postId}", uniHaloService::getQRCodeImg,
                     builder -> {
                         builder.operationId("getQRCodeImg")
                                 .description("getQRCodeImg")
                                 .tag(ApiTag);
                     })
-            .GET(Constants.END_POINT_API_BASE_PATH + "/getQRCodeInfo/{key}", uniHaloService::getQRCodeInfo,
+            .GET("/getQRCodeInfo/{key}", uniHaloService::getQRCodeInfo,
                     builder -> {
                         builder.operationId("getQRCodeInfo")
                                 .description("getQRCodeInfo")

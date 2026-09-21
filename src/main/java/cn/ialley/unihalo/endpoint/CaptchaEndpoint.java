@@ -16,7 +16,7 @@ import run.halo.app.extension.GroupVersion;
  *
  * {@code GET plugins/uni-halo/captcha/generate} 返回 {@code {id, imageBase64}}，
  * 小程序端展示图片并让用户输入，提交申请/解锁时携带 id + 输入码（query 参数）。
- * 匿名放行由 role-anonymous.yaml 的全局规则覆盖。
+ * 匿名放行由 role-template-anonymous.yaml 的全局规则覆盖。
  *
  * @author 小莫唐尼
  */

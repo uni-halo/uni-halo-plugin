@@ -17,7 +17,7 @@ import run.halo.app.extension.GroupVersion;
 import static org.springdoc.core.fn.builders.parameter.Builder.parameterBuilder;
 
 /**
- * 应用升级公开接口（app 端调用，匿名可访问，需在 role-anonymous.yaml 放行）。
+ * 应用升级公开接口（app 端调用，匿名可访问，需在 role-template-anonymous.yaml 放行）。
  *
  * @author 小莫唐尼
  */

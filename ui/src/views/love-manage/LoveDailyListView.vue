@@ -209,7 +209,7 @@ const timelineDotClass = (status?: string) => {
           </template>
           刷新
         </VButton>
-        <VButton v-permission="['plugin:uni-halo:love:manage']" type="primary" @click="handleOpenEditingModal()">
+        <VButton v-permission="['plugin:uni-halo:love-daily:manage']" type="primary" @click="handleOpenEditingModal()">
           <template #icon>
             <IconAddCircle />
           </template>
@@ -288,7 +288,7 @@ const timelineDotClass = (status?: string) => {
         <Transition v-if="!sortedItems.length" appear name="fade">
           <VEmpty message="写下第一件想一起做的事吧" title="清单还是空的">
             <template #actions>
-              <VButton v-permission="['plugin:uni-halo:love:manage']" type="secondary" @click="handleOpenEditingModal()">
+              <VButton v-permission="['plugin:uni-halo:love-daily:manage']" type="secondary" @click="handleOpenEditingModal()">
                 <template #icon>
                   <IconAddCircle />
                 </template>

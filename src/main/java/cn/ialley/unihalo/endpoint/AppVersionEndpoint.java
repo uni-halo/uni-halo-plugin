@@ -63,7 +63,7 @@ public class AppVersionEndpoint implements CustomEndpoint {
                 .POST(Constants.APP_VERSION_API_BASE_PATH, this::createVersion)
                 .PUT(Constants.APP_VERSION_API_BASE_PATH + "/{name}", this::updateVersion)
                 .DELETE(Constants.APP_VERSION_API_BASE_PATH + "/{name}", this::deleteVersion)
-                .POST(Constants.APP_VERSION_API_BASE_PATH + "/upload", this::uploadPackage)
+                .POST(Constants.APP_VERSION_API_BASE_PATH + "/-/upload", this::uploadPackage)
                 .build();
     }
 

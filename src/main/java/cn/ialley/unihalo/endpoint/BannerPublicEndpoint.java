@@ -15,7 +15,7 @@ import run.halo.app.extension.GroupVersion;
  * 轮播图公开接口（app 端，匿名可访问）。
  *
  * 列表脱敏（不含 content/remark），详情才返回完整 HTML；
- * 公开接口已被 role-anonymous.yaml 的 api.unihalo.ialley.cn 全资源规则覆盖。
+ * 公开接口已被 role-template-anonymous.yaml 的 api.unihalo.ialley.cn 全资源规则覆盖。
  *
  * @author 小莫唐尼
  */

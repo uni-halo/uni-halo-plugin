@@ -44,7 +44,7 @@ public class LoveDiaryHeadProcessor implements TemplateHeadProcessor {
             Constants.PLUGIN_STATIC_PREFIX + Constants.LOVE_STATIC_DIR;
 
     private static final String PUBLIC_API_BASE =
-            "/apis/" + Constants.PUBLIC_CUSTOM_API_GROUP_NAME + "/" + Constants.END_POINT_API_BASE_PATH;
+            "/apis/" + Constants.PUBLIC_CUSTOM_API_GROUP_NAME;
 
     private final LoveDiaryConfigResolver configResolver;
 

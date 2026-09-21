@@ -158,7 +158,7 @@ const onModalClose = () => {
           </template>
           刷新
         </VButton>
-        <VButton v-permission="['plugin:uni-halo:love:manage']" type="primary" @click="handleOpenEditingModal()">
+        <VButton v-permission="['plugin:uni-halo:love-albums:manage']" type="primary" @click="handleOpenEditingModal()">
           <template #icon>
             <IconAddCircle />
           </template>
@@ -203,7 +203,7 @@ const onModalClose = () => {
       <div v-else-if="!albums?.items.length" class=":uno: py-10">
         <VEmpty message="点击右上角新建你的第一个恋爱相册" title="当前没有相册">
           <template #actions>
-            <VButton v-permission="['plugin:uni-halo:love:manage']" type="secondary" @click="handleOpenEditingModal()">
+            <VButton v-permission="['plugin:uni-halo:love-albums:manage']" type="secondary" @click="handleOpenEditingModal()">
               <template #icon>
                 <IconAddCircle />
               </template>
