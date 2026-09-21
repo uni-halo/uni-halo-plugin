@@ -469,7 +469,7 @@ public class AuthServiceImpl implements AuthService {
                     if (e instanceof ServerWebInputException inputException) {
                         var reason = String.valueOf(inputException.getReason());
                         var message = reason.contains("registration")
-                                ? "新用户无法使用一键登录"
+                                ? "未开启新用户一键登录"
                                 : reason.contains("default role")
                                         ? "站点未配置新用户默认角色，请在 Halo 系统设置中选择默认角色"
                                         : "自动注册失败：" + reason;
