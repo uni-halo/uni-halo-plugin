@@ -45,6 +45,10 @@ import run.halo.app.security.authentication.CryptoService;
  * {@code spec.expiresAt}），调用方务必传入 expiresAt。启动时做一次自签自检，
  * 失败则 {@link #available()} 返回 false，登录能力应据此 fail closed。
  *
+ * <p>单活令牌：每次登录签发前会先删除该用户名下本插件签发的全部旧令牌
+ * （见 {@link #deletePreviousTokens}），避免令牌随登录次数无限堆积；
+ * 同账号多设备互踢是该策略的预期副作用。
+ *
  * @author 小莫唐尼
  */
 @Slf4j
@@ -91,7 +95,39 @@ public class PatIssuerImpl implements PatIssuer, InitializingBean {
         pat.getSpec().setRoles(new ArrayList<>(roles));
         pat.getSpec().setExpiresAt(expiresAt);
         pat.getSpec().setTokenId(UUID.randomUUID().toString());
-        return client.create(pat).flatMap(this::sign);
+        return deletePreviousTokens(username)
+                .then(client.create(pat))
+                .flatMap(this::sign);
+    }
+
+    /**
+     * 单活令牌策略：签发新令牌前，删除该用户名下所有本插件签发的旧令牌
+     * （只认 {@code managed-by} 标签，用户手动创建的个人令牌不受影响）。
+     * 删除扩展后 {@code PatAuthenticationManager} 拉不到 PAT 即拒绝，旧令牌立刻失效，
+     * 不依赖 {@code PatCleanupService} 的 6 小时周期扫描。
+     *
+     * <p>副作用：同账号多设备互踢——后登录的设备会使先前设备的会话失效。
+     * 删除失败不阻断登录（降级为旧行为，旧令牌留给定时清理回收）。
+     */
+    private Mono<Void> deletePreviousTokens(String username) {
+        return client.list(PersonalAccessToken.class,
+                        pat -> ownedByPlugin(pat) && username.equals(pat.getSpec().getUsername()),
+                        null)
+                .flatMap(client::delete)
+                .then()
+                .onErrorResume(e -> {
+                    log.warn("【UniHalo】清理用户 {} 的旧登录令牌失败，本次登录继续", username, e);
+                    return Mono.empty();
+                });
+    }
+
+    private static boolean ownedByPlugin(PersonalAccessToken pat) {
+        if (pat == null || pat.getMetadata() == null || pat.getSpec() == null) {
+            return false;
+        }
+        var labels = pat.getMetadata().getLabels();
+        return labels != null
+                && Constants.PAT_MANAGED_BY_VALUE.equals(labels.get(Constants.PAT_MANAGED_BY_LABEL));
     }
 
     @Override

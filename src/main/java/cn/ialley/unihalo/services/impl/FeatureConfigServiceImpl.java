@@ -570,13 +570,13 @@ public class FeatureConfigServiceImpl implements FeatureConfigService {
                 "#f83856", "#f8385699", "#fce7f3", "uhlove-icon", "gushi",
                 "/pages-blog/love/stories", 1));
 
-        // 恋爱相册模块默认关闭（enabled=false）
-        love.setLovePhoto(defaultLoveModule(false, "恋爱相册", "定格了我们的那些小美好",
+        // 恋爱相册模块默认开启（enabled=true）
+        love.setLovePhoto(defaultLoveModule(true, "恋爱相册", "定格了我们的那些小美好",
                 "#60a5fa", "#93c5fd", "#dbeafe", "uhlove-icon", "xiangce",
                 "/pages-blog/love/album", 2));
 
-        // 恋爱清单模块默认关闭（enabled=false）
-        love.setLoveDaily(defaultLoveModule(false, "恋爱清单", "你我之间的约定我们都在努力实现",
+        // 恋爱清单模块默认开启（enabled=true）
+        love.setLoveDaily(defaultLoveModule(true, "恋爱清单", "你我之间的约定我们都在努力实现",
                 "#f83856", "#f8385699", "#fce7f3", "uhlove-icon", "liebiao",
                 "/pages-blog/love/list", 3));
 

@@ -223,13 +223,13 @@ function defaultSpec(): FeatureConfigSpec {
         passwordEnabled: false, password: "", passwordRemoved: false,
       },
       lovePhoto: {
-        enabled: false, title: "恋爱相册", subTitle: "定格了我们的那些小美好",
+        enabled: true, title: "恋爱相册", subTitle: "定格了我们的那些小美好",
         titleColor: "#60a5fa", subTitleColor: "#93c5fd", iconBgColor: "#dbeafe",
         path: "/pages-blog/love/album", priority: 2,
         passwordEnabled: false, password: "", passwordRemoved: false,
       },
       loveDaily: {
-        enabled: false, title: "恋爱清单", subTitle: "你我之间的约定我们都在努力实现",
+        enabled: true, title: "恋爱清单", subTitle: "你我之间的约定我们都在努力实现",
         titleColor: "#f83856", subTitleColor: "#f8385699", iconBgColor: "#fce7f3",
         path: "/pages-blog/love/list", priority: 3,
         passwordEnabled: false, password: "", passwordRemoved: false,
