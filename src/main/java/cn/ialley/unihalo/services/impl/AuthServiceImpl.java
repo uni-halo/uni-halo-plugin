@@ -336,7 +336,7 @@ public class AuthServiceImpl implements AuthService {
             var reason = String.valueOf(inputException.getReason());
             if (reason.contains("registration")) {
                 return new AuthException("REGISTER_FORBIDDEN",
-                        "站点未开放用户注册，请联系站长在 Halo 系统设置中开启「允许注册」",
+                        "未开放新用户注册",
                         AuthException.STATUS_FORBIDDEN);
             }
             if (reason.contains("default role")) {
@@ -469,7 +469,7 @@ public class AuthServiceImpl implements AuthService {
                     if (e instanceof ServerWebInputException inputException) {
                         var reason = String.valueOf(inputException.getReason());
                         var message = reason.contains("registration")
-                                ? "站点未开放用户注册，请在 Halo 系统设置中开启「允许注册」后再试"
+                                ? "未开放新用户注册"
                                 : reason.contains("default role")
                                         ? "站点未配置新用户默认角色，请在 Halo 系统设置中选择默认角色"
                                         : "自动注册失败：" + reason;

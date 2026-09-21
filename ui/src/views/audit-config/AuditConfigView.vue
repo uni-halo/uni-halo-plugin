@@ -9,6 +9,7 @@ import {
   VLoading,
   VPageHeader,
   VSpace,
+  VSwitch,
 } from "@halo-dev/components";
 import { useQuery, useQueryClient } from "@tanstack/vue-query";
 import { computed, reactive, ref, watch } from "vue";
@@ -87,6 +88,9 @@ const SPEC_FIELD: Record<
 const modalType = ref<AuditCandidateType | null>(null);
 const saving = ref(false);
 
+/** 审核模式开关（AuditDataConfig.spec.enabled，随本页整体保存） */
+const auditEnabled = ref(false);
+
 /** 当前展示的数据分类（左侧切换，默认文章） */
 const activeType = ref<AuditCandidateType>("post");
 
@@ -121,6 +125,7 @@ const validNames = reactive<Record<AuditCandidateType, Set<string>>>({
 const initialSnapshot = ref("");
 
 const buildSpec = () => ({
+  enabled: auditEnabled.value,
   posts: selectedItems.post,
   categories: selectedItems.category,
   galleryGroups: selectedItems.galleryGroup,
@@ -143,6 +148,7 @@ watch(
       selectedItems[type] = [...(spec[field] || [])];
       validNames[type] = new Set((val.selections?.[type] || []).map((item) => item.name));
     });
+    auditEnabled.value = val.config.spec.enabled === true;
     initialSnapshot.value = JSON.stringify(spec);
   },
   { immediate: true }
@@ -257,16 +263,27 @@ const handleSave = async () => {
   </VPageHeader>
 
   <div class=":uno: m-0 flex flex-col gap-4 pt-4 md:m-4 md:mt-0">
-    <!-- 说明 -->
+    <!-- 说明 + 审核模式开关（独立一行，便于后续扩展更多配置） -->
     <VCard>
       <div class=":uno: flex items-start gap-3 py-1">
         <RiShieldCheckLine class=":uno: mt-0.5 h-5 w-5 shrink-0 text-primary" />
         <div class=":uno: text-sm leading-6 text-gray-500">
           审核模式开启后，小程序端（微信审核等场景）<b class=":uno: text-gray-700"
             >仅展示以下挑选的数据</b
-          >。开关在「通用配置 → 应用设置 → 审核模式」中开启；此处仅维护「展示哪些数据」。
+          >；此处同时维护「是否开启」与「展示哪些数据」。
           数据均为站内真实数据的引用，被删除后自动标记<span class=":uno: text-red-500">已失效</span>，保存时剔除。
         </div>
+      </div>
+      <div
+        class=":uno: mt-3 flex items-center justify-between gap-4 border-t border-gray-100 pt-3"
+      >
+        <div>
+          <div class=":uno: text-sm text-gray-700">开启审核模式</div>
+          <div class=":uno: mt-0.5 text-xs text-gray-400">
+            开启后关闭小程序部分数据展示，仅展示下方挑选的数据；小程序提交审核时建议开启，审核通过后关闭
+          </div>
+        </div>
+        <VSwitch v-model="auditEnabled" />
       </div>
     </VCard>
 

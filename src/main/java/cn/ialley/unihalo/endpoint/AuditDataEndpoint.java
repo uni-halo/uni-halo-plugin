@@ -20,6 +20,8 @@ import run.halo.app.extension.GroupVersion;
  *
  * 单例读写 + 候选数据查询（选择器数据源，按类型映射外部扩展 GVK）。
  * 公开只读接口见 {@link AuditDataPublicEndpoint}（匿名，联动审核模式开关）。
+ * 审核模式开关（{@code FeatureConfig.spec.auditMode}）管理入口同页：
+ * GET/PUT {@code /audit-data/audit-mode}（整体读改存，防丢其他配置）。
  *
  * @author 小莫唐尼
  */

@@ -116,8 +116,59 @@ const CARD_STYLE_OPTIONS = [
     />
   </template>
 
+  <!-- 偏好设置 → 分类笔记 / 标签笔记（与归档页同构） -->
+  <template v-if="subTab === 'categoryArticles'">
+    <p class=":uno: mb-3 text-xs text-gray-400">
+      以下为分类笔记页默认展示偏好，与小程序端「偏好设置-布局」分类笔记分组对齐；用户可在「我的-设置」中按个人偏好覆盖。
+    </p>
+    <FormKit
+      v-model="formState.spec.preferences.categoryArticlesListLayout"
+      name="pref_category_articles_layout"
+      label="分类笔记布局"
+      type="select"
+      :options="[
+        {label: '单列', value: 'single'},
+        {label: '双列', value: 'double'},
+      ]"
+      help="分类笔记页默认展示方式"
+    />
+    <FormKit
+      v-model="formState.spec.preferences.categoryArticlesCardType"
+      name="pref_category_articles_card_type"
+      label="分类笔记卡片样式"
+      type="select"
+      :options="CARD_STYLE_OPTIONS"
+      help="分类笔记卡片中封面图与文字的位置关系"
+    />
+  </template>
+
+  <template v-if="subTab === 'tagArticles'">
+    <p class=":uno: mb-3 text-xs text-gray-400">
+      以下为标签笔记页默认展示偏好，与小程序端「偏好设置-布局」标签笔记分组对齐；用户可在「我的-设置」中按个人偏好覆盖。
+    </p>
+    <FormKit
+      v-model="formState.spec.preferences.tagArticlesListLayout"
+      name="pref_tag_articles_layout"
+      label="标签笔记布局"
+      type="select"
+      :options="[
+        {label: '单列', value: 'single'},
+        {label: '双列', value: 'double'},
+      ]"
+      help="标签笔记页默认展示方式"
+    />
+    <FormKit
+      v-model="formState.spec.preferences.tagArticlesCardType"
+      name="pref_tag_articles_card_type"
+      label="标签笔记卡片样式"
+      type="select"
+      :options="CARD_STYLE_OPTIONS"
+      help="标签笔记卡片中封面图与文字的位置关系"
+    />
+  </template>
+
   <!-- 偏好设置 → 友情链接页 -->
-  <template v-if="subTab === 'linkPage'">
+  <template v-if="subTab === 'friendLinks'">
     <p class=":uno: mb-3 text-xs text-gray-400">
       以下为友情链接页展示偏好；小程序打开模式决定用户点击小程序链接时的打开方式。
     </p>

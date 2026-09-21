@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import {VButton, VEmpty, VSpace, VSwitch} from "@halo-dev/components";
-import {computed, inject} from "vue";
-import {VueDraggable} from "vue-draggable-plus";
+import { VButton, VEmpty, VSwitch } from "@halo-dev/components";
+import { computed, inject } from "vue";
+import { VueDraggable } from "vue-draggable-plus";
 import RiDragMove2Line from "~icons/ri/drag-move-2-line";
 import RiDeleteBinLine from "~icons/ri/delete-bin-6-line";
 import RichTextEditorField from "@/components/common/RichTextEditorField.vue";
@@ -70,21 +70,27 @@ function onSocialBgColor(item: FeatureConfigSocialItem, value: unknown) {
 <template>
   <!-- 应用资料 → 应用信息 -->
   <template v-if="subTab === 'appInfo'">
-    <FormKit v-model="formState.spec.profile.appInfo.name" name="appinfo_name" label="应用名称" type="text" help="小程序应用展示名称，如关于页标题等处使用" />
-    <FormKit v-model="formState.spec.profile.appInfo.logo" name="appinfo_logo" label="应用图标" type="attachment" :accepts="['image/*']" help="小程序应用图标" />
+    <FormKit v-model="formState.spec.profile.appInfo.name" name="appinfo_name" label="应用名称" type="text"
+      help="小程序应用展示名称，如关于页标题等处使用" />
+    <FormKit v-model="formState.spec.profile.appInfo.logo" name="appinfo_logo" label="应用图标" type="attachment"
+      :accepts="['image/*']" help="小程序应用图标" />
   </template>
 
   <!-- 应用资料 → 博主资料 -->
   <template v-if="subTab === 'blogger'">
     <FormKit v-model="formState.spec.profile.blogger.nickname" name="blogger_nickname" label="昵称" type="text" />
     <FormKit v-model="formState.spec.profile.blogger.email" name="blogger_email" label="邮箱" type="text" />
-    <FormKit v-model="formState.spec.profile.blogger.website" name="blogger_website" label="主页" type="text" placeholder="如 https://your-site.com" />
-    <FormKit v-model="formState.spec.profile.blogger.avatar" name="blogger_avatar" label="头像" type="attachment" :accepts="['image/*']" />
-    <FormKit v-model="formState.spec.profile.blogger.description" name="blogger_description" label="简介" type="textarea" />
+    <FormKit v-model="formState.spec.profile.blogger.website" name="blogger_website" label="主页" type="text"
+      placeholder="如 https://your-site.com" />
+    <FormKit v-model="formState.spec.profile.blogger.avatar" name="blogger_avatar" label="头像" type="attachment"
+      :accepts="['image/*']" />
+    <FormKit v-model="formState.spec.profile.blogger.description" name="blogger_description" label="简介"
+      type="textarea" />
     <!-- 介绍（富文本 HTML，app 端联系博主页 mp-html 渲染） -->
     <div class=":uno: mt-4">
       <div class=":uno: mb-2 text-sm text-gray-700">介绍</div>
-      <RichTextEditorField v-model="formState.spec.profile.blogger.intro" placeholder="博主介绍，支持图文混排……app 端「联系博主」页面展示，留空不展示" />
+      <RichTextEditorField v-model="formState.spec.profile.blogger.intro"
+        placeholder="博主介绍，支持图文混排……app 端「联系博主」页面展示，留空不展示" />
     </div>
   </template>
 
@@ -98,58 +104,35 @@ function onSocialBgColor(item: FeatureConfigSocialItem, value: unknown) {
       <VButton size="sm" type="secondary" @click="addSocialItem">添加</VButton>
     </div>
     <VueDraggable v-model="socialItems" handle=".social-drag-handle">
-      <div
-        v-for="(item, index) in socialItems"
-        :key="index"
-        class=":uno: mb-2 last:mb-0"
-      >
-        <div class=":uno: flex flex-wrap items-center gap-x-3 gap-y-2 rounded-lg border border-gray-100 bg-gray-50 px-3 py-2">
+      <div v-for="(item, index) in socialItems" :key="index" class=":uno: mb-2 last:mb-0">
+        <div
+          class=":uno: flex flex-wrap items-center gap-x-3 gap-y-2 rounded-lg border border-gray-100 bg-gray-50 px-3 py-2">
           <span class=":uno: social-drag-handle cursor-move shrink-0 text-gray-400 hover:text-gray-600">
             <RiDragMove2Line class=":uno: h-4 w-4" />
           </span>
           <!-- 名称 -->
           <div class=":uno: flex w-32 shrink-0 items-center gap-2">
             <span class=":uno: w-10 shrink-0 text-xs text-gray-700">名称</span>
-            <FormKit
-              v-model="item.name"
-              :name="`social_name_${index}`"
-              type="text"
-              placeholder="如 企鹅号"
-              outer-class=":uno: min-w-0 flex-1 !pt-0"
-            />
+            <FormKit v-model="item.name" :name="`social_name_${index}`" type="text" placeholder="如 企鹅号"
+              outer-class=":uno: min-w-0 flex-1 !pt-0" />
           </div>
           <!-- 内容 -->
           <div class=":uno: flex min-w-0 flex-1 items-center gap-2 px-12">
             <span class=":uno: w-10 shrink-0 text-xs text-gray-700">内容</span>
-            <FormKit
-              v-model="item.content"
-              :name="`social_content_${index}`"
-              type="text"
-              placeholder="账号 / 地址 / 链接"
-              outer-class=":uno: min-w-0 flex-1 !pt-0"
-            />
+            <FormKit v-model="item.content" :name="`social_content_${index}`" type="text" placeholder="账号 / 地址 / 链接"
+              outer-class=":uno: min-w-0 flex-1 !pt-0" />
           </div>
           <!-- 图标颜色 -->
           <div class=":uno: flex shrink-0 items-center gap-2 pr-22">
             <span class=":uno: text-xs text-gray-700">颜色</span>
-            <FormKit
-              type="color"
-              format="hex8"
-              :model-value="toColorInput(item.color)"
-              @update:model-value="onSocialColor(item, $event)"
-              outer-class=":uno: w-12 shrink-0 !pt-0"
-            />
+            <FormKit type="color" format="hex8" :model-value="toColorInput(item.color)"
+              @update:model-value="onSocialColor(item, $event)" outer-class=":uno: w-12 shrink-0 !pt-0" />
           </div>
           <!-- 背景色 -->
           <div class=":uno: flex shrink-0 items-center gap-2 pr-22">
             <span class=":uno: text-xs text-gray-700">背景</span>
-            <FormKit
-              type="color"
-              format="hex8"
-              :model-value="toColorInput(item.bgColor)"
-              @update:model-value="onSocialBgColor(item, $event)"
-              outer-class=":uno: w-12 shrink-0 !pt-0"
-            />
+            <FormKit type="color" format="hex8" :model-value="toColorInput(item.bgColor)"
+              @update:model-value="onSocialBgColor(item, $event)" outer-class=":uno: w-12 shrink-0 !pt-0" />
           </div>
           <!-- 显示开关 -->
           <div class=":uno: flex shrink-0 items-center gap-2 text-xs text-gray-500">
@@ -157,34 +140,14 @@ function onSocialBgColor(item: FeatureConfigSocialItem, value: unknown) {
             <VSwitch v-model="item.visible" />
           </div>
           <!-- 删除 -->
-          <button
-            type="button"
-            class=":uno: shrink-0 text-gray-400 transition-all hover:text-red-600"
-            title="删除"
-            @click="removeSocialItem(item)"
-          >
+          <button type="button" class=":uno: shrink-0 text-gray-400 transition-all hover:text-red-600" title="删除"
+            @click="removeSocialItem(item)">
             <RiDeleteBinLine class=":uno: h-4 w-4" />
           </button>
         </div>
       </div>
     </VueDraggable>
-    <VEmpty
-      v-if="!socialItems.length"
-      title="暂无社交信息"
-      message="点击「添加」增加一条社交方式"
-      :class="':uno: py-6'"
-    />
-  </template>
-
-  <!-- 应用资料 → 审核模式 -->
-  <template v-if="subTab === 'auditMode'">
-    <div class=":uno: flex items-center justify-between gap-4 border-b border-gray-100 pb-3">
-      <div>
-        <div class=":uno: text-sm text-gray-700">审核模式</div>
-        <div class=":uno: mt-0.5 text-xs text-gray-400">开启审核模式，关闭小程序部分数据展示；小程序提交审核时建议开启，审核通过后关闭</div>
-      </div>
-      <VSwitch v-model="formState.spec.auditMode!.enabled" />
-    </div>
+    <VEmpty v-if="!socialItems.length" title="暂无社交信息" message="点击「添加」增加一条社交方式" :class="':uno: py-6'" />
   </template>
 
   <!-- 应用资料 → 页脚版权（显示于【关于】页面页脚） -->
@@ -200,7 +163,8 @@ function onSocialBgColor(item: FeatureConfigSocialItem, value: unknown) {
       <VSwitch v-model="formState.spec.profile.copyrightConfig!.enabled" />
     </div>
     <div class=":uno: mt-3">
-      <FormKit v-model="formState.spec.profile.copyrightConfig!.content" name="copyright_content" label="版权内容" type="textarea" />
+      <FormKit v-model="formState.spec.profile.copyrightConfig!.content" name="copyright_content" label="版权内容"
+        type="textarea" />
     </div>
   </template>
 </template>

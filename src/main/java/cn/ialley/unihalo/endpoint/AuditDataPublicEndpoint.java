@@ -11,7 +11,6 @@ import org.springframework.web.reactive.function.server.ServerResponse;
 import cn.ialley.unihalo.constants.Constants;
 import cn.ialley.unihalo.enums.CandidateType;
 import cn.ialley.unihalo.services.AuditDataService;
-import cn.ialley.unihalo.services.FeatureConfigService;
 import reactor.core.publisher.Mono;
 import run.halo.app.core.extension.endpoint.CustomEndpoint;
 import run.halo.app.extension.GroupVersion;
@@ -19,9 +18,9 @@ import run.halo.app.extension.GroupVersion;
 /**
  * 审核模式公开接口（app 端/小程序端，匿名可访问）。
  *
- * 联动功能设置「应用设置-审核模式」开关：enabled=true 时返回剔除失效引用后的
- * 选中列表（小程序端据此过滤真实数据展示），并附带 {@code categoryDetails} 分类完整
- * 快照（剔除失效、按配置顺序），供 app 端审核模式下免请求映射 ICategory；
+ * 联动审核模式开关（{@code AuditDataConfig.spec.enabled}）：enabled=true 时返回剔除
+ * 失效引用后的选中列表（小程序端据此过滤真实数据展示），并附带 {@code categoryDetails}
+ * 分类完整快照（剔除失效、按配置顺序），供 app 端审核模式下免请求映射 ICategory；
  * 开关关闭时返回 {@code {enabled:false}}。匿名放行由 role-anonymous.yaml 全局规则覆盖。
  *
  * @author 小莫唐尼
@@ -30,12 +29,9 @@ import run.halo.app.extension.GroupVersion;
 public class AuditDataPublicEndpoint implements CustomEndpoint {
 
     private final AuditDataService auditDataService;
-    private final FeatureConfigService featureConfigService;
 
-    public AuditDataPublicEndpoint(AuditDataService auditDataService,
-            FeatureConfigService featureConfigService) {
+    public AuditDataPublicEndpoint(AuditDataService auditDataService) {
         this.auditDataService = auditDataService;
-        this.featureConfigService = featureConfigService;
     }
 
     @Override
@@ -51,29 +47,27 @@ public class AuditDataPublicEndpoint implements CustomEndpoint {
     }
 
     private Mono<ServerResponse> getAuditData(ServerRequest request) {
-        return featureConfigService.get().flatMap(config -> {
-            boolean enabled = config.getSpec() != null
-                    && config.getSpec().getAuditMode() != null
-                    && Boolean.TRUE.equals(config.getSpec().getAuditMode().getEnabled());
+        return auditDataService.getDetail().flatMap(detail -> {
+            boolean enabled = detail.config() != null
+                    && detail.config().getSpec() != null
+                    && Boolean.TRUE.equals(detail.config().getSpec().getEnabled());
             Map<String, Object> body = new HashMap<>();
             body.put("enabled", enabled);
-            if (enabled) {
-                return auditDataService.getEffective()
-                        .zipWith(auditDataService.getDetail())
-                        .flatMap(tuple -> {
-                            body.put("spec",
-                                    tuple.getT1().getSpec() == null ? Map.of()
-                                            : tuple.getT1().getSpec());
-                            // 分类完整快照（剔除失效、按配置顺序，app 端审核模式免请求映射 ICategory）
-                            var categoryDetails = tuple.getT2().selections()
-                                    .get(CandidateType.category);
-                            if (categoryDetails != null && !categoryDetails.isEmpty()) {
-                                body.put("categoryDetails", categoryDetails);
-                            }
-                            return ServerResponse.ok().bodyValue(body);
-                        });
+            if (!enabled) {
+                return ServerResponse.ok().bodyValue(body);
             }
-            return ServerResponse.ok().bodyValue(body);
+            return auditDataService.getEffective()
+                    .flatMap(effective -> {
+                        body.put("spec",
+                                effective.getSpec() == null ? Map.of() : effective.getSpec());
+                        // 分类完整快照（剔除失效、按配置顺序，app 端审核模式免请求映射 ICategory）
+                        var categoryDetails = detail.selections()
+                                .get(CandidateType.category);
+                        if (categoryDetails != null && !categoryDetails.isEmpty()) {
+                            body.put("categoryDetails", categoryDetails);
+                        }
+                        return ServerResponse.ok().bodyValue(body);
+                    });
         });
     }
 }

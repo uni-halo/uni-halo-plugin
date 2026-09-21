@@ -13,7 +13,6 @@ import org.springframework.stereotype.Service;
 import cn.ialley.unihalo.constants.Constants;
 import cn.ialley.unihalo.scheme.FeatureConfig;
 import cn.ialley.unihalo.scheme.FeatureConfig.Assets;
-import cn.ialley.unihalo.scheme.FeatureConfig.AuditMode;
 import cn.ialley.unihalo.scheme.FeatureConfig.Blogger;
 import cn.ialley.unihalo.scheme.FeatureConfig.BloggerPage;
 import cn.ialley.unihalo.scheme.FeatureConfig.Copyright;
@@ -244,10 +243,6 @@ public class FeatureConfigServiceImpl implements FeatureConfigService {
         spec.setLove(buildDefaultLove());
         spec.setLinkInfo(buildDefaultLinkInfo());
         spec.setMaintenance(buildDefaultMaintenance());
-        // 审核模式（默认关闭）
-        AuditMode auditMode = new AuditMode();
-        auditMode.setEnabled(false);
-        spec.setAuditMode(auditMode);
         return spec;
     }
 
@@ -274,6 +269,11 @@ public class FeatureConfigServiceImpl implements FeatureConfigService {
         preferences.setArticlesCardType("image_bottom");
         preferences.setArchivesListLayout("single");
         preferences.setArchivesCardType("image_bottom");
+        // 分类笔记 / 标签笔记页与归档页同构，默认同样 single + image_bottom
+        preferences.setCategoryArticlesListLayout("single");
+        preferences.setCategoryArticlesCardType("image_bottom");
+        preferences.setTagArticlesListLayout("single");
+        preferences.setTagArticlesCardType("image_bottom");
         // 与客户端内置默认对齐：头像外观默认方形（square/circle）
         preferences.setAvatarShape("square");
         FeatureConfig.LinkPage linkPage = new FeatureConfig.LinkPage();

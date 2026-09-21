@@ -41,16 +41,6 @@ public class FeatureConfig extends AbstractExtension {
         private LinkInfo linkInfo;
         /** 维护模式 */
         private Maintenance maintenance;
-        /** 审核模式：开启后关闭小程序部分数据展示，小程序提交审核时建议开启；
-         * 随 {@code featureConfig.auditMode} 下发 */
-        private AuditMode auditMode;
-    }
-
-    /** 审核模式开关（默认关闭） */
-    @Data
-    public static class AuditMode {
-        /** 是否开启审核模式 */
-        private Boolean enabled;
     }
 
     /** 应用资料：应用信息（名称/图标）+ 博主/社交信息；
@@ -365,6 +355,14 @@ public class FeatureConfig extends AbstractExtension {
         private String archivesListLayout;
         /** 文章归档页卡片样式（客户端 layout.archives.cardType） */
         private String archivesCardType;
+        /** 分类笔记页列表布局（客户端 layout.categoryArticles.listLayout）：single / double */
+        private String categoryArticlesListLayout;
+        /** 分类笔记页卡片样式（客户端 layout.categoryArticles.cardType） */
+        private String categoryArticlesCardType;
+        /** 标签笔记页列表布局（客户端 layout.tagArticles.listLayout）：single / double */
+        private String tagArticlesListLayout;
+        /** 标签笔记页卡片样式（客户端 layout.tagArticles.cardType） */
+        private String tagArticlesCardType;
         /** 头像外观（客户端 preferences.avatarShape）：square 方形（默认）/ circle 圆形；
          * 应用于文章卡片（上文下图）与瞬间卡片的用户头像 */
         private String avatarShape;

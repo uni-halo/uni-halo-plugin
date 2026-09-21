@@ -460,6 +460,8 @@ export interface AuditDataRef {
 
 /** 审核模式模拟数据的选中引用（对象快照存储，数组顺序即展示顺序） */
 export interface AuditDataConfigSpec {
+  /** 是否开启审核模式（默认 false；开启后小程序端仅展示下方选中的数据） */
+  enabled?: boolean;
   /** 选中的文章 Post 引用列表 */
   posts?: AuditDataRef[];
   /** 选中的分类 Category 引用列表 */
@@ -538,9 +540,6 @@ export interface FeatureConfigSpec {
   linkInfo: FeatureConfigLinkInfo;
   /** 维护模式 */
   maintenance: FeatureConfigMaintenance;
-  /** 审核模式：开启后关闭小程序部分数据展示，小程序提交审核时建议开启；
-   * 经 getConfigs 重建回旧 auditConfig.auditModeEnabled 形态下发 */
-  auditMode: { enabled?: boolean };
 }
 
 /**
@@ -795,6 +794,14 @@ export interface FeatureConfigPreferences {
   archivesListLayout?: "single" | "double";
   /** 文章归档页卡片样式（L0 默认，客户端 layout.archives.cardType） */
   archivesCardType?: "image_top" | "image_right" | "image_bottom" | "image_left";
+  /** 分类笔记页列表布局（L0 默认，客户端 layout.categoryArticles.listLayout）：single / double */
+  categoryArticlesListLayout?: "single" | "double";
+  /** 分类笔记页卡片样式（L0 默认，客户端 layout.categoryArticles.cardType） */
+  categoryArticlesCardType?: "image_top" | "image_right" | "image_bottom" | "image_left";
+  /** 标签笔记页列表布局（L0 默认，客户端 layout.tagArticles.listLayout）：single / double */
+  tagArticlesListLayout?: "single" | "double";
+  /** 标签笔记页卡片样式（L0 默认，客户端 layout.tagArticles.cardType） */
+  tagArticlesCardType?: "image_top" | "image_right" | "image_bottom" | "image_left";
   /** 头像外观（L0 默认，客户端 preferences.avatarShape）：square 方形 / circle 圆形；应用于文章卡片(上文下图)与瞬间卡片 */
   avatarShape?: "square" | "circle";
   /** 友情链接页展示偏好（小程序打开模式等） */

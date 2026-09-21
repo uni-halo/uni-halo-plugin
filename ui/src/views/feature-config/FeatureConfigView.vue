@@ -41,15 +41,16 @@ const SUB_TABS: Record<BigGroup, Array<{ id: string; label: string }>> = {
     { id: "appInfo", label: "应用信息" },
     { id: "blogger", label: "博主资料" },
     { id: "social", label: "社交信息" },
-    { id: "auditMode", label: "审核模式" },
     { id: "copyright", label: "页脚版权" },
   ],
   preferences: [
     { id: "general", label: "通用功能" },
     { id: "home", label: "首页" },
-    { id: "articles", label: "笔记页面" },
-    { id: "archives", label: "归档页面" },
-    { id: "linkPage", label: "友情链接页" },
+    { id: "articles", label: "笔记页" },
+    { id: "archives", label: "归档页" },
+    { id: "categoryArticles", label: "分类笔记页" },
+    { id: "tagArticles", label: "标签笔记页" },
+    { id: "friendLinks", label: "友情链接页" },
   ],
   pages: [
     { id: "pageTitles", label: "页面标题" },
@@ -202,6 +203,10 @@ function defaultSpec(): FeatureConfigSpec {
       articlesCardType: "image_bottom",
       archivesListLayout: "single",
       archivesCardType: "image_bottom",
+      categoryArticlesListLayout: "single",
+      categoryArticlesCardType: "image_bottom",
+      tagArticlesListLayout: "single",
+      tagArticlesCardType: "image_bottom",
       avatarShape: "square",
       linkPage: {
         miniProgramOpenMode: "fullscreen",
@@ -269,10 +274,6 @@ function defaultSpec(): FeatureConfigSpec {
       title: "站点维护中",
       notice: "",
       description: "",
-    },
-    // 审核模式（默认关闭，开启后关闭小程序部分数据展示，小程序提交审核时建议开启）
-    auditMode: {
-      enabled: false,
     },
   };
 }
