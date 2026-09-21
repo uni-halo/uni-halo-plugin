@@ -173,6 +173,27 @@ export const LOVE_DAILY_TIME_SORT_OPTIONS: { label: string; value: string }[] = 
   { label: "完成时间 · 最早在前", value: "complete_asc" },
 ];
 
+/** 恋爱信息 spec（单例，metadata.name 固定 love-info；纪念日 + 恋人信息） */
+export interface LoveInfoSpec {
+  /** 纪念日标题（默认「这是我们一起走过的」，留空客户端回落） */
+  loveDateTitle?: string;
+  /** 恋爱纪念日（yyyy-MM-dd），用于计算恋爱天数 */
+  loveDate?: string;
+  /** 男生昵称 */
+  boyNickname?: string;
+  /** 男生头像 */
+  boyAvatar?: string;
+  /** 女生昵称 */
+  girlNickname?: string;
+  /** 女生头像 */
+  girlAvatar?: string;
+}
+
+export interface LoveInfo {
+  metadata: Metadata;
+  spec: LoveInfoSpec;
+}
+
 export interface LoveStorySpec {
   title?: string;
   content?: string;
@@ -825,22 +846,6 @@ export interface FeatureConfigLove {
   lovePhoto?: FeatureConfigLoveModule;
   /** 恋爱清单模块入口（数据在「恋爱管理-恋爱清单」维护） */
   loveDaily?: FeatureConfigLoveModule;
-  /** 恋爱信息（纪念日 + 恋人信息，配置于恋爱设置-恋爱信息 tab，
-   * 经 getConfigs 下发 loveConfig.loveInfo） */
-  loveInfo?: {
-    /** 纪念日标题（默认「这是我们一起走过的」） */
-    loveDateTitle?: string;
-    /** 恋爱纪念日（yyyy-MM-dd），用于计算恋爱天数 */
-    loveDate?: string;
-    /** 男生昵称 */
-    boyNickname?: string;
-    /** 男生头像 */
-    boyAvatar?: string;
-    /** 女生昵称 */
-    girlNickname?: string;
-    /** 女生头像 */
-    girlAvatar?: string;
-  };
   /** 恋爱日记页面设置（配置于恋爱设置-页面设置 tab；app 端输出 shape 不变，
    * 仍为 pageConfig.loveDiaryConfig） */
   diaryPage?: {

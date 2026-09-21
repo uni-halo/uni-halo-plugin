@@ -19,10 +19,12 @@ import cn.ialley.unihalo.scheme.LoveAlbum;
 import cn.ialley.unihalo.services.FeatureConfigService;
 import cn.ialley.unihalo.services.LoveAlbumService;
 import cn.ialley.unihalo.services.LoveDailyItemService;
+import cn.ialley.unihalo.services.LoveInfoService;
 import cn.ialley.unihalo.services.LoveStoryService;
 import cn.ialley.unihalo.utils.AlbumTokenManager;
 import cn.ialley.unihalo.utils.LoveModuleTokenManager;
 import cn.ialley.unihalo.vo.LoveAlbumVo;
+import cn.ialley.unihalo.vo.LoveInfoVo;
 import reactor.core.publisher.Mono;
 import run.halo.app.core.extension.endpoint.CustomEndpoint;
 import run.halo.app.extension.GroupVersion;
@@ -46,6 +48,7 @@ public class LovePublicEndpoint implements CustomEndpoint {
     private final LoveAlbumService loveAlbumService;
     private final LoveDailyItemService loveDailyItemService;
     private final LoveStoryService loveStoryService;
+    private final LoveInfoService loveInfoService;
     private final AlbumTokenManager albumTokenManager;
     private final LoveModuleTokenManager loveModuleTokenManager;
     private final CaptchaService captchaService;
@@ -54,6 +57,7 @@ public class LovePublicEndpoint implements CustomEndpoint {
             LoveAlbumService loveAlbumService,
             LoveDailyItemService loveDailyItemService,
             LoveStoryService loveStoryService,
+            LoveInfoService loveInfoService,
             AlbumTokenManager albumTokenManager,
             LoveModuleTokenManager loveModuleTokenManager,
             CaptchaService captchaService) {
@@ -61,6 +65,7 @@ public class LovePublicEndpoint implements CustomEndpoint {
         this.loveAlbumService = loveAlbumService;
         this.loveDailyItemService = loveDailyItemService;
         this.loveStoryService = loveStoryService;
+        this.loveInfoService = loveInfoService;
         this.albumTokenManager = albumTokenManager;
         this.loveModuleTokenManager = loveModuleTokenManager;
         this.captchaService = captchaService;
@@ -82,7 +87,17 @@ public class LovePublicEndpoint implements CustomEndpoint {
                 .POST(Constants.END_POINT_API_BASE_PATH + "/love-modules/unlock",
                         this::unlockLoveModule)
                 .GET(Constants.END_POINT_API_BASE_PATH + "/love-daily-items", this::listDailyItems)
+                .GET(Constants.END_POINT_API_BASE_PATH + "/love-info", this::getLoveInfo)
                 .build();
+    }
+
+    /**
+     * 恋爱信息（纪念日 + 恋人信息，匿名公开；未配置时字段为 null）。
+     */
+    private Mono<ServerResponse> getLoveInfo(ServerRequest request) {
+        return loveInfoService.fetchOrDefault()
+                .map(LoveInfoVo::from)
+                .flatMap(body -> ServerResponse.ok().bodyValue(body));
     }
 
     /**

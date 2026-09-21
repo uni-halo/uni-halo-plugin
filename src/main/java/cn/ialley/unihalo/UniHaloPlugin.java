@@ -7,6 +7,7 @@ import cn.ialley.unihalo.scheme.Banner;
 import cn.ialley.unihalo.scheme.FeatureConfig;
 import cn.ialley.unihalo.scheme.LoveAlbum;
 import cn.ialley.unihalo.scheme.LoveDailyItem;
+import cn.ialley.unihalo.scheme.LoveInfo;
 import cn.ialley.unihalo.scheme.LoveStory;
 import cn.ialley.unihalo.scheme.MiniProgramLink;
 import cn.ialley.unihalo.scheme.MiniProgramLinkGroup;
@@ -101,6 +102,10 @@ public class UniHaloPlugin extends BasePlugin {
             indexSpecs.add(IndexSpecs.<LoveStory, Integer>single("spec.priority", Integer.class)
                     .indexFunc(story -> story.getSpec() == null ? null
                             : story.getSpec().getPriority()));
+        });
+
+        schemeManager.register(LoveInfo.class, indexSpecs -> {
+            // 单例模型（固定 name = love-info），无需额外索引
         });
 
         schemeManager.register(Notice.class, indexSpecs -> {

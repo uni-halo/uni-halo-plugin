@@ -10,6 +10,7 @@ import type {
   LoveAlbum,
   LoveAlbumPhoto,
   LoveDailyItem,
+  LoveInfo,
   LoveStory,
   MiniProgramLink,
   MiniProgramLinkGroup,
@@ -104,6 +105,13 @@ export const loveStoryApi = {
     http.put<LoveStory>(`${PLUGIN_BASE}/love-stories/${name}`, data),
   delete: (name: string) =>
     http.delete<{ success: boolean }>(`${PLUGIN_BASE}/love-stories/${name}`),
+};
+
+// ===== 恋爱信息（LoveInfo 单例）=====
+
+export const loveInfoApi = {
+  get: () => http.get<LoveInfo>(`${PLUGIN_BASE}/love-info`),
+  save: (data: LoveInfo) => http.put<LoveInfo>(`${PLUGIN_BASE}/love-info`, data),
 };
 
 // 公开接口（app 端/小程序端调用，匿名可访问）

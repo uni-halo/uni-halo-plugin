@@ -19,6 +19,8 @@ rules:
       - "plugins/uni-halo/love-albums/*"
       - "plugins/uni-halo/love-daily-items"
       - "plugins/uni-halo/love-daily-items/*"
+      - "plugins/uni-halo/love-info"
+      - "plugins/uni-halo/love-info/*"
     verbs: [ "get", "list" ]
 
 ---
@@ -46,4 +48,6 @@ rules:
       - "plugins/uni-halo/love-albums/*"
       - "plugins/uni-halo/love-daily-items"
       - "plugins/uni-halo/love-daily-items/*"
+      - "plugins/uni-halo/love-info"
+      - "plugins/uni-halo/love-info/*"
     verbs: [ "create", "patch", "update", "delete", "deletecollection" ]

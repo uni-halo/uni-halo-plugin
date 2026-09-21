@@ -10,7 +10,7 @@ import { FeatureConfigFormKey } from "../form-context";
 
 /**
  * 恋爱设置分区：
- * 恋爱信息（纪念日 + 恋人信息）/ 页面入口（恋爱日记入口密码，无开关；
+ * 页面入口（恋爱日记入口密码，无开关；
  * 入口显隐由页面设置-快捷导航/关于页功能入口注册表控制）/ 模块入口
  * （恋爱故事/相册/清单：开关 + 入口密码 + 入口列表数据
  * title/subTitle/颜色/iconBgColor/path + 拖拽排序，app 端直接消费）。
@@ -117,32 +117,6 @@ function cancelRemovalOnTyping(module: FeatureConfigLoveModule) {
       help="恋爱日记页展示标题，留空使用默认" />
     <FormKit v-model="formState.spec.love.diaryPage!.bgImageUrl" name="love_diary_bg_image" label="恋爱页背景图"
       type="attachment" :accepts="['image/*']" help="恋爱页（恋爱日记）顶部背景图，留空使用内置回退" />
-  </template>
-
-  <!-- 恋爱 → 恋爱信息（纪念日 + 恋人信息） -->
-  <template v-if="subTab === 'info'">
-    <p class=":uno: mb-3 text-xs text-gray-400">
-      恋爱纪念日与恋人信息展示在恋爱页顶部。
-    </p>
-    <div class=":uno: mb-6">
-      <div class=":uno: mb-2 text-sm font-semibold text-gray-700">纪念日</div>
-      <FormKit v-model="formState.spec.love.loveInfo!.loveDateTitle" name="love_info_date_title" label="纪念日标题"
-        type="text" placeholder="例如：我们在一起的那天" />
-      <FormKit v-model="formState.spec.love.loveInfo!.loveDate" name="love_info_date" label="恋爱纪念日" type="date"
-        help="用于计算恋爱天数，同时这可是一个非常重要的节日呢，可不能忘记哦~" />
-    </div>
-
-    <div class=":uno: mb-4">
-      <div class=":uno: mb-2 text-sm font-semibold text-gray-700">恋人信息</div>
-      <FormKit v-model="formState.spec.love.loveInfo!.boyAvatar" name="love_info_boy_avatar" label="男生头像"
-        type="attachment" :accepts="['image/*']" />
-      <FormKit v-model="formState.spec.love.loveInfo!.boyNickname" name="love_info_boy_nickname" label="男生昵称"
-        type="text" placeholder="男生的昵称" />
-      <FormKit v-model="formState.spec.love.loveInfo!.girlAvatar" name="love_info_girl_avatar" label="女生头像"
-        type="attachment" :accepts="['image/*']" />
-      <FormKit v-model="formState.spec.love.loveInfo!.girlNickname" name="love_info_girl_nickname" label="女生昵称"
-        type="text" placeholder="女生的昵称" />
-    </div>
   </template>
 
   <!-- 恋爱 → 页面入口（恋爱日记入口密码，无开关；入口显隐由页面设置 快捷导航/关于页功能入口注册表控制） -->

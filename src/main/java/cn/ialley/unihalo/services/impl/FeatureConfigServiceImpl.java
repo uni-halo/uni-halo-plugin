@@ -21,7 +21,6 @@ import cn.ialley.unihalo.scheme.FeatureConfig.HomePage;
 import cn.ialley.unihalo.scheme.FeatureConfig.LinkInfo;
 import cn.ialley.unihalo.scheme.FeatureConfig.Love;
 import cn.ialley.unihalo.scheme.FeatureConfig.LoveDiaryPage;
-import cn.ialley.unihalo.scheme.FeatureConfig.LoveInfo;
 import cn.ialley.unihalo.scheme.FeatureConfig.Maintenance;
 import cn.ialley.unihalo.scheme.FeatureConfig.ModuleSwitch;
 import cn.ialley.unihalo.scheme.FeatureConfig.MinePage;
@@ -467,8 +466,8 @@ public class FeatureConfigServiceImpl implements FeatureConfigService {
     }
 
     /**
-     * 我的页面-其他功能默认 5 项（对齐 app 端 about.vue navList：
-     * 偏好设置/免责声明/用户协议/隐私政策/关于项目，顺序即展示顺序；
+     * 我的页面-其他功能默认 5 项（顺序即展示顺序：
+     * 偏好设置/关于项目/免责声明/用户协议/隐私政策；
      * subTitle 对齐 app 端本地默认 rightText）。
      */
     private static List<QuickNavigationItem> defaultMineOtherFeatures() {
@@ -477,22 +476,22 @@ public class FeatureConfigServiceImpl implements FeatureConfigService {
                 "uhemoji2-icon", "-tired", "/pages-blog/setting/setting");
         setting.setSubTitle("首页布局、卡片样式等本地偏好");
         items.add(setting);
+        QuickNavigationItem aboutProject = navItem("aboutProject", "关于项目", "#607D8B", "#607D8B24",
+                "uhemoji2-icon", "-happy-", "/pages-blog/about-project/about-project");
+        aboutProject.setSubTitle("小莫唐尼开源项目");
+        items.add(aboutProject);
         QuickNavigationItem disclaimer = navItem("disclaimer", "免责声明", "#795548", "#79554824",
                 "uhemoji2-icon", "-smirking", "/pages-blog/disclaimer/disclaimer");
         disclaimer.setSubTitle("博客内容免责声明");
         items.add(disclaimer);
         QuickNavigationItem userAgreement = navItem("user-agreement", "用户协议", "#8D6E63", "#8D6E6324",
-                "uhemoji2-icon", "-thinking", "/pages-blog/user-agreement/user-agreement");
+                "uhemoji2-icon", "-wink", "/pages-blog/user-agreement/user-agreement");
         userAgreement.setSubTitle("站点用户协议");
         items.add(userAgreement);
         QuickNavigationItem privacyPolicy = navItem("privacy-policy", "隐私政策", "#A1887F", "#A1887F24",
-                "uhemoji2-icon", "-shushing", "/pages-blog/privacy-policy/privacy-policy");
+                "uhemoji2-icon", "-secret", "/pages-blog/privacy-policy/privacy-policy");
         privacyPolicy.setSubTitle("站点隐私政策");
         items.add(privacyPolicy);
-        QuickNavigationItem aboutProject = navItem("aboutProject", "关于项目", "#607D8B", "#607D8B24",
-                "uhemoji2-icon", "-happy-", "/pages-blog/about-project/about-project");
-        aboutProject.setSubTitle("小莫唐尼开源项目");
-        items.add(aboutProject);
         return items;
     }
 
@@ -580,9 +579,6 @@ public class FeatureConfigServiceImpl implements FeatureConfigService {
         love.setLoveDaily(defaultLoveModule(false, "恋爱清单", "你我之间的约定我们都在努力实现",
                 "#f83856", "#f8385699", "#fce7f3", "uhlove-icon", "liebiao",
                 "/pages-blog/love/list", 3));
-
-        // 恋爱信息（纪念日 + 恋人信息）：默认留空（前端/输出端回退默认标题）
-        love.setLoveInfo(new LoveInfo());
 
         // 恋爱日记页面设置（页面标题 + 背景图，默认留空客户端内置回退）
         love.setDiaryPage(new LoveDiaryPage());

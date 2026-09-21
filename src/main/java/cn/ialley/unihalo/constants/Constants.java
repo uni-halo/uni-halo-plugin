@@ -167,6 +167,17 @@ public class Constants {
         "plugins/uni-halo/feature-config";
 
     /**
+     * 恋爱信息（LoveInfo 单例）资源名（metadata.name 固定值）
+     */
+    public static final String LOVE_INFO_SINGLETON_NAME = "love-info";
+
+    /**
+     * 恋爱信息（console）接口基础路径
+     */
+    public static final String LOVE_INFO_API_BASE_PATH =
+        "plugins/uni-halo/love-info";
+
+    /**
      * 基础的域名地址
      */
     public static final String BASIC_DOMAIN_NAME = "unihalo.ialley.cn";

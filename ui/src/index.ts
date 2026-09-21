@@ -140,6 +140,22 @@ export default definePlugin({
         },
         children: [
           {
+            path: 'info',
+            name: 'LoveInfo',
+            component: () => import('@/views/love-manage/LoveInfoView.vue'),
+            meta: {
+              title: '恋爱信息',
+              searchable: true,
+              hideFooter: false,
+              permissions: ['plugin:uni-halo:love:view'],
+              menu: {
+                name: '恋爱信息',
+                icon: markRaw(RiHeartLine),
+                priority: 0,
+              },
+            },
+          },
+          {
             path: 'albums',
             name: 'LoveAlbums',
             component: () => import('@/views/love-manage/LoveAlbumListView.vue'),

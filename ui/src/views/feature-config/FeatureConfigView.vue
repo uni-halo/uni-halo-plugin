@@ -67,7 +67,6 @@ const SUB_TABS: Record<BigGroup, Array<{ id: string; label: string }>> = {
   ],
   love: [
     { id: "page", label: "页面设置" },
-    { id: "info", label: "恋爱信息" },
     { id: "pageEntry", label: "页面入口" },
     { id: "modules", label: "模块入口" },
   ],
@@ -234,15 +233,6 @@ function defaultSpec(): FeatureConfigSpec {
         titleColor: "#f83856", subTitleColor: "#f8385699", iconBgColor: "#fce7f3",
         path: "/pages-blog/love/list", priority: 3,
         passwordEnabled: false, password: "", passwordRemoved: false,
-      },
-      // 恋爱信息（纪念日 + 恋人信息；默认留空，前端回退默认标题）
-      loveInfo: {
-        loveDateTitle: "",
-        loveDate: "",
-        boyNickname: "",
-        boyAvatar: "",
-        girlNickname: "",
-        girlAvatar: "",
       },
       // 恋爱日记页面设置（页面标题 + 恋爱页背景图，默认留空客户端内置回退）
       diaryPage: { pageTitle: "", bgImageUrl: "" },

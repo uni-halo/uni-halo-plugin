@@ -19,9 +19,11 @@ import cn.ialley.unihalo.constants.Constants;
 import cn.ialley.unihalo.finders.UniHaloFinder;
 import cn.ialley.unihalo.scheme.FeatureConfig;
 import cn.ialley.unihalo.scheme.LoveAlbum;
+import cn.ialley.unihalo.scheme.LoveInfo;
 import cn.ialley.unihalo.services.FeatureConfigService;
 import cn.ialley.unihalo.services.LoveAlbumService;
 import cn.ialley.unihalo.services.LoveDailyItemService;
+import cn.ialley.unihalo.services.LoveInfoService;
 import cn.ialley.unihalo.services.LoveStoryService;
 import cn.ialley.unihalo.utils.LoveDates;
 import cn.ialley.unihalo.utils.LoveDiaryConfigResolver;
@@ -81,6 +83,8 @@ public class UniHaloFinderImpl implements UniHaloFinder {
     private final LoveDailyItemService loveDailyItemService;
 
     private final FeatureConfigService featureConfigService;
+
+    private final LoveInfoService loveInfoService;
 
     private final CaptchaService captchaService;
 
@@ -200,9 +204,14 @@ public class UniHaloFinderImpl implements UniHaloFinder {
                         lockFlags(),
                         captchaService.requiredFor(CaptchaScope.LOVE_MODULE_UNLOCK)
                                 .defaultIfEmpty(false)
-                                .onErrorResume(e -> Mono.just(false)))
+                                .onErrorResume(e -> Mono.just(false)),
+                        loveInfoService.fetchOrDefault()
+                                .onErrorResume(e -> {
+                                    log.warn("读取恋爱信息失败，按空信息渲染：{}", e.getMessage());
+                                    return Mono.just(new LoveInfo());
+                                }))
                 .map(tuple -> new Ctx(tuple.getT1(), tuple.getT2(), tuple.getT3(),
-                        tuple.getT4(), tuple.getT5()));
+                        tuple.getT4(), tuple.getT5(), tuple.getT6()));
     }
 
     /**
@@ -241,8 +250,8 @@ public class UniHaloFinderImpl implements UniHaloFinder {
         FeatureConfig.Love love = loveOf(ctx.general());
         LoveConfigVo vo = new LoveConfigVo();
         vo.setEnabled(love != null);
-        if (love != null && love.getLoveInfo() != null) {
-            FeatureConfig.LoveInfo info = love.getLoveInfo();
+        LoveInfo.LoveInfoSpec info = ctx.loveInfo() == null ? null : ctx.loveInfo().getSpec();
+        if (info != null) {
             vo.setLoveDateTitle(info.getLoveDateTitle());
             vo.setLoveDate(LoveDates.isoDate(info.getLoveDate()));
             vo.setLoveDays(LoveDates.daysSince(info.getLoveDate()));
@@ -450,7 +459,7 @@ public class UniHaloFinderImpl implements UniHaloFinder {
      * 单次渲染的只读上下文。
      */
     private record Ctx(LoveRoutePlan plan, LoveDiaryThemeConfig theme, FeatureConfig general,
-                       Map<String, Boolean> locks, boolean captchaRequired) {
+                       Map<String, Boolean> locks, boolean captchaRequired, LoveInfo loveInfo) {
 
         boolean locked(String module) {
             return Boolean.TRUE.equals(locks.get(module));

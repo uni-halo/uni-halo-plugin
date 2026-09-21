@@ -392,28 +392,9 @@ public class FeatureConfig extends AbstractExtension {
         private ModuleSwitch lovePhoto;
         /** 恋爱清单模块入口（数据在「恋爱管理-恋爱清单」维护） */
         private ModuleSwitch loveDaily;
-        /** 恋爱信息（纪念日 + 恋人信息，配置在功能设置-恋爱设置-恋爱信息 tab） */
-        private LoveInfo loveInfo;
         /** 恋爱日记页面设置（页面标题 + 恋爱页背景图，配置在功能设置-恋爱设置-页面设置
          * tab；随 {@code featureConfig.love.diaryPage} 下发） */
         private LoveDiaryPage diaryPage;
-    }
-
-    /** 恋爱信息（纪念日 + 恋人信息） */
-    @Data
-    public static class LoveInfo {
-        /** 纪念日标题，默认「这是我们一起走过的」 */
-        private String loveDateTitle;
-        /** 恋爱纪念日（yyyy-MM-dd），用于计算恋爱天数 */
-        private String loveDate;
-        /** 男生昵称 */
-        private String boyNickname;
-        /** 男生头像 */
-        private String boyAvatar;
-        /** 女生昵称 */
-        private String girlNickname;
-        /** 女生头像 */
-        private String girlAvatar;
     }
 
     /**

@@ -8,7 +8,7 @@ import lombok.Data;
  * 恋爱日记页配置视图（已解析、已脱敏；模板只读）。
  *
  * 字段来源：{@link #loveDateTitle}/{@link #loveDate}/恋人昵称与头像 ←
- * {@code FeatureConfig.Love.loveInfo}；{@link #modules} ← 三个模块入口（已按
+ * {@code LoveInfo} 单例（{@code name = love-info}）；{@link #modules} ← 三个模块入口（已按
  * {@code priority} 降序、已剔除无路由者）；{@link #bgImageUrl} ← 功能设置
  * {@code featureConfig.spec.love.diaryPage.bgImageUrl}（与小程序端同一处配置）。
  *
