@@ -455,14 +455,28 @@ spec:
                 - key: appSecret
                   help: 小程序 AppSecret
               help: 只保存 Secret 资源名称，密钥内容由服务端按名称读取，不会下发到小程序端。
-            - $formkit: text
+            - $formkit: select
               if: "$get(wechatLoginEnabled).value === true"
+              name: wechatUsernameType
+              id: wechatUsernameType
+              label: 自动注册用户名类型
+              value: prefix_seq
+              options:
+                - label: 使用前缀
+                  value: prefix_seq
+                - label: 随机标识
+                  value: uuid
+                - label: 微信标识
+                  value: hash
+              help: 首次登录的微信用户会自动创建账号。使用前缀：用户名 = 前缀 + 两位递增序号（unihalo01）；随机标识：uhu- + 随机 UUID 前 12 位（uhu-3f2a8c9b1d4e）；微信标识：uhu- + 微信身份哈希前 12 位（uhu-9f86d081884c），同一微信重新注册用户名不变。昵称统一为「微信用户 + 6 位标识尾巴」且不超过 16 字符。Halo 的用户名不可修改，切换类型只影响之后新注册的用户，请谨慎选择。
+            - $formkit: text
+              if: "$get(wechatLoginEnabled).value === true && $get(wechatUsernameType).value === 'prefix_seq'"
               name: wechatUsernamePrefix
               id: wechatUsernamePrefix
               label: 自动注册用户名前缀
               value: unihalo
               validation: required
-              help: 首次登录的微信用户会自动创建账号，用户名 = 前缀 + 两位递增序号，如 unihalo01、unihalo02。只允许小写字母、数字和连字符，不能以连字符开头或结尾；前缀加两位序号后总长度需在 4-63 之间。Halo 的用户名不可修改，请谨慎设置。自动注册的初始密码为随机强密码，不对外提供，这类用户通过微信登录即可。
+              help: 仅「使用前缀」类型生效。用户名 = 前缀 + 两位递增序号，如 unihalo01、unihalo02。只允许小写字母、数字和连字符，不能以连字符开头或结尾；前缀加两位序号后总长度需在 4-63 之间。自动注册的初始密码为随机强密码，不对外提供，这类用户通过微信登录即可。
             - $formkit: number
               name: tokenTtlDays
               label: 令牌有效期（天）

@@ -369,7 +369,7 @@ public class AuthServiceImpl implements AuthService {
         return findConnection(session)
                 .flatMap(this::loadBoundUser)
                 .flatMap(user -> issueFor(user, config))
-                .switchIfEmpty(Mono.defer(() -> registerWechatUser(config)
+                .switchIfEmpty(Mono.defer(() -> registerWechatUser(config, identity)
                         .flatMap(user -> connect(user.getMetadata().getName(), identity)
                                 .thenReturn(user))
                         .flatMap(user -> issueFor(user, config))));
@@ -421,37 +421,107 @@ public class AuthServiceImpl implements AuthService {
     }
 
     /**
-     * 自动注册：用户名 = {@code 前缀 + 两位递增序号}（如 {@code unihalo01}），
-     * 昵称 = {@code 微信用户 + 同序号}，便于在用户列表里区分。
+     * 自动注册，按配置的用户名类型生成用户名与昵称：
+     * <ul>
+     * <li>prefix_seq：用户名 = {@code 前缀 + 两位递增序号}（如 {@code unihalo01}），
+     * 昵称 = {@code 微信用户 + 同序号}，便于在用户列表里区分；</li>
+     * <li>uuid / hash：用户名 = {@code uhu- + 12 位标识段}（统一前缀 uhu-），
+     * 昵称 = {@code 微信用户 + 6 位标识尾巴}。</li>
+     * </ul>
      */
-    private Mono<User> registerWechatUser(LoginConfig config) {
+    private Mono<User> registerWechatUser(LoginConfig config, String identity) {
+        var type = config.usernameType();
+        if (LoginConfig.TYPE_UUID.equals(type)) {
+            return createWithCandidateUsernames(
+                    Flux.range(0, MAX_USERNAME_ATTEMPTS)
+                            .map(i -> randomUuidUsername()),
+                    config);
+        }
+        if (LoginConfig.TYPE_HASH.equals(type)) {
+            var base = hashedUsername(identity);
+            // 哈希本应唯一，被占用极可能是同身份的历史残留或极端碰撞；
+            // 追加递增尾巴重试（uhu-xxxx…2）保证注册不被卡死。
+            return createWithCandidateUsernames(
+                    Flux.concat(Flux.just(base),
+                            Flux.range(1, MAX_USERNAME_ATTEMPTS - 1)
+                                    .map(i -> base + i)),
+                    config);
+        }
+        // prefix_seq（默认，存量行为不变）
         var prefix = config.usernamePrefix();
         return nextSequence(prefix)
-                .flatMap(start -> Flux.range(start, MAX_USERNAME_ATTEMPTS)
-                        .concatMap(seq -> tryCreate(prefix, seq, config))
-                        .next()
-                        .switchIfEmpty(Mono.error(new AuthException("REGISTER_FAILED",
-                                "自动注册失败，请稍后重试"))));
+                .flatMap(start -> createWithCandidateUsernames(
+                        Flux.range(start, MAX_USERNAME_ATTEMPTS)
+                                .map(seq -> prefix + String.format(SEQUENCE_FORMAT, seq)),
+                        config));
     }
 
-    /** 已占用则跳过（交给下一个序号），未占用则创建。 */
-    private Mono<User> tryCreate(String prefix, int seq, LoginConfig config) {
-        var username = prefix + String.format(SEQUENCE_FORMAT, seq);
-        // 用 client.fetch 而非 userService.getUser：后者查不到会抛 UserNotFoundException，
-        // 会让首次登录的自动注册路径整体失败（详见 loadBoundUser 的说明）。
-        return client.fetch(User.class, username)
-                .hasElement()
-                .flatMap(occupied -> Boolean.TRUE.equals(occupied)
-                        ? Mono.<User>empty()
-                        : signUp(username, seq, config));
+    /** 依次尝试候选用户名，第一个创建成功的即返回；全部占用才报错。 */
+    private Mono<User> createWithCandidateUsernames(Flux<String> candidates,
+            LoginConfig config) {
+        return candidates
+                .concatMap(username -> signUp(username, config)
+                        // 并发抢号等 DuplicateName 场景吞掉本次，继续试下一个候选；
+                        // 其余错误（未开放注册/默认角色未配置等）直接透出终止。
+                        .onErrorResume(e -> isDuplicateName(e) ? Mono.empty() : Mono.error(e)))
+                .next()
+                .switchIfEmpty(Mono.error(new AuthException("REGISTER_FAILED",
+                        "自动注册失败，请稍后重试")));
     }
 
-    private Mono<User> signUp(String username, int seq, LoginConfig config) {
+    /** 随机标识用户名：uhu- + UUID 去连字符后的前 12 位（小写十六进制）。 */
+    private static String randomUuidUsername() {
+        var segment = UUID.randomUUID().toString().replace("-", "")
+                .substring(0, Constants.USERNAME_ID_SEGMENT_LENGTH);
+        return Constants.USERNAME_ID_PREFIX + segment;
+    }
+
+    /** 微信标识用户名：uhu- + SHA-256(unionid/openid) 的前 12 位（确定性）。 */
+    private static String hashedUsername(String identity) {
+        try {
+            var digest = java.security.MessageDigest.getInstance("SHA-256")
+                    .digest(identity.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+            var sb = new StringBuilder();
+            for (int i = 0; sb.length() < Constants.USERNAME_ID_SEGMENT_LENGTH; i++) {
+                sb.append(String.format("%02x", digest[i]));
+            }
+            return Constants.USERNAME_ID_PREFIX + sb;
+        } catch (java.security.NoSuchAlgorithmException e) {
+            // JVM 必带 SHA-256，不会发生；防御性回落随机标识。
+            return randomUuidUsername();
+        }
+    }
+
+    /**
+     * 昵称 = {@code 微信用户 + 标识尾巴}（prefix_seq 为序号、其余为用户名末 6 位），
+     * 超过 {@link Constants#DISPLAY_NAME_MAX_LENGTH} 字符硬性截断。
+     */
+    private static String displayName(String username, LoginConfig config) {
+        String tail;
+        if (LoginConfig.TYPE_PREFIX_SEQ.equals(config.usernameType())) {
+            tail = username.substring(config.usernamePrefix().length());
+        } else {
+            tail = username.substring(username.length() - 6);
+        }
+        var name = "微信用户" + tail;
+        return name.length() <= Constants.DISPLAY_NAME_MAX_LENGTH ? name
+                : name.substring(0, Constants.DISPLAY_NAME_MAX_LENGTH);
+    }
+
+    /**
+     * 创建用户：昵称 = {@code 微信用户 + 6 位标识尾巴}（prefix_seq 为序号），
+     * 超过 {@link Constants#DISPLAY_NAME_MAX_LENGTH} 字符硬性截断。
+     */
+    private Mono<User> signUp(String username, LoginConfig config) {
         var data = new SignUpData();
         data.setUsername(username);
-        data.setDisplayName("微信用户" + String.format(SEQUENCE_FORMAT, seq));
+        data.setDisplayName(displayName(username, config));
         data.setPassword(randomPassword());
         data.setConfirmPassword(data.getPassword());
+        // 微信一键登录是服务端静默注册，无表单勾选动作；Halo 仅在系统设置配置了
+        // 必读协议页时才校验该值，未配置时校验整体跳过，置 true 两种情况均通过。
+        // 用户侧的协议确认由 app 端登录前流程承担。
+        data.setAgreedToTerms(true);
         return userService.signUp(data)
                 .onErrorResume(e -> {
                     // 并发抢号（用户名已被占用）时吞掉本次，让调用方继续试下一个序号；
@@ -461,8 +531,8 @@ public class AuthServiceImpl implements AuthService {
                     // DuplicateNameException 在 Halo application 模块、api 依赖里没有，
                     // 只能按类名识别（父类 ResponseStatusException 400 与「注册未开放」共用，无法按类型区分）。
                     if (isDuplicateName(e)) {
-                        log.info("【UniHalo】微信自动注册用户名 {} 已被占用，尝试下一个序号", username);
-                        return Mono.empty();
+                        log.info("【UniHalo】微信自动注册用户名 {} 已被占用，尝试下一个候选", username);
+                        return Mono.error(e);
                     }
                     // 注册失败的配置类原因（未开放注册 / 默认角色未配置）转成明确的业务错误，
                     // 提示站长去 Halo 系统设置修复；AuthException 会穿过 unexpectedWechatFailure 兜底。

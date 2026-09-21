@@ -412,13 +412,11 @@ public class FeatureConfigServiceImpl implements FeatureConfigService {
         mine.setOtherFeatures(defaultMineOtherFeatures());
         pages.setMine(mine);
 
-        // 用户协议页/隐私政策页（默认启用、内容留空 = app 端回退静态提示文案）
+        // 用户协议页/隐私政策页（内容留空 = app 端回退静态提示文案）
         UserAgreementPage userAgreement = new UserAgreementPage();
-        userAgreement.setEnabled(true);
         userAgreement.setContent("");
         pages.setUserAgreement(userAgreement);
         PrivacyPolicyPage privacyPolicy = new PrivacyPolicyPage();
-        privacyPolicy.setEnabled(true);
         privacyPolicy.setContent("");
         pages.setPrivacyPolicy(privacyPolicy);
         return pages;

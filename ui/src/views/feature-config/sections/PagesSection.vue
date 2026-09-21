@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import {Dialog, Toast, VButton, VEmpty, VSpace, VSwitch} from "@halo-dev/components";
-import {computed, inject, ref} from "vue";
-import {VueDraggable} from "vue-draggable-plus";
+import { Dialog, Toast, VButton, VEmpty, VSpace, VSwitch } from "@halo-dev/components";
+import { computed, inject, ref } from "vue";
+import { VueDraggable } from "vue-draggable-plus";
 import RiDragMove2Line from "~icons/ri/drag-move-2-line";
 import RiArrowDownSLine from "~icons/ri/arrow-down-s-line";
 import RiArrowUpSLine from "~icons/ri/arrow-up-s-line";
@@ -10,7 +10,7 @@ import RiImageLine from "~icons/ri/image-line";
 import RichTextEditorField from "@/components/common/RichTextEditorField.vue";
 import AuditCandidatesModal from "@/components/audit-config/AuditCandidatesModal.vue";
 import FeatureEntryCandidatesModal from "@/components/feature-config/FeatureEntryCandidatesModal.vue";
-import {FeatureConfigFormKey} from "@/views/feature-config/form-context";
+import { FeatureConfigFormKey } from "@/views/feature-config/form-context";
 import {
   DEFAULT_MY_PAGE_COMMON_KEYS,
   DEFAULT_MY_PAGE_OTHER_KEYS,
@@ -273,7 +273,7 @@ function restoreQuickNavigationDefaults() {
     cancelText: "取消",
     onConfirm: () => {
       formState.value.spec.pages.home.quickNavigation = DEFAULT_QUICK_NAVIGATION.map(
-        (item) => ({...item})
+        (item) => ({ ...item })
       );
       Toast.success("已恢复默认");
     },
@@ -352,7 +352,7 @@ function onNavBgColor(item: FeatureConfigQuickNavigationItem, value: unknown) {
 
 /** 我的页面 mine 安全访问（defaultSpec 已含两组默认，旧数据可能缺失） */
 const mine = computed<FeatureConfigMinePage>(
-  () => formState.value.spec.pages.mine || {commonFeatures: [], otherFeatures: []}
+  () => formState.value.spec.pages.mine || { commonFeatures: [], otherFeatures: [] }
 );
 
 /** 常用功能显示方式（grid=宫格 / list=列表；旧数据字段缺失时表单回显 grid，与 app 端兜底一致） */
@@ -444,19 +444,13 @@ function restoreMineDefaults(group: "common" | "other") {
             <div class=":uno: mt-0.5 text-xs text-gray-400">{{ group.desc }}</div>
           </div>
           <VSpace class=":uno: flex-wrap justify-end">
-            <VButton
-              v-for="version in TITLE_NAMING_VERSIONS"
-              :key="version.key"
-              size="sm"
+            <VButton v-for="version in TITLE_NAMING_VERSIONS" :key="version.key" size="sm"
               :type="activeTitleVersions[group.key] === version.key ? 'primary' : 'default'"
-              class=":uno: !py-1 !px-2.5 rounded-full"
-              @click="applyTitleVersion(group, version)"
-            >
+              class=":uno: !py-1 !px-2.5 rounded-full" @click="applyTitleVersion(group, version)">
               {{ version.label }}
             </VButton>
             <VButton size="sm" type="secondary" plain class=":uno: !py-1.5 !px-3 rounded-full"
-              :title="collapsedTitleGroups[group.key] ? '展开配置' : '折叠配置'"
-              @click="toggleTitleGroupCollapse(group.key)">
+              :title="collapsedTitleGroups[group.key] ? '展开配置' : '折叠配置'" @click="toggleTitleGroupCollapse(group.key)">
               <span class=":uno: flex items-center justify-center gap-x-1 my-auto">
                 <span>{{ collapsedTitleGroups[group.key] ? '展开配置' : '折叠配置' }} </span>
                 <RiArrowDownSLine v-if="collapsedTitleGroups[group.key]" class=":uno: text-base" />
@@ -467,20 +461,12 @@ function restoreMineDefaults(group: "common" | "other") {
         </div>
 
         <div v-show="!collapsedTitleGroups[group.key]" class=":uno: pt-1">
-          <div
-            v-for="item in group.items"
-            :key="item.key"
-            class=":uno: flex items-center justify-between gap-4 border-b border-gray-100 py-2 last:border-b-0"
-          >
+          <div v-for="item in group.items" :key="item.key"
+            class=":uno: flex items-center justify-between gap-4 border-b border-gray-100 py-2 last:border-b-0">
             <div class=":uno: w-28 shrink-0 text-sm leading-8 text-gray-700">{{ item.label }}</div>
-            <FormKit
-              :model-value="pageTitleBindings[item.key]()"
-              :name="`titles_${item.key}`"
-              type="text"
-              :classes="{outer: 'flex-1 min-w-0 !mb-0', input: '!py-1.5'}"
-              placeholder="留空使用默认标题"
-              @update:model-value="(value: unknown) => { const titles = formState.spec.pages.titles as Record<string, string | undefined> | undefined; if (titles) { titles[item.key] = typeof value === 'string' ? value : undefined } }"
-            />
+            <FormKit :model-value="pageTitleBindings[item.key]()" :name="`titles_${item.key}`" type="text"
+              :classes="{ outer: 'flex-1 min-w-0 !mb-0', input: '!py-1.5' }" placeholder="留空使用默认标题"
+              @update:model-value="(value: unknown) => { const titles = formState.spec.pages.titles as Record<string, string | undefined> | undefined; if (titles) { titles[item.key] = typeof value === 'string' ? value : undefined } }" />
           </div>
         </div>
       </div>
@@ -498,10 +484,7 @@ function restoreMineDefaults(group: "common" | "other") {
     </div>
 
     <!-- 快捷导航项配置（一行紧凑：标识 key 禁用 + 名称左右 label + 背景色颜色选择 + 显示开关，拖拽排序） -->
-    <div
-      v-if="formState.spec.pages.home.useQuickNavigation"
-      class=":uno: mt-4 rounded-lg bg-gray-50 p-4"
-    >
+    <div v-if="formState.spec.pages.home.useQuickNavigation" class=":uno: mt-4 rounded-lg bg-gray-50 p-4">
       <div class=":uno: mb-2 flex items-center justify-between">
         <div class=":uno: text-sm font-medium text-gray-700">快捷导航项</div>
         <VSpace>
@@ -512,50 +495,29 @@ function restoreMineDefaults(group: "common" | "other") {
       <p class=":uno: mb-3 text-xs text-gray-400">
         拖拽排序，顺序即首页展示顺序。
       </p>
-      <VueDraggable
-        v-model="homeQuickNavigation"
-        handle=".nav-drag-handle"
-      >
-        <div
-          v-for="(item, index) in homeQuickNavigation"
-          :key="index"
-          class=":uno: mb-2"
-        >
-          <div class=":uno: flex flex-wrap items-center gap-x-4 gap-y-2 rounded-lg border border-gray-100 bg-white px-3 py-2">
+      <VueDraggable v-model="homeQuickNavigation" handle=".nav-drag-handle">
+        <div v-for="(item, index) in homeQuickNavigation" :key="index" class=":uno: mb-2">
+          <div
+            class=":uno: flex flex-wrap items-center gap-x-4 gap-y-2 rounded-lg border border-gray-100 bg-white px-3 py-2">
             <span class=":uno: nav-drag-handle cursor-move shrink-0 text-gray-400 hover:text-gray-600">
               <RiDragMove2Line class=":uno: h-4 w-4" />
             </span>
             <!-- 名称 -->
             <div class=":uno: flex min-w-0 flex-1 items-center gap-2">
               <span class=":uno: w-10 shrink-0 text-xs text-gray-700">名称</span>
-              <FormKit
-                v-model="item.title"
-                :name="`nav_title_${index}`"
-                type="text"
-                placeholder="导航名称"
-                outer-class=":uno: min-w-0 flex-1 !pt-0"
-              />
+              <FormKit v-model="item.title" :name="`nav_title_${index}`" type="text" placeholder="导航名称"
+                outer-class=":uno: min-w-0 flex-1 !pt-0" />
             </div>
             <!-- 文字颜色  -->
             <div class=":uno: flex shrink-0 items-center pr-24 gap-2">
               <span class=":uno: w-14 shrink-0 text-xs text-gray-700">文字颜色</span>
-              <FormKit
-                type="color"
-                format="hex8"
-                :model-value="toColorInput(item.color)"
-                @update:model-value="onNavColor(item, $event)"
-                outer-class=":uno: w-12 shrink-0 !pt-0"
-              />
+              <FormKit type="color" format="hex8" :model-value="toColorInput(item.color)"
+                @update:model-value="onNavColor(item, $event)" outer-class=":uno: w-12 shrink-0 !pt-0" />
             </div>
             <div class=":uno: flex shrink-0 items-center pr-24 gap-2">
               <span class=":uno: w-16 shrink-0 text-xs text-gray-700">图标背景色</span>
-              <FormKit
-                type="color"
-                format="hex8"
-                :model-value="toColorInput(item.bgColor)"
-                @update:model-value="onNavBgColor(item, $event)"
-                outer-class=":uno: w-12 shrink-0 !pt-0"
-              />
+              <FormKit type="color" format="hex8" :model-value="toColorInput(item.bgColor)"
+                @update:model-value="onNavBgColor(item, $event)" outer-class=":uno: w-12 shrink-0 !pt-0" />
             </div>
             <!-- 显示开关 -->
             <div class=":uno: flex shrink-0 items-center gap-2 text-xs text-gray-500">
@@ -563,12 +525,8 @@ function restoreMineDefaults(group: "common" | "other") {
               <VSwitch v-model="item.visible" />
             </div>
             <!-- 删除 -->
-            <button
-              type="button"
-              class=":uno: shrink-0 text-gray-400 transition-all hover:text-red-600"
-              title="删除"
-              @click="removeQuickNavItem(item)"
-            >
+            <button type="button" class=":uno: shrink-0 text-gray-400 transition-all hover:text-red-600" title="删除"
+              @click="removeQuickNavItem(item)">
               <RiDeleteBinLine class=":uno: h-4 w-4" />
             </button>
           </div>
@@ -585,16 +543,13 @@ function restoreMineDefaults(group: "common" | "other") {
     </div>
 
     <!-- 首页分类栏选中（固定 3 个，快照含封面/名称，拖拽排序；复用审核模式候选弹窗 AuditCandidatesModal） -->
-    <div
-      v-if="formState.spec.pages.home.useCategory"
-      class=":uno: mt-4 rounded-lg bg-gray-50 p-4"
-    >
+    <div v-if="formState.spec.pages.home.useCategory" class=":uno: mt-4 rounded-lg bg-gray-50 p-4">
       <div class="flex items-center justify-between">
         <div class="flex-1">
           <div class=":uno: mb-2 text-sm font-medium text-gray-700">分类栏展示（固定 3 个）</div>
-           <p class=":uno: mb-3 text-xs text-gray-400">
-             首页显示的分类，设置3个分类最佳。
-           </p>
+          <p class=":uno: mb-3 text-xs text-gray-400">
+            首页显示的分类，设置3个分类最佳。
+          </p>
         </div>
         <div class="shrink-0">
           <VButton size="sm" type="secondary" @click="categoryModalVisible = true">
@@ -603,25 +558,15 @@ function restoreMineDefaults(group: "common" | "other") {
         </div>
       </div>
       <div v-if="homeCategoriesSortable.length" class=":uno: mb-3">
-        <VueDraggable
-          v-model="homeCategoriesSortable"
-          handle=".home-category-drag-handle"
-        >
-          <div
-            v-for="item in homeCategoriesSortable"
-            :key="item.name"
-            class=":uno: mb-2 flex items-center gap-3 rounded-md border border-gray-100 bg-white px-3 py-2 last:mb-0"
-          >
+        <VueDraggable v-model="homeCategoriesSortable" handle=".home-category-drag-handle">
+          <div v-for="item in homeCategoriesSortable" :key="item.name"
+            class=":uno: mb-2 flex items-center gap-3 rounded-md border border-gray-100 bg-white px-3 py-2 last:mb-0">
             <span class=":uno: home-category-drag-handle cursor-move text-gray-300 hover:text-gray-500">
               <RiDragMove2Line class=":uno: h-4 w-4" />
             </span>
-            <div class=":uno: flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-md bg-gray-100 text-base">
-              <img
-                v-if="item.cover"
-                :src="item.cover"
-                class=":uno: h-full w-full object-cover"
-                alt=""
-              />
+            <div
+              class=":uno: flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-md bg-gray-100 text-base">
+              <img v-if="item.cover" :src="item.cover" class=":uno: h-full w-full object-cover" alt="" />
               <RiImageLine v-else class=":uno: h-5 w-5 text-gray-300" />
             </div>
             <div class=":uno: min-w-0 flex-1">
@@ -629,11 +574,8 @@ function restoreMineDefaults(group: "common" | "other") {
                 {{ item.displayName || item.name }}
               </div>
             </div>
-            <button
-              class=":uno: rounded p-1 text-gray-400 hover:bg-red-50 hover:text-red-500"
-              title="移除该分类"
-              @click="removeCategory(item)"
-            >
+            <button class=":uno: rounded p-1 text-gray-400 hover:bg-red-50 hover:text-red-500" title="移除该分类"
+              @click="removeCategory(item)">
               <RiDeleteBinLine class=":uno: h-4 w-4" />
             </button>
           </div>
@@ -647,10 +589,12 @@ function restoreMineDefaults(group: "common" | "other") {
   <template v-if="subTab === 'blogger'">
     <div class=":uno: flex flex-col gap-y-4 gap-x-12 md:flex-row">
       <div class=":uno: min-w-0 shrink-0">
-        <FormKit v-model="formState.spec.pages.blogger.bgImageUrl" name="about_bg_image" label="资料卡背景图" type="attachment" :accepts="['image/*']" />
+        <FormKit v-model="formState.spec.pages.blogger.bgImageUrl" name="about_bg_image" label="资料卡背景图"
+          type="attachment" :accepts="['image/*']" />
       </div>
       <div class=":uno: min-w-0 shrink-0">
-        <FormKit v-model="formState.spec.pages.blogger.waveImageUrl" name="about_wave_image" label="资料卡波浪图" type="attachment" :accepts="['image/*']" />
+        <FormKit v-model="formState.spec.pages.blogger.waveImageUrl" name="about_wave_image" label="资料卡波浪图"
+          type="attachment" :accepts="['image/*']" />
       </div>
     </div>
 
@@ -663,17 +607,10 @@ function restoreMineDefaults(group: "common" | "other") {
 
       <!-- 常用功能显示方式（grid=宫格 / list=列表，控制 app 端关于页常用功能布局） -->
       <div class=":uno: mb-4 rounded-lg bg-white p-3">
-        <FormKit
-          v-model="commonFeaturesMode"
-          name="about_common_features_mode"
-          label="常用功能显示方式"
-          type="radio"
-          :options="[
-            {label: '网格（宫格图标）', value: 'grid'},
-            {label: '列表（分行条目）', value: 'list'},
-          ]"
-          help="控制 app 端「我的/关于页」常用功能的展示布局；切换为列表时常用于功能较多、需要展示副标题的场景。"
-        />
+        <FormKit v-model="commonFeaturesMode" name="about_common_features_mode" label="常用功能显示方式" type="radio" :options="[
+          { label: '网格（宫格图标）', value: 'grid' },
+          { label: '列表（分行条目）', value: 'list' },
+        ]" help="控制 app 端「我的/关于页」常用功能的展示布局；切换为列表时常用于功能较多、需要展示副标题的场景。" />
       </div>
 
       <!-- 常用功能（原「博客功能」改名） -->
@@ -686,79 +623,47 @@ function restoreMineDefaults(group: "common" | "other") {
           </VSpace>
         </div>
         <VueDraggable v-model="mineCommonFeatures" handle=".nav-drag-handle">
-          <div
-            v-for="(item, index) in mineCommonFeatures"
-            :key="index"
-            class=":uno: mb-2 last:mb-0"
-          >
-            <div class=":uno: flex flex-wrap items-center gap-x-3 gap-y-2 rounded-lg border border-gray-100 bg-gray-50 px-3 py-2">
+          <div v-for="(item, index) in mineCommonFeatures" :key="index" class=":uno: mb-2 last:mb-0">
+            <div
+              class=":uno: flex flex-wrap items-center gap-x-3 gap-y-2 rounded-lg border border-gray-100 bg-gray-50 px-3 py-2">
               <span class=":uno: nav-drag-handle cursor-move shrink-0 text-gray-400 hover:text-gray-600">
                 <RiDragMove2Line class=":uno: h-4 w-4" />
               </span>
               <!-- 名称 -->
               <div class=":uno: flex min-w-0 flex-1 items-center gap-2">
                 <span class=":uno: w-10 shrink-0 text-xs text-gray-700">名称</span>
-                <FormKit
-                  v-model="item.title"
-                  :name="`mypage_common_title_${index}`"
-                  type="text"
-                  placeholder="导航名称"
-                  outer-class=":uno: min-w-0 flex-1 !pt-0"
-                />
+                <FormKit v-model="item.title" :name="`mypage_common_title_${index}`" type="text" placeholder="导航名称"
+                  outer-class=":uno: min-w-0 flex-1 !pt-0" />
               </div>
               <!-- 提示（subTitle，app 端展示为功能入口副标题） -->
               <div class=":uno: flex min-w-0 flex-1 items-center gap-2">
                 <span class=":uno: w-10 shrink-0 text-xs text-gray-700">提示</span>
-                <FormKit
-                  v-model="item.subTitle"
-                  :name="`mypage_common_subtitle_${index}`"
-                  type="text"
-                  placeholder="如 博主常用联系方式"
-                  outer-class=":uno: min-w-0 flex-1 !pt-0"
-                />
+                <FormKit v-model="item.subTitle" :name="`mypage_common_subtitle_${index}`" type="text"
+                  placeholder="如 博主常用联系方式" outer-class=":uno: min-w-0 flex-1 !pt-0" />
               </div>
               <!-- 文字颜色 + 图标背景色 -->
               <div class=":uno: flex shrink-0 items-center gap-2 pr-24">
                 <span class=":uno: w-14 shrink-0 text-xs text-gray-700">文字颜色</span>
-                <FormKit
-                  type="color"
-                  format="hex8"
-                  :model-value="toColorInput(item.color)"
-                  @update:model-value="onNavColor(item, $event)"
-                  outer-class=":uno: w-12 shrink-0 !pt-0"
-                />
+                <FormKit type="color" format="hex8" :model-value="toColorInput(item.color)"
+                  @update:model-value="onNavColor(item, $event)" outer-class=":uno: w-12 shrink-0 !pt-0" />
               </div>
               <div class=":uno: flex shrink-0 items-center gap-2 pr-24">
                 <span class=":uno: w-16 shrink-0 text-xs text-gray-700">图标背景色</span>
-                <FormKit
-                  type="color"
-                  format="hex8"
-                  :model-value="toColorInput(item.bgColor)"
-                  @update:model-value="onNavBgColor(item, $event)"
-                  outer-class=":uno: w-12 shrink-0 !pt-0"
-                />
+                <FormKit type="color" format="hex8" :model-value="toColorInput(item.bgColor)"
+                  @update:model-value="onNavBgColor(item, $event)" outer-class=":uno: w-12 shrink-0 !pt-0" />
               </div>
               <div class=":uno: flex shrink-0 items-center gap-2 text-xs text-gray-500">
                 <span>显示</span>
                 <VSwitch v-model="item.visible" />
               </div>
-              <button
-                type="button"
-                class=":uno: shrink-0 text-gray-400 transition-all hover:text-red-600"
-                title="删除"
-                @click="removeMineFeature('common', item)"
-              >
+              <button type="button" class=":uno: shrink-0 text-gray-400 transition-all hover:text-red-600" title="删除"
+                @click="removeMineFeature('common', item)">
                 <RiDeleteBinLine class=":uno: h-4 w-4" />
               </button>
             </div>
           </div>
         </VueDraggable>
-        <VEmpty
-          v-if="!mineCommonFeatures.length"
-          title="暂无功能入口"
-          message="点击「添加」选择功能"
-          :class="':uno: py-6'"
-        />
+        <VEmpty v-if="!mineCommonFeatures.length" title="暂无功能入口" message="点击「添加」选择功能" :class="':uno: py-6'" />
       </div>
 
       <!-- 其他功能 -->
@@ -771,79 +676,47 @@ function restoreMineDefaults(group: "common" | "other") {
           </VSpace>
         </div>
         <VueDraggable v-model="mineOtherFeatures" handle=".nav-drag-handle">
-          <div
-            v-for="(item, index) in mineOtherFeatures"
-            :key="index"
-            class=":uno: mb-2 last:mb-0"
-          >
-            <div class=":uno: flex flex-wrap items-center gap-x-3 gap-y-2 rounded-lg border border-gray-100 bg-gray-50 px-3 py-2">
+          <div v-for="(item, index) in mineOtherFeatures" :key="index" class=":uno: mb-2 last:mb-0">
+            <div
+              class=":uno: flex flex-wrap items-center gap-x-3 gap-y-2 rounded-lg border border-gray-100 bg-gray-50 px-3 py-2">
               <span class=":uno: nav-drag-handle cursor-move shrink-0 text-gray-400 hover:text-gray-600">
                 <RiDragMove2Line class=":uno: h-4 w-4" />
               </span>
               <!-- 名称 -->
               <div class=":uno: flex min-w-0 flex-1 items-center gap-2">
                 <span class=":uno: w-10 shrink-0 text-xs text-gray-700">名称</span>
-                <FormKit
-                  v-model="item.title"
-                  :name="`mypage_other_title_${index}`"
-                  type="text"
-                  placeholder="导航名称"
-                  outer-class=":uno: min-w-0 flex-1 !pt-0"
-                />
+                <FormKit v-model="item.title" :name="`mypage_other_title_${index}`" type="text" placeholder="导航名称"
+                  outer-class=":uno: min-w-0 flex-1 !pt-0" />
               </div>
               <!-- 提示（subTitle，app 端展示为功能入口副标题） -->
               <div class=":uno: flex min-w-0 flex-1 items-center gap-2">
                 <span class=":uno: w-10 shrink-0 text-xs text-gray-700">提示</span>
-                <FormKit
-                  v-model="item.subTitle"
-                  :name="`mypage_other_subtitle_${index}`"
-                  type="text"
-                  placeholder="如 首页布局、卡片样式等本地偏好"
-                  outer-class=":uno: min-w-0 flex-1 !pt-0"
-                />
+                <FormKit v-model="item.subTitle" :name="`mypage_other_subtitle_${index}`" type="text"
+                  placeholder="如 首页布局、卡片样式等本地偏好" outer-class=":uno: min-w-0 flex-1 !pt-0" />
               </div>
               <!-- 文字颜色 + 图标背景色 -->
               <div class=":uno: flex shrink-0 items-center gap-2 pr-24">
                 <span class=":uno: w-14 shrink-0 text-xs text-gray-700">文字颜色</span>
-                <FormKit
-                  type="color"
-                  format="hex8"
-                  :model-value="toColorInput(item.color)"
-                  @update:model-value="onNavColor(item, $event)"
-                  outer-class=":uno: w-12 shrink-0 !pt-0"
-                />
+                <FormKit type="color" format="hex8" :model-value="toColorInput(item.color)"
+                  @update:model-value="onNavColor(item, $event)" outer-class=":uno: w-12 shrink-0 !pt-0" />
               </div>
               <div class=":uno: flex shrink-0 items-center gap-2 pr-24">
                 <span class=":uno: w-16 shrink-0 text-xs text-gray-700">图标背景色</span>
-                <FormKit
-                  type="color"
-                  format="hex8"
-                  :model-value="toColorInput(item.bgColor)"
-                  @update:model-value="onNavBgColor(item, $event)"
-                  outer-class=":uno: w-12 shrink-0 !pt-0"
-                />
+                <FormKit type="color" format="hex8" :model-value="toColorInput(item.bgColor)"
+                  @update:model-value="onNavBgColor(item, $event)" outer-class=":uno: w-12 shrink-0 !pt-0" />
               </div>
               <div class=":uno: flex shrink-0 items-center gap-2 text-xs text-gray-500">
                 <span>显示</span>
                 <VSwitch v-model="item.visible" />
               </div>
-              <button
-                type="button"
-                class=":uno: shrink-0 text-gray-400 transition-all hover:text-red-600"
-                title="删除"
-                @click="removeMineFeature('other', item)"
-              >
+              <button type="button" class=":uno: shrink-0 text-gray-400 transition-all hover:text-red-600" title="删除"
+                @click="removeMineFeature('other', item)">
                 <RiDeleteBinLine class=":uno: h-4 w-4" />
               </button>
             </div>
           </div>
         </VueDraggable>
-        <VEmpty
-          v-if="!mineOtherFeatures.length"
-          title="暂无功能入口"
-          message="点击「添加」选择功能"
-          :class="':uno: py-6'"
-        />
+        <VEmpty v-if="!mineOtherFeatures.length" title="暂无功能入口" message="点击「添加」选择功能" :class="':uno: py-6'" />
       </div>
     </div>
   </template>
@@ -886,72 +759,55 @@ function restoreMineDefaults(group: "common" | "other") {
       <VSwitch v-model="formState.spec.pages.postDetail!.copyrightEnabled" />
     </div>
     <div class=":uno: mt-4 rounded-lg bg-gray-50 p-4">
-      <FormKit v-model="formState.spec.pages.postDetail!.copyrightAuthor" name="post_copyright_author" label="笔记版权作者" type="text" />
-      <FormKit v-model="formState.spec.pages.postDetail!.copyrightDesc" name="post_copyright_desc" label="笔记版权描述" type="textarea" />
-      <FormKit v-model="formState.spec.pages.postDetail!.copyrightViolation" name="post_copyright_violation" label="笔记侵权说明" type="textarea" />
+      <FormKit v-model="formState.spec.pages.postDetail!.copyrightAuthor" name="post_copyright_author" label="笔记版权作者"
+        type="text" />
+      <FormKit v-model="formState.spec.pages.postDetail!.copyrightDesc" name="post_copyright_desc" label="笔记版权描述"
+        type="textarea" />
+      <FormKit v-model="formState.spec.pages.postDetail!.copyrightViolation" name="post_copyright_violation"
+        label="笔记侵权说明" type="textarea" />
     </div>
   </template>
 
-  <!-- 页面与排版 → 免责声明页（不再需要启用开关，仅内容） -->
+  <!-- 免责声明页 -->
   <template v-if="subTab === 'disclaimer'">
     <p class=":uno: mb-3 text-xs text-gray-400">
-      小程序端「免责声明」页面展示的内容（支持图文混排）；留空则不展示该页面。
+      UniHalo端「免责声明」页面展示的内容。
     </p>
-    <RichTextEditorField v-model="formState.spec.pages.disclaimer!.content" placeholder="输入免责声明内容，支持图文混排……留空则不展示免责声明页" />
+    <RichTextEditorField v-model="formState.spec.pages.disclaimer!.content"
+      placeholder="输入免责声明内容，支持图文混排……留空则不展示免责声明页" />
   </template>
 
-  <!-- 页面与排版 → 用户协议页（启用开关 + 注册页勾选行/协议弹窗与独立协议页共用内容） -->
+  <!-- 用户协议页 -->
   <template v-if="subTab === 'userAgreement'">
-    <div class=":uno: mb-3 flex items-center justify-between gap-4 border-b border-gray-100 pb-3">
-      <div>
-        <div class=":uno: text-sm text-gray-700">启用用户协议页</div>
-        <div class=":uno: mt-0.5 text-xs text-gray-400">关闭后 app 端隐藏注册页勾选行与协议入口</div>
-      </div>
-      <VSwitch v-model="formState.spec.pages.userAgreement!.enabled" />
-    </div>
-    <RichTextEditorField v-model="formState.spec.pages.userAgreement!.content" placeholder="输入用户协议内容，支持图文混排……留空时 app 端仅展示静态提示" />
+    <p class=":uno: mb-3 text-xs text-gray-400">
+      UniHalo端「用户协议」页面展示的内容。
+    </p>
+    <RichTextEditorField v-model="formState.spec.pages.userAgreement!.content"
+      placeholder="输入用户协议内容，支持图文混排……留空时 app 端仅展示静态提示" />
   </template>
 
-  <!-- 页面与排版 → 隐私政策页（启用开关 + 与用户协议同套路） -->
+  <!-- 隐私政策页 -->
   <template v-if="subTab === 'privacyPolicy'">
-    <div class=":uno: mb-3 flex items-center justify-between gap-4 border-b border-gray-100 pb-3">
-      <div>
-        <div class=":uno: text-sm text-gray-700">启用隐私政策页</div>
-        <div class=":uno: mt-0.5 text-xs text-gray-400">关闭后 app 端隐藏注册页勾选行与协议入口</div>
-      </div>
-      <VSwitch v-model="formState.spec.pages.privacyPolicy!.enabled" />
-    </div>
-    <RichTextEditorField v-model="formState.spec.pages.privacyPolicy!.content" placeholder="输入隐私政策内容，支持图文混排……留空时 app 端仅展示静态提示" />
+    <p class=":uno: mb-3 text-xs text-gray-400">
+      UniHalo端「隐私政策」页面展示的内容。
+    </p>
+    <RichTextEditorField v-model="formState.spec.pages.privacyPolicy!.content"
+      placeholder="输入隐私政策内容，支持图文混排……留空时 app 端仅展示静态提示" />
   </template>
 
   <!-- 首页分类栏选择（固定 3 个，复用审核模式候选弹窗） -->
-  <AuditCandidatesModal
-    v-if="categoryModalVisible"
-    type="category"
-    :selected="categoryModalSelected"
-    :max="3"
-    @update:visible="categoryModalVisible = false"
-    @confirm="handleCategoryConfirm"
-  />
+  <AuditCandidatesModal v-if="categoryModalVisible" type="category" :selected="categoryModalSelected" :max="3"
+    @update:visible="categoryModalVisible = false" @confirm="handleCategoryConfirm" />
 
   <!-- 首页快捷导航「添加」候选弹窗（统一清单：展示全部注册表条目，已配置置灰禁选，确认后追加） -->
-  <FeatureEntryCandidatesModal
-    v-if="quickNavModalVisible"
+  <FeatureEntryCandidatesModal v-if="quickNavModalVisible"
     :selected-keys="(formState.spec.pages.home.quickNavigation || []).map((i) => i.key || '')"
-    @update:visible="quickNavModalVisible = false"
-    @confirm="(selected) => handleQuickNavConfirm(selected)"
-  />
+    @update:visible="quickNavModalVisible = false" @confirm="(selected) => handleQuickNavConfirm(selected)" />
 
   <!-- 关于页功能入口候选弹窗（common/other 两组共用；统一清单展示全部注册表条目，按组追加） -->
-  <FeatureEntryCandidatesModal
-    v-if="mineModalGroup"
-    :selected-keys="
-      (mineModalGroup === 'common'
-        ? mineCommonFeatures
-        : mineOtherFeatures
-      ).map((i) => i.key || '')
-    "
-    @update:visible="mineModalGroup = null"
-    @confirm="(selected) => handleMineConfirm(selected, mineModalGroup!)"
-  />
+  <FeatureEntryCandidatesModal v-if="mineModalGroup" :selected-keys="(mineModalGroup === 'common'
+      ? mineCommonFeatures
+      : mineOtherFeatures
+    ).map((i) => i.key || '')
+    " @update:visible="mineModalGroup = null" @confirm="(selected) => handleMineConfirm(selected, mineModalGroup!)" />
 </template>

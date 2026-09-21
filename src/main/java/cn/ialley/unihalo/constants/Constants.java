@@ -104,6 +104,24 @@ public class Constants {
      */
     public static final String USERNAME_PREFIX_REGEX = "^[a-z0-9]([-a-z0-9]*[a-z0-9])?$";
 
+    /** 微信自动注册用户名类型：前缀 + 两位序号（默认）。 */
+    public static final String WECHAT_USERNAME_TYPE_PREFIX_SEQ = "prefix_seq";
+
+    /** 微信自动注册用户名类型：uhu- + 随机 UUID 前 12 位。 */
+    public static final String WECHAT_USERNAME_TYPE_UUID = "uuid";
+
+    /** 微信自动注册用户名类型：uhu- + 微信身份 SHA-256 前 12 位（确定性）。 */
+    public static final String WECHAT_USERNAME_TYPE_HASH = "hash";
+
+    /** 随机标识/微信标识用户名的统一前缀（uhu- = uni-halo-user）。 */
+    public static final String USERNAME_ID_PREFIX = "uhu-";
+
+    /** 随机/哈希用户名中标识段的截取长度（如 u-3f2a8c9b1d4e 的 12 位）。 */
+    public static final int USERNAME_ID_SEGMENT_LENGTH = 12;
+
+    /** 昵称最大长度（Halo 控制台展示考虑，硬性截断兜底）。 */
+    public static final int DISPLAY_NAME_MAX_LENGTH = 16;
+
     /**
      * Halo 用户名最短长度（{@code SignUpData.username} 的 {@code @Size(min = 4)}）。
      */

@@ -718,21 +718,13 @@ export interface FeatureConfigPages {
   disclaimer?: {
     content?: string;
   };
-  /** 用户协议页（页面设置-用户协议 tab 维护，
-   * 经 getConfigs 下发 featureConfig.pages.userAgreement，app 端注册页/协议页渲染；
-   * enabled=false 或留空 = 站点未启用/未配置，app 端回退静态提示） */
+  /** 用户协议页 */
   userAgreement?: {
-    /** 是否启用用户协议页面（注册页勾选行/协议入口显隐） */
-    enabled?: boolean;
     /** 用户协议内容（富文本 HTML） */
     content?: string;
   };
-  /** 隐私政策页（页面设置-隐私政策 tab 维护，
-   * 经 getConfigs 下发 featureConfig.pages.privacyPolicy，app 端注册页/协议页渲染；
-   * enabled=false 或留空 = 站点未启用/未配置，app 端回退静态提示） */
+  /** 隐私政策页 */
   privacyPolicy?: {
-    /** 是否启用隐私政策页面（注册页勾选行/协议入口显隐） */
-    enabled?: boolean;
     /** 隐私政策内容（富文本 HTML） */
     content?: string;
   };

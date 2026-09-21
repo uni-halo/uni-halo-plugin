@@ -16,7 +16,8 @@ import cn.ialley.unihalo.constants.Constants;
  * @param passwordLoginEnabled 账号密码登录开关
  * @param wechatLoginEnabled   微信一键登录开关
  * @param wechatSecretName     微信凭据所在的 Secret 资源名
- * @param wechatUsernamePrefix 微信自动注册的用户名前缀，最终用户名 = 前缀 + 两位序号
+ * @param wechatUsernamePrefix 微信自动注册的用户名前缀，仅 prefix_seq 类型生效
+ * @param wechatUsernameType   自动注册用户名类型：prefix_seq / uuid / hash
  * @param tokenTtlDays         令牌有效期（天）
  * @author 小莫唐尼
  */
@@ -25,12 +26,32 @@ public record LoginConfig(
         boolean wechatLoginEnabled,
         String wechatSecretName,
         String wechatUsernamePrefix,
+        String wechatUsernameType,
         int tokenTtlDays
 ) {
 
     public static LoginConfig defaults() {
         return new LoginConfig(true, false, null,
-                Constants.DEFAULT_WECHAT_USERNAME_PREFIX, 30);
+                Constants.DEFAULT_WECHAT_USERNAME_PREFIX,
+                Constants.WECHAT_USERNAME_TYPE_PREFIX_SEQ, 30);
+    }
+
+    /** 用户名类型枚举值：前缀 + 两位序号（默认，存量行为不变）。 */
+    public static final String TYPE_PREFIX_SEQ = Constants.WECHAT_USERNAME_TYPE_PREFIX_SEQ;
+    /** 用户名类型枚举值：uhu- + 随机 UUID 前 12 位。 */
+    public static final String TYPE_UUID = Constants.WECHAT_USERNAME_TYPE_UUID;
+    /** 用户名类型枚举值：uhu- + 微信身份哈希前 12 位（确定性，可复用原用户名）。 */
+    public static final String TYPE_HASH = Constants.WECHAT_USERNAME_TYPE_HASH;
+
+    /**
+     * 归一化后的用户名类型：未知值一律回落到 {@link #TYPE_PREFIX_SEQ}，
+     * 与前缀的回落策略一致——配置写错不至于让注册功能瘫痪。
+     */
+    public String usernameType() {
+        if (TYPE_UUID.equals(wechatUsernameType) || TYPE_HASH.equals(wechatUsernameType)) {
+            return wechatUsernameType;
+        }
+        return TYPE_PREFIX_SEQ;
     }
 
     /**

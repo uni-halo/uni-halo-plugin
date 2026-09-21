@@ -161,24 +161,16 @@ public class FeatureConfig extends AbstractExtension {
         private PrivacyPolicyPage privacyPolicy;
     }
 
-    /** 用户协议页（注册流程与独立协议页共用内容）。内容为富文本 HTML
-     * （RichTextEditorField 编辑）；enabled=false 或留空 = 站点未启用/未配置，
-     * app 端注册页回退为静态提示文案，协议页展示空态。 */
+    /** 用户协议页。内容为富文本 HTML（RichTextEditorField 编辑），留空 = 站点未配置。 */
     @Data
     public static class UserAgreementPage {
-        /** 是否启用用户协议页面（注册页勾选行/协议入口显隐） */
-        private Boolean enabled;
         /** 用户协议内容（富文本 HTML） */
         private String content;
     }
 
-    /** 隐私政策页（注册流程与独立协议页共用内容）。内容为富文本 HTML
-     * （RichTextEditorField 编辑）；enabled=false 或留空 = 站点未启用/未配置，
-     * app 端注册页回退为静态提示文案，协议页展示空态。 */
+    /** 隐私政策页。内容为富文本 HTML（RichTextEditorField 编辑），留空 = 站点未配置。 */
     @Data
     public static class PrivacyPolicyPage {
-        /** 是否启用隐私政策页面（注册页勾选行/协议入口显隐） */
-        private Boolean enabled;
         /** 隐私政策内容（富文本 HTML） */
         private String content;
     }
