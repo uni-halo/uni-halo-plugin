@@ -113,6 +113,12 @@ public class Constants {
     /** 微信自动注册用户名类型：uhu- + 微信身份 SHA-256 前 12 位（确定性）。 */
     public static final String WECHAT_USERNAME_TYPE_HASH = "hash";
 
+    /** 微信自动注册初始密码类型：随机强密码（默认）。 */
+    public static final String WECHAT_PASSWORD_TYPE_RANDOM = "random";
+
+    /** 微信自动注册初始密码类型：固定密码（所有自动注册用户共用）。 */
+    public static final String WECHAT_PASSWORD_TYPE_FIXED = "fixed";
+
     /** 随机标识/微信标识用户名的统一前缀（uhu- = uni-halo-user）。 */
     public static final String USERNAME_ID_PREFIX = "uhu-";
 
@@ -124,6 +130,10 @@ public class Constants {
 
     /** 首次设置密码的最小长度（对齐 Halo SignUpData.password 的 @Size(min = 5)）。 */
     public static final int PASSWORD_MIN_LENGTH = 5;
+
+    /** 自动注册固定密码的长度范围（6-16 位）。 */
+    public static final int FIXED_PASSWORD_MIN_LENGTH = 6;
+    public static final int FIXED_PASSWORD_MAX_LENGTH = 16;
 
     /** 用户注解键：标记「已自主设置过密码」，首次设密接口据此关闭免旧密码通道。 */
     public static final String PASSWORD_SET_BY_USER_ANNOTATION =

@@ -1,6 +1,6 @@
 package cn.ialley.unihalo.utils;
 
-import java.time.OffsetDateTime;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.Map;
@@ -102,6 +102,6 @@ public class NotificationHelper {
     }
 
     private static String now() {
-        return OffsetDateTime.now().format(DateTimeFormatter.ISO_OFFSET_DATE_TIME);
+        return LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
     }
 }

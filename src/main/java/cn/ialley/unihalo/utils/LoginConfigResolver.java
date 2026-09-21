@@ -50,6 +50,8 @@ public class LoginConfigResolver {
                             text(login, "wechatSecretName"),
                             text(login, "wechatUsernamePrefix"),
                             text(login, "wechatUsernameType"),
+                            text(login, "wechatPasswordType"),
+                            text(login, "wechatFixedPassword"),
                             intValue(login, "tokenTtlDays", 30));
                 })
                 .defaultIfEmpty(LoginConfig.defaults());

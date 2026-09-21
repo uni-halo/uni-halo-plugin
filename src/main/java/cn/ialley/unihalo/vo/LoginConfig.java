@@ -18,6 +18,8 @@ import cn.ialley.unihalo.constants.Constants;
  * @param wechatSecretName     微信凭据所在的 Secret 资源名
  * @param wechatUsernamePrefix 微信自动注册的用户名前缀，仅 prefix_seq 类型生效
  * @param wechatUsernameType   自动注册用户名类型：prefix_seq / uuid / hash
+ * @param wechatPasswordType   自动注册初始密码类型：random（随机强密码）/ fixed（固定密码）
+ * @param wechatFixedPassword  固定密码明文，仅 fixed 类型生效
  * @param tokenTtlDays         令牌有效期（天）
  * @author 小莫唐尼
  */
@@ -27,13 +29,16 @@ public record LoginConfig(
         String wechatSecretName,
         String wechatUsernamePrefix,
         String wechatUsernameType,
+        String wechatPasswordType,
+        String wechatFixedPassword,
         int tokenTtlDays
 ) {
 
     public static LoginConfig defaults() {
         return new LoginConfig(true, false, null,
                 Constants.DEFAULT_WECHAT_USERNAME_PREFIX,
-                Constants.WECHAT_USERNAME_TYPE_PREFIX_SEQ, 30);
+                Constants.WECHAT_USERNAME_TYPE_PREFIX_SEQ,
+                Constants.WECHAT_PASSWORD_TYPE_RANDOM, null, 30);
     }
 
     /** 用户名类型枚举值：前缀 + 两位序号（默认，存量行为不变）。 */
@@ -42,6 +47,11 @@ public record LoginConfig(
     public static final String TYPE_UUID = Constants.WECHAT_USERNAME_TYPE_UUID;
     /** 用户名类型枚举值：uhu- + 微信身份哈希前 12 位（确定性，可复用原用户名）。 */
     public static final String TYPE_HASH = Constants.WECHAT_USERNAME_TYPE_HASH;
+
+    /** 密码类型枚举值：随机强密码（默认，存量行为不变）。 */
+    public static final String PASSWORD_TYPE_RANDOM = Constants.WECHAT_PASSWORD_TYPE_RANDOM;
+    /** 密码类型枚举值：固定密码（所有自动注册用户共用）。 */
+    public static final String PASSWORD_TYPE_FIXED = Constants.WECHAT_PASSWORD_TYPE_FIXED;
 
     /**
      * 归一化后的用户名类型：未知值一律回落到 {@link #TYPE_PREFIX_SEQ}，
@@ -52,6 +62,26 @@ public record LoginConfig(
             return wechatUsernameType;
         }
         return TYPE_PREFIX_SEQ;
+    }
+
+    /**
+     * 归一化后的初始密码类型：fixed 但固定密码为空或长度不在 6-16 范围时回落 random，
+     * 保证注册永远拿得到合法密码（fail-safe，不阻断注册）。
+     */
+    public String passwordType() {
+        if (PASSWORD_TYPE_FIXED.equals(wechatPasswordType)) {
+            var fixed = fixedPassword();
+            if (fixed.length() >= Constants.FIXED_PASSWORD_MIN_LENGTH
+                    && fixed.length() <= Constants.FIXED_PASSWORD_MAX_LENGTH) {
+                return PASSWORD_TYPE_FIXED;
+            }
+        }
+        return PASSWORD_TYPE_RANDOM;
+    }
+
+    /** 归一化后的固定密码明文（trim）；仅 {@link #passwordType()} 为 fixed 时有意义。 */
+    public String fixedPassword() {
+        return wechatFixedPassword == null ? null : wechatFixedPassword.trim();
     }
 
     /**

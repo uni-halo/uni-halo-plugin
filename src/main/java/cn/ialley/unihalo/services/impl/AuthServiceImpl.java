@@ -560,7 +560,11 @@ public class AuthServiceImpl implements AuthService {
         var data = new SignUpData();
         data.setUsername(username);
         data.setDisplayName(displayName(username, config));
-        var plainPassword = randomPassword();
+        // 初始密码按设置页类型取值：固定密码（所有自动注册用户共用，需≥5位，
+        // 不满足回落随机）或随机强密码（默认）；密码会经注册欢迎通知告知本人。
+        var plainPassword = LoginConfig.PASSWORD_TYPE_FIXED.equals(config.passwordType())
+                ? config.fixedPassword()
+                : randomPassword();
         data.setPassword(plainPassword);
         data.setConfirmPassword(plainPassword);
         // 微信一键登录是服务端静默注册，无表单勾选动作；Halo 仅在系统设置配置了
@@ -772,7 +776,12 @@ public class AuthServiceImpl implements AuthService {
         return values == null ? new String[0] : values;
     }
 
+    /**
+     * 随机强密码：Wx + 12 位随机十六进制 + a1!（总长 16 位，含大小写/数字/特殊字符，
+     * 满足 Halo 密码策略与「最长 16 位」要求；经注册欢迎通知告知本人）。
+     */
     private static String randomPassword() {
-        return "Wx" + UUID.randomUUID().toString().replace("-", "") + "a1!";
+        var hex = UUID.randomUUID().toString().replace("-", "");
+        return "Wx" + hex.substring(0, 12) + "a1!";
     }
 }
