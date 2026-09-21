@@ -119,4 +119,13 @@ public interface AuthService {
      * @param username 当前登录用户
      */
     Mono<Void> unbindMyWechat(String username);
+
+    /**
+     * 首次设置密码（免旧密码）：仅「从未自主设置过密码」的用户可调用，
+     * 成功后打 {@code unihalo.ialley.cn/password-set-by-user} 注解，此后改密走原生旧密码流程。
+     *
+     * @param username    当前登录用户
+     * @param newPassword 新密码明文
+     */
+    Mono<Void> setInitialPassword(String username, String newPassword);
 }

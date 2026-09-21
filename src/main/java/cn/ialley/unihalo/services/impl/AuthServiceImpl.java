@@ -76,6 +76,7 @@ public class AuthServiceImpl implements AuthService {
     private final ReactiveExtensionClient client;
     private final LoginAttemptGuard attemptGuard;
     private final BindTicketService bindTicketService;
+    private final cn.ialley.unihalo.utils.NotificationHelper notificationHelper;
 
     @Override
     public Mono<LoginResult> loginByPassword(String username, String rawPassword, String clientIp) {
@@ -227,6 +228,49 @@ public class AuthServiceImpl implements AuthService {
                         connection.getSpec().getProviderUserId(),
                         connection.getSpec().getUpdatedAt()))
                 .defaultIfEmpty(WechatBindingVo.unbound(username));
+    }
+
+    @Override
+    public Mono<Void> setInitialPassword(String username, String newPassword) {
+        return client.fetch(User.class, username)
+                .switchIfEmpty(Mono.error(new AuthException("USER_NOT_FOUND", "用户不存在")))
+                .flatMap(user -> {
+                    var annotations = user.getMetadata() == null
+                            ? null : user.getMetadata().getAnnotations();
+                    if (annotations != null
+                            && Boolean.parseBoolean(annotations.get(
+                                    Constants.PASSWORD_SET_BY_USER_ANNOTATION))) {
+                        // 已自主设置过密码：免旧密码通道关闭，防止登录态泄露后被直接换密
+                        return Mono.error(new AuthException("PASSWORD_ALREADY_SET",
+                                "密码已设置，请使用旧密码修改"));
+                    }
+                    if (newPassword == null || newPassword.length() < Constants.PASSWORD_MIN_LENGTH) {
+                        return Mono.error(new AuthException("BAD_REQUEST",
+                                "密码长度至少 " + Constants.PASSWORD_MIN_LENGTH + " 位"));
+                    }
+                    return userService.updatePassword(username, newPassword)
+                            .then(Mono.defer(() -> markPasswordSet(username)))
+                            // 设密成功后发确认通知（通知失败不阻断主流程）
+                            .then(notificationHelper.emitPasswordSet(username));
+                });
+    }
+
+    /** 在用户注解上标记「已自主设置过密码」，幂等。 */
+    private Mono<Void> markPasswordSet(String username) {
+        return client.fetch(User.class, username)
+                .flatMap(user -> {
+                    var metadata = user.getMetadata();
+                    if (metadata == null) {
+                        return Mono.empty();
+                    }
+                    var annotations = metadata.getAnnotations();
+                    if (annotations == null) {
+                        annotations = new java.util.HashMap<>();
+                        metadata.setAnnotations(annotations);
+                    }
+                    annotations.put(Constants.PASSWORD_SET_BY_USER_ANNOTATION, "true");
+                    return client.update(user).then();
+                });
     }
 
     @Override
@@ -516,13 +560,18 @@ public class AuthServiceImpl implements AuthService {
         var data = new SignUpData();
         data.setUsername(username);
         data.setDisplayName(displayName(username, config));
-        data.setPassword(randomPassword());
-        data.setConfirmPassword(data.getPassword());
+        var plainPassword = randomPassword();
+        data.setPassword(plainPassword);
+        data.setConfirmPassword(plainPassword);
         // 微信一键登录是服务端静默注册，无表单勾选动作；Halo 仅在系统设置配置了
         // 必读协议页时才校验该值，未配置时校验整体跳过，置 true 两种情况均通过。
         // 用户侧的协议确认由 app 端登录前流程承担。
         data.setAgreedToTerms(true);
         return userService.signUp(data)
+                // 注册成功后发欢迎通知（含用户名/昵称/初始密码，仅此一次；失败不阻断注册）
+                .doOnSuccess(user -> notificationHelper
+                        .emitUserRegistered(username, data.getDisplayName(), plainPassword)
+                        .subscribe())
                 .onErrorResume(e -> {
                     // 并发抢号（用户名已被占用）时吞掉本次，让调用方继续试下一个序号；
                     // 连试 MAX_USERNAME_ATTEMPTS 次都失败才向上抛业务错误。

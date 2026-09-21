@@ -61,6 +61,7 @@ public class AuthEndpoint implements CustomEndpoint {
                 .POST(Constants.AUTH_API_BASE_PATH + "/bind/wechat/qr/tickets/{ticket}/confirm",
                         this::confirmBindTicket)
                 .POST(Constants.AUTH_API_BASE_PATH + "/-/logout", this::logout)
+                .POST(Constants.AUTH_API_BASE_PATH + "/-/password/set", this::setInitialPassword)
                 .GET(Constants.AUTH_API_BASE_PATH + "/profile", this::profile)
                 .GET(Constants.AUTH_API_BASE_PATH + "/my/wechat-binding", this::myWechatBinding)
                 .DELETE(Constants.AUTH_API_BASE_PATH + "/my/wechat-binding", this::unbindWechat)
@@ -173,6 +174,23 @@ public class AuthEndpoint implements CustomEndpoint {
                 .onErrorResume(AuthEndpoint::handleFailure);
     }
 
+    /**
+     * 首次设置密码（免旧密码）：要求登录身份（PAT 或会话），匿名一律拒绝；
+     * 仅「从未自主设置过密码」的用户可用，防滥用见服务层注解判定。
+     */
+    private Mono<ServerResponse> setInitialPassword(ServerRequest request) {
+        return currentIdentity()
+                .filter(identity -> !Constants.ANONYMOUS_USER.equals(identity.username()))
+                .switchIfEmpty(Mono.error(new AuthException("UNAUTHENTICATED", "未登录")))
+                .flatMap(identity -> request.bodyToMono(SetPasswordRequest.class)
+                        .switchIfEmpty(Mono.error(
+                                new AuthException("BAD_REQUEST", "缺少请求体")))
+                        .flatMap(body -> authService.setInitialPassword(
+                                identity.username(), body.newPassword())))
+                .then(ServerResponse.ok().bodyValue(Map.of("success", true)))
+                .onErrorResume(AuthEndpoint::handleFailure);
+    }
+
     private Mono<ServerResponse> profile(ServerRequest request) {
         return currentIdentity()
                 .flatMap(identity -> authService.profile(identity.username()))
@@ -257,6 +275,10 @@ public class AuthEndpoint implements CustomEndpoint {
 
     /** 微信登录请求体。 */
     public record WechatLoginRequest(String code) {
+    }
+
+    /** 首次设置密码请求体。 */
+    public record SetPasswordRequest(String newPassword) {
     }
 
     /**

@@ -122,6 +122,13 @@ public class Constants {
     /** 昵称最大长度（Halo 控制台展示考虑，硬性截断兜底）。 */
     public static final int DISPLAY_NAME_MAX_LENGTH = 16;
 
+    /** 首次设置密码的最小长度（对齐 Halo SignUpData.password 的 @Size(min = 5)）。 */
+    public static final int PASSWORD_MIN_LENGTH = 5;
+
+    /** 用户注解键：标记「已自主设置过密码」，首次设密接口据此关闭免旧密码通道。 */
+    public static final String PASSWORD_SET_BY_USER_ANNOTATION =
+            "unihalo.ialley.cn/password-set-by-user";
+
     /**
      * Halo 用户名最短长度（{@code SignUpData.username} 的 {@code @Size(min = 4)}）。
      */

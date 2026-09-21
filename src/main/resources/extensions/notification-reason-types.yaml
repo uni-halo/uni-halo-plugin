@@ -1,0 +1,41 @@
+apiVersion: notification.halo.run/v1alpha1
+kind: ReasonType
+metadata:
+  name: uni-halo-user-registered
+spec:
+  displayName: "注册欢迎（UniHalo）"
+  description: "移动端新用户注册成功后的欢迎通知，包含用户名、昵称与初始密码"
+  properties:
+    - name: username
+      type: string
+      description: "注册生成的用户名"
+      optional: false
+    - name: displayName
+      type: string
+      description: "用户昵称"
+      optional: false
+    - name: password
+      type: string
+      description: "初始密码明文（仅注册时下发一次，用户首次设置密码后失效）"
+      optional: false
+    - name: registeredAt
+      type: string
+      description: "注册时间（RFC3339）"
+      optional: false
+---
+apiVersion: notification.halo.run/v1alpha1
+kind: ReasonType
+metadata:
+  name: uni-halo-password-set
+spec:
+  displayName: "密码设置成功（UniHalo）"
+  description: "用户首次设置专属密码成功后的确认通知"
+  properties:
+    - name: username
+      type: string
+      description: "用户名"
+      optional: false
+    - name: setAt
+      type: string
+      description: "设置时间（RFC3339）"
+      optional: false

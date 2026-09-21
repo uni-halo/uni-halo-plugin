@@ -1,0 +1,39 @@
+apiVersion: notification.halo.run/v1alpha1
+kind: NotificationTemplate
+metadata:
+  name: uni-halo-user-registered-template
+spec:
+  reasonSelector:
+    reasonType: uni-halo-user-registered
+    language: default
+  template:
+    title: "欢迎加入本站 🎉"
+    rawBody: |-
+      你的账号已创建成功，以下是你的账号信息，请妥善保管：
+
+      用户名：${props.username}
+      昵称：${props.displayName}
+      初始密码：${props.password}
+      注册时间：${props.registeredAt}
+
+      提示：
+      1. 初始密码仅用于「账号密码登录」与「修改密码」时验证身份，微信一键登录无需密码。
+      2. 建议尽快在「我的 → 账号与安全 → 设置密码」中修改为你的专属密码，修改后本条消息中的初始密码立即失效。
+      3. 本消息仅你本人可见，请勿将密码告知任何人。
+---
+apiVersion: notification.halo.run/v1alpha1
+kind: NotificationTemplate
+metadata:
+  name: uni-halo-password-set-template
+spec:
+  reasonSelector:
+    reasonType: uni-halo-password-set
+    language: default
+  template:
+    title: "密码设置成功"
+    rawBody: |-
+      你已于 ${props.setAt} 成功设置专属密码。
+
+      提示：
+      1. 初始密码已失效，此后请使用新密码进行账号密码登录与修改密码验证。
+      2. 如非本人操作，请立即联系站长处理并修改密码。
