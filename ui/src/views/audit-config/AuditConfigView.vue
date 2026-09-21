@@ -44,31 +44,31 @@ const BLOCKS: BlockDef[] = [
   {
     type: "post",
     title: "文章",
-    desc: "审核模式下首页 / 笔记列表 / 归档仅展示选中的笔记（建议不超过 20 篇）· 依赖：Halo 核心",
+    desc: "审核模式下首页 / 笔记列表 / 归档仅展示选中的笔记（建议不超过 20 篇）",
     icon: RiArticleLine,
   },
   {
     type: "category",
     title: "分类",
-    desc: "审核模式下首页分类栏 / 分类页仅展示选中的分类 · 依赖：Halo 核心",
+    desc: "审核模式下首页分类栏 / 分类页仅展示选中的分类",
     icon: RiFolder2Line,
   },
   {
     type: "galleryGroup",
     title: "图库",
-    desc: "审核模式下图库页仅展示所选分组内的照片（未分组照片不展示）· 依赖：plugin-photos",
+    desc: "审核模式下图库页仅展示所选分组内的照片（未分组照片不展示）· 依赖：【图库管理插件】",
     icon: RiGalleryLine,
   },
   {
     type: "moment",
     title: "瞬间",
-    desc: "审核模式下瞬间页仅展示选中的瞬间 · 依赖：plugin-moments",
+    desc: "审核模式下瞬间页仅展示选中的瞬间 · 依赖：【瞬间插件】",
     icon: RiMessage3Line,
   },
   {
     type: "linkGroup",
     title: "友链",
-    desc: "审核模式下友情链接页仅展示所选分组内的链接 · 依赖：plugin-links",
+    desc: "审核模式下友情链接页仅展示所选分组内的链接 · 依赖：【链接管理插件】",
     icon: RiLink,
   },
 ];
@@ -238,24 +238,19 @@ const handleSave = async () => {
 </script>
 
 <template>
-  <AuditCandidatesModal
-    v-if="modalType"
-    :type="modalType"
-    :selected="selectedItems[modalType]"
-    @update:visible="modalType = null"
-    @confirm="(selected) => handleModalConfirm(modalType!, selected)"
-  />
+  <AuditCandidatesModal v-if="modalType" :type="modalType" :selected="selectedItems[modalType]"
+    @update:visible="modalType = null" @confirm="(selected) => handleModalConfirm(modalType!, selected)" />
 
   <VPageHeader title="UniHalo-审核模式">
     <template #actions>
       <VSpace>
-        <VButton type="secondary" @click="refetch">
+        <VButton @click="refetch">
           <template #icon>
-            <IconRefreshLine :class="{ 'animate-spin text-gray-900': isFetching }" />
+            <IconRefreshLine class="w-4 h-4" :class="{ 'animate-spin text-gray-900': isFetching }" />
           </template>
           刷新
         </VButton>
-        <VButton type="primary" :loading="saving" :disabled="!dirty" @click="handleSave">
+        <VButton type="secondary" :loading="saving" :disabled="!dirty" @click="handleSave">
           保存修改
         </VButton>
       </VSpace>
@@ -268,15 +263,11 @@ const handleSave = async () => {
       <div class=":uno: flex items-start gap-3 py-1">
         <RiShieldCheckLine class=":uno: mt-0.5 h-5 w-5 shrink-0 text-primary" />
         <div class=":uno: text-sm leading-6 text-gray-500">
-          审核模式开启后，小程序端（微信审核等场景）<b class=":uno: text-gray-700"
-            >仅展示以下挑选的数据</b
-          >；此处同时维护「是否开启」与「展示哪些数据」。
+          审核模式开启后，小程序端（微信审核等场景）<b class=":uno: text-gray-700">仅展示以下挑选的数据</b>，
           数据均为站内真实数据的引用，被删除后自动标记<span class=":uno: text-red-500">已失效</span>，保存时剔除。
         </div>
       </div>
-      <div
-        class=":uno: mt-3 flex items-center justify-between gap-4 border-t border-gray-100 pt-3"
-      >
+      <div class=":uno: mt-3 flex items-center justify-between gap-4 border-t border-gray-100 pt-3">
         <div>
           <div class=":uno: text-sm text-gray-700">开启审核模式</div>
           <div class=":uno: mt-0.5 text-xs text-gray-400">
@@ -295,27 +286,17 @@ const handleSave = async () => {
           <div class=":uno: flex items-center justify-between border-b border-gray-100 px-4 py-3">
             <span class=":uno: text-sm font-semibold text-gray-700">数据分类</span>
           </div>
-          <div
-            v-for="block in BLOCKS"
-            :key="block.type"
-            class=":uno: flex cursor-pointer items-center gap-2 px-4 py-3 text-sm"
-            :class="
-              activeType === block.type
-                ? ':uno: bg-gray-50 font-medium text-gray-900'
-                : ':uno: text-gray-700 hover:bg-gray-50'
-            "
-            @click="activeType = block.type"
-          >
+          <div v-for="block in BLOCKS" :key="block.type"
+            class=":uno: flex cursor-pointer items-center gap-2 px-4 py-3 text-sm" :class="activeType === block.type
+              ? ':uno: bg-gray-50 font-medium text-gray-900'
+              : ':uno: text-gray-700 hover:bg-gray-50'
+              " @click="activeType = block.type">
             <component :is="block.icon" class=":uno: h-4 w-4 shrink-0" />
             <span class=":uno: flex-1 truncate">{{ block.title }}</span>
-            <span
-              class=":uno: shrink-0 rounded-full px-2 py-0.5 text-xs"
-              :class="
-                selectedItems[block.type].length
-                  ? ':uno: bg-gray-100 text-gray-600'
-                  : ':uno: bg-amber-50 text-amber-600'
-              "
-            >
+            <span class=":uno: shrink-0 rounded-full px-2 py-0.5 text-xs" :class="selectedItems[block.type].length
+              ? ':uno: bg-gray-100 text-gray-600'
+              : ':uno: bg-amber-50 text-amber-600'
+              ">
               {{ selectedItems[block.type].length }} 条
             </span>
           </div>
@@ -329,9 +310,7 @@ const handleSave = async () => {
         <VCard v-else :body-class="[':uno: !p-0']">
           <template #header>
             <div class=":uno: flex w-full items-center gap-3 px-4 py-3">
-              <div
-                class=":uno: flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#0E1731]/[0.06]"
-              >
+              <div class=":uno: flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#0E1731]/[0.06]">
                 <component :is="activeBlock.icon" class=":uno: h-5 w-5 text-[#0E1731]" />
               </div>
               <div class=":uno: min-w-0 flex-1">
@@ -339,14 +318,10 @@ const handleSave = async () => {
                 <div class=":uno: mt-0.5 truncate text-xs text-gray-400">{{ activeBlock.desc }}</div>
               </div>
               <div class=":uno: ml-auto flex shrink-0 items-center gap-3">
-                <span
-                  class=":uno: rounded-full px-2.5 py-0.5 text-xs"
-                  :class="
-                    selectedItems[activeBlock.type].length
-                      ? ':uno: bg-gray-100 text-gray-600'
-                      : ':uno: bg-amber-50 text-amber-600'
-                  "
-                >
+                <span class=":uno: rounded-full px-2.5 py-0.5 text-xs" :class="selectedItems[activeBlock.type].length
+                  ? ':uno: bg-gray-100 text-gray-600'
+                  : ':uno: bg-amber-50 text-amber-600'
+                  ">
                   已选 {{ selectedItems[activeBlock.type].length }} 条
                 </span>
                 <VButton size="sm" type="secondary" @click="modalType = activeBlock.type">
@@ -358,75 +333,42 @@ const handleSave = async () => {
 
           <div class=":uno: p-4">
             <!-- 批量操作条（全选 + 删除选中，勾选后出现） -->
-            <div
-              v-if="selectedItems[activeBlock.type].length"
-              class=":uno: mb-2 flex items-center gap-3 rounded-md bg-gray-50 px-3 py-2"
-            >
-              <input
-                type="checkbox"
-                :checked="isAllChecked(activeBlock.type)"
-                @change="toggleCheckAll(activeBlock.type)"
-              />
+            <div v-if="selectedItems[activeBlock.type].length"
+              class=":uno: mb-2 flex items-center gap-3 rounded-md bg-gray-50 px-3 py-2">
+              <input type="checkbox" :checked="isAllChecked(activeBlock.type)"
+                @change="toggleCheckAll(activeBlock.type)" />
               <span class=":uno: text-xs text-gray-500">全选</span>
-              <VButton
-                v-if="batchSelected[activeBlock.type].length"
-                size="sm"
-                type="danger"
-                class=":uno: ml-auto"
-                @click="handleBatchDelete(activeBlock.type)"
-              >
+              <VButton v-if="batchSelected[activeBlock.type].length" size="sm" type="danger" class=":uno: ml-auto"
+                @click="handleBatchDelete(activeBlock.type)">
                 删除选中（{{ batchSelected[activeBlock.type].length }}）
               </VButton>
             </div>
             <!-- 已选列表（拖拽排序，顺序即小程序端展示顺序） -->
-            <VueDraggable
-              v-if="selectedItems[activeBlock.type].length"
-              v-model="selectedItems[activeBlock.type]"
-              handle=".audit-drag-handle"
-            >
-              <div
-                v-for="item in selectedItems[activeBlock.type]"
-                :key="item.name"
-                class=":uno: mb-2 flex items-center gap-3 rounded-md border border-gray-100 bg-gray-50/60 px-3 py-2 last:mb-0"
-              >
-                <input
-                  type="checkbox"
-                  :checked="isChecked(activeBlock.type, item)"
-                  class=":uno: shrink-0"
-                  @change="toggleCheck(activeBlock.type, item)"
-                />
+            <VueDraggable v-if="selectedItems[activeBlock.type].length" v-model="selectedItems[activeBlock.type]"
+              handle=".audit-drag-handle">
+              <div v-for="item in selectedItems[activeBlock.type]" :key="item.name"
+                class=":uno: mb-2 flex items-center gap-3 rounded-md border border-gray-100 bg-gray-50/60 px-3 py-2 last:mb-0">
+                <input type="checkbox" :checked="isChecked(activeBlock.type, item)" class=":uno: shrink-0"
+                  @change="toggleCheck(activeBlock.type, item)" />
                 <span class=":uno: audit-drag-handle cursor-move text-gray-300 hover:text-gray-500">
                   <RiDragMove2Line class=":uno: h-4 w-4" />
                 </span>
                 <div
-                  class=":uno: flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-md bg-gray-100 text-base"
-                >
-                  <img
-                    v-if="item.cover"
-                    :src="item.cover"
-                    class=":uno: h-full w-full object-cover"
-                    alt=""
-                  />
+                  class=":uno: flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-md bg-gray-100 text-base">
+                  <img v-if="item.cover" :src="item.cover" class=":uno: h-full w-full object-cover" alt="" />
                   <RiImageLine v-else class=":uno: h-5 w-5 text-gray-300" />
                 </div>
                 <div class=":uno: min-w-0 flex-1">
                   <div class=":uno: flex items-center gap-2">
                     <!-- 瞬间内容为富文本 HTML，v-html 渲染保留格式；其余类型纯文本插值 -->
-                    <span
-                      v-if="activeBlock.type === 'moment'"
+                    <span v-if="activeBlock.type === 'moment'"
                       class=":uno: block min-w-0 flex-1 truncate text-sm font-medium text-gray-700 [&_p]:inline [&_p]:m-0"
-                      v-html="item.title"
-                    />
-                    <span
-                      v-else
-                      class=":uno: block min-w-0 flex-1 truncate text-sm font-medium text-gray-700"
-                    >
+                      v-html="item.title" />
+                    <span v-else class=":uno: block min-w-0 flex-1 truncate text-sm font-medium text-gray-700">
                       {{ item.title || item.name }}
                     </span>
-                    <span
-                      v-if="isInvalid(activeBlock.type, item)"
-                      class=":uno: shrink-0 rounded bg-red-50 px-1.5 py-0.5 text-xs text-red-500"
-                    >
+                    <span v-if="isInvalid(activeBlock.type, item)"
+                      class=":uno: shrink-0 rounded bg-red-50 px-1.5 py-0.5 text-xs text-red-500">
                       已失效
                     </span>
                   </div>
@@ -434,20 +376,13 @@ const handleSave = async () => {
                     {{ [item.subTitle, item.extra].filter(Boolean).join(" · ") }}
                   </div>
                 </div>
-                <button
-                  class=":uno: rounded p-1 text-gray-400 hover:bg-red-50 hover:text-red-500"
-                  title="移除"
-                  @click="handleRemove(activeBlock.type, item)"
-                >
+                <button class=":uno: rounded p-1 text-gray-400 hover:bg-red-50 hover:text-red-500" title="移除"
+                  @click="handleRemove(activeBlock.type, item)">
                   <RiDeleteBinLine class=":uno: h-4 w-4" />
                 </button>
               </div>
             </VueDraggable>
-            <VEmpty
-              v-else
-              title="未配置"
-              message="审核模式下该模块显示为空，点击右上角按钮挑选数据"
-            />
+            <VEmpty v-else title="未配置" message="审核模式下该模块显示为空，点击右上角按钮挑选数据" />
           </div>
         </VCard>
       </div>

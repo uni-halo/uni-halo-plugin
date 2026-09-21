@@ -138,29 +138,22 @@ const onModalClose = () => {
 </script>
 
 <template>
-  <LoveAlbumEditingModal
-    v-if="editingModal"
-    :album="selectedAlbum"
-    @close="onModalClose"
-  />
-  <PhotoManageModal
-    v-if="photoModal && selectedAlbum"
-    :album="selectedAlbum"
-    @close="onModalClose"
-  />
+  <LoveAlbumEditingModal v-if="editingModal" :album="selectedAlbum" @close="onModalClose" />
+  <PhotoManageModal v-if="photoModal && selectedAlbum" :album="selectedAlbum" @close="onModalClose" />
 
   <VPageHeader title="UniHalo-恋爱相册">
     <template #actions>
       <VSpace>
-        <VButton type="secondary" @click="refetch">
+        <VButton @click="refetch">
           <template #icon>
-            <IconRefreshLine :class="{ 'animate-spin text-gray-900': isFetching }" />
+            <IconRefreshLine class="w-4 h-4" :class="{ 'animate-spin text-gray-900': isFetching }" />
           </template>
           刷新
         </VButton>
-        <VButton v-permission="['plugin:uni-halo:love-albums:manage']" type="primary" @click="handleOpenEditingModal()">
+        <VButton v-permission="['plugin:uni-halo:love-albums:manage']" type="secondary"
+          @click="handleOpenEditingModal()">
           <template #icon>
-            <IconAddCircle />
+            <IconAddCircle class="w-5 h-5" />
           </template>
           新建相册
         </VButton>
@@ -173,11 +166,7 @@ const onModalClose = () => {
         <div class=":uno: block w-full bg-gray-50 px-4 py-3">
           <div class=":uno: relative flex flex-col flex-wrap items-start gap-4 sm:flex-row sm:items-center">
             <div class=":uno: hidden items-center sm:flex">
-              <input
-                v-model="checkAll"
-                type="checkbox"
-                @change="handleCheckAllChange"
-              />
+              <input v-model="checkAll" type="checkbox" @change="handleCheckAllChange" />
             </div>
             <div class=":uno: flex w-full flex-1 items-center sm:w-auto">
               <template v-if="!selectedAlbumNames.length">
@@ -188,12 +177,8 @@ const onModalClose = () => {
               </VButton>
             </div>
             <VSpace spacing="lg" class=":uno: flex-wrap">
-              <FilterDropdown
-                v-model="sortValue"
-                label="排序"
-                :items="LOVE_LIST_SORT_OPTIONS"
-                @update:model-value="() => refetch()"
-              />
+              <FilterDropdown v-model="sortValue" label="排序" :items="LOVE_LIST_SORT_OPTIONS"
+                @update:model-value="() => refetch()" />
             </VSpace>
           </div>
         </div>
@@ -203,7 +188,8 @@ const onModalClose = () => {
       <div v-else-if="!albums?.items.length" class=":uno: py-10">
         <VEmpty message="点击右上角新建你的第一个恋爱相册" title="当前没有相册">
           <template #actions>
-            <VButton v-permission="['plugin:uni-halo:love-albums:manage']" type="secondary" @click="handleOpenEditingModal()">
+            <VButton v-permission="['plugin:uni-halo:love-albums:manage']" type="secondary"
+              @click="handleOpenEditingModal()">
               <template #icon>
                 <IconAddCircle />
               </template>
@@ -213,36 +199,20 @@ const onModalClose = () => {
         </VEmpty>
       </div>
       <div v-else class=":uno: grid grid-cols-1 gap-4 p-4 sm:grid-cols-2 lg:grid-cols-3">
-        <VCard
-          v-for="album in sortedAlbums"
-          :key="album.metadata.name"
-          :body-class="[':uno: !p-0']"
+        <VCard v-for="album in sortedAlbums" :key="album.metadata.name" :body-class="[':uno: !p-0']"
           class=":uno: overflow-hidden"
-          :class="checkSelection(album) ? ':uno: border-pink-400 ring-2 ring-pink-200' : ''"
-        >
+          :class="checkSelection(album) ? ':uno: border-pink-400 ring-2 ring-pink-200' : ''">
           <div class=":uno: relative aspect-[16/9] w-full overflow-hidden bg-gray-100">
-            <input
-              v-model="selectedAlbumNames"
-              :value="album.metadata.name"
-              name="love-album-checkbox"
-              type="checkbox"
-              class=":uno: absolute left-2 top-2 z-10 h-4 w-4 cursor-pointer rounded border-gray-300"
-            />
-            <img
-              v-if="album.spec.cover"
-              :src="album.spec.cover"
-              alt=""
-              loading="lazy"
+            <input v-model="selectedAlbumNames" :value="album.metadata.name" name="love-album-checkbox" type="checkbox"
+              class=":uno: absolute left-2 top-2 z-10 h-4 w-4 cursor-pointer rounded border-gray-300" />
+            <img v-if="album.spec.cover" :src="album.spec.cover" alt="" loading="lazy"
               class=":uno: h-full w-full cursor-pointer object-cover hover:opacity-80"
-              @click="() => { previewUrl = album.spec.cover || ''; previewVisible = true; }"
-            />
+              @click="() => { previewUrl = album.spec.cover || ''; previewVisible = true; }" />
             <div v-else class=":uno: flex h-full w-full items-center justify-center text-gray-300">
               <span class=":uno: text-sm">暂无封面</span>
             </div>
-            <span
-              v-if="album.spec.passwordEnabled"
-              class=":uno: absolute right-2 top-2 rounded bg-gray-900/70 px-1.5 py-0.5 text-xs text-white"
-            >
+            <span v-if="album.spec.passwordEnabled"
+              class=":uno: absolute right-2 top-2 rounded bg-gray-900/70 px-1.5 py-0.5 text-xs text-white">
               🔒 已加密
             </span>
           </div>
@@ -251,12 +221,7 @@ const onModalClose = () => {
               <div class=":uno: truncate text-sm font-semibold text-gray-800">
                 {{ album.spec.displayName || "未命名相册" }}
               </div>
-              <VStatusDot
-                v-if="album.metadata.deletionTimestamp"
-                v-tooltip="'删除中'"
-                state="warning"
-                text="删除中"
-              />
+              <VStatusDot v-if="album.metadata.deletionTimestamp" v-tooltip="'删除中'" state="warning" text="删除中" />
             </div>
             <div class=":uno: mt-1 line-clamp-1 text-xs text-gray-500">
               {{ album.spec.description || "暂无描述" }}
@@ -280,22 +245,11 @@ const onModalClose = () => {
       </div>
 
       <template #footer>
-        <VPagination
-          v-model:page="page"
-          v-model:size="size"
-          page-label="页"
-          size-label="条 / 页"
-          :total-label="`共 ${total} 项数据`"
-          :total="total"
-          :size-options="[20, 30, 50, 100]"
-        />
+        <VPagination v-model:page="page" v-model:size="size" page-label="页" size-label="条 / 页"
+          :total-label="`共 ${total} 项数据`" :total="total" :size-options="[20, 30, 50, 100]" />
       </template>
     </VCard>
   </div>
 
-  <ImagePreviewModal
-    v-model:visible="previewVisible"
-    :images="previewUrl ? [previewUrl] : []"
-    title="相册封面"
-  />
+  <ImagePreviewModal v-model:visible="previewVisible" :images="previewUrl ? [previewUrl] : []" title="相册封面" />
 </template>

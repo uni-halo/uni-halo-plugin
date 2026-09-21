@@ -136,15 +136,15 @@ const filteredLinks = computed(() => {
         return false;
       }
       if (activeGroup.value && activeGroup.value !== UNGROUPED_TAB
-          && groupName !== activeGroup.value) {
+        && groupName !== activeGroup.value) {
         return false;
       }
       if (visibleFilter.value !== undefined
-          && link.spec.visible !== visibleFilter.value) {
+        && link.spec.visible !== visibleFilter.value) {
         return false;
       }
       if (sourceFilter.value
-          && (link.spec.source || "manual") !== sourceFilter.value) {
+        && (link.spec.source || "manual") !== sourceFilter.value) {
         return false;
       }
       if (keyword.value) {
@@ -206,7 +206,7 @@ watch(
   () => selectedNames.value,
   (value) => {
     checkAll.value = value.length === filteredLinks.value.length
-        && filteredLinks.value.length > 0;
+      && filteredLinks.value.length > 0;
   }
 );
 
@@ -306,36 +306,24 @@ const onModalClose = () => {
 </script>
 
 <template>
-  <LinkEditingModal
-    v-if="editingModal"
-    :item="selectedLink"
-    @close="onModalClose"
-  />
+  <LinkEditingModal v-if="editingModal" :item="selectedLink" @close="onModalClose" />
 
   <!-- 分组编辑弹窗（新建/编辑共用，与编辑链接弹窗平级挂载） -->
-  <LinkGroupEditingModal
-    v-if="groupEditingModalVisible"
-    :item="editingGroup"
-    @close="groupEditingModalVisible = false"
-    @saved="handleGroupSaved"
-  />
+  <LinkGroupEditingModal v-if="groupEditingModalVisible" :item="editingGroup" @close="groupEditingModalVisible = false"
+    @saved="handleGroupSaved" />
 
   <VPageHeader title="UniHalo-链接管理">
     <template #actions>
       <VSpace>
-        <VButton type="secondary" @click="refetch">
+        <VButton @click="refetch">
           <template #icon>
-            <IconRefreshLine :class="{ 'animate-spin text-gray-900': isFetching }" />
+            <IconRefreshLine class="w-4 h-4" :class="{ 'animate-spin text-gray-900': isFetching }" />
           </template>
           刷新
         </VButton>
-        <VButton
-          v-permission="['plugin:uni-halo:link:manage']"
-          type="primary"
-          @click="handleOpenEditingModal()"
-        >
+        <VButton v-permission="['plugin:uni-halo:link:manage']" type="secondary" @click="handleOpenEditingModal()">
           <template #icon>
-            <IconAddCircle />
+            <IconAddCircle class="w-5 h-5" />
           </template>
           新建链接
         </VButton>
@@ -354,13 +342,9 @@ const onModalClose = () => {
           </VButton>
         </div>
         <!-- 全部 -->
-        <div
-          class=":uno: flex cursor-pointer items-center justify-between gap-3 px-4 py-3 text-sm"
-          :class="activeGroup === undefined
-            ? ':uno: bg-gray-50 font-bold text-gray-900'
-            : ':uno: text-gray-700 hover:bg-gray-50'"
-          @click="activeGroup = undefined"
-        >
+        <div class=":uno: flex cursor-pointer items-center justify-between gap-3 px-4 py-3 text-sm" :class="activeGroup === undefined
+          ? ':uno: bg-gray-50 font-bold text-gray-900'
+          : ':uno: text-gray-700 hover:bg-gray-50'" @click="activeGroup = undefined">
           <div class=":uno: flex items-center gap-3">
             <div class=":uno: flex h-8 w-8 flex-shrink-0 items-center justify-center rounded bg-gray-200">
               <IconGrid class=":uno: h-4 w-4 text-gray-500" />
@@ -370,13 +354,9 @@ const onModalClose = () => {
           <span class=":uno: text-xs text-gray-400">{{ links?.length || 0 }}</span>
         </div>
         <!-- 未分组 -->
-        <div
-          class=":uno: flex cursor-pointer items-center justify-between gap-3 px-4 py-3 text-sm"
-          :class="activeGroup === UNGROUPED_TAB
-            ? ':uno: bg-gray-50 font-bold text-gray-900'
-            : ':uno: text-gray-700 hover:bg-gray-50'"
-          @click="activeGroup = UNGROUPED_TAB"
-        >
+        <div class=":uno: flex cursor-pointer items-center justify-between gap-3 px-4 py-3 text-sm" :class="activeGroup === UNGROUPED_TAB
+          ? ':uno: bg-gray-50 font-bold text-gray-900'
+          : ':uno: text-gray-700 hover:bg-gray-50'" @click="activeGroup = UNGROUPED_TAB">
           <div class=":uno: flex items-center gap-3">
             <div class=":uno: flex h-8 w-8 flex-shrink-0 items-center justify-center rounded bg-gray-100">
               <IconGrid class=":uno: h-4 w-4 text-gray-400" />
@@ -386,15 +366,10 @@ const onModalClose = () => {
           <span class=":uno: text-xs text-gray-400">{{ groupCountMap[UNGROUPED_TAB] || 0 }}</span>
         </div>
         <!-- 各分组：hover 显示编辑/删除（内联管理） -->
-        <div
-          v-for="group in groups || []"
-          :key="group.metadata.name"
-          class=":uno: group flex cursor-pointer items-center justify-between gap-3 px-4 py-3 text-sm"
-          :class="activeGroup === group.metadata.name
+        <div v-for="group in groups || []" :key="group.metadata.name"
+          class=":uno: group flex cursor-pointer items-center justify-between gap-3 px-4 py-3 text-sm" :class="activeGroup === group.metadata.name
             ? ':uno: bg-gray-50 font-bold text-gray-900'
-            : ':uno: text-gray-700 hover:bg-gray-50'"
-          @click="activeGroup = group.metadata.name"
-        >
+            : ':uno: text-gray-700 hover:bg-gray-50'" @click="activeGroup = group.metadata.name">
           <div class=":uno: flex min-w-0 items-center gap-3">
             <div class=":uno: flex h-8 w-8 flex-shrink-0 items-center justify-center rounded bg-gray-100">
               <RiFolderLine class=":uno: h-4 w-4 text-gray-400" />
@@ -408,18 +383,12 @@ const onModalClose = () => {
               {{ groupCountMap[group.metadata.name] || 0 }}
             </span>
             <div class=":uno: hidden items-center gap-1 group-hover:flex" @click.stop>
-              <button
-                class=":uno: rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-700"
-                title="编辑分组"
-                @click="handleOpenGroupEdit(group)"
-              >
+              <button class=":uno: rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-700" title="编辑分组"
+                @click="handleOpenGroupEdit(group)">
                 <RiEditLine class=":uno: h-3.5 w-3.5" />
               </button>
-              <button
-                class=":uno: rounded p-1 text-gray-400 hover:bg-red-50 hover:text-red-500"
-                title="删除分组"
-                @click="handleDeleteGroup(group)"
-              >
+              <button class=":uno: rounded p-1 text-gray-400 hover:bg-red-50 hover:text-red-500" title="删除分组"
+                @click="handleDeleteGroup(group)">
                 <RiDeleteBinLine class=":uno: h-3.5 w-3.5" />
               </button>
             </div>
@@ -434,11 +403,7 @@ const onModalClose = () => {
           <div class=":uno: block w-full bg-gray-50 px-4 py-3">
             <div class=":uno: relative flex flex-col flex-wrap items-start gap-4 sm:flex-row sm:items-center">
               <div class=":uno: hidden items-center sm:flex">
-                <input
-                  v-model="checkAll"
-                  type="checkbox"
-                  @change="handleCheckAllChange"
-                />
+                <input v-model="checkAll" type="checkbox" @change="handleCheckAllChange" />
               </div>
               <div class=":uno: flex w-full flex-1 items-center sm:w-auto">
                 <template v-if="!selectedNames.length">
@@ -449,21 +414,9 @@ const onModalClose = () => {
                 </VButton>
               </div>
               <VSpace spacing="lg" class=":uno: flex-wrap">
-                <FilterDropdown
-                  v-model="sortBy"
-                  label="排序"
-                  :items="SORT_OPTIONS"
-                />
-                <FilterDropdown
-                  v-model="sourceFilter"
-                  label="来源"
-                  :items="LINK_SOURCE_OPTIONS"
-                />
-                <FilterDropdown
-                  v-model="visibleFilter"
-                  label="可见性"
-                  :items="VISIBLE_FILTER_OPTIONS"
-                />
+                <FilterDropdown v-model="sortBy" label="排序" :items="SORT_OPTIONS" />
+                <FilterDropdown v-model="sourceFilter" label="来源" :items="LINK_SOURCE_OPTIONS" />
+                <FilterDropdown v-model="visibleFilter" label="可见性" :items="VISIBLE_FILTER_OPTIONS" />
               </VSpace>
             </div>
           </div>
@@ -474,11 +427,8 @@ const onModalClose = () => {
         <Transition v-else-if="!filteredLinks.length" appear name="fade">
           <VEmpty message="添加小程序链接，让 app 端用户可以扫码直达" title="还没有链接">
             <template #actions>
-              <VButton
-                v-permission="['plugin:uni-halo:link:manage']"
-                type="secondary"
-                @click="handleOpenEditingModal()"
-              >
+              <VButton v-permission="['plugin:uni-halo:link:manage']" type="secondary"
+                @click="handleOpenEditingModal()">
                 <template #icon>
                   <IconAddCircle />
                 </template>
@@ -490,29 +440,16 @@ const onModalClose = () => {
 
         <Transition v-else appear name="fade">
           <VEntityContainer>
-            <VEntity
-              v-for="link in pagedLinks"
-              :key="link.metadata.name"
-              :is-selected="checkSelection(link)"
-            >
+            <VEntity v-for="link in pagedLinks" :key="link.metadata.name" :is-selected="checkSelection(link)">
               <template #checkbox>
-                <input
-                  v-model="selectedNames"
-                  :value="link.metadata.name"
-                  name="link-checkbox"
-                  type="checkbox"
-                />
+                <input v-model="selectedNames" :value="link.metadata.name" name="link-checkbox" type="checkbox" />
               </template>
               <template #start>
                 <VEntityField v-if="link.spec.miniProgramCode" width="6rem">
                   <template #description>
-                    <img
-                      :src="link.spec.miniProgramCode"
-                      :alt="link.spec.displayName || '太阳码'"
-                      loading="lazy"
+                    <img :src="link.spec.miniProgramCode" :alt="link.spec.displayName || '太阳码'" loading="lazy"
                       class=":uno: h-10 w-10 cursor-pointer rounded object-cover hover:opacity-80"
-                      @click="() => { previewUrl = link.spec.miniProgramCode || ''; previewVisible = true; }"
-                    />
+                      @click="() => { previewUrl = link.spec.miniProgramCode || ''; previewVisible = true; }" />
                   </template>
                 </VEntityField>
                 <VEntityField :title="link.spec.displayName || link.metadata.name" width="14rem">
@@ -553,11 +490,9 @@ const onModalClose = () => {
                 <VEntityField v-if="(link.spec.priority || 0) > 0" description="置顶" />
                 <VEntityField>
                   <template #description>
-                    <button
-                      class=":uno: text-xs font-medium"
+                    <button class=":uno: text-xs font-medium"
                       :class="link.spec.visible === false ? 'text-gray-400' : 'text-green-600'"
-                      @click="handleToggleVisible(link)"
-                    >
+                      @click="handleToggleVisible(link)">
                       {{ link.spec.visible === false ? "已隐藏" : "已显示" }}
                     </button>
                   </template>
@@ -576,23 +511,13 @@ const onModalClose = () => {
         </Transition>
 
         <template #footer>
-          <VPagination
-            v-model:page="page"
-            v-model:size="size"
-            page-label="页"
-            size-label="条 / 页"
-            :total-label="`共 ${filteredLinks.length} 项数据`"
-            :total="filteredLinks.length"
-            :size-options="[20, 30, 50, 100]"
-          />
+          <VPagination v-model:page="page" v-model:size="size" page-label="页" size-label="条 / 页"
+            :total-label="`共 ${filteredLinks.length} 项数据`" :total="filteredLinks.length"
+            :size-options="[20, 30, 50, 100]" />
         </template>
       </VCard>
     </div>
   </div>
 
-  <ImagePreviewModal
-    v-model:visible="previewVisible"
-    :images="previewUrl ? [previewUrl] : []"
-    title="太阳码预览"
-  />
+  <ImagePreviewModal v-model:visible="previewVisible" :images="previewUrl ? [previewUrl] : []" title="太阳码预览" />
 </template>

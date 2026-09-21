@@ -83,7 +83,7 @@ const formatTime = (value?: string) => {
 </script>
 
 <template>
-  <VModal :title="`选择文章`" :width="720" @close="handleClose">
+  <VModal title="选择文章" :width="720" @close="handleClose">
     <div class=":uno: flex flex-col gap-3">
       <!-- 搜索（Halo SearchInput 全局组件） + 已选计数 -->
       <div class=":uno: flex items-center gap-3">
@@ -98,32 +98,20 @@ const formatTime = (value?: string) => {
       <template v-else>
         <!-- 候选列表（多选/单选） -->
         <div class=":uno: max-h-96 overflow-y-auto rounded-md border border-gray-100">
-          <div
-            v-for="candidate in data?.items || []"
-            :key="candidate.name"
+          <div v-for="candidate in data?.items || []" :key="candidate.name"
             class=":uno: flex cursor-pointer items-center gap-3 border-b border-gray-50 px-3 py-2.5 last:border-b-0"
             :class="isChecked(candidate) ? ':uno: bg-blue-50' : ':uno: hover:bg-gray-50'"
-            @click="toggleItem(candidate)"
-          >
-            <span
-              class=":uno: flex h-4 w-4 shrink-0 items-center justify-center rounded border text-[11px] text-white"
-              :class="
-                isChecked(candidate)
-                  ? ':uno: border-primary bg-primary'
-                  : ':uno: border-gray-300'
-              "
-            >
+            @click="toggleItem(candidate)">
+            <span class=":uno: flex h-4 w-4 shrink-0 items-center justify-center rounded border text-[11px] text-white"
+              :class="isChecked(candidate)
+                ? ':uno: border-primary bg-primary'
+                : ':uno: border-gray-300'
+                ">
               {{ isChecked(candidate) ? "✓" : "" }}
             </span>
             <div
-              class=":uno: flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-md bg-gray-100 text-lg"
-            >
-              <img
-                v-if="candidate.cover"
-                :src="candidate.cover"
-                class=":uno: h-full w-full object-cover"
-                alt=""
-              />
+              class=":uno: flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-md bg-gray-100 text-lg">
+              <img v-if="candidate.cover" :src="candidate.cover" class=":uno: h-full w-full object-cover" alt="" />
               <RiImageLine v-else class=":uno: h-5 w-5 text-gray-300" />
             </div>
             <div class=":uno: min-w-0 flex-1">
@@ -146,13 +134,8 @@ const formatTime = (value?: string) => {
 
         <!-- 分页 -->
         <div class=":uno: flex justify-end">
-          <VPagination
-            :page="data?.page || 1"
-            :size="data?.size || PAGE_SIZE"
-            :total="data?.total || 0"
-            :page-visible="5"
-            @update:page="page = $event"
-          />
+          <VPagination :page="data?.page || 1" :size="data?.size || PAGE_SIZE" :total="data?.total || 0"
+            :page-visible="5" @update:page="page = $event" />
         </div>
       </template>
 

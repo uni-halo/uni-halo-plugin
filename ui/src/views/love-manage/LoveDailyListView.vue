@@ -194,24 +194,21 @@ const timelineDotClass = (status?: string) => {
 </script>
 
 <template>
-  <LoveDailyItemEditingModal
-    v-if="editingModal"
-    :item="selectedItem"
-    @close="onModalClose"
-  />
+  <LoveDailyItemEditingModal v-if="editingModal" :item="selectedItem" @close="onModalClose" />
 
   <VPageHeader title="UniHalo-恋爱清单">
     <template #actions>
       <VSpace>
-        <VButton type="secondary" @click="refetch">
+        <VButton @click="refetch">
           <template #icon>
-            <IconRefreshLine :class="{ 'animate-spin text-gray-900': isFetching }" />
+            <IconRefreshLine class="w-4 h-4" :class="{ 'animate-spin text-gray-900': isFetching }" />
           </template>
           刷新
         </VButton>
-        <VButton v-permission="['plugin:uni-halo:love-daily:manage']" type="primary" @click="handleOpenEditingModal()">
+        <VButton v-permission="['plugin:uni-halo:love-daily:manage']" type="secondary"
+          @click="handleOpenEditingModal()">
           <template #icon>
-            <IconAddCircle />
+            <IconAddCircle class="w-5 h-5" />
           </template>
           新建清单项
         </VButton>
@@ -224,11 +221,7 @@ const timelineDotClass = (status?: string) => {
         <div class=":uno: block w-full bg-gray-50 px-4 py-3">
           <div class=":uno: relative flex flex-col flex-wrap items-start gap-4 sm:flex-row sm:items-center">
             <div class=":uno: hidden items-center sm:flex">
-              <input
-                v-model="checkAll"
-                type="checkbox"
-                @change="handleCheckAllChange"
-              />
+              <input v-model="checkAll" type="checkbox" @change="handleCheckAllChange" />
             </div>
             <div class=":uno: flex w-full flex-1 items-center sm:w-auto">
               <template v-if="!selectedItemNames.length">
@@ -239,41 +232,20 @@ const timelineDotClass = (status?: string) => {
               </VButton>
             </div>
             <VSpace spacing="lg" class=":uno: flex-wrap">
-              <FilterDropdown
-                v-model="filterStatus"
-                label="状态"
-                :items="[{ label: '全部状态' }, ...LOVE_STATUS_OPTIONS]"
-                @update:model-value="() => refetch()"
-              />
-              <FilterDropdown
-                v-if="viewMode === 'list'"
-                v-model="listSortValue"
-                label="排序"
-                :items="LOVE_LIST_SORT_OPTIONS"
-                @update:model-value="() => refetch()"
-              />
-              <FilterDropdown
-                v-else
-                v-model="timelineSortValue"
-                label="排序"
-                :items="LOVE_DAILY_TIME_SORT_OPTIONS"
-                @update:model-value="() => refetch()"
-              />
+              <FilterDropdown v-model="filterStatus" label="状态" :items="[{ label: '全部状态' }, ...LOVE_STATUS_OPTIONS]"
+                @update:model-value="() => refetch()" />
+              <FilterDropdown v-if="viewMode === 'list'" v-model="listSortValue" label="排序"
+                :items="LOVE_LIST_SORT_OPTIONS" @update:model-value="() => refetch()" />
+              <FilterDropdown v-else v-model="timelineSortValue" label="排序" :items="LOVE_DAILY_TIME_SORT_OPTIONS"
+                @update:model-value="() => refetch()" />
             </VSpace>
             <!-- 展示方式切换：分段器 -->
             <div class=":uno: flex items-center rounded-lg bg-gray-100 p-1">
-              <button
-                v-for="mode in LOVE_DAILY_VIEW_MODES"
-                :key="mode.value"
-                type="button"
-                class=":uno: rounded-md px-3 py-1.5 text-sm transition"
-                :class="
-                  viewMode === mode.value
-                    ? ':uno: bg-white font-medium text-gray-900 shadow-sm'
-                    : ':uno: text-gray-500 hover:text-gray-700'
-                "
-                @click="viewMode = mode.value"
-              >
+              <button v-for="mode in LOVE_DAILY_VIEW_MODES" :key="mode.value" type="button"
+                class=":uno: rounded-md px-3 py-1.5 text-sm transition" :class="viewMode === mode.value
+                  ? ':uno: bg-white font-medium text-gray-900 shadow-sm'
+                  : ':uno: text-gray-500 hover:text-gray-700'
+                  " @click="viewMode = mode.value">
                 {{ mode.label }}
               </button>
             </div>
@@ -288,7 +260,8 @@ const timelineDotClass = (status?: string) => {
         <Transition v-if="!sortedItems.length" appear name="fade">
           <VEmpty message="写下第一件想一起做的事吧" title="清单还是空的">
             <template #actions>
-              <VButton v-permission="['plugin:uni-halo:love-daily:manage']" type="secondary" @click="handleOpenEditingModal()">
+              <VButton v-permission="['plugin:uni-halo:love-daily:manage']" type="secondary"
+                @click="handleOpenEditingModal()">
                 <template #icon>
                   <IconAddCircle />
                 </template>
@@ -299,18 +272,10 @@ const timelineDotClass = (status?: string) => {
         </Transition>
         <Transition v-else appear name="fade">
           <VEntityContainer>
-            <VEntity
-              v-for="item in sortedItems"
-              :key="item.metadata.name"
-              :is-selected="checkSelection(item)"
-            >
+            <VEntity v-for="item in sortedItems" :key="item.metadata.name" :is-selected="checkSelection(item)">
               <template #checkbox>
-                <input
-                  v-model="selectedItemNames"
-                  :value="item.metadata.name"
-                  name="love-daily-checkbox"
-                  type="checkbox"
-                />
+                <input v-model="selectedItemNames" :value="item.metadata.name" name="love-daily-checkbox"
+                  type="checkbox" />
               </template>
               <template #start>
                 <VEntityField :title="item.spec.title || item.metadata.name" width="15rem">
@@ -329,10 +294,8 @@ const timelineDotClass = (status?: string) => {
                 </VEntityField>
                 <VEntityField>
                   <template #description>
-                    <VStatusDot
-                      :state="statusDotState(item.spec.status)"
-                      :text="LOVE_STATUS_LABELS[item.spec.status || 'wait'] || item.spec.status"
-                    />
+                    <VStatusDot :state="statusDotState(item.spec.status)"
+                      :text="LOVE_STATUS_LABELS[item.spec.status || 'wait'] || item.spec.status" />
                   </template>
                 </VEntityField>
                 <VEntityField v-if="item.spec.planDate" :description="`计划 ${item.spec.planDate}`" />
@@ -361,26 +324,17 @@ const timelineDotClass = (status?: string) => {
           <div class=":uno: absolute bottom-2 left-0 top-2 w-0.5 bg-[#f8385640]" />
           <div class=":uno: space-y-6 pl-8">
             <div v-for="item in sortedItems" :key="item.metadata.name" class=":uno: relative">
-              <div
-                class=":uno: absolute -left-9 top-1.5 h-3 w-3 rounded-full ring-4"
-                :class="timelineDotClass(item.spec.status)"
-              />
+              <div class=":uno: absolute -left-9 top-1.5 h-3 w-3 rounded-full ring-4"
+                :class="timelineDotClass(item.spec.status)" />
               <VCard :body-class="[':uno: !p-4 !bg-[#fff5f7]']">
                 <div class=":uno: flex items-center justify-between gap-2">
                   <div class=":uno: flex min-w-0 items-center gap-2">
                     <span class=":uno: truncate text-sm font-semibold text-[#f83856]">
                       {{ item.spec.title || item.metadata.name }}
                     </span>
-                    <VStatusDot
-                      v-if="item.metadata.deletionTimestamp"
-                      v-tooltip="'删除中'"
-                      state="warning"
-                      text="删除中"
-                    />
-                    <VStatusDot
-                      :state="statusDotState(item.spec.status)"
-                      :text="LOVE_STATUS_LABELS[item.spec.status || 'wait'] || item.spec.status"
-                    />
+                    <VStatusDot v-if="item.metadata.deletionTimestamp" v-tooltip="'删除中'" state="warning" text="删除中" />
+                    <VStatusDot :state="statusDotState(item.spec.status)"
+                      :text="LOVE_STATUS_LABELS[item.spec.status || 'wait'] || item.spec.status" />
                   </div>
                   <VSpace spacing="sm">
                     <VButton size="sm" type="secondary" @click="handleOpenEditingModal(item)">
@@ -395,31 +349,17 @@ const timelineDotClass = (status?: string) => {
                   <span v-if="item.spec.planDate">计划 {{ item.spec.planDate }}</span>
                   <span v-if="item.spec.completeDate">完成于 {{ item.spec.completeDate }}</span>
                 </div>
-                <div
-                  v-if="item.spec.content"
-                  class=":uno: mt-2 text-sm leading-relaxed text-[#5c4a4e]"
-                >
+                <div v-if="item.spec.content" class=":uno: mt-2 text-sm leading-relaxed text-[#5c4a4e]">
                   {{ item.spec.content }}
                 </div>
-                <div
-                  v-if="item.spec.completeRemark"
-                  class=":uno: mt-2 rounded bg-[#f8385614] px-3 py-2 text-sm text-[#c22840]"
-                >
+                <div v-if="item.spec.completeRemark"
+                  class=":uno: mt-2 rounded bg-[#f8385614] px-3 py-2 text-sm text-[#c22840]">
                   💬 {{ item.spec.completeRemark }}
                 </div>
-                <div
-                  v-if="item.spec.images?.length"
-                  class=":uno: mt-3 grid grid-cols-3 gap-2 sm:grid-cols-4"
-                >
-                  <img
-                    v-for="(url, index) in item.spec.images"
-                    :key="index"
-                    :src="url"
-                    :alt="item.spec.title || ''"
-                    loading="lazy"
-                    class=":uno: h-20 w-full cursor-pointer rounded object-cover hover:opacity-80"
-                    @click="() => { previewImages = item.spec.images || []; previewIndex = index; previewVisible = true; }"
-                  />
+                <div v-if="item.spec.images?.length" class=":uno: mt-3 grid grid-cols-3 gap-2 sm:grid-cols-4">
+                  <img v-for="(url, index) in item.spec.images" :key="index" :src="url" :alt="item.spec.title || ''"
+                    loading="lazy" class=":uno: h-20 w-full cursor-pointer rounded object-cover hover:opacity-80"
+                    @click="() => { previewImages = item.spec.images || []; previewIndex = index; previewVisible = true; }" />
                 </div>
               </VCard>
             </div>
@@ -428,23 +368,12 @@ const timelineDotClass = (status?: string) => {
       </div>
 
       <template #footer>
-        <VPagination
-          v-model:page="page"
-          v-model:size="size"
-          page-label="页"
-          size-label="条 / 页"
-          :total-label="`共 ${total} 项数据`"
-          :total="total"
-          :size-options="[20, 30, 50, 100]"
-        />
+        <VPagination v-model:page="page" v-model:size="size" page-label="页" size-label="条 / 页"
+          :total-label="`共 ${total} 项数据`" :total="total" :size-options="[20, 30, 50, 100]" />
       </template>
     </VCard>
   </div>
 
-  <ImagePreviewModal
-    v-model:visible="previewVisible"
-    :images="previewImages"
-    :initial-index="previewIndex"
-    title="图片预览"
-  />
+  <ImagePreviewModal v-model:visible="previewVisible" :images="previewImages" :initial-index="previewIndex"
+    title="图片预览" />
 </template>

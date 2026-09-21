@@ -79,62 +79,21 @@ const handleSave = async () => {
 </script>
 
 <template>
-  <VModal
-    ref="modal"
-    :title="isUpdateMode ? '编辑自定义轮播图' : '新建自定义轮播图'"
-    :width="880"
-    @close="emit('close')"
-  >
-    <FormKit
-      id="banner-form"
-      type="form"
-      name="banner-form"
-      :config="{ validationVisibility: 'submit' }"
-      @submit="handleSave"
-    >
+  <VModal ref="modal" :title="isUpdateMode ? '编辑自定义轮播图' : '新建自定义轮播图'" :width="880" @close="emit('close')">
+    <FormKit id="banner-form" type="form" name="banner-form" :config="{ validationVisibility: 'submit' }"
+      @submit="handleSave">
       <!-- 左右布局：左侧基础表单（固定宽），右侧富文本内容（自适应） -->
       <div class=":uno: flex gap-4">
         <div class=":uno: w-80 shrink-0">
-          <FormKit
-            v-model="formState.spec.title"
-            name="title"
-            label="标题"
-            type="text"
-            validation="required"
-            :validation-messages="{ required: '标题不能为空' }"
-            placeholder="例如：iAlley 博客上线啦"
-          />
-          <FormKit
-            v-model="formState.spec.cover"
-            name="cover"
-            label="封面图"
-            type="attachment"
-            validation="required"
-            :validation-messages="{ required: '封面图不能为空' }"
-          />
-          <FormKit
-            v-model="formState.spec.date"
-            name="date"
-            label="日期"
-            type="date"
-            help="留空则不展示"
-          />
-          <FormKit
-            v-model="formState.spec.remark"
-            name="remark"
-            label="备注"
-            type="textarea"
-            rows="2"
-            help="仅管理端可见，不对外展示"
-          />
-          <FormKit
-            v-model="formState.spec.link"
-            name="link"
-            label="外链"
-            type="text"
-            help="点击弹窗中的跳转链接（可选）"
-            placeholder="https://..."
-          />
+          <FormKit v-model="formState.spec.title" name="title" label="标题" type="text" validation="required"
+            :validation-messages="{ required: '标题不能为空' }" placeholder="例如：UniHalo v3.x 发布啦" />
+          <FormKit v-model="formState.spec.cover" name="cover" label="封面图" type="attachment" validation="required"
+            :validation-messages="{ required: '封面图不能为空' }" />
+          <FormKit v-model="formState.spec.date" name="date" label="日期" type="date" help="留空则不展示" />
+          <FormKit v-model="formState.spec.remark" name="remark" label="备注" type="textarea" rows="2"
+            help="仅管理端可见，不对外展示" />
+          <FormKit v-model="formState.spec.link" name="link" label="外链" type="text" help="点击弹窗中的跳转链接（可选）"
+            placeholder="https://..." />
         </div>
         <div class=":uno: flex min-w-0 flex-1 flex-col gap-2">
           <div class=":uno: text-sm font-medium text-gray-700">内容详情</div>
@@ -147,13 +106,7 @@ const handleSave = async () => {
 
     <template #footer>
       <VSpace>
-        <SubmitButton
-          :loading="saving"
-          :disabled="saving"
-          type="secondary"
-          text="提交"
-          @submit="handleSubmit"
-        />
+        <SubmitButton :loading="saving" :disabled="saving" type="secondary" text="提交" @submit="handleSubmit" />
         <VButton @click="modal?.close()">关闭</VButton>
       </VSpace>
     </template>

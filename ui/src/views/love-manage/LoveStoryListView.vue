@@ -149,24 +149,21 @@ const onModalClose = () => {
 </script>
 
 <template>
-  <LoveStoryEditingModal
-    v-if="editingModal"
-    :story="selectedStory"
-    @close="onModalClose"
-  />
+  <LoveStoryEditingModal v-if="editingModal" :story="selectedStory" @close="onModalClose" />
 
   <VPageHeader title="UniHalo-恋爱故事">
     <template #actions>
       <VSpace>
-        <VButton type="secondary" @click="refetch">
+        <VButton @click="refetch">
           <template #icon>
-            <IconRefreshLine :class="{ 'animate-spin text-gray-900': isFetching }" />
+            <IconRefreshLine class="w-4 h-4" :class="{ 'animate-spin text-gray-900': isFetching }" />
           </template>
           刷新
         </VButton>
-        <VButton v-permission="['plugin:uni-halo:love-stories:manage']" type="primary" @click="handleOpenEditingModal()">
+        <VButton v-permission="['plugin:uni-halo:love-stories:manage']" type="secondary"
+          @click="handleOpenEditingModal()">
           <template #icon>
-            <IconAddCircle />
+            <IconAddCircle class="w-5 h-5" />
           </template>
           新建故事
         </VButton>
@@ -180,11 +177,7 @@ const onModalClose = () => {
         <div class=":uno: block w-full bg-gray-50 px-4 py-3">
           <div class=":uno: relative flex flex-col flex-wrap items-start gap-4 sm:flex-row sm:items-center">
             <div class=":uno: hidden items-center sm:flex">
-              <input
-                v-model="checkAll"
-                type="checkbox"
-                @change="handleCheckAllChange"
-              />
+              <input v-model="checkAll" type="checkbox" @change="handleCheckAllChange" />
             </div>
             <div class=":uno: flex w-full flex-1 items-center sm:w-auto">
               <template v-if="!selectedStoryNames.length">
@@ -195,27 +188,16 @@ const onModalClose = () => {
               </VButton>
             </div>
             <VSpace spacing="lg" class=":uno: flex-wrap">
-              <FilterDropdown
-                v-model="sortValue"
-                label="排序"
-                :items="LOVE_STORY_SORT_OPTIONS"
-                @update:model-value="() => refetch()"
-              />
+              <FilterDropdown v-model="sortValue" label="排序" :items="LOVE_STORY_SORT_OPTIONS"
+                @update:model-value="() => refetch()" />
             </VSpace>
             <!-- 展示方式切换：分段器 -->
             <div class=":uno: flex items-center rounded-lg bg-gray-100 p-1">
-              <button
-                v-for="mode in LOVE_STORY_VIEW_MODES"
-                :key="mode.value"
-                type="button"
-                class=":uno: rounded-md px-3 py-1.5 text-sm transition"
-                :class="
-                  viewMode === mode.value
-                    ? ':uno: bg-white font-medium text-gray-900 shadow-sm'
-                    : ':uno: text-gray-500 hover:text-gray-700'
-                "
-                @click="viewMode = mode.value"
-              >
+              <button v-for="mode in LOVE_STORY_VIEW_MODES" :key="mode.value" type="button"
+                class=":uno: rounded-md px-3 py-1.5 text-sm transition" :class="viewMode === mode.value
+                  ? ':uno: bg-white font-medium text-gray-900 shadow-sm'
+                  : ':uno: text-gray-500 hover:text-gray-700'
+                  " @click="viewMode = mode.value">
                 {{ mode.label }}
               </button>
             </div>
@@ -230,7 +212,8 @@ const onModalClose = () => {
         <Transition v-if="!sortedStories.length" appear name="fade">
           <VEmpty message="记录下你们的故事，成为珍贵的回忆" title="还没有故事">
             <template #actions>
-              <VButton v-permission="['plugin:uni-halo:love-stories:manage']" type="secondary" @click="handleOpenEditingModal()">
+              <VButton v-permission="['plugin:uni-halo:love-stories:manage']" type="secondary"
+                @click="handleOpenEditingModal()">
                 <template #icon>
                   <IconAddCircle />
                 </template>
@@ -241,18 +224,10 @@ const onModalClose = () => {
         </Transition>
         <Transition v-else appear name="fade">
           <VEntityContainer>
-            <VEntity
-              v-for="story in sortedStories"
-              :key="story.metadata.name"
-              :is-selected="checkSelection(story)"
-            >
+            <VEntity v-for="story in sortedStories" :key="story.metadata.name" :is-selected="checkSelection(story)">
               <template #checkbox>
-                <input
-                  v-model="selectedStoryNames"
-                  :value="story.metadata.name"
-                  name="love-story-checkbox"
-                  type="checkbox"
-                />
+                <input v-model="selectedStoryNames" :value="story.metadata.name" name="love-story-checkbox"
+                  type="checkbox" />
               </template>
               <template #start>
                 <VEntityField :title="story.spec.title || story.metadata.name" width="15rem">
@@ -310,12 +285,7 @@ const onModalClose = () => {
                     <span class=":uno: truncate text-sm font-semibold text-gray-800">
                       {{ story.spec.title || story.metadata.name }}
                     </span>
-                    <VStatusDot
-                      v-if="story.metadata.deletionTimestamp"
-                      v-tooltip="'删除中'"
-                      state="warning"
-                      text="删除中"
-                    />
+                    <VStatusDot v-if="story.metadata.deletionTimestamp" v-tooltip="'删除中'" state="warning" text="删除中" />
                   </div>
                   <VSpace spacing="sm">
                     <VButton size="sm" type="secondary" @click="handleOpenEditingModal(story)">
@@ -330,24 +300,12 @@ const onModalClose = () => {
                   <span v-if="story.spec.date">{{ story.spec.date }}</span>
                   <span v-if="story.spec.location">📍 {{ story.spec.location }}</span>
                 </div>
-                <div
-                  v-if="story.spec.content"
-                  class=":uno: mt-2 text-sm leading-relaxed text-gray-600"
-                  v-html="story.spec.content"
-                />
-                <div
-                  v-if="story.spec.images?.length"
-                  class=":uno: mt-3 grid grid-cols-3 gap-2 sm:grid-cols-4"
-                >
-                  <img
-                    v-for="(url, index) in story.spec.images"
-                    :key="index"
-                    :src="url"
-                    :alt="story.spec.title || ''"
-                    loading="lazy"
-                    class=":uno: h-20 w-full cursor-pointer rounded object-cover hover:opacity-80"
-                    @click="() => { previewImages = story.spec.images || []; previewIndex = index; previewVisible = true; }"
-                  />
+                <div v-if="story.spec.content" class=":uno: mt-2 text-sm leading-relaxed text-gray-600"
+                  v-html="story.spec.content" />
+                <div v-if="story.spec.images?.length" class=":uno: mt-3 grid grid-cols-3 gap-2 sm:grid-cols-4">
+                  <img v-for="(url, index) in story.spec.images" :key="index" :src="url" :alt="story.spec.title || ''"
+                    loading="lazy" class=":uno: h-20 w-full cursor-pointer rounded object-cover hover:opacity-80"
+                    @click="() => { previewImages = story.spec.images || []; previewIndex = index; previewVisible = true; }" />
                 </div>
               </VCard>
             </div>
@@ -356,23 +314,12 @@ const onModalClose = () => {
       </div>
 
       <template #footer>
-        <VPagination
-          v-model:page="page"
-          v-model:size="size"
-          page-label="页"
-          size-label="条 / 页"
-          :total-label="`共 ${total} 项数据`"
-          :total="total"
-          :size-options="[20, 30, 50, 100]"
-        />
+        <VPagination v-model:page="page" v-model:size="size" page-label="页" size-label="条 / 页"
+          :total-label="`共 ${total} 项数据`" :total="total" :size-options="[20, 30, 50, 100]" />
       </template>
     </VCard>
   </div>
 
-  <ImagePreviewModal
-    v-model:visible="previewVisible"
-    :images="previewImages"
-    :initial-index="previewIndex"
-    title="故事图片"
-  />
+  <ImagePreviewModal v-model:visible="previewVisible" :images="previewImages" :initial-index="previewIndex"
+    title="故事图片" />
 </template>

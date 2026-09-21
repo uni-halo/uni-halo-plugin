@@ -114,9 +114,6 @@ const handleCheckAllChange = (e: Event) => {
   }
 };
 
-const checkSelection = (banner: Banner) => {
-  return selectedBannerNames.value.includes(banner.metadata.name);
-};
 
 // ===== 新建 =====
 
@@ -287,46 +284,30 @@ const sourceBadgeClass = (source?: string) =>
 </script>
 
 <template>
-  <BannerEditingModal
-    v-if="editingModal"
-    :item="selectedBanner"
-    @close="onModalClose"
-  />
+  <BannerEditingModal v-if="editingModal" :item="selectedBanner" @close="onModalClose" />
 
   <!-- 文章候选弹窗：新建-从文章（多选）/ 更换文章（单选） -->
-  <BannerCandidatesModal
-    v-if="candidatesVisible"
-    :multi-select="candidatesMode === 'create'"
-    @update:visible="candidatesVisible = $event"
-    @confirm="handleCandidateConfirm"
-  />
+  <BannerCandidatesModal v-if="candidatesVisible" :multi-select="candidatesMode === 'create'"
+    @update:visible="candidatesVisible = $event" @confirm="handleCandidateConfirm" />
 
   <VPageHeader title="UniHalo-轮播管理">
     <template #actions>
       <VSpace>
-        <VButton type="secondary" @click="refetch">
+        <VButton @click="refetch">
           <template #icon>
-            <IconRefreshLine :class="{ 'animate-spin text-gray-900': isFetching }" />
+            <IconRefreshLine class="w-4 h-4" :class="{ 'animate-spin text-gray-900': isFetching }" />
           </template>
           刷新
         </VButton>
-        <VButton
-          v-permission="['plugin:uni-halo:banner:manage']"
-          type="secondary"
-          @click="handleCreateFromPost"
-        >
+        <VButton v-permission="['plugin:uni-halo:banner:manage']" type="secondary" @click="handleCreateFromPost">
           <template #icon>
-            <IconAddCircle />
+            <IconAddCircle class="w-5 h-5" />
           </template>
           新建（从文章）
         </VButton>
-        <VButton
-          v-permission="['plugin:uni-halo:banner:manage']"
-          type="primary"
-          @click="handleCreateCustom"
-        >
+        <VButton v-permission="['plugin:uni-halo:banner:manage']" type="primary" @click="handleCreateCustom">
           <template #icon>
-            <IconAddCircle />
+            <IconAddCircle class="w-5 h-5" />
           </template>
           新建（自定义）
         </VButton>
@@ -340,11 +321,7 @@ const sourceBadgeClass = (source?: string) =>
         <div class=":uno: block w-full bg-gray-50 px-4 py-3">
           <div class=":uno: flex flex-wrap items-center gap-3">
             <div class=":uno: flex items-center">
-              <input
-                v-model="checkAll"
-                type="checkbox"
-                @change="handleCheckAllChange"
-              />
+              <input v-model="checkAll" type="checkbox" @change="handleCheckAllChange" />
             </div>
             <div class=":uno: flex min-w-0 flex-1 items-center">
               <template v-if="!selectedBannerNames.length">
@@ -363,16 +340,8 @@ const sourceBadgeClass = (source?: string) =>
               </VSpace>
             </div>
             <VSpace spacing="lg" class=":uno: flex-wrap">
-              <FilterDropdown
-                v-model="source"
-                label="来源"
-                :items="BANNER_SOURCE_OPTIONS"
-              />
-              <FilterDropdown
-                v-model="sort"
-                label="排序"
-                :items="BANNER_SORT_OPTIONS"
-              />
+              <FilterDropdown v-model="source" label="来源" :items="BANNER_SOURCE_OPTIONS" />
+              <FilterDropdown v-model="sort" label="排序" :items="BANNER_SORT_OPTIONS" />
             </VSpace>
           </div>
         </div>
@@ -381,26 +350,18 @@ const sourceBadgeClass = (source?: string) =>
       <VLoading v-if="isLoading" />
 
       <Transition v-else-if="!banners?.items.length" appear name="fade">
-        <VEmpty message="创建轮播图，让 app 端首页展示精彩内容" title="还没有轮播图">
+        <VEmpty message="创建轮播图，让 移动端 首页展示精彩内容" title="还没有轮播图">
           <template #actions>
             <VSpace>
-              <VButton
-                v-permission="['plugin:uni-halo:banner:manage']"
-                type="secondary"
-                @click="handleCreateFromPost"
-              >
+              <VButton v-permission="['plugin:uni-halo:banner:manage']" type="secondary" @click="handleCreateFromPost">
                 <template #icon>
-                  <IconAddCircle />
+                  <IconAddCircle class="w-5 h-5" />
                 </template>
                 新建（从文章）
               </VButton>
-              <VButton
-                v-permission="['plugin:uni-halo:banner:manage']"
-                type="primary"
-                @click="handleCreateCustom"
-              >
+              <VButton v-permission="['plugin:uni-halo:banner:manage']" type="primary" @click="handleCreateCustom">
                 <template #icon>
-                  <IconAddCircle />
+                  <IconAddCircle class="w-5 h-5" />
                 </template>
                 新建（自定义）
               </VButton>
@@ -411,46 +372,30 @@ const sourceBadgeClass = (source?: string) =>
 
       <Transition v-else appear name="fade">
         <!-- 非手动排序模式手柄不渲染，handle 无匹配时列表不可拖 -->
-        <VueDraggable
-          v-model="bannerList"
-          handle=".banner-drag-handle"
-          @end="handleDragEnd"
-        >
+        <VueDraggable v-model="bannerList" handle=".banner-drag-handle" @end="handleDragEnd">
           <VEntityContainer>
             <VEntity v-for="banner in bannerList" :key="banner.metadata.name">
               <template #checkbox>
-                <input
-                  v-model="selectedBannerNames"
-                  :value="banner.metadata.name"
-                  name="banner-checkbox"
-                  type="checkbox"
-                />
+                <input v-model="selectedBannerNames" :value="banner.metadata.name" name="banner-checkbox"
+                  type="checkbox" />
               </template>
               <template #start>
                 <VEntityField v-if="sort === 'manual'" width="2rem">
                   <template #description>
-                    <span
-                      class=":uno: banner-drag-handle cursor-move text-gray-300 hover:text-gray-500"
-                      title="拖拽排序"
-                    >
+                    <span class=":uno: banner-drag-handle cursor-move text-gray-300 hover:text-gray-500" title="拖拽排序">
                       <RiDragMove2Line class=":uno: h-4 w-4" />
                     </span>
                   </template>
                 </VEntityField>
                 <VEntityField v-if="banner.spec.cover" width="6rem">
                   <template #description>
-                    <img
-                      :src="banner.spec.cover"
-                      :alt="banner.spec.title || '封面'"
-                      loading="lazy"
-                      class=":uno: h-10 w-16 cursor-pointer rounded object-cover hover:opacity-80"
-                      @click="
+                    <img :src="banner.spec.cover" :alt="banner.spec.title || '封面'" loading="lazy"
+                      class=":uno: h-10 w-16 cursor-pointer rounded object-cover hover:opacity-80" @click="
                         () => {
                           previewUrl = banner.spec.cover || '';
                           previewVisible = true;
                         }
-                      "
-                    />
+                      " />
                   </template>
                 </VEntityField>
                 <VEntityField v-else width="6rem">
@@ -463,12 +408,8 @@ const sourceBadgeClass = (source?: string) =>
                 <VEntityField :title="banner.spec.title || banner.metadata.name" width="16rem">
                   <template #description>
                     <span class=":uno: inline-flex items-center gap-1.5 text-xs text-gray-500">
-                      <img
-                        v-if="banner.spec.authorAvatar"
-                        :src="banner.spec.authorAvatar"
-                        class=":uno: h-4 w-4 rounded-full object-cover"
-                        alt=""
-                      />
+                      <img v-if="banner.spec.authorAvatar" :src="banner.spec.authorAvatar"
+                        class=":uno: h-4 w-4 rounded-full object-cover" alt="" />
                       {{ banner.spec.authorName || "—" }}
                       <template v-if="banner.spec.date">
                         {{ formatTime(banner.spec.date) }}
@@ -480,11 +421,7 @@ const sourceBadgeClass = (source?: string) =>
               <template #end>
                 <VEntityField v-if="banner.metadata.deletionTimestamp">
                   <template #description>
-                    <VStatusDot
-                      v-tooltip="'删除中'"
-                      state="warning"
-                      text="删除中"
-                    />
+                    <VStatusDot v-tooltip="'删除中'" state="warning" text="删除中" />
                   </template>
                 </VEntityField>
                 <VEntityField v-if="banner.spec.remark">
@@ -524,22 +461,11 @@ const sourceBadgeClass = (source?: string) =>
       </Transition>
 
       <template #footer>
-        <VPagination
-          v-model:page="page"
-          v-model:size="size"
-          page-label="页"
-          size-label="条 / 页"
-          :total-label="`共 ${total} 项数据`"
-          :total="total"
-          :size-options="[20, 30, 50, 100]"
-        />
+        <VPagination v-model:page="page" v-model:size="size" page-label="页" size-label="条 / 页"
+          :total-label="`共 ${total} 项数据`" :total="total" :size-options="[20, 30, 50, 100]" />
       </template>
     </VCard>
   </div>
 
-  <ImagePreviewModal
-    v-model:visible="previewVisible"
-    :images="previewUrl ? [previewUrl] : []"
-    title="轮播图封面"
-  />
+  <ImagePreviewModal v-model:visible="previewVisible" :images="previewUrl ? [previewUrl] : []" title="轮播图封面" />
 </template>

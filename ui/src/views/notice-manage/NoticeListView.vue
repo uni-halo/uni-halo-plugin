@@ -271,36 +271,24 @@ const formatTime = (value?: string | null) => {
 </script>
 
 <template>
-  <NoticeEditingModal
-    v-if="editingModal"
-    :item="selectedNotice"
-    @close="onModalClose"
-  />
+  <NoticeEditingModal v-if="editingModal" :item="selectedNotice" @close="onModalClose" />
 
   <!-- 类型编辑弹窗（新建/编辑，与公告编辑弹窗平级挂载） -->
-  <NoticeTypeEditingModal
-    v-if="typeEditingVisible"
-    :item="editingType"
-    @close="typeEditingVisible = false"
-    @saved="handleTypeSaved"
-  />
+  <NoticeTypeEditingModal v-if="typeEditingVisible" :item="editingType" @close="typeEditingVisible = false"
+    @saved="handleTypeSaved" />
 
   <VPageHeader title="UniHalo-公告管理">
     <template #actions>
       <VSpace>
-        <VButton type="secondary" @click="refetch">
+        <VButton @click="refetch">
           <template #icon>
-            <IconRefreshLine :class="{ 'animate-spin text-gray-900': isFetching }" />
+            <IconRefreshLine class="w-4 h-4" :class="{ 'animate-spin text-gray-900': isFetching }" />
           </template>
           刷新
         </VButton>
-        <VButton
-          v-permission="['plugin:uni-halo:notice:manage']"
-          type="primary"
-          @click="handleOpenEditingModal()"
-        >
+        <VButton v-permission="['plugin:uni-halo:notice:manage']" type="secondary" @click="handleOpenEditingModal()">
           <template #icon>
-            <IconAddCircle />
+            <IconAddCircle class="w-5 h-5" />
           </template>
           新建公告
         </VButton>
@@ -321,38 +309,25 @@ const formatTime = (value?: string | null) => {
             新建类型
           </VButton>
         </div>
-        <div
-          class=":uno: flex cursor-pointer items-center gap-2 px-4 py-3 text-sm"
-          :class="
-            type === undefined
-              ? ':uno: bg-gray-50 font-medium text-gray-900'
-              : ':uno: text-gray-700 hover:bg-gray-50'
-          "
-          @click="type = undefined"
-        >
+        <div class=":uno: flex cursor-pointer items-center gap-2 px-4 py-3 text-sm" :class="type === undefined
+          ? ':uno: bg-gray-50 font-medium text-gray-900'
+          : ':uno: text-gray-700 hover:bg-gray-50'
+          " @click="type = undefined">
           <IconGrid class=":uno: h-4 w-4 text-gray-400" />
           全部公告
         </div>
         <VueDraggable v-model="typeList" handle=".type-drag-handle" @end="handleTypeDragEnd">
-          <div
-            v-for="t in typeList"
-            :key="t.metadata.name"
-            class=":uno: group flex cursor-pointer items-center gap-2 px-4 py-3 text-sm"
-            :class="
-              type === t.metadata.name
-                ? ':uno: bg-gray-50'
-                : ':uno: hover:bg-gray-50'
-            "
-          >
+          <div v-for="t in typeList" :key="t.metadata.name"
+            class=":uno: group flex cursor-pointer items-center gap-2 px-4 py-3 text-sm" :class="type === t.metadata.name
+              ? ':uno: bg-gray-50'
+              : ':uno: hover:bg-gray-50'
+              ">
             <span class=":uno: type-drag-handle cursor-move text-gray-300 hover:text-gray-500">
               <RiDragMove2Line class=":uno: h-4 w-4" />
             </span>
-            <span
-              class=":uno: inline-block h-3.5 w-3.5 rounded-full border border-gray-200"
-              :style="{
-                backgroundColor: isValidColor(t.spec.color) ? t.spec.color : '#cccccc',
-              }"
-            />
+            <span class=":uno: inline-block h-3.5 w-3.5 rounded-full border border-gray-200" :style="{
+              backgroundColor: isValidColor(t.spec.color) ? t.spec.color : '#cccccc',
+            }" />
             <span class=":uno: min-w-0 flex-1 truncate" @click="toggleType(t.metadata.name)">
               {{ t.spec.displayName || t.metadata.name }}
             </span>
@@ -360,18 +335,12 @@ const formatTime = (value?: string | null) => {
               <VStatusDot v-tooltip="'删除中'" state="warning" text="删除中" />
             </span>
             <span class=":uno: hidden items-center gap-1 group-hover:flex">
-              <button
-                class=":uno: rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-700"
-                title="编辑"
-                @click="handleTypeEdit(t)"
-              >
+              <button class=":uno: rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-700" title="编辑"
+                @click="handleTypeEdit(t)">
                 <RiEditLine class=":uno: h-3.5 w-3.5" />
               </button>
-              <button
-                class=":uno: rounded p-1 text-gray-400 hover:bg-red-50 hover:text-red-500"
-                title="删除"
-                @click="handleTypeDelete(t)"
-              >
+              <button class=":uno: rounded p-1 text-gray-400 hover:bg-red-50 hover:text-red-500" title="删除"
+                @click="handleTypeDelete(t)">
                 <RiDeleteBinLine class=":uno: h-3.5 w-3.5" />
               </button>
             </span>
@@ -383,164 +352,117 @@ const formatTime = (value?: string | null) => {
     <!-- 右侧公告列表 -->
     <div class=":uno: min-w-0 flex-1">
       <VCard :body-class="[':uno: !p-0']">
-      <template #header>
-        <div class=":uno: block w-full bg-gray-50 px-4 py-3">
-          <div class=":uno: relative flex flex-col flex-wrap items-start gap-4 sm:flex-row sm:items-center">
-            <div class=":uno: hidden items-center sm:flex">
-              <input
-                v-model="checkAll"
-                type="checkbox"
-                @change="handleCheckAllChange"
-              />
+        <template #header>
+          <div class=":uno: block w-full bg-gray-50 px-4 py-3">
+            <div class=":uno: relative flex flex-col flex-wrap items-start gap-4 sm:flex-row sm:items-center">
+              <div class=":uno: hidden items-center sm:flex">
+                <input v-model="checkAll" type="checkbox" @change="handleCheckAllChange" />
+              </div>
+              <div class=":uno: flex w-full flex-1 items-center sm:w-auto">
+                <template v-if="!selectedNoticeNames.length">
+                  <SearchInput v-model="keyword" placeholder="公告标题/摘要（回车搜索）" />
+                </template>
+                <VButton v-else size="sm" type="danger" @click="handleDeleteInBatch">
+                  删除
+                </VButton>
+              </div>
+              <VSpace spacing="lg" class=":uno: flex-wrap">
+                <FilterDropdown v-model="status" label="状态" :items="NOTICE_STATUS_OPTIONS"
+                  @update:model-value="() => refetch()" />
+                <FilterDropdown v-model="sort" label="排序" :items="NOTICE_SORT_OPTIONS"
+                  @update:model-value="() => refetch()" />
+              </VSpace>
             </div>
-            <div class=":uno: flex w-full flex-1 items-center sm:w-auto">
-              <template v-if="!selectedNoticeNames.length">
-                <SearchInput v-model="keyword" placeholder="公告标题/摘要（回车搜索）" />
-              </template>
-              <VButton v-else size="sm" type="danger" @click="handleDeleteInBatch">
-                删除
-              </VButton>
-            </div>
-            <VSpace spacing="lg" class=":uno: flex-wrap">
-              <FilterDropdown
-                v-model="status"
-                label="状态"
-                :items="NOTICE_STATUS_OPTIONS"
-                @update:model-value="() => refetch()"
-              />
-              <FilterDropdown
-                v-model="sort"
-                label="排序"
-                :items="NOTICE_SORT_OPTIONS"
-                @update:model-value="() => refetch()"
-              />
-            </VSpace>
           </div>
-        </div>
-      </template>
+        </template>
 
-      <VLoading v-if="isLoading" />
+        <VLoading v-if="isLoading" />
 
-      <Transition v-else-if="!notices?.items.length" appear name="fade">
-        <VEmpty message="发布公告，让 app 端用户及时了解最新动态" title="还没有公告">
-          <template #actions>
-            <VButton
-              v-permission="['plugin:uni-halo:notice:manage']"
-              type="secondary"
-              @click="handleOpenEditingModal()"
-            >
-              <template #icon>
-                <IconAddCircle />
+        <Transition v-else-if="!notices?.items.length" appear name="fade">
+          <VEmpty message="发布公告，让 app 端用户及时了解最新动态" title="还没有公告">
+            <template #actions>
+              <VButton v-permission="['plugin:uni-halo:notice:manage']" type="secondary"
+                @click="handleOpenEditingModal()">
+                <template #icon>
+                  <IconAddCircle />
+                </template>
+                新建公告
+              </VButton>
+            </template>
+          </VEmpty>
+        </Transition>
+
+        <Transition v-else appear name="fade">
+          <VEntityContainer>
+            <VEntity v-for="notice in notices?.items" :key="notice.metadata.name" :is-selected="checkSelection(notice)">
+              <template #checkbox>
+                <input v-model="selectedNoticeNames" :value="notice.metadata.name" name="notice-checkbox"
+                  type="checkbox" />
               </template>
-              新建公告
-            </VButton>
-          </template>
-        </VEmpty>
-      </Transition>
+              <template #start>
+                <VEntityField v-if="notice.spec.cover" width="6rem">
+                  <template #description>
+                    <img :src="notice.spec.cover" :alt="notice.spec.title || '封面'" loading="lazy"
+                      class=":uno: h-10 w-16 cursor-pointer rounded object-cover hover:opacity-80"
+                      @click="() => { previewUrl = notice.spec.cover || ''; previewVisible = true; }" />
+                  </template>
+                </VEntityField>
+                <VEntityField :title="notice.spec.title || notice.metadata.name" width="16rem">
+                  <template #description>
+                    <span class=":uno: text-xs text-gray-500">
+                      {{ formatTime(notice.spec.publishTime || notice.metadata.creationTimestamp) }}
+                    </span>
+                  </template>
+                </VEntityField>
+              </template>
+              <template #end>
+                <VEntityField v-if="notice.metadata.deletionTimestamp">
+                  <template #description>
+                    <VStatusDot v-tooltip="'删除中'" state="warning" text="删除中" />
+                  </template>
+                </VEntityField>
+                <VEntityField>
+                  <template #description>
+                    <span class=":uno: truncate text-xs text-gray-500" style="max-width: 20rem">
+                      {{ notice.spec.summary || "暂无摘要" }}
+                    </span>
+                  </template>
+                </VEntityField>
+                <VEntityField v-if="notice.spec.typeName">
+                  <template #description>
+                    <span class=":uno: rounded px-1.5 py-0.5 text-xs text-white" :style="typeBadgeStyle(notice)">
+                      {{ typeBadgeText(notice) }}
+                    </span>
+                  </template>
+                </VEntityField>
+                <VEntityField>
+                  <template #description>
+                    <span class=":uno: text-xs font-medium" :class="statusColorClass(notice)">
+                      {{ NOTICE_STATUS_LABELS[notice.spec.status || 'draft'] }}
+                    </span>
+                  </template>
+                </VEntityField>
+                <VEntityField v-if="(notice.spec.priority || 0) > 0" description="置顶" />
+              </template>
+              <template #dropdownItems>
+                <VDropdownItem @click="handleOpenEditingModal(notice)">
+                  编辑
+                </VDropdownItem>
+                <VDropdownItem type="danger" @click="handleDelete(notice)">
+                  删除
+                </VDropdownItem>
+              </template>
+            </VEntity>
+          </VEntityContainer>
+        </Transition>
 
-      <Transition v-else appear name="fade">
-        <VEntityContainer>
-          <VEntity
-            v-for="notice in notices?.items"
-            :key="notice.metadata.name"
-            :is-selected="checkSelection(notice)"
-          >
-            <template #checkbox>
-              <input
-                v-model="selectedNoticeNames"
-                :value="notice.metadata.name"
-                name="notice-checkbox"
-                type="checkbox"
-              />
-            </template>
-            <template #start>
-              <VEntityField v-if="notice.spec.cover" width="6rem">
-                <template #description>
-                  <img
-                    :src="notice.spec.cover"
-                    :alt="notice.spec.title || '封面'"
-                    loading="lazy"
-                    class=":uno: h-10 w-16 cursor-pointer rounded object-cover hover:opacity-80"
-                    @click="() => { previewUrl = notice.spec.cover || ''; previewVisible = true; }"
-                  />
-                </template>
-              </VEntityField>
-              <VEntityField :title="notice.spec.title || notice.metadata.name" width="16rem">
-                <template #description>
-                  <span class=":uno: text-xs text-gray-500">
-                    {{ formatTime(notice.spec.publishTime || notice.metadata.creationTimestamp) }}
-                  </span>
-                </template>
-              </VEntityField>
-            </template>
-            <template #end>
-              <VEntityField v-if="notice.metadata.deletionTimestamp">
-                <template #description>
-                  <VStatusDot v-tooltip="'删除中'" state="warning" text="删除中" />
-                </template>
-              </VEntityField>
-              <VEntityField>
-                <template #description>
-                  <span
-                    class=":uno: truncate text-xs text-gray-500"
-                    style="max-width: 20rem"
-                  >
-                    {{ notice.spec.summary || "暂无摘要" }}
-                  </span>
-                </template>
-              </VEntityField>
-              <VEntityField v-if="notice.spec.typeName">
-                <template #description>
-                  <span
-                    class=":uno: rounded px-1.5 py-0.5 text-xs text-white"
-                    :style="typeBadgeStyle(notice)"
-                  >
-                    {{ typeBadgeText(notice) }}
-                  </span>
-                </template>
-              </VEntityField>
-              <VEntityField>
-                <template #description>
-                  <span
-                    class=":uno: text-xs font-medium"
-                    :class="statusColorClass(notice)"
-                  >
-                    {{ NOTICE_STATUS_LABELS[notice.spec.status || 'draft'] }}
-                  </span>
-                </template>
-              </VEntityField>
-              <VEntityField v-if="(notice.spec.priority || 0) > 0" description="置顶" />
-            </template>
-            <template #dropdownItems>
-              <VDropdownItem @click="handleOpenEditingModal(notice)">
-                编辑
-              </VDropdownItem>
-              <VDropdownItem type="danger" @click="handleDelete(notice)">
-                删除
-              </VDropdownItem>
-            </template>
-          </VEntity>
-        </VEntityContainer>
-      </Transition>
-
-      <template #footer>
-        <VPagination
-          v-model:page="page"
-          v-model:size="size"
-          page-label="页"
-          size-label="条 / 页"
-          :total-label="`共 ${total} 项数据`"
-          :total="total"
-          :size-options="[20, 30, 50, 100]"
-        />
-      </template>
+        <template #footer>
+          <VPagination v-model:page="page" v-model:size="size" page-label="页" size-label="条 / 页"
+            :total-label="`共 ${total} 项数据`" :total="total" :size-options="[20, 30, 50, 100]" />
+        </template>
       </VCard>
     </div>
   </div>
 
-  <ImagePreviewModal
-    v-model:visible="previewVisible"
-    :images="previewUrl ? [previewUrl] : []"
-    title="公告封面"
-  />
+  <ImagePreviewModal v-model:visible="previewVisible" :images="previewUrl ? [previewUrl] : []" title="公告封面" />
 </template>

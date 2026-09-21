@@ -211,49 +211,28 @@ const formatTime = (value?: string | null) => {
 </script>
 
 <template>
-  <SubmissionAuditModal
-    v-if="auditModal && selectedSubmission"
-    :item="selectedSubmission"
-    @close="auditModal = false"
-    @done="refetch"
-  />
-  <SubmissionDetailModal
-    v-if="detailModal && selectedSubmission"
-    :item="selectedSubmission"
-    @close="detailModal = false"
-  />
+  <SubmissionAuditModal v-if="auditModal && selectedSubmission" :item="selectedSubmission" @close="auditModal = false"
+    @done="refetch" />
+  <SubmissionDetailModal v-if="detailModal && selectedSubmission" :item="selectedSubmission"
+    @close="detailModal = false" />
   <!-- 新增申请（测试用） -->
-  <SubmissionFormModal
-    v-if="formModal"
-    @close="formModal = false"
-    @saved="refetch"
-  />
+  <SubmissionFormModal v-if="formModal" @close="formModal = false" @saved="refetch" />
   <!-- 行内/批量审核确认弹窗 -->
-  <AuditConfirmModal
-    v-if="auditConfirmVisible"
-    :action="auditAction"
-    :names="auditNames"
-    @close="auditConfirmVisible = false"
-    @done="onAuditConfirmDone"
-  />
+  <AuditConfirmModal v-if="auditConfirmVisible" :action="auditAction" :names="auditNames"
+    @close="auditConfirmVisible = false" @done="onAuditConfirmDone" />
 
   <VPageHeader title="UniHalo-申请审核">
     <template #actions>
       <VSpace>
-        <VButton
-          v-if="false"
-          v-permission="['plugin:uni-halo:link:manage']"
-          type="secondary"
-          @click="formModal = true"
-        >
+        <VButton v-if="false" v-permission="['plugin:uni-halo:link:manage']" type="secondary" @click="formModal = true">
           <template #icon>
-            <IconAddCircle />
+            <IconAddCircle class="w-5 h-5" />
           </template>
           新增申请
         </VButton>
-        <VButton type="secondary" @click="refetch">
+        <VButton @click="refetch">
           <template #icon>
-            <IconRefreshLine :class="{ 'animate-spin text-gray-900': isFetching }" />
+            <IconRefreshLine class="w-4 h-4" :class="{ 'animate-spin text-gray-900': isFetching }" />
           </template>
           刷新
         </VButton>
@@ -267,11 +246,7 @@ const formatTime = (value?: string | null) => {
         <div class=":uno: block w-full bg-gray-50 px-4 py-3">
           <div class=":uno: relative flex flex-col flex-wrap items-start gap-4 sm:flex-row sm:items-center">
             <div class=":uno: hidden items-center sm:flex">
-              <input
-                v-model="checkAll"
-                type="checkbox"
-                @change="handleCheckAllChange"
-              />
+              <input v-model="checkAll" type="checkbox" @change="handleCheckAllChange" />
             </div>
             <div class=":uno: flex w-full flex-1 items-center sm:w-auto">
               <template v-if="!selectedNames.length">
@@ -291,11 +266,7 @@ const formatTime = (value?: string | null) => {
             </div>
             <VSpace spacing="lg" class=":uno: flex-wrap">
               <FilterCleanButton v-if="hasFilters" @click="handleClearFilters" />
-              <FilterDropdown
-                v-model="status"
-                label="状态"
-                :items="SUBMISSION_STATUS_OPTIONS"
-              />
+              <FilterDropdown v-model="status" label="状态" :items="SUBMISSION_STATUS_OPTIONS" />
               <SortDropdowns v-model="sortBy" :fields="SORT_FIELDS" />
             </VSpace>
           </div>
@@ -310,29 +281,18 @@ const formatTime = (value?: string | null) => {
 
       <Transition v-else appear name="fade">
         <VEntityContainer>
-          <VEntity
-            v-for="submission in submissions?.items"
-            :key="submission.metadata.name"
-            :is-selected="checkSelection(submission)"
-          >
+          <VEntity v-for="submission in submissions?.items" :key="submission.metadata.name"
+            :is-selected="checkSelection(submission)">
             <template #checkbox>
-              <input
-                v-model="selectedNames"
-                :value="submission.metadata.name"
-                name="submission-checkbox"
-                type="checkbox"
-              />
+              <input v-model="selectedNames" :value="submission.metadata.name" name="submission-checkbox"
+                type="checkbox" />
             </template>
             <template #start>
               <VEntityField v-if="submission.spec.miniProgramCode" width="42px">
                 <template #description>
-                  <img
-                    :src="submission.spec.miniProgramCode"
-                    :alt="submission.spec.displayName || '太阳码'"
-                    loading="lazy"
+                  <img :src="submission.spec.miniProgramCode" :alt="submission.spec.displayName || '太阳码'" loading="lazy"
                     class=":uno: h-10 w-10 cursor-pointer rounded object-cover hover:opacity-80"
-                    @click="() => { previewUrl = submission.spec.miniProgramCode || ''; previewVisible = true; }"
-                  />
+                    @click="() => { previewUrl = submission.spec.miniProgramCode || ''; previewVisible = true; }" />
                 </template>
               </VEntityField>
               <VEntityField width="16rem">
@@ -356,10 +316,7 @@ const formatTime = (value?: string | null) => {
               </VEntityField>
               <VEntityField>
                 <template #description>
-                  <span
-                    class=":uno: truncate text-xs text-gray-500"
-                    style="max-width: 14rem"
-                  >
+                  <span class=":uno: truncate text-xs text-gray-500" style="max-width: 14rem">
                     <template v-if="submission.spec.applyRemark">
                       <span class=":uno: text-gray-400">申请说明：</span>
                       {{ submission.spec.applyRemark }}
@@ -371,12 +328,9 @@ const formatTime = (value?: string | null) => {
               <VEntityField>
                 <template #description>
                   <div class=":uno: flex items-center gap-1.5">
-                    <img
-                      v-if="submission.spec.avatar"
-                      :src="submission.spec.avatar"
+                    <img v-if="submission.spec.avatar" :src="submission.spec.avatar"
                       :alt="submission.spec.authorName || '作者头像'"
-                      class=":uno: h-5 w-5 flex-shrink-0 rounded-full object-cover"
-                    />
+                      class=":uno: h-5 w-5 flex-shrink-0 rounded-full object-cover" />
                     <span v-else class=":uno: h-5 w-5 flex-shrink-0 rounded-full bg-gray-100" />
                     <span class=":uno: truncate text-xs text-gray-600">
                       {{ submission.spec.authorName || "未填写作者" }}
@@ -407,26 +361,13 @@ const formatTime = (value?: string | null) => {
               <VEntityField v-if="isPending(submission)">
                 <template #description>
                   <VSpace spacing="sm">
-                    <VButton
-                      size="sm"
-                      type="secondary"
-                      @click="handleOpenAudit(submission)"
-                    >
+                    <VButton size="sm" type="secondary" @click="handleOpenAudit(submission)">
                       审核
                     </VButton>
-                    <VButton
-                      size="sm"
-                      type="primary"
-                      @click="handleQuickAudit('approve', submission)"
-                    >
+                    <VButton size="sm" type="primary" @click="handleQuickAudit('approve', submission)">
                       通过
                     </VButton>
-                    <VButton
-                      size="sm"
-                      type="danger"
-                      plain
-                      @click="handleQuickAudit('reject', submission)"
-                    >
+                    <VButton size="sm" type="danger" plain @click="handleQuickAudit('reject', submission)">
                       拒绝
                     </VButton>
                   </VSpace>
@@ -434,10 +375,7 @@ const formatTime = (value?: string | null) => {
               </VEntityField>
             </template>
             <template #dropdownItems>
-              <VDropdownItem
-                v-if="isPending(submission)"
-                @click="handleOpenAudit(submission)"
-              >
+              <VDropdownItem v-if="isPending(submission)" @click="handleOpenAudit(submission)">
                 审核
               </VDropdownItem>
               <VDropdownItem v-else @click="handleViewDetail(submission)">
@@ -452,22 +390,11 @@ const formatTime = (value?: string | null) => {
       </Transition>
 
       <template #footer>
-        <VPagination
-          v-model:page="page"
-          v-model:size="size"
-          page-label="页"
-          size-label="条 / 页"
-          :total-label="`共 ${total} 项数据`"
-          :total="total"
-          :size-options="[20, 30, 50, 100]"
-        />
+        <VPagination v-model:page="page" v-model:size="size" page-label="页" size-label="条 / 页"
+          :total-label="`共 ${total} 项数据`" :total="total" :size-options="[20, 30, 50, 100]" />
       </template>
     </VCard>
   </div>
 
-  <ImagePreviewModal
-    v-model:visible="previewVisible"
-    :images="previewUrl ? [previewUrl] : []"
-    title="太阳码预览"
-  />
+  <ImagePreviewModal v-model:visible="previewVisible" :images="previewUrl ? [previewUrl] : []" title="太阳码预览" />
 </template>

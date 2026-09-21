@@ -602,7 +602,7 @@ function restoreMineDefaults(group: "common" | "other") {
     <div class=":uno: mt-6 rounded-lg bg-gray-50 p-4">
       <div class=":uno: mb-2 text-sm font-medium text-gray-700">功能入口</div>
       <p class=":uno: mb-3 text-xs text-gray-400">
-        「我的」页面（about）展示的功能入口，分组配置；拖拽排序，顺序即展示顺序。
+        展示的功能入口，分组配置，拖拽排序，顺序即展示顺序。
       </p>
 
       <!-- 常用功能显示方式（grid=宫格 / list=列表，控制 app 端关于页常用功能布局） -->
@@ -610,7 +610,7 @@ function restoreMineDefaults(group: "common" | "other") {
         <FormKit v-model="commonFeaturesMode" name="about_common_features_mode" label="常用功能显示方式" type="radio" :options="[
           { label: '网格（宫格图标）', value: 'grid' },
           { label: '列表（分行条目）', value: 'list' },
-        ]" help="控制 app 端「我的/关于页」常用功能的展示布局；切换为列表时常用于功能较多、需要展示副标题的场景。" />
+        ]" />
       </div>
 
       <!-- 常用功能（原「博客功能」改名） -->
@@ -806,8 +806,8 @@ function restoreMineDefaults(group: "common" | "other") {
 
   <!-- 关于页功能入口候选弹窗（common/other 两组共用；统一清单展示全部注册表条目，按组追加） -->
   <FeatureEntryCandidatesModal v-if="mineModalGroup" :selected-keys="(mineModalGroup === 'common'
-      ? mineCommonFeatures
-      : mineOtherFeatures
-    ).map((i) => i.key || '')
+    ? mineCommonFeatures
+    : mineOtherFeatures
+  ).map((i) => i.key || '')
     " @update:visible="mineModalGroup = null" @confirm="(selected) => handleMineConfirm(selected, mineModalGroup!)" />
 </template>

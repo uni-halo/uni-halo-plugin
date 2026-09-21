@@ -187,15 +187,15 @@ const onEditingModalClose = () => {
     :apps="(apps?.items as AppInfo[]) || []" @close="onEditingModalClose" />
   <VPageHeader title="UniHalo-版本管理">
     <template #actions>
-      <VButton type="secondary" @click="refetch">
+      <VButton @click="refetch">
         <template #icon>
-          <IconRefreshLine />
+          <IconRefreshLine class="w-4 h-4" :class="{ 'animate-spin text-gray-900': isFetching }" />
         </template>
         刷新
       </VButton>
-      <VButton v-permission="['plugin:uni-halo:version:manage']" type="primary" @click="editingModal = true">
+      <VButton v-permission="['plugin:uni-halo:version:manage']" type="secondary" @click="editingModal = true">
         <template #icon>
-          <IconAddCircle />
+          <IconAddCircle class="w-5 h-5" />
         </template>
         发布新版
       </VButton>
@@ -220,13 +220,9 @@ const onEditingModalClose = () => {
           class=":uno: flex cursor-pointer items-center gap-3 px-4 py-3"
           :class="filterAppid === (app.spec.appid || '') ? ':uno: bg-gray-50' : ':uno: hover:bg-gray-50'"
           @click="filterAppid = app.spec.appid || ''">
-          <img
-            v-if="app.spec.iconUrl"
-            :src="app.spec.iconUrl"
-            class=":uno: h-8 w-8 flex-shrink-0 cursor-pointer rounded object-cover hover:opacity-80"
-            alt=""
-            @click.stop="() => { previewUrl = app.spec.iconUrl || ''; previewVisible = true; }"
-          />
+          <img v-if="app.spec.iconUrl" :src="app.spec.iconUrl"
+            class=":uno: h-8 w-8 flex-shrink-0 cursor-pointer rounded object-cover hover:opacity-80" alt=""
+            @click.stop="() => { previewUrl = app.spec.iconUrl || ''; previewVisible = true; }" />
           <div v-else class=":uno: h-8 w-8 flex-shrink-0 rounded bg-gray-100" />
           <div class=":uno: min-w-0">
             <div class=":uno: truncate text-sm text-gray-800">
@@ -249,7 +245,7 @@ const onEditingModalClose = () => {
               </div>
               <div class=":uno: flex w-full flex-1 items-center sm:w-auto">
                 <template v-if="!selectedVersionNames.length">
-                  <SearchInput v-model="keyword" placeholder="标题/版本号（回车搜索）"/>
+                  <SearchInput v-model="keyword" placeholder="标题/版本号（回车搜索）" />
                 </template>
                 <VButton v-else size="sm" type="danger" @click="handleDeleteInBatch">
                   删除
@@ -321,9 +317,5 @@ const onEditingModalClose = () => {
     </div>
   </div>
 
-  <ImagePreviewModal
-    v-model:visible="previewVisible"
-    :images="previewUrl ? [previewUrl] : []"
-    :title="'应用图标'"
-  />
+  <ImagePreviewModal v-model:visible="previewVisible" :images="previewUrl ? [previewUrl] : []" :title="'应用图标'" />
 </template>
