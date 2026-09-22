@@ -276,12 +276,12 @@ public class Constants {
     public static final String LOVE_STATIC_DIR = "/love-diary";
 
     /**
-     * 设置域组名（setting.yaml 的 Tab「主题展示」）。
+     * 设置域组名（setting.yaml 的 Tab「主题模板」）。
      */
-    public static final String SETTING_DOMAIN_THEME_CONFIG = "themeConfig";
+    public static final String SETTING_DOMAIN_THEME_CONFIG = "themeTemplateConfig";
 
     /**
-     * 恋爱日记主题模板设置组名（themeConfig.loveDiaryTheme）。
+     * 恋爱日记主题模板设置组名（themeTemplateConfig.loveDiaryTheme）。
      */
     public static final String SETTING_MODULE_LOVE_DIARY_THEME = "loveDiaryTheme";
 

@@ -8,6 +8,8 @@ group 'cn.ialley.unihalo.ui'
 // pnpm workspace：安装统一在仓库根执行（单份根 pnpm-lock.yaml）
 tasks.named('pnpmInstall') {
     workingDir = rootDir
+    // 输出（node_modules）实际落在仓库根，由插件默认状态跟踪指向子工程目录会报不可读
+    doNotTrackState('pnpm workspace 安装在仓库根执行，node_modules 由各工程共享')
     inputs.files(rootProject.file('pnpm-lock.yaml'), rootProject.file('pnpm-workspace.yaml'))
 }
 

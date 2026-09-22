@@ -24,7 +24,7 @@ import { styles } from "./styles";
 import type {
   BloggerInfo,
   CaptchaResponse,
-  FloatMiniProfileConfig,
+  FloatProfileWidgetConfig,
   MiniInfo,
 } from "./types";
 
@@ -80,7 +80,7 @@ interface DragState {
 }
 
 /** 申请表单草稿缓存 key：输入自动保存，提交成功后清空（验证码不缓存） */
-const DRAFT_KEY = "uh-fmp-apply-draft";
+const DRAFT_KEY = "uh-fpw-apply-draft";
 
 /**
  * 图片地址规范化：http(s):// 或 // 协议相对或 data: 原样返回；
@@ -96,7 +96,7 @@ function normalizeImageUrl(url?: string): string {
   return window.location.origin + (url.startsWith("/") ? url : "/" + url);
 }
 
-export class FloatMiniProfileElement extends LitElement {
+export class FloatProfileWidgetElement extends LitElement {
   static styles = [styles];
 
   static properties = {
@@ -137,7 +137,7 @@ export class FloatMiniProfileElement extends LitElement {
   declare edgeTriggerStyle: string;
   declare miniDotStyle: string;
 
-  private config: FloatMiniProfileConfig;
+  private config: FloatProfileWidgetConfig;
   private dragState: DragState | null = null;
   private miniDotDrag: MiniDotDrag | null = null;
   private miniDotDragged = false;
@@ -145,7 +145,7 @@ export class FloatMiniProfileElement extends LitElement {
   constructor() {
     super();
     // 入口（index.ts）已校验 CONFIG 非空
-    this.config = CONFIG as FloatMiniProfileConfig;
+    this.config = CONFIG as FloatProfileWidgetConfig;
     this.applyOpen = false;
     this.linksOpen = false;
     this.applySubmitting = false;
@@ -205,7 +205,7 @@ export class FloatMiniProfileElement extends LitElement {
   }
 
   private get cardEl(): HTMLElement | null {
-    return this.renderRoot.querySelector(".uh-fmp");
+    return this.renderRoot.querySelector(".uh-fpw");
   }
 
   // ===== 定位：9 向锚点 + 偏移 =====
@@ -216,9 +216,9 @@ export class FloatMiniProfileElement extends LitElement {
     }
     const c = this.config;
     const pos = c.position || "bottom-right";
-    card.classList.add("uh-fmp-pos-" + pos);
+    card.classList.add("uh-fpw-pos-" + pos);
     if (c.dragEnabled) {
-      card.classList.add("uh-fmp-draggable"); // 允许拖拽时显示抓手光标
+      card.classList.add("uh-fpw-draggable"); // 允许拖拽时显示抓手光标
     }
 
     const x = Number(c.offsetX) || 0;
@@ -244,12 +244,12 @@ export class FloatMiniProfileElement extends LitElement {
     // 否则 setPointerCapture + preventDefault 会干扰 click 合成事件
     if (
       target &&
-      (target.closest(".uh-fmp-close") ||
-        target.closest(".uh-fmp-minimize") ||
-        target.closest(".uh-fmp-actions") ||
-        target.closest(".uh-fmp-overlay") ||
-        target.closest(".uh-fmp-mini-dot") ||
-        target.closest(".uh-fmp-edge-trigger"))
+      (target.closest(".uh-fpw-close") ||
+        target.closest(".uh-fpw-minimize") ||
+        target.closest(".uh-fpw-actions") ||
+        target.closest(".uh-fpw-overlay") ||
+        target.closest(".uh-fpw-mini-dot") ||
+        target.closest(".uh-fpw-edge-trigger"))
     ) {
       return;
     }
@@ -265,7 +265,7 @@ export class FloatMiniProfileElement extends LitElement {
       top: rect.top,
     };
     this.restoreFromEdge(); // 拖拽开始时清除贴边状态与把手
-    card.classList.add("uh-fmp-dragging");
+    card.classList.add("uh-fpw-dragging");
     card.style.touchAction = "none";
     card.setPointerCapture(e.pointerId);
     e.preventDefault();
@@ -290,7 +290,7 @@ export class FloatMiniProfileElement extends LitElement {
       return;
     }
     this.dragState = null;
-    card.classList.remove("uh-fmp-dragging");
+    card.classList.remove("uh-fpw-dragging");
     card.style.touchAction = "";
     this.maybeEdgeHide();
   }
@@ -305,7 +305,7 @@ export class FloatMiniProfileElement extends LitElement {
     card.style.right = "auto";
     card.style.bottom = "auto";
     card.style.transform = "translate(0, 0)";
-    card.classList.remove("uh-fmp-edge");
+    card.classList.remove("uh-fpw-edge");
   }
 
   private maybeEdgeHide(): void {
@@ -350,7 +350,7 @@ export class FloatMiniProfileElement extends LitElement {
       } else {
         card.style.transform = `translateY(${window.innerHeight - rect.top}px)`;
       }
-      card.classList.add("uh-fmp-edge", "uh-fmp-edge-" + side);
+      card.classList.add("uh-fpw-edge", "uh-fpw-edge-" + side);
       // 边缘触发把手：fixed 定位在对应视口边缘中点
       this.edgeSide = side;
       this.edgeTriggerStyle = this.buildEdgeTriggerStyle(side, rect);
@@ -379,14 +379,14 @@ export class FloatMiniProfileElement extends LitElement {
   private onEdgeTriggerEnter(): void {
     const card = this.cardEl;
     if (card) {
-      card.classList.add("uh-fmp-edge-hover");
+      card.classList.add("uh-fpw-edge-hover");
     }
   }
 
   private onEdgeTriggerLeave(): void {
     const card = this.cardEl;
     if (card) {
-      card.classList.remove("uh-fmp-edge-hover");
+      card.classList.remove("uh-fpw-edge-hover");
     }
   }
 
@@ -398,16 +398,16 @@ export class FloatMiniProfileElement extends LitElement {
     this.edgeTriggerStyle = "";
     if (card) {
       // 仅在实际贴边时才清除内联位移，避免误清锚点 transform 导致首次点击位置跳动
-      if (card.classList.contains("uh-fmp-edge")) {
+      if (card.classList.contains("uh-fpw-edge")) {
         card.style.transform = "";
       }
       card.classList.remove(
-        "uh-fmp-edge",
-        "uh-fmp-edge-hover",
-        "uh-fmp-edge-left",
-        "uh-fmp-edge-right",
-        "uh-fmp-edge-top",
-        "uh-fmp-edge-bottom",
+        "uh-fpw-edge",
+        "uh-fpw-edge-hover",
+        "uh-fpw-edge-left",
+        "uh-fpw-edge-right",
+        "uh-fpw-edge-top",
+        "uh-fpw-edge-bottom",
       );
     }
   }
@@ -424,15 +424,15 @@ export class FloatMiniProfileElement extends LitElement {
     this.minimized = true;
     this.edgeTrigger = false; // 最小化后隐藏贴边触发把手
     // 最小化后不再贴边（小图保持原位）
-    if (card.classList.contains("uh-fmp-edge")) {
+    if (card.classList.contains("uh-fpw-edge")) {
       card.style.transform = ""; // 仅贴边时清除内联位移，恢复后卡片正常显示
     }
     card.classList.remove(
-      "uh-fmp-edge",
-      "uh-fmp-edge-left",
-      "uh-fmp-edge-right",
-      "uh-fmp-edge-top",
-      "uh-fmp-edge-bottom",
+      "uh-fpw-edge",
+      "uh-fpw-edge-left",
+      "uh-fpw-edge-right",
+      "uh-fpw-edge-top",
+      "uh-fpw-edge-bottom",
     );
   }
 
@@ -443,7 +443,7 @@ export class FloatMiniProfileElement extends LitElement {
     }
     // 恢复：把卡片移动到小球当前位置（小球可被拖到任意位置，卡片应跟随出现，
     // 而不是回到最小化前的位置）
-    const dot = this.renderRoot.querySelector(".uh-fmp-mini-dot") as HTMLElement | null;
+    const dot = this.renderRoot.querySelector(".uh-fpw-mini-dot") as HTMLElement | null;
     const card = this.cardEl;
     if (dot && card) {
       const rect = dot.getBoundingClientRect();
@@ -529,7 +529,7 @@ export class FloatMiniProfileElement extends LitElement {
     }
     const card = this.cardEl;
     if (card) {
-      card.classList.add("uh-fmp-closing");
+      card.classList.add("uh-fpw-closing");
       setTimeout(() => this.remove(), 200);
     } else {
       this.remove();
@@ -539,7 +539,7 @@ export class FloatMiniProfileElement extends LitElement {
   // ===== 弹窗通用 =====
   private onOverlayClick(e: Event): void {
     const target = e.target as HTMLElement;
-    if (target.classList.contains("uh-fmp-overlay")) {
+    if (target.classList.contains("uh-fpw-overlay")) {
       this.closeModals();
     }
   }
@@ -558,7 +558,7 @@ export class FloatMiniProfileElement extends LitElement {
   }
 
   private restoreDraft(): void {
-    const form = this.renderRoot.querySelector(".uh-fmp-form") as HTMLFormElement | null;
+    const form = this.renderRoot.querySelector(".uh-fpw-form") as HTMLFormElement | null;
     if (!form) {
       return;
     }
@@ -595,7 +595,7 @@ export class FloatMiniProfileElement extends LitElement {
 
   /** 输入即自动保存草稿：刷新/关闭页面后重新打开仍显示已填内容 */
   private saveDraft(): void {
-    const form = this.renderRoot.querySelector(".uh-fmp-form") as HTMLFormElement | null;
+    const form = this.renderRoot.querySelector(".uh-fpw-form") as HTMLFormElement | null;
     if (!form) {
       return;
     }
@@ -623,7 +623,7 @@ export class FloatMiniProfileElement extends LitElement {
 
   /** 重置：清空表单与本地草稿 */
   private resetApply(): void {
-    const form = this.renderRoot.querySelector(".uh-fmp-form") as HTMLFormElement | null;
+    const form = this.renderRoot.querySelector(".uh-fpw-form") as HTMLFormElement | null;
     if (form) {
       form.reset();
     }
@@ -759,7 +759,7 @@ export class FloatMiniProfileElement extends LitElement {
       ${this.applyOpen ? this.renderApplyModal() : ""}
       ${this.linksOpen ? this.renderLinksModal() : ""}
       <div
-        class="uh-fmp ${this.minimized ? "uh-fmp-minimized" : ""}"
+        class="uh-fpw ${this.minimized ? "uh-fpw-minimized" : ""}"
         style="width:${size}px"
         @pointerdown=${this.onPointerDown}
         @pointermove=${this.onPointerMove}
@@ -767,28 +767,28 @@ export class FloatMiniProfileElement extends LitElement {
         @pointercancel=${this.onPointerEnd}
         @mouseleave=${this.onEdgeTriggerLeave}
       >
-        <div class="uh-fmp-main" ?hidden=${this.minimized}>
-          <div class="uh-fmp-topbar">
-            <button type="button" class="uh-fmp-minimize" aria-label="最小化" @click=${this.onMinimizeClick}>&minus;</button>
+        <div class="uh-fpw-main" ?hidden=${this.minimized}>
+          <div class="uh-fpw-topbar">
+            <button type="button" class="uh-fpw-minimize" aria-label="最小化" @click=${this.onMinimizeClick}>&minus;</button>
             ${c.closeEnabled !== false
-              ? html`<button type="button" class="uh-fmp-close" aria-label="关闭悬浮窗" @click=${this.onCloseClick}>&times;</button>`
+              ? html`<button type="button" class="uh-fpw-close" aria-label="关闭悬浮窗" @click=${this.onCloseClick}>&times;</button>`
               : ""}
           </div>
           ${c.imageUrl
-            ? html`<img class="uh-fmp-img" src=${normalizeImageUrl(c.imageUrl)} alt=${c.name || "小程序太阳码"} />`
+            ? html`<img class="uh-fpw-img" src=${normalizeImageUrl(c.imageUrl)} alt=${c.name || "小程序太阳码"} />`
             : ""}
           ${c.name
-            ? html`<div class="uh-fmp-name" style="font-size:${Number(c.nameSize) || 14}px;color:${c.nameColor || "#333333"}">${c.name}</div>`
+            ? html`<div class="uh-fpw-name" style="font-size:${Number(c.nameSize) || 14}px;color:${c.nameColor || "#333333"}">${c.name}</div>`
             : ""}
           ${c.description
-            ? html`<div class="uh-fmp-desc" style="font-size:${Number(c.descSize) || 12}px;color:${c.descColor || "#999999"}">${c.description}</div>`
+            ? html`<div class="uh-fpw-desc" style="font-size:${Number(c.descSize) || 12}px;color:${c.descColor || "#999999"}">${c.description}</div>`
             : ""}
           ${c.miniProgramApply
             ? html`
-                <div class="uh-fmp-actions">
-                  <button type="button" class="uh-fmp-btn" @click=${this.openApply}>我要申请</button>
-                  <button type="button" class="uh-fmp-btn" @click=${this.openLinks}>友链信息</button>
-                  <div class="uh-fmp-hint">小程序申请和友链信息</div>
+                <div class="uh-fpw-actions">
+                  <button type="button" class="uh-fpw-btn" @click=${this.openApply}>我要申请</button>
+                  <button type="button" class="uh-fpw-btn" @click=${this.openLinks}>友链信息</button>
+                  <div class="uh-fpw-hint">小程序申请和友链信息</div>
                 </div>`
             : ""}
         </div>
@@ -797,7 +797,7 @@ export class FloatMiniProfileElement extends LitElement {
         ? html`
             <button
               type="button"
-              class="uh-fmp-mini-dot"
+              class="uh-fpw-mini-dot"
               style=${this.miniDotStyle}
               @click=${this.onRestoreClick}
               @pointerdown=${this.onMiniDotPointerDown}
@@ -807,14 +807,14 @@ export class FloatMiniProfileElement extends LitElement {
               aria-label="恢复悬浮窗"
             >
               ${c.imageUrl ? html`<img src=${normalizeImageUrl(c.imageUrl)} alt="" />` : ""}
-              <span class="uh-fmp-mini-plus">+</span>
+              <span class="uh-fpw-mini-plus">+</span>
             </button>`
         : ""}
       ${this.edgeTrigger
         ? html`
             <button
               type="button"
-              class="uh-fmp-edge-trigger uh-fmp-edge-trigger-${this.edgeSide}"
+              class="uh-fpw-edge-trigger uh-fpw-edge-trigger-${this.edgeSide}"
               style=${this.edgeTriggerStyle}
               @mouseenter=${this.onEdgeTriggerEnter}
               @mouseleave=${this.onEdgeTriggerLeave}
@@ -830,9 +830,9 @@ export class FloatMiniProfileElement extends LitElement {
     const labelEl = html`<span>${field.label}${field.required ? " *" : ""}</span>`;
     if (field.type === "select") {
       return html`
-        <label class="uh-fmp-field">
+        <label class="uh-fpw-field">
           ${labelEl}
-          <select name=${field.key} class="uh-fmp-select">
+          <select name=${field.key} class="uh-fpw-select">
             <option value="">未分组</option>
             ${this.groupOptions.map(
               (opt) => html`<option value=${opt.value}>${opt.label}</option>`,
@@ -842,13 +842,13 @@ export class FloatMiniProfileElement extends LitElement {
     }
     if (field.type === "textarea") {
       return html`
-        <label class="uh-fmp-field">
+        <label class="uh-fpw-field">
           ${labelEl}
-          <textarea name=${field.key} rows="2" class="uh-fmp-textarea" placeholder=${field.placeholder ?? ""}></textarea>
+          <textarea name=${field.key} rows="2" class="uh-fpw-textarea" placeholder=${field.placeholder ?? ""}></textarea>
         </label>`;
     }
     return html`
-      <label class="uh-fmp-field">
+      <label class="uh-fpw-field">
         ${labelEl}
         <input type="text" name=${field.key} ?required=${field.required} placeholder=${field.placeholder ?? ""} />
       </label>`;
@@ -856,43 +856,43 @@ export class FloatMiniProfileElement extends LitElement {
 
   private renderApplyModal() {
     return html`
-      <div class="uh-fmp-overlay" @click=${this.onOverlayClick}>
-        <div class="uh-fmp-modal uh-fmp-modal-apply">
-          <div class="uh-fmp-modal-header">
-            <div class="uh-fmp-modal-title">小程序申请</div>
-            <button type="button" class="uh-fmp-modal-close" aria-label="关闭" @click=${this.closeModals}>&times;</button>
+      <div class="uh-fpw-overlay" @click=${this.onOverlayClick}>
+        <div class="uh-fpw-modal uh-fpw-modal-apply">
+          <div class="uh-fpw-modal-header">
+            <div class="uh-fpw-modal-title">小程序申请</div>
+            <button type="button" class="uh-fpw-modal-close" aria-label="关闭" @click=${this.closeModals}>&times;</button>
           </div>
-          <div class="uh-fmp-segmented">
+          <div class="uh-fpw-segmented">
             <button
               type="button"
-              class="uh-fmp-seg-item ${this.applyTab === "basic" ? "uh-fmp-seg-active" : ""}"
+              class="uh-fpw-seg-item ${this.applyTab === "basic" ? "uh-fpw-seg-active" : ""}"
               @click=${() => (this.applyTab = "basic")}
             >基础信息</button>
             <button
               type="button"
-              class="uh-fmp-seg-item ${this.applyTab === "author" ? "uh-fmp-seg-active" : ""}"
+              class="uh-fpw-seg-item ${this.applyTab === "author" ? "uh-fpw-seg-active" : ""}"
               @click=${() => (this.applyTab = "author")}
             >作者信息</button>
           </div>
-          <div class="uh-fmp-modal-body uh-fmp-apply-body">
+          <div class="uh-fpw-modal-body uh-fpw-apply-body">
             <!-- novalidate：隐藏面板的 required 不参与原生校验，由提交时手动校验 -->
-            <form class="uh-fmp-form" novalidate @submit=${this.onApplySubmit} @input=${this.onFormInput}>
-              <div class="uh-fmp-apply-panels">
-                <div class="uh-fmp-apply-panel" ?hidden=${this.applyTab !== "basic"}>
+            <form class="uh-fpw-form" novalidate @submit=${this.onApplySubmit} @input=${this.onFormInput}>
+              <div class="uh-fpw-apply-panels">
+                <div class="uh-fpw-apply-panel" ?hidden=${this.applyTab !== "basic"}>
                   ${BASIC_FIELDS.map((field) => this.renderApplyField(field))}
                   ${this.renderScreenshotRows()}
                 </div>
-                <div class="uh-fmp-apply-panel" ?hidden=${this.applyTab !== "author"}>
+                <div class="uh-fpw-apply-panel" ?hidden=${this.applyTab !== "author"}>
                   ${AUTHOR_FIELDS.map((field) => this.renderApplyField(field))}
                 </div>
               </div>
-              <div class="uh-fmp-apply-footer">
-                <label class="uh-fmp-field uh-fmp-captcha-row">
+              <div class="uh-fpw-apply-footer">
+                <label class="uh-fpw-field uh-fpw-captcha-row">
                   <span>验证码 *</span>
-                  <span class="uh-fmp-captcha-input">
+                  <span class="uh-fpw-captcha-input">
                     <input type="text" name="captchaCode" required autocomplete="off" />
                     <img
-                      class="uh-fmp-captcha-img"
+                      class="uh-fpw-captcha-img"
                       alt="验证码"
                       title="看不清？点击刷新"
                       src=${this.captchaSrc}
@@ -900,10 +900,10 @@ export class FloatMiniProfileElement extends LitElement {
                     />
                   </span>
                 </label>
-                <div class="uh-fmp-form-actions">
-                  <button type="button" class="uh-fmp-btn" @click=${this.resetApply}>重置</button>
-                  <button type="button" class="uh-fmp-btn" @click=${this.closeModals}>取消</button>
-                  <button type="submit" class="uh-fmp-btn uh-fmp-btn-primary" ?disabled=${this.applySubmitting}>
+                <div class="uh-fpw-form-actions">
+                  <button type="button" class="uh-fpw-btn" @click=${this.resetApply}>重置</button>
+                  <button type="button" class="uh-fpw-btn" @click=${this.closeModals}>取消</button>
+                  <button type="submit" class="uh-fpw-btn uh-fpw-btn-primary" ?disabled=${this.applySubmitting}>
                     ${this.applySubmitting ? "提交中…" : "提交申请"}
                   </button>
                 </div>
@@ -918,13 +918,13 @@ export class FloatMiniProfileElement extends LitElement {
   /** 预览图动态添加：URL 输入行 + 删除按钮 + 底部「添加一张」 */
   private renderScreenshotRows() {
     return html`
-      <div class="uh-fmp-field">
+      <div class="uh-fpw-field">
         <span>预览截图(可选)</span>
         ${this.screenshotRows.map(
           (url, index) => html`
-            <div class="uh-fmp-shot-row">
+            <div class="uh-fpw-shot-row">
               <input
-                class="uh-fmp-shot-input"
+                class="uh-fpw-shot-input"
                 type="text"
                 name="screenshots"
                 placeholder="https://…/image.png"
@@ -934,13 +934,13 @@ export class FloatMiniProfileElement extends LitElement {
               />
               <button
                 type="button"
-                class="uh-fmp-shot-remove"
+                class="uh-fpw-shot-remove"
                 aria-label="删除该预览图"
                 @click=${() => this.removeScreenshotRow(index)}
               >&times;</button>
             </div>`,
         )}
-        <button type="button" class="uh-fmp-btn uh-fmp-shot-add" @click=${this.addScreenshotRow}>
+        <button type="button" class="uh-fpw-btn uh-fpw-shot-add" @click=${this.addScreenshotRow}>
           + 添加一张预览图
         </button>
       </div>`;
@@ -956,7 +956,7 @@ export class FloatMiniProfileElement extends LitElement {
     this.screenshotRows = [...this.screenshotRows, ""];
     // 新行渲染后自动滚动到底部（面板内滚动容器）
     this.updateComplete.then(() => {
-      const rows = this.renderRoot.querySelectorAll(".uh-fmp-shot-row");
+      const rows = this.renderRoot.querySelectorAll(".uh-fpw-shot-row");
       const last = rows[rows.length - 1];
       if (last) {
         last.scrollIntoView({ block: "nearest", behavior: "smooth" });
@@ -989,31 +989,31 @@ export class FloatMiniProfileElement extends LitElement {
     const hasContent =
       miniRows.some((row) => row.value) || blogRows.some((row) => row.value);
     return html`
-      <div class="uh-fmp-overlay" @click=${this.onOverlayClick}>
-        <div class="uh-fmp-modal">
-          <div class="uh-fmp-modal-header">
-            <div class="uh-fmp-modal-title">小程序友链信息</div>
-            <button type="button" class="uh-fmp-modal-close" aria-label="关闭" @click=${this.closeModals}>&times;</button>
+      <div class="uh-fpw-overlay" @click=${this.onOverlayClick}>
+        <div class="uh-fpw-modal">
+          <div class="uh-fpw-modal-header">
+            <div class="uh-fpw-modal-title">小程序友链信息</div>
+            <button type="button" class="uh-fpw-modal-close" aria-label="关闭" @click=${this.closeModals}>&times;</button>
           </div>
-          <div class="uh-fmp-modal-body">
+          <div class="uh-fpw-modal-body">
             ${this.linksLoading
-              ? html`<div class="uh-fmp-loading">加载中…</div>`
+              ? html`<div class="uh-fpw-loading">加载中…</div>`
               : this.linksError
-                ? html`<div class="uh-fmp-empty">加载失败，请稍后重试</div>`
+                ? html`<div class="uh-fpw-empty">加载失败，请稍后重试</div>`
                 : !hasContent
-                  ? html`<div class="uh-fmp-empty">暂无友链信息</div>`
+                  ? html`<div class="uh-fpw-empty">暂无友链信息</div>`
                   : html`
-                      <div class="uh-fmp-info-card">
-                        <div class="uh-fmp-info-card-title">小程序信息</div>
+                      <div class="uh-fpw-info-card">
+                        <div class="uh-fpw-info-card-title">小程序信息</div>
                         ${miniRows.map((row) => this.renderCopyRow(row.label, row.value, row))}
                       </div>
-                      <div class="uh-fmp-info-card">
-                        <div class="uh-fmp-info-card-title">博主信息</div>
+                      <div class="uh-fpw-info-card">
+                        <div class="uh-fpw-info-card-title">博主信息</div>
                         ${blogRows.map((row) => this.renderCopyRow(row.label, row.value, row))}
                       </div>
                       <button
                         type="button"
-                        class="uh-fmp-btn uh-fmp-copy-all"
+                        class="uh-fpw-btn uh-fpw-copy-all"
                         @click=${(e: Event) =>
                           this.copyText(this.collectLinkText(), e.target as HTMLButtonElement)}
                       >复制全部</button>
@@ -1034,28 +1034,28 @@ export class FloatMiniProfileElement extends LitElement {
     const input = textarea
       ? html`
           <textarea
-            class="uh-fmp-copy-input uh-fmp-copy-textarea"
+            class="uh-fpw-copy-input uh-fpw-copy-textarea"
             readonly
             rows="2"
             @click=${(e: Event) => (e.target as HTMLTextAreaElement).select()}
           >${value}</textarea>`
       : html`
           <input
-            class="uh-fmp-copy-input"
+            class="uh-fpw-copy-input"
             type="text"
             readonly
             value=${value}
             @click=${(e: Event) => (e.target as HTMLInputElement).select()}
           />`;
     return html`
-      <div class="uh-fmp-copy-row">
-        <span class="uh-fmp-copy-label">${label}</span>
+      <div class="uh-fpw-copy-row">
+        <span class="uh-fpw-copy-label">${label}</span>
         ${input}
         ${copyable
           ? html`
               <button
                 type="button"
-                class="uh-fmp-btn uh-fmp-copy-btn"
+                class="uh-fpw-btn uh-fpw-copy-btn"
                 @click=${(e: Event) => this.copyText(value, e.target as HTMLButtonElement)}
               >复制</button>`
           : ""}
@@ -1117,4 +1117,4 @@ export class FloatMiniProfileElement extends LitElement {
   }
 }
 
-customElements.define("uh-float-mini-profile", FloatMiniProfileElement);
+customElements.define("uh-float-profile-widget", FloatProfileWidgetElement);

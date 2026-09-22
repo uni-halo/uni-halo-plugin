@@ -3,7 +3,7 @@
  *
  * 组件使用 shadow DOM，样式完全内聚不泄漏、外部主题样式也无法穿透影响组件；
  * 弹窗（overlay/modal）渲染在 shadow DOM 内部，按钮等选择器直接用类名
- * （无需 .uh-fmp 前缀），修复了此前「弹窗内按钮无样式」的问题。
+ * （无需 .uh-fpw 前缀），修复了此前「弹窗内按钮无样式」的问题。
  * 设计参考 app 端 glass（uh-styles / tabbar：半透明背景 + backdrop blur + 白色细边框 + 柔和阴影）。
  */
 import { css } from "lit";
@@ -13,7 +13,7 @@ export const styles = css`
     display: block;
   }
 
-  .uh-fmp {
+  .uh-fpw {
     position: fixed;
     z-index: 9999;
     box-sizing: border-box;
@@ -36,30 +36,30 @@ export const styles = css`
     transition: transform 0.3s ease;
   }
   /* 允许拖拽（dragEnabled）时显示抓手光标 */
-  .uh-fmp-draggable {
+  .uh-fpw-draggable {
     cursor: grab;
   }
 
   /* ===== 9 向锚点（配合 JS inline transform 偏移） ===== */
-  .uh-fmp.uh-fmp-pos-top-left { top: 8px; left: 8px; }
-  .uh-fmp.uh-fmp-pos-top-center { top: 8px; left: 50%; }
-  .uh-fmp.uh-fmp-pos-top-right { top: 8px; right: 8px; }
-  .uh-fmp.uh-fmp-pos-right-center { top: 50%; right: 8px; }
-  .uh-fmp.uh-fmp-pos-bottom-right { bottom: 8px; right: 8px; }
-  .uh-fmp.uh-fmp-pos-bottom-center { bottom: 8px; left: 50%; }
-  .uh-fmp.uh-fmp-pos-bottom-left { bottom: 8px; left: 8px; }
-  .uh-fmp.uh-fmp-pos-left-center { top: 50%; left: 8px; }
-  .uh-fmp.uh-fmp-pos-center { top: 50%; left: 50%; }
+  .uh-fpw.uh-fpw-pos-top-left { top: 8px; left: 8px; }
+  .uh-fpw.uh-fpw-pos-top-center { top: 8px; left: 50%; }
+  .uh-fpw.uh-fpw-pos-top-right { top: 8px; right: 8px; }
+  .uh-fpw.uh-fpw-pos-right-center { top: 50%; right: 8px; }
+  .uh-fpw.uh-fpw-pos-bottom-right { bottom: 8px; right: 8px; }
+  .uh-fpw.uh-fpw-pos-bottom-center { bottom: 8px; left: 50%; }
+  .uh-fpw.uh-fpw-pos-bottom-left { bottom: 8px; left: 8px; }
+  .uh-fpw.uh-fpw-pos-left-center { top: 50%; left: 8px; }
+  .uh-fpw.uh-fpw-pos-center { top: 50%; left: 50%; }
 
   /* ===== 内容 ===== */
-  .uh-fmp-main{
+  .uh-fpw-main{
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     gap: 8px;
   }
-  .uh-fmp-img {
+  .uh-fpw-img {
     display: block;
     width: 100%;
     /* 太阳码为正方形：宽度撑满卡片，高度按 aspect-ratio 自动 */
@@ -67,19 +67,19 @@ export const styles = css`
     object-fit: cover;
     border-radius: 8px;
   }
-  .uh-fmp-name {
+  .uh-fpw-name {
     font-weight: 600;
     text-align: center;
     max-width: 100%;
     word-break: break-all;
   }
-  .uh-fmp-desc {
+  .uh-fpw-desc {
     text-align: center;
     word-break: break-all;
   }
 
   /* ===== 右上角操作按钮组（最小化/关闭统一定位，任一隐藏不位移） ===== */
-  .uh-fmp-topbar {
+  .uh-fpw-topbar {
     position: absolute;
     top: 8px;
     right: 8px;
@@ -87,7 +87,7 @@ export const styles = css`
     gap: 4px;
     z-index: 3;
   }
-  .uh-fmp-close {
+  .uh-fpw-close {
     width: 20px;
     height: 20px;
     display: flex;
@@ -104,12 +104,12 @@ export const styles = css`
     text-align: center;
     cursor: pointer;
   }
-  .uh-fmp-close:hover {
+  .uh-fpw-close:hover {
     color: #333;
   }
 
   /* ===== 最小化按钮（右上角按钮组内，关闭按钮左侧） ===== */
-  .uh-fmp-minimize {
+  .uh-fpw-minimize {
     width: 20px;
     height: 20px;
     display: flex;
@@ -126,15 +126,15 @@ export const styles = css`
     text-align: center;
     cursor: pointer;
   }
-  .uh-fmp-minimize:hover {
+  .uh-fpw-minimize:hover {
     color: #333;
   }
   /* 最小化态：卡片容器整体隐藏（小图为独立 fixed 元素，不影响卡片样式） */
-  .uh-fmp-minimized {
+  .uh-fpw-minimized {
     display: none !important;
   }
   /* 圆形小图：独立 fixed 元素（minimized 时显示在卡片原位置），hover 显示 + 覆盖层 */
-  .uh-fmp-mini-dot {
+  .uh-fpw-mini-dot {
     display: block;
     box-sizing: border-box;
     width: 50px;
@@ -149,13 +149,13 @@ export const styles = css`
     background: rgba(255, 255, 255, 0.95);
     box-shadow: 0 0 16px rgba(0, 0, 0, 0.25);
   }
-  .uh-fmp-mini-dot img {
+  .uh-fpw-mini-dot img {
     display: block;
     width: 100%;
     height: 100%;
     object-fit: cover;
   }
-  .uh-fmp-mini-plus {
+  .uh-fpw-mini-plus {
     position: absolute;
     inset: 0;
     display: flex;
@@ -168,26 +168,26 @@ export const styles = css`
     opacity: 0;
     transition: opacity 0.15s ease;
   }
-  .uh-fmp-mini-dot:hover .uh-fmp-mini-plus {
+  .uh-fpw-mini-dot:hover .uh-fpw-mini-plus {
     opacity: 1;
   }
 
   /* ===== 拖拽 ===== */
-  .uh-fmp.uh-fmp-dragging {
+  .uh-fpw.uh-fpw-dragging {
     transition: none !important;
     cursor: default;
   }
 
   /* ===== 贴边隐藏（完全隐藏 + 边缘触发把手，JS 控制 hover 类滑出） ===== */
-  .uh-fmp.uh-fmp-edge-left { transform: translateX(-100%); }
-  .uh-fmp.uh-fmp-edge-right { transform: translateX(100%); }
-  .uh-fmp.uh-fmp-edge-top { transform: translateY(-100%); }
-  .uh-fmp.uh-fmp-edge-bottom { transform: translateY(100%); }
-  .uh-fmp.uh-fmp-edge-hover {
+  .uh-fpw.uh-fpw-edge-left { transform: translateX(-100%); }
+  .uh-fpw.uh-fpw-edge-right { transform: translateX(100%); }
+  .uh-fpw.uh-fpw-edge-top { transform: translateY(-100%); }
+  .uh-fpw.uh-fpw-edge-bottom { transform: translateY(100%); }
+  .uh-fpw.uh-fpw-edge-hover {
     transform: translate(0, 0) !important;
   }
   /* 边缘触发把手（贴边后露出的触发元素，hover 滑出、点击完全恢复） */
-  .uh-fmp-edge-trigger {
+  .uh-fpw-edge-trigger {
     position: fixed;
     width: 8px;
     height: 35px;
@@ -199,30 +199,30 @@ export const styles = css`
     cursor: pointer;
     z-index: 99999999;
   }
-  .uh-fmp-edge-trigger:hover {
+  .uh-fpw-edge-trigger:hover {
     background: #1A1B1D;
   }
-  .uh-fmp-edge-trigger-top,
-  .uh-fmp-edge-trigger-bottom {
+  .uh-fpw-edge-trigger-top,
+  .uh-fpw-edge-trigger-bottom {
     width: 35px;
     height: 8px;
   }
 
   /* ===== 关闭动画 ===== */
-  .uh-fmp.uh-fmp-closing {
+  .uh-fpw.uh-fpw-closing {
     opacity: 0;
     transition: opacity 0.2s ease;
   }
 
   /* ===== 底部操作按钮（小程序申请开关开启后显示） ===== */
-  .uh-fmp-actions {
+  .uh-fpw-actions {
     display: flex;
     flex-wrap: wrap;
     gap: 8px;
     width: 100%;
     margin-top: 2px;
   }
-  .uh-fmp-btn {
+  .uh-fpw-btn {
     flex: 1;
     box-sizing: border-box;
     border: 1px solid rgba(0,0,0,0.05);
@@ -238,18 +238,18 @@ export const styles = css`
     box-shadow: 0 0 12px rgba(0, 0, 0, 0.05);
     transition: background 0.15s ease;
   }
-  .uh-fmp-btn:hover {
+  .uh-fpw-btn:hover {
     background: #f1f5f9;
   }
-  .uh-fmp-btn-primary {
+  .uh-fpw-btn-primary {
     background: #1A1B1D;
     border-color: transparent;
     color: #ffffff;
   }
-  .uh-fmp-btn-primary:hover {
+  .uh-fpw-btn-primary:hover {
     background: #1a1b1de3;
   }
-  .uh-fmp-hint {
+  .uh-fpw-hint {
     flex-basis: 100%;
     text-align: center;
     font-size: 10px;
@@ -258,7 +258,7 @@ export const styles = css`
   }
 
   /* ===== 弹窗（遮罩 + 居中卡片，渲染于 shadow DOM 内） ===== */
-  .uh-fmp-overlay {
+  .uh-fpw-overlay {
     position: fixed;
     inset: 0;
     z-index: 2147483000;
@@ -272,7 +272,7 @@ export const styles = css`
     padding: 16px;
     box-sizing: border-box;
   }
-  .uh-fmp-modal {
+  .uh-fpw-modal {
     box-sizing: border-box;
     width: 100%;
     max-width: 420px;
@@ -289,19 +289,19 @@ export const styles = css`
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC",
       "Microsoft YaHei", sans-serif;
   }
-  .uh-fmp-modal-header {
+  .uh-fpw-modal-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
     padding: 12px 14px;
     border-bottom: 1px solid rgba(0, 0, 0, 0.06);
   }
-  .uh-fmp-modal-title {
+  .uh-fpw-modal-title {
     font-size: 15px;
     font-weight: 600;
     color: #1a1a1a;
   }
-  .uh-fmp-modal-close {
+  .uh-fpw-modal-close {
     width: 20px;
     height: 20px;
     display: flex;
@@ -316,21 +316,21 @@ export const styles = css`
     color: #999999;
     cursor: pointer;
   }
-  .uh-fmp-modal-close:hover {
+  .uh-fpw-modal-close:hover {
     color: #333333;
   }
-  .uh-fmp-modal-body {
+  .uh-fpw-modal-body {
     padding: 14px;
     overflow-y: auto;
   }
 
   /* ===== 申请表单 ===== */
-  .uh-fmp-form {
+  .uh-fpw-form {
     display: flex;
     flex-direction: column;
     gap: 10px;
   }
-  .uh-fmp-field {
+  .uh-fpw-field {
     display: flex;
     flex-direction: column;
     gap: 4px;
@@ -338,13 +338,13 @@ export const styles = css`
     color: #666666;
   }
   /* 申请弹窗面板内字段上下间距（footer 内验证码区不受影响） */
-  .uh-fmp-apply-panel .uh-fmp-field {
+  .uh-fpw-apply-panel .uh-fpw-field {
     margin-bottom: 10px;
   }
-  .uh-fmp-apply-panel .uh-fmp-field:last-child {
+  .uh-fpw-apply-panel .uh-fpw-field:last-child {
     margin-bottom: 0;
   }
-  .uh-fmp-field input[type="text"] {
+  .uh-fpw-field input[type="text"] {
     box-sizing: border-box;
     width: 100%;
     height: 32px;
@@ -357,13 +357,13 @@ export const styles = css`
     font-family: inherit;
     background: #ffffff;
   }
-  .uh-fmp-field input[type="text"]:focus,
-  .uh-fmp-field select:focus,
-  .uh-fmp-field textarea:focus {
+  .uh-fpw-field input[type="text"]:focus,
+  .uh-fpw-field select:focus,
+  .uh-fpw-field textarea:focus {
     border-color: #37c2bc;
   }
-  .uh-fmp-field select,
-  .uh-fmp-field textarea {
+  .uh-fpw-field select,
+  .uh-fpw-field textarea {
     box-sizing: border-box;
     width: 100%;
     border: 1px solid rgba(0, 0, 0, 0.12);
@@ -374,22 +374,22 @@ export const styles = css`
     font-family: inherit;
     background: #ffffff;
   }
-  .uh-fmp-field select {
+  .uh-fpw-field select {
     height: 32px;
     padding: 0 8px;
   }
-  .uh-fmp-field textarea {
+  .uh-fpw-field textarea {
     padding: 6px 10px;
     resize: vertical;
   }
-  .uh-fmp-captcha-input {
+  .uh-fpw-captcha-input {
     display: flex;
     gap: 8px;
   }
-  .uh-fmp-captcha-input input {
+  .uh-fpw-captcha-input input {
     flex: 1;
   }
-  .uh-fmp-captcha-img {
+  .uh-fpw-captcha-img {
     width: 100px;
     height: 32px;
     border-radius: 8px;
@@ -397,18 +397,18 @@ export const styles = css`
     cursor: pointer;
     object-fit: cover;
   }
-  .uh-fmp-form-actions {
+  .uh-fpw-form-actions {
     display: flex;
     gap: 8px;
     margin-top: 12px;
   }
 
   /* ===== 申请弹窗：分段器 + 面板 + 底部固定操作区 ===== */
-  .uh-fmp-modal-apply {
+  .uh-fpw-modal-apply {
     max-height: 80vh;
   }
   /* shadcn Tabs（radix tabs）风格分段器：track 连体浅灰背景，激活项浮起 */
-  .uh-fmp-segmented {
+  .uh-fpw-segmented {
     display: flex;
     gap: 4px;
     margin: 8px 14px 0;
@@ -416,7 +416,7 @@ export const styles = css`
     background: rgba(0, 0, 0, 0.05);
     border-radius: 8px;
   }
-  .uh-fmp-seg-item {
+  .uh-fpw-seg-item {
     flex: 1;
     box-sizing: border-box;
     padding: 6px 0;
@@ -428,20 +428,20 @@ export const styles = css`
     cursor: pointer;
     font-family: inherit;
   }
-  .uh-fmp-seg-active {
+  .uh-fpw-seg-active {
     /* 激活块：主色 #1A1B1D + 白字 + 轻投影 */
     background: #1A1B1D;
     color: #ffffff;
     font-weight: 600;
     box-shadow: 0 1px 2px rgba(14, 23, 49, 0.35);
   }
-  .uh-fmp-apply-body {
+  .uh-fpw-apply-body {
     display: flex;
     flex-direction: column;
     padding: 10px 14px 14px;
     overflow: hidden;
   }
-  .uh-fmp-apply-panels {
+  .uh-fpw-apply-panels {
     flex: 1;
     min-height: 0;
     max-height: 40vh; /* 内容区最大高度 40vh + 滚动 */
@@ -449,33 +449,33 @@ export const styles = css`
     scrollbar-width: thin; /* Firefox */
     scrollbar-color: rgba(120, 130, 150, 0.4) transparent;
   }
-  .uh-fmp-apply-panels::-webkit-scrollbar {
+  .uh-fpw-apply-panels::-webkit-scrollbar {
     width: 6px;
   }
-  .uh-fmp-apply-panels::-webkit-scrollbar-track {
+  .uh-fpw-apply-panels::-webkit-scrollbar-track {
     background: transparent;
   }
-  .uh-fmp-apply-panels::-webkit-scrollbar-thumb {
+  .uh-fpw-apply-panels::-webkit-scrollbar-thumb {
     background: rgba(120, 130, 150, 0.4);
     border-radius: 3px;
   }
-  .uh-fmp-apply-panels::-webkit-scrollbar-thumb:hover {
+  .uh-fpw-apply-panels::-webkit-scrollbar-thumb:hover {
     background: rgba(120, 130, 150, 0.6);
   }
-  .uh-fmp-apply-footer {
+  .uh-fpw-apply-footer {
     flex-shrink: 0;
     border-top: 1px solid rgba(0, 0, 0, 0.06);
     padding-top: 10px;
     margin-top: 10px;
   }
   /* 预览图动态行 */
-  .uh-fmp-shot-row {
+  .uh-fpw-shot-row {
     display: flex;
     align-items: center;
     gap: 6px;
     margin-top: 6px; /* 预览图行之间上下间距 */
   }
-  .uh-fmp-shot-input {
+  .uh-fpw-shot-input {
     flex: 1;
     min-width: 0;
     box-sizing: border-box;
@@ -489,10 +489,10 @@ export const styles = css`
     font-family: inherit;
     background: #ffffff;
   }
-  .uh-fmp-shot-input:focus {
+  .uh-fpw-shot-input:focus {
     border-color: #37c2bc;
   }
-  .uh-fmp-shot-remove {
+  .uh-fpw-shot-remove {
     flex-shrink: 0;
     width: 28px;
     height: 28px;
@@ -505,16 +505,16 @@ export const styles = css`
     cursor: pointer;
     padding: 0;
   }
-  .uh-fmp-shot-remove:hover {
+  .uh-fpw-shot-remove:hover {
     background: rgba(0, 0, 0, 0.1);
     color: #333333;
   }
-  .uh-fmp-shot-add {
+  .uh-fpw-shot-add {
     margin-top: 2px;
   }
 
   /* ===== 友链信息（小程序信息 + 博主信息，输入框行 + 复制） ===== */
-  .uh-fmp-info-card {
+  .uh-fpw-info-card {
     display: flex;
     flex-direction: column;
     gap: 6px;
@@ -523,25 +523,25 @@ export const styles = css`
     background: rgba(0, 0, 0, 0.03);
     margin-bottom: 10px;
   }
-  .uh-fmp-info-card-title {
+  .uh-fpw-info-card-title {
     font-size: 13px;
     font-weight: 600;
     color: #1a1a1a;
     margin-bottom: 2px;
   }
-  .uh-fmp-copy-row {
+  .uh-fpw-copy-row {
     display: flex;
     align-items: center;
     gap: 6px;
   }
-  .uh-fmp-copy-label {
+  .uh-fpw-copy-label {
     flex-shrink: 0;
     font-size: 12px;
     color: #000000; /* label 正常黑色 */
     min-width: 64px;
     text-align: right;
   }
-  .uh-fmp-copy-input {
+  .uh-fpw-copy-input {
     flex: 1;
     min-width: 0;
     box-sizing: border-box;
@@ -556,10 +556,10 @@ export const styles = css`
     outline: none;
     font-family: inherit;
   }
-  .uh-fmp-copy-input:focus {
+  .uh-fpw-copy-input:focus {
     border-color: #37c2bc;
   }
-  .uh-fmp-copy-textarea {
+  .uh-fpw-copy-textarea {
     height: auto;
     min-height: 40px;
     padding: 5px 8px;
@@ -567,17 +567,17 @@ export const styles = css`
     resize: none;
     font-family: inherit;
   }
-  .uh-fmp-copy-btn {
+  .uh-fpw-copy-btn {
     flex-shrink: 0;
     flex: none;
     width: 60px;
     padding: 8px 0;
   }
-  .uh-fmp-copy-all {
+  .uh-fpw-copy-all {
     width: 100%;
   }
-  .uh-fmp-loading,
-  .uh-fmp-empty {
+  .uh-fpw-loading,
+  .uh-fpw-empty {
     padding: 20px 0;
     text-align: center;
     font-size: 13px;

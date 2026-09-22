@@ -2,8 +2,8 @@
  * 悬浮卡片类型定义。
  */
 
-/** 悬浮卡片配置（FloatingWindowHeadProcessor 内联注入 window.__UNI_HALO_FLOAT_MINI_PROFILE__） */
-export interface FloatMiniProfileConfig {
+/** 悬浮卡片配置（FloatingWindowHeadProcessor 内联注入 window.__UNI_HALO_FLOAT_PROFILE_WIDGET__） */
+export interface FloatProfileWidgetConfig {
   enabled: boolean;
   pageScope: "all" | "only" | "except";
   pagePatterns: string;
@@ -71,6 +71,6 @@ export interface BloggerInfo {
 
 declare global {
   interface Window {
-    __UNI_HALO_FLOAT_MINI_PROFILE__?: FloatMiniProfileConfig;
+    __UNI_HALO_FLOAT_PROFILE_WIDGET__?: FloatProfileWidgetConfig;
   }
 }

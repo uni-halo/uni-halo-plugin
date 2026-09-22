@@ -26,7 +26,7 @@ import cn.ialley.unihalo.vo.LoveDiaryThemeConfig;
  * 恋爱日记主题页 Head 注入处理器。
  *
  * 注入门槛（fail-closed，两条都要满足）：模板 {@code _templateId} 以
- * {@code plugin:uni-halo:love} 开头，且 {@code themeConfig.loveDiaryTheme.enabled == true}
+ * {@code plugin:uni-halo:love} 开头，且 {@code themeTemplateConfig.loveDiaryTheme.enabled == true}
  * 且配置读取成功 —— 关闭或配置异常时一个字节都不注入。样式/脚本走同源静态前缀而非 CDN，
  * 避免离线/内网白屏、CSP 坑与版本漂移。
  *

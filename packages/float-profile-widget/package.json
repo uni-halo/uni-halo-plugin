@@ -1,8 +1,9 @@
 {
+  "name": "@unihalo/float-profile-widget",
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "description": "主题端悬浮卡片（小程序太阳码）",
+  "description": "主题组件：悬浮名片卡片（小程序太阳码）",
   "scripts": {
     "build": "vite build",
     "dev": "vite",

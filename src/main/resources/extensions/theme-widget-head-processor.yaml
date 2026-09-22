@@ -1,0 +1,9 @@
+apiVersion: plugin.halo.run/v1alpha1
+kind: ExtensionDefinition
+metadata:
+  name: theme-widget-head-extension
+spec:
+  extensionPointName: template-head-processor
+  className: cn.ialley.unihalo.process.ThemeWidgetHeadProcessor
+  displayName: 主题组件注入
+  description: 向主题页面注入各主题组件的配置与脚本。

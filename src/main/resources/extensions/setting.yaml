@@ -201,12 +201,12 @@ spec:
                   value: ""
                   help: 广告ID，请在 微信小程序广告管理中获取。
                   validation: required
-    - group: themeConfig
-      label: 主题展示
+    - group: themeWidgetConfig
+      label: 主题组件
       formSchema:
         - $formkit: group
-          name: floatingWindow
-          label: 主题悬浮窗
+          name: floatProfileWidget
+          label: 悬浮名片卡片
           children:
             - $formkit: switch
               name: enabled
@@ -364,6 +364,9 @@ spec:
               label: 小程序申请
               value: false
               help: 开启后悬浮卡片底部显示「申请」「友链信息」两个按钮，点击分别弹出小程序申请表单与友链信息展示。
+    - group: themeTemplateConfig
+      label: 主题模板
+      formSchema:
         - $formkit: group
           name: loveDiaryTheme
           label: 恋爱日记主题页

@@ -3,24 +3,27 @@ plugins {
     id "com.github.node-gradle.node" version "7.1.0"
 }
 
-group 'cn.ialley.unihalo.packages.float-mini-profile'
+group 'cn.ialley.unihalo.packages.float-profile-widget'
 
 // pnpm workspace：安装统一在仓库根执行（单份根 pnpm-lock.yaml）
 tasks.named('pnpmInstall') {
     workingDir = rootDir
+    // 输出（node_modules）实际落在仓库根，由插件默认状态跟踪指向子工程目录会报不可读
+    doNotTrackState('pnpm workspace 安装在仓库根执行，node_modules 由各工程共享')
     inputs.files(rootProject.file('pnpm-lock.yaml'), rootProject.file('pnpm-workspace.yaml'))
 }
 
 tasks.register('pnpmBuild', PnpmTask) {
     group = 'build'
-    description = 'Build the float-mini-profile package using pnpm'
+    description = 'Build the float-profile-widget package using pnpm'
     args = ['build']
     dependsOn tasks.named('pnpmInstall')
     inputs.dir(layout.projectDirectory.dir('src'))
     inputs.files(fileTree(
         dir: layout.projectDirectory,
         includes: ['*.cjs', '*.ts', '*.js', '*.json', '*.yaml']))
-    // 产物由 vite copyToStatic 插件拷入 src/main/resources/static/floating-window/
+    // 产物由 vite copyToStatic 插件拷入 src/main/resources/static/widgets/float-profile-widget/
+    // vite outDir 已对齐 bundler-kit 约定指向 build/dist，outputs 与其一致
     outputs.dir(layout.buildDirectory.dir('dist'))
 }
 
