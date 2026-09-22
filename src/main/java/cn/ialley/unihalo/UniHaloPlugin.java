@@ -189,6 +189,7 @@ public class UniHaloPlugin extends BasePlugin {
         unregisterQuietly(LoveAlbum.class);
         unregisterQuietly(LoveDailyItem.class);
         unregisterQuietly(LoveStory.class);
+        unregisterQuietly(LoveInfo.class);
         unregisterQuietly(Notice.class);
         unregisterQuietly(NoticeType.class);
         unregisterQuietly(Banner.class);
