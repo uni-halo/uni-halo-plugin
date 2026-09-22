@@ -393,7 +393,7 @@ public class FeatureConfig extends AbstractExtension {
      * 恋爱模块入口（三模块共用；loveDiary 仅使用密码相关字段）：
      * enabled 是否在恋爱页展示入口；passwordEnabled/password/passwordHash/
      * passwordRemoved 为入口密码，与恋爱相册密码同一套 BCrypt 语义：管理端设置后，
-     * 小程序端访问对应模块数据前需先经 {@code POST /love-modules/unlock}
+     * 小程序端访问对应模块数据前需先经 {@code POST /love-modules/-/unlock}
      * 验证密码换取 HMAC token。
      * 三模块（ourStory/lovePhoto/loveDaily）另承载 app 端入口列表数据：
      * title/subTitle/titleColor/subTitleColor/iconBgColor/path/priority

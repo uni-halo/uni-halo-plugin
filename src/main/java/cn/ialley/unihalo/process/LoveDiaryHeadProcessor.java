@@ -101,7 +101,7 @@ public class LoveDiaryHeadProcessor implements TemplateHeadProcessor {
         Map<String, Object> script = new LinkedHashMap<>();
         script.put("apiBase", PUBLIC_API_BASE);
         script.put("captchaApi", PUBLIC_API_BASE + "/captcha/generate");
-        script.put("moduleUnlockApi", PUBLIC_API_BASE + "/love-modules/unlock");
+        script.put("moduleUnlockApi", PUBLIC_API_BASE + "/love-modules/-/unlock");
         script.put("albumUnlockApiTemplate", PUBLIC_API_BASE + "/love-albums/{name}/unlock");
         script.put("loveStoriesApi", PUBLIC_API_BASE + "/love-stories");
         script.put("loveAlbumsApi", PUBLIC_API_BASE + "/love-albums");

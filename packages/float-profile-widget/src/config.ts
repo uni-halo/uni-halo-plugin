@@ -41,5 +41,5 @@ migrateLegacyKeys("uh-fpw-apply-draft", "uh-fmp-apply-draft", localStorage);
 export const API_BASE = "/apis/api.unihalo.ialley.cn/v1alpha1";
 export const CAPTCHA_URL = API_BASE + "/captcha/generate";
 export const LINK_LIST_URL = API_BASE + "/mini-program-links";
-export const LINK_SUBMIT_URL = API_BASE + "/mini-program-links/submissions";
+export const LINK_SUBMIT_URL = API_BASE + "/mini-program-links/-/submissions";
 export const CONFIGS_URL = API_BASE + "/getConfigs";

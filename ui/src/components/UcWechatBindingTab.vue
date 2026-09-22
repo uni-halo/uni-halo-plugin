@@ -134,7 +134,7 @@ onUnmounted(stopPolling);
     <div v-else class="flex flex-col gap-3">
       <div class="flex items-center gap-2">
         <VTag>未绑定</VTag>
-        <span class="text-sm text-gray-600">绑定后可使用微信小程序一键登录本账号</span>
+        <span class="text-sm text-gray-600">绑定后可以在 UniHalo 客户端使用微信一键登录本账号。</span>
       </div>
       <VSpace>
         <VButton type="secondary" size="sm" @click="openModal">扫码绑定微信</VButton>

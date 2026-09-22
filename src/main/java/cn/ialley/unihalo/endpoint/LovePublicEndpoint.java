@@ -36,7 +36,7 @@ import run.halo.app.extension.ListResult;
  * 恋爱配置统一经公开 getConfigs 的 loveConfig 组下发，不再提供独立的 /love-config
  * 聚合接口；本端点仅保留恋爱数据接口，相册接口按锁定状态脱敏。模块入口密码：三个入口
  * 可分别设密码，设置后数据接口要求携带 {@code ?token=}（经 {@code POST
- * /love-modules/unlock} 校验密码换取，30 分钟有效），未带或无效返回 401；
+ * /love-modules/-/unlock} 校验密码换取，30 分钟有效），未带或无效返回 401；
  * 未设密码的模块不校验（老客户端无感）。相册级密码保持外层模块锁 + 内层相册锁。
  *
  * @author 小莫唐尼
