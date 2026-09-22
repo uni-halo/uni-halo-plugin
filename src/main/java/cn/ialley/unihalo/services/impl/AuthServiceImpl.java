@@ -248,7 +248,7 @@ public class AuthServiceImpl implements AuthService {
                         return Mono.error(new AuthException("BAD_REQUEST",
                                 "密码长度至少 " + Constants.PASSWORD_MIN_LENGTH + " 位"));
                     }
-                    return userService.updatePassword(username, newPassword)
+                    return userService.updateWithRawPassword(username, newPassword)
                             .then(Mono.defer(() -> markPasswordSet(username)))
                             // 设密成功后发确认通知（通知失败不阻断主流程）
                             .then(notificationHelper.emitPasswordSet(username));
@@ -737,7 +737,17 @@ public class AuthServiceImpl implements AuthService {
                 user.getMetadata().getName(),
                 user.getSpec().getDisplayName(),
                 user.getSpec().getAvatar(),
-                user.getSpec().getEmail());
+                user.getSpec().getEmail(),
+                passwordSetByUser(user));
+    }
+
+    /** 用户是否「自主设置过密码」：读首次设密接口写入的注解，缺失即 false。 */
+    private static boolean passwordSetByUser(User user) {
+        var annotations = user.getMetadata() == null
+                ? null : user.getMetadata().getAnnotations();
+        return annotations != null
+                && Boolean.parseBoolean(annotations.get(
+                        Constants.PASSWORD_SET_BY_USER_ANNOTATION));
     }
 
     /**

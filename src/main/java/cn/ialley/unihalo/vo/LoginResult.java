@@ -23,8 +23,16 @@ public record LoginResult(
         List<PermissionRule> permissions
 ) {
 
-    /** 登录用户摘要（不含任何敏感字段）。 */
-    public record LoginUser(String name, String displayName, String avatar, String email) {
+    /**
+     * 登录用户摘要（不含任何敏感字段）。
+     *
+     * @param passwordSetByUser 用户是否「自主设置过密码」（读 {@code unihalo.ialley.cn/password-set-by-user}
+     *                          注解）。与 Halo UC 的 {@code passwordSet}（密码哈希是否存在）不同：
+     *                          插件代生成的随机/固定密码用户该值为 false，app 端据此走免旧密码的
+     *                          首次设密通道（方案 B）。
+     */
+    public record LoginUser(String name, String displayName, String avatar, String email,
+            boolean passwordSetByUser) {
     }
 
     /** 由角色模板递归展开的 RBAC 规则。 */
