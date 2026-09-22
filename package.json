@@ -1,0 +1,9 @@
+{
+  "name": "@uni-halo/uni-halo-plugin",
+  "private": true,
+  "packageManager": "pnpm@10.33.0",
+  "scripts": {
+    "build": "pnpm -r run build",
+    "type-check": "pnpm -r run type-check"
+  }
+}

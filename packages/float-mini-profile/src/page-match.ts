@@ -1,5 +1,5 @@
 /**
- * 页面显示范围匹配（对齐 plugin-announcement 的 matchUrlPattern 语义）：
+ * 页面显示范围匹配：
  * pageScope = all 恒显示；only 仅匹配路径显示；except 匹配路径不显示。
  * 通配符：* 匹配非 / 字符，** 匹配任意字符（含 /）；空或 / 表示仅首页。
  */

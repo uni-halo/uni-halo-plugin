@@ -5,6 +5,12 @@ plugins {
 
 group 'cn.ialley.unihalo.ui'
 
+// pnpm workspace：安装统一在仓库根执行（单份根 pnpm-lock.yaml）
+tasks.named('pnpmInstall') {
+    workingDir = rootDir
+    inputs.files(rootProject.file('pnpm-lock.yaml'), rootProject.file('pnpm-workspace.yaml'))
+}
+
 tasks.register('pnpmBuild', PnpmTask) {
     group = 'build'
     description = 'Build the UI project using pnpm'

@@ -1,0 +1,9 @@
+packages:
+  - "ui"
+  - "packages/**"
+
+allowBuilds:
+  esbuild: true
+  core-js: true
+  "@parcel/watcher": true
+  vue-demi: true

@@ -7,7 +7,8 @@ uni-halo-plugin：Halo 2.26 插件（Java 21 + Gradle 9.4 wrapper），前端为
 - 完整构建（含 UI）：`./gradlew build` —— 根工程 `classes` 依赖 `processUiResources`，会自动触发 `:ui:assemble`（pnpm build）并把 `ui/build/dist` 拷入 `build/resources/main/ui`，因此**构建必须联网装 pnpm 依赖**（Node ^20.19 或 >=22.12，pnpm 10，CI 用 Node 24）。
 - 启动内置 Halo 调试环境：`./gradlew haloServer`（来自 `run.halo.plugin.devtools` 插件）。
 - 后端测试：`./gradlew test`（JUnit 5 + Mockito，见 `src/test/java`）。
-- UI 单独操作：`cd ui && pnpm install && pnpm dev`。注意 `dev` 是 `vite build --watch --mode=development`（监听重建，不是开发服务器）。
+- **pnpm workspace（2026-09-22 起）**：`ui` 与 `packages/float-mini-profile` 已并入仓库根 pnpm workspace（根 `pnpm-workspace.yaml` + 根 `package.json`），**依赖统一在仓库根安装**（根 `pnpm install`），单份根 `pnpm-lock.yaml`（子工程各自 lockfile 已删除，勿再生成）；Gradle 子工程 `pnpmInstall` 的 `workingDir` 已指向 rootDir，`./gradlew build` 自动从根安装。
+- UI 单独操作：仓库根 `pnpm install` 后，`cd ui && pnpm dev`（无需各自 install）。注意 `dev` 是 `vite build --watch --mode=development`（监听重建，不是开发服务器）。
 - UI 校验：`pnpm type-check`（vue-tsc）、`pnpm test:unit`（vitest）、`./gradlew :ui:pnpmCheck`（check 任务自动跑）。`pnpm lint` = oxlint + eslint，两者均带 `--fix`，**会直接改写文件**；格式化用 `pnpm format`（prettier）。
 - 悬浮卡片独立构建（主题端注入资源，2026-09-11）：`cd packages/float-mini-profile && pnpm install && pnpm build` —— **Lit + shadow DOM** 组件（lit 运行时打进产物），vite lib mode（iife + esbuild minify）产出**单文件**压缩版 `float-mini-profile.js`（样式内聚于组件、无独立 CSS），`copyToStatic` 插件自动拷入 `src/main/resources/static/floating-window/`（文件名不变，插件注入 URL 无感）；**改 `packages/float-mini-profile/src/` 源码后必须重新构建再打包插件**。
 
