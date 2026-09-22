@@ -16,16 +16,20 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import cn.ialley.unihalo.constants.Constants;
 import cn.ialley.unihalo.exception.AuthException;
+import cn.ialley.unihalo.exception.BizErrorCode;
 import cn.ialley.unihalo.services.AuthService;
 import cn.ialley.unihalo.services.BindTicketService;
 import cn.ialley.unihalo.services.PatIssuer;
 import cn.ialley.unihalo.services.WechatService;
 import cn.ialley.unihalo.utils.LoginAttemptGuard;
 import cn.ialley.unihalo.utils.LoginConfigResolver;
+import cn.ialley.unihalo.utils.NotificationHelper;
+import cn.ialley.unihalo.utils.UserConnectionSupport;
 import cn.ialley.unihalo.vo.LoginConfig;
 import cn.ialley.unihalo.vo.LoginResult;
 import cn.ialley.unihalo.vo.ProfileVo;
 import cn.ialley.unihalo.vo.RegisterForm;
+import cn.ialley.unihalo.vo.TokenCheckVo;
 import cn.ialley.unihalo.vo.WechatBindingVo;
 import run.halo.app.core.extension.User;
 import run.halo.app.core.extension.UserConnection;
@@ -35,6 +39,7 @@ import run.halo.app.core.user.service.SignUpData;
 import run.halo.app.core.user.service.UserService;
 import run.halo.app.extension.Metadata;
 import run.halo.app.extension.ReactiveExtensionClient;
+import run.halo.app.security.PersonalAccessToken;
 
 /**
  * 移动端登录实现。三种登录方式（密码 / 微信 / 已登录绑定微信）最终都收敛到
@@ -58,6 +63,9 @@ public class AuthServiceImpl implements AuthService {
     /** 自动注册时最多连续尝试多少个序号（并发抢号 + 已存在时的兜底次数）。 */
     private static final int MAX_USERNAME_ATTEMPTS = 5;
 
+    /** PC 端主动取消扫码时回传给用户的原因文案（票据落到 FAILED，UC 弹窗据此提示）。 */
+    private static final String REJECT_REASON = "你已取消本次绑定，请重新生成二维码";
+
     /**
      * 注册失败中「用户可修复」的错误码（计入限流）：
      * 用户名重复/受限、验证码无效、邮箱被占、未同意协议。
@@ -65,8 +73,11 @@ public class AuthServiceImpl implements AuthService {
      * 客户端重试无意义，计入限流只会把配置问题变成 429 迷惑用户。
      */
     private static final Set<String> ACCOUNTABLE_REGISTER_CODES = Set.of(
-            "USERNAME_EXISTS", "NAME_RESTRICTED", "EMAIL_CODE_INVALID",
-            "EMAIL_ALREADY_TAKEN", "AGREEMENT_REQUIRED");
+            BizErrorCode.USERNAME_EXISTS.getCode(),
+            BizErrorCode.NAME_RESTRICTED.getCode(),
+            BizErrorCode.EMAIL_CODE_INVALID.getCode(),
+            BizErrorCode.EMAIL_ALREADY_TAKEN.getCode(),
+            BizErrorCode.AGREEMENT_REQUIRED.getCode());
 
     private final UserService userService;
     private final RoleService roleService;
@@ -76,14 +87,14 @@ public class AuthServiceImpl implements AuthService {
     private final ReactiveExtensionClient client;
     private final LoginAttemptGuard attemptGuard;
     private final BindTicketService bindTicketService;
-    private final cn.ialley.unihalo.utils.NotificationHelper notificationHelper;
+    private final NotificationHelper notificationHelper;
 
     @Override
     public Mono<LoginResult> loginByPassword(String username, String rawPassword, String clientIp) {
         return configResolver.config()
                 .filter(LoginConfig::passwordLoginEnabled)
                 .switchIfEmpty(Mono.error(
-                        new AuthException("PASSWORD_LOGIN_DISABLED", "账号密码登录未开启")))
+                        BizErrorCode.PASSWORD_LOGIN_DISABLED.toException()))
                 .flatMap(config -> requireNotLocked(username, clientIp)
                         .then(Mono.defer(() -> authenticate(username, rawPassword)
                                 .doOnSuccess(user -> attemptGuard.resetUsername(username))
@@ -97,7 +108,7 @@ public class AuthServiceImpl implements AuthService {
         return configResolver.config()
                 .filter(LoginConfig::wechatLoginEnabled)
                 .switchIfEmpty(Mono.error(
-                        new AuthException("WECHAT_LOGIN_DISABLED", "微信登录未开启")))
+                        BizErrorCode.WECHAT_LOGIN_DISABLED.toException()))
                 .flatMap(config -> configResolver.wechatCredential(config.wechatSecretName())
                         .flatMap(credential -> wechatService.code2Session(
                                 credential.appId(), credential.appSecret(), code))
@@ -114,10 +125,12 @@ public class AuthServiceImpl implements AuthService {
             // 邮箱格式/验证码、注册协议）由 Halo signUp 内部 fail closed 校验并在此映射成中文。
             if (form == null || isBlank(form.username()) || isBlank(form.displayName())
                     || isBlank(form.password())) {
-                return Mono.error(new AuthException("BAD_REQUEST", "请填写完整的注册信息"));
+                return Mono.error(BizErrorCode.BAD_REQUEST
+                        .toException("请填写完整的注册信息"));
             }
             if (!form.password().equals(form.confirmPassword())) {
-                return Mono.error(new AuthException("BAD_REQUEST", "两次输入的密码不一致"));
+                return Mono.error(BizErrorCode.BAD_REQUEST
+                        .toException("两次输入的密码不一致"));
             }
             return requireNotLocked(form.username(), clientIp)
                     .then(configResolver.config())
@@ -145,14 +158,16 @@ public class AuthServiceImpl implements AuthService {
         return configResolver.config()
                 .filter(LoginConfig::wechatLoginEnabled)
                 .switchIfEmpty(Mono.error(
-                        new AuthException("WECHAT_LOGIN_DISABLED", "微信登录未开启")))
+                        BizErrorCode.WECHAT_LOGIN_DISABLED.toException()))
                 .flatMap(config -> configResolver.wechatCredential(config.wechatSecretName())
                         .flatMap(credential -> wechatService.code2Session(
                                 credential.appId(), credential.appSecret(), code)))
                 .flatMap(session -> connect(username, identity(session)))
                 .onErrorMap(e -> !(e instanceof AuthException),
                         this::unexpectedWechatFailure)
-                .then();
+                // 绑定成功发通知（失败不阻断主流程，沿用通知侧 onErrorResume 口径）
+                .then(Mono.defer(() -> notificationHelper.emitWechatBound(
+                        username, NotificationHelper.BIND_WAY_APP)));
     }
 
     @Override
@@ -161,11 +176,37 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
+    public Mono<TokenCheckVo> tokenCheck(String username, String patName) {
+        if (patName == null) {
+            // 非令牌登录（如浏览器会话 Cookie）：认证链放行即有效，
+            // 没有 PAT 扩展可查，也就没有令牌元数据可回传
+            return Mono.just(new TokenCheckVo(true, username, null, null));
+        }
+        return client.fetch(PersonalAccessToken.class, patName)
+                .switchIfEmpty(Mono.error(BizErrorCode.UNAUTHENTICATED.toException()))
+                .flatMap(pat -> {
+                    if (!username.equals(pat.getSpec().getUsername())) {
+                        return Mono.error(BizErrorCode.UNAUTHENTICATED.toException());
+                    }
+                    if (pat.getSpec().isRevoked()) {
+                        return Mono.error(
+                                BizErrorCode.UNAUTHENTICATED.toException("令牌已吊销"));
+                    }
+                    var expiresAt = pat.getSpec().getExpiresAt();
+                    if (expiresAt != null && expiresAt.isBefore(Instant.now())) {
+                        return Mono.error(
+                                BizErrorCode.UNAUTHENTICATED.toException("令牌已过期"));
+                    }
+                    return Mono.just(new TokenCheckVo(true, username, patName, expiresAt));
+                });
+    }
+
+    @Override
     public Mono<BindTicketService.IssuedTicket> createBindTicket(String username) {
         return configResolver.config()
                 .filter(LoginConfig::wechatLoginEnabled)
                 .switchIfEmpty(Mono.error(
-                        new AuthException("WECHAT_LOGIN_DISABLED", "微信登录未开启")))
+                        BizErrorCode.WECHAT_LOGIN_DISABLED.toException()))
                 .then(bindTicketService.issue(username));
     }
 
@@ -175,31 +216,101 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public Mono<Void> confirmBindTicket(String ticket, String code) {
+    public Mono<String> bindTicketOwner(String ticket) {
+        return bindTicketService.owner(ticket);
+    }
+
+    @Override
+    public Mono<Void> scanBindTicket(String ticket, String code, String visitor) {
         return configResolver.config()
                 .filter(LoginConfig::wechatLoginEnabled)
                 .switchIfEmpty(Mono.error(
-                        new AuthException("WECHAT_LOGIN_DISABLED", "微信登录未开启")))
+                        BizErrorCode.WECHAT_LOGIN_DISABLED.toException()))
                 .flatMap(config -> configResolver.wechatCredential(config.wechatSecretName())
                         .onErrorResume(e -> Mono.error(e instanceof AuthException ? e
-                                : new AuthException("WECHAT_LOGIN_FAILED",
-                                        "微信登录未配置，请联系站长",
-                                        AuthException.STATUS_FORBIDDEN)))
-                        .flatMap(credential -> bindTicketService.consume(ticket)
-                                .flatMap(consumed -> {
-                                    if (!consumed.success()) {
-                                        return Mono.error(new AuthException(
-                                                "BIND_TICKET_INVALID", consumed.reason(),
-                                                AuthException.STATUS_BAD_REQUEST));
-                                    }
-                                    return wechatService.code2Session(
-                                            credential.appId(), credential.appSecret(), code)
-                                            .flatMap(session -> connect(consumed.username(),
-                                                    identity(session)))
-                                            .onErrorMap(e -> !(e instanceof AuthException),
-                                                    this::unexpectedWechatFailure);
-                                })))
+                                : BizErrorCode.WECHAT_NOT_CONFIGURED.toException()))
+                        .flatMap(credential -> bindTicketService.owner(ticket)
+                                .switchIfEmpty(Mono.error(BizErrorCode.BIND_TICKET_INVALID
+                                        .toException("二维码已失效，请重新生成")))
+                                // 登录态校验必须早于换票：否则「手机登录着 B 却扫了 A 的码」
+                                // 会先把二维码作废，用户退出登录还得回电脑重新生成
+                                .flatMap(owner -> rejectIfSignedInAsOther(owner, visitor))
+                                .flatMap(owner -> wechatService.code2Session(
+                                                credential.appId(), credential.appSecret(), code)
+                                        .flatMap(session -> bindTicketService.scan(ticket,
+                                                identity(session)))
+                                        .flatMap(scanned -> scanned.success()
+                                                ? Mono.<Void>empty()
+                                                : Mono.error(BizErrorCode.BIND_TICKET_INVALID
+                                                        .toException(scanned.reason())))
+                                        .onErrorMap(e -> !(e instanceof AuthException),
+                                                this::unexpectedWechatFailure))))
                 .then();
+    }
+
+    /**
+     * 手机端已登录另一个账号时拒绝扫码。
+     *
+     * <p>扫码绑定的语义是「给<b>发起二维码的那个账号</b>绑上你手机上的微信」，
+     * 不是「给你当前登录的账号绑」。手机号登录着 B 却扫了 A 的码，用户几乎一定是
+     * 想给 B 绑 —— 放行只会把微信静默绑给 A（一对一约束管不了：微信本来就是空闲的）。
+     * 正确出口是引导他去 App 内「我的 - 个人资料」直接绑定。
+     */
+    private Mono<String> rejectIfSignedInAsOther(String owner, String visitor) {
+        boolean anonymous = visitor == null || Constants.ANONYMOUS_USER.equals(visitor);
+        if (anonymous || owner.equals(visitor)) {
+            return Mono.just(owner);
+        }
+        log.warn("【UniHalo】扫码绑定被拒绝（手机端已登录其他账号）：票据归属 {}，来访身份 {}",
+                owner, visitor);
+        return Mono.error(BizErrorCode.BIND_SIGNED_IN_OTHER_ACCOUNT.toException());
+    }
+
+    @Override
+    public Mono<Void> approveBindTicket(String ticket, String username) {
+        return bindTicketService.approve(ticket, username)
+                .flatMap(approved -> {
+                    if (!approved.success()) {
+                        return Mono.error(BizErrorCode.BIND_TICKET_INVALID
+                                .toException(approved.reason()));
+                    }
+                    return connect(username, approved.identity())
+                            .onErrorMap(e -> !(e instanceof AuthException),
+                                    this::unexpectedWechatFailure)
+                            // 成功：落 CONFIRMED 终态 + 发绑定通知
+                            .flatMap(connection -> bindTicketService.confirm(ticket)
+                                    .then(notificationHelper.emitWechatBound(username,
+                                            NotificationHelper.BIND_WAY_SCAN))
+                                    .thenReturn(connection))
+                            // 失败：落 FAILED 终态（含原因）+ 记插件日志
+                            .onErrorResume(e -> settleBindFailure(ticket, username, e)
+                                    .then(Mono.<UserConnection>error(e)));
+                })
+                .then();
+    }
+
+    @Override
+    public Mono<Void> rejectBindTicket(String ticket, String username) {
+        return bindTicketService.reject(ticket, username, REJECT_REASON).then();
+    }
+
+    /**
+     * 扫码绑定失败收尾：把票据落到 {@code FAILED} 并回传原因文案，同时记插件日志。
+     *
+     * <p>票据消费与绑定是两步，若不落终态，UC 轮询只会看到「已消费」并误报成功
+     * （历史缺陷）。日志侧记录目标账号与业务错误码，供站长定位「用户绑不上」类问题；
+     * 微信 code 属一次性凭据，不入日志。
+     */
+    private Mono<Void> settleBindFailure(String ticket, String username, Throwable e) {
+        if (!(e instanceof AuthException auth)) {
+            log.warn("【UniHalo】扫码绑定失败（未预期错误）：ticket={}, 目标账号={}",
+                    ticket, username, e);
+            return bindTicketService.fail(ticket,
+                    BizErrorCode.INTERNAL_ERROR.getMessage());
+        }
+        log.warn("【UniHalo】扫码绑定失败：ticket={}, 目标账号={}, code={}, message={}",
+                ticket, username, auth.getCode(), auth.getMessage());
+        return bindTicketService.fail(ticket, auth.getMessage());
     }
 
     @Override
@@ -215,16 +326,10 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public Mono<WechatBindingVo> myWechatBinding(String username) {
-        return client.list(UserConnection.class,
-                        connection -> connection.getSpec() != null
-                                && Constants.WECHAT_REGISTRATION_ID.equals(
-                                        connection.getSpec().getRegistrationId())
-                                && username.equals(connection.getSpec().getUsername()),
-                        null)
-                .next()
-                .map(connection -> new WechatBindingVo(
+        return UserConnectionSupport.newest(connectionsOf(username))
+                // 本人视角同样只给脱敏值：本人在页面上也不需要完整 openid
+                .map(connection -> WechatBindingVo.masked(
                         username,
-                        true,
                         connection.getSpec().getProviderUserId(),
                         connection.getSpec().getUpdatedAt()))
                 .defaultIfEmpty(WechatBindingVo.unbound(username));
@@ -233,7 +338,7 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public Mono<Void> setInitialPassword(String username, String newPassword) {
         return client.fetch(User.class, username)
-                .switchIfEmpty(Mono.error(new AuthException("USER_NOT_FOUND", "用户不存在")))
+                .switchIfEmpty(Mono.error(BizErrorCode.USER_NOT_FOUND.toException()))
                 .flatMap(user -> {
                     var annotations = user.getMetadata() == null
                             ? null : user.getMetadata().getAnnotations();
@@ -241,11 +346,10 @@ public class AuthServiceImpl implements AuthService {
                             && Boolean.parseBoolean(annotations.get(
                                     Constants.PASSWORD_SET_BY_USER_ANNOTATION))) {
                         // 已自主设置过密码：免旧密码通道关闭，防止登录态泄露后被直接换密
-                        return Mono.error(new AuthException("PASSWORD_ALREADY_SET",
-                                "密码已设置，请使用旧密码修改"));
+                        return Mono.error(BizErrorCode.PASSWORD_ALREADY_SET.toException());
                     }
                     if (newPassword == null || newPassword.length() < Constants.PASSWORD_MIN_LENGTH) {
-                        return Mono.error(new AuthException("BAD_REQUEST",
+                        return Mono.error(BizErrorCode.BAD_REQUEST.toException(
                                 "密码长度至少 " + Constants.PASSWORD_MIN_LENGTH + " 位"));
                     }
                     return userService.updateWithRawPassword(username, newPassword)
@@ -273,17 +377,26 @@ public class AuthServiceImpl implements AuthService {
                 });
     }
 
+    /**
+     * 解除自己的微信绑定（幂等：未绑定时同样返回成功，但不发通知）。
+     *
+     * <p>删除<b>全部</b>绑定记录而非只删第一条：历史重复数据可能给同一账号留下多条
+     * UserConnection，只删一条会出现「已解绑但仍能微信登录」。
+     */
     @Override
     public Mono<Void> unbindMyWechat(String username) {
-        return client.list(UserConnection.class,
-                        connection -> connection.getSpec() != null
-                                && Constants.WECHAT_REGISTRATION_ID.equals(
-                                        connection.getSpec().getRegistrationId())
-                                && username.equals(connection.getSpec().getUsername()),
-                        null)
-                .next()
-                .flatMap(client::delete)
-                .then();
+        return connectionsOf(username)
+                .collectList()
+                .flatMap(connections -> {
+                    if (connections.isEmpty()) {
+                        // 幂等：本来就未绑定，不产生无意义的通知
+                        return Mono.<Void>empty();
+                    }
+                    return Flux.fromIterable(connections)
+                            .flatMap(client::delete)
+                            .then(Mono.defer(() -> notificationHelper.emitWechatUnbound(
+                                    username, NotificationHelper.OPERATOR_SELF)));
+                });
     }
 
     // ---------- 内部实现 ----------
@@ -303,30 +416,29 @@ public class AuthServiceImpl implements AuthService {
             return Mono.empty();
         }
         long minutes = Math.max(1, remaining.toMinutes() + 1);
-        return Mono.error(new AuthException("TOO_MANY_ATTEMPTS",
-                "登录尝试次数过多，请 %d 分钟后再试".formatted(minutes),
-                AuthException.STATUS_TOO_MANY_REQUESTS));
+        return Mono.error(BizErrorCode.TOO_MANY_ATTEMPTS.toException(
+                "登录尝试次数过多，请 %d 分钟后再试".formatted(minutes)));
     }
 
     private Mono<User> authenticate(String username, String rawPassword) {
         if (username == null || username.isBlank() || rawPassword == null
                 || rawPassword.isBlank()) {
-            return Mono.error(new AuthException("BAD_CREDENTIALS", "请输入用户名和密码"));
+            return Mono.error(BizErrorCode.BAD_CREDENTIALS
+                    .toException("请输入用户名和密码"));
         }
         return userService.getUser(username)
-                .onErrorMap(e -> new AuthException("BAD_CREDENTIALS", "用户名或密码错误"))
+                .onErrorMap(e -> BizErrorCode.BAD_CREDENTIALS.toException())
                 .flatMap(user -> {
                     if (Boolean.TRUE.equals(user.getSpec().getDisabled())) {
-                        return Mono.error(new AuthException("USER_DISABLED", "账号已被禁用"));
+                        return Mono.error(BizErrorCode.USER_DISABLED.toException());
                     }
                     if (Boolean.TRUE.equals(user.getSpec().getTwoFactorAuthEnabled())) {
-                        return Mono.error(new AuthException("TWO_FACTOR_REQUIRED",
-                                "该账号已开启二次验证，请使用微信登录"));
+                        return Mono.error(BizErrorCode.TWO_FACTOR_REQUIRED.toException());
                     }
                     return userService.confirmPassword(username, rawPassword)
                             .filter(Boolean::booleanValue)
                             .switchIfEmpty(Mono.error(
-                                    new AuthException("BAD_CREDENTIALS", "用户名或密码错误")))
+                                    BizErrorCode.BAD_CREDENTIALS.toException()))
                             .thenReturn(user);
                 });
     }
@@ -357,42 +469,33 @@ public class AuthServiceImpl implements AuthService {
         }
         var name = e.getClass().getName();
         if ("run.halo.app.infra.exception.DuplicateNameException".equals(name)) {
-            return new AuthException("USERNAME_EXISTS", "用户名已被占用，换一个试试",
-                    AuthException.STATUS_BAD_REQUEST);
+            return BizErrorCode.USERNAME_EXISTS.toException();
         }
         if ("run.halo.app.infra.exception.RestrictedNameException".equals(name)) {
-            return new AuthException("NAME_RESTRICTED", "用户名或昵称不符合规范",
-                    AuthException.STATUS_BAD_REQUEST);
+            return BizErrorCode.NAME_RESTRICTED.toException();
         }
         if ("run.halo.app.infra.exception.EmailVerificationFailed".equals(name)) {
-            return new AuthException("EMAIL_CODE_INVALID", "邮箱验证码无效或已过期",
-                    AuthException.STATUS_BAD_REQUEST);
+            return BizErrorCode.EMAIL_CODE_INVALID.toException();
         }
         if ("run.halo.app.infra.exception.EmailAlreadyTakenException".equals(name)) {
-            return new AuthException("EMAIL_ALREADY_TAKEN", "该邮箱已被其他账号占用",
-                    AuthException.STATUS_BAD_REQUEST);
+            return BizErrorCode.EMAIL_ALREADY_TAKEN.toException();
         }
         if ("run.halo.app.infra.exception.AgreementNotAcceptedException".equals(name)) {
-            return new AuthException("AGREEMENT_REQUIRED", "请先阅读并同意用户协议",
-                    AuthException.STATUS_BAD_REQUEST);
+            return BizErrorCode.AGREEMENT_REQUIRED.toException();
         }
         if (e instanceof ServerWebInputException inputException) {
             var reason = String.valueOf(inputException.getReason());
             if (reason.contains("registration")) {
-                return new AuthException("REGISTER_FORBIDDEN",
-                        "未开放新用户注册",
-                        AuthException.STATUS_FORBIDDEN);
+                return BizErrorCode.REGISTER_FORBIDDEN.toException();
             }
             if (reason.contains("default role")) {
-                return new AuthException("REGISTER_FORBIDDEN",
-                        "站点未配置新用户默认角色，请联系站长检查 Halo 系统设置",
-                        AuthException.STATUS_FORBIDDEN);
+                return BizErrorCode.REGISTER_FORBIDDEN.toException(
+                        "站点未配置新用户默认角色，请联系站长检查 Halo 系统设置");
             }
-            return new AuthException("BAD_REQUEST", "注册信息不合法，请检查后重试",
-                    AuthException.STATUS_BAD_REQUEST);
+            return BizErrorCode.BAD_REQUEST.toException("注册信息不合法，请检查后重试");
         }
         log.warn("【UniHalo】账号密码注册失败", e);
-        return new AuthException("REGISTER_FAILED", "注册失败，请稍后重试");
+        return BizErrorCode.REGISTER_FAILED.toException();
     }
 
     /** 仅「用户可修复」的注册错误计入限流（见 ACCOUNTABLE_REGISTER_CODES）。 */
@@ -459,7 +562,7 @@ public class AuthServiceImpl implements AuthService {
      */
     private Mono<User> requireEnabledUser(User user) {
         if (Boolean.TRUE.equals(user.getSpec().getDisabled())) {
-            return Mono.error(new AuthException("USER_DISABLED", "账号已被禁用"));
+            return Mono.error(BizErrorCode.USER_DISABLED.toException());
         }
         return Mono.just(user);
     }
@@ -509,8 +612,8 @@ public class AuthServiceImpl implements AuthService {
                         // 其余错误（未开放注册/默认角色未配置等）直接透出终止。
                         .onErrorResume(e -> isDuplicateName(e) ? Mono.empty() : Mono.error(e)))
                 .next()
-                .switchIfEmpty(Mono.error(new AuthException("REGISTER_FAILED",
-                        "自动注册失败，请稍后重试")));
+                .switchIfEmpty(Mono.error(BizErrorCode.REGISTER_FAILED
+                        .toException("自动注册失败，请稍后重试")));
     }
 
     /** 随机标识用户名：uhu- + UUID 去连字符后的前 12 位（小写十六进制）。 */
@@ -596,8 +699,8 @@ public class AuthServiceImpl implements AuthService {
                                 : reason.contains("default role")
                                         ? "站点未配置新用户默认角色，请在 Halo 系统设置中选择默认角色"
                                         : "自动注册失败：" + reason;
-                        return Mono.error(new AuthException("REGISTER_FORBIDDEN", message,
-                                AuthException.STATUS_FORBIDDEN));
+                        return Mono.error(BizErrorCode.REGISTER_FORBIDDEN
+                                .toException(message));
                     }
                     log.warn("【UniHalo】微信自动注册用户名 {} 创建失败", username, e);
                     return Mono.error(e);
@@ -635,23 +738,76 @@ public class AuthServiceImpl implements AuthService {
         return Integer.parseInt(tail);
     }
 
+    /**
+     * 建立绑定关系（一对一：一个微信只能绑一个账号，一个账号只能绑一个微信）。
+     *
+     * <p>全部绑定路径（一键绑定 / 扫码绑定 / 微信自动注册）都收敛到这里，
+     * 冲突校验必须放在这一层 —— 放在上游会被扫码票据路径绕过。
+     *
+     * <p>历史缺陷：命中已有绑定后直接 {@code setUsername} 改写，导致原账号被静默
+     * 解绑，且原账号用该微信登录会登进新账号（串号）。现改为<b>一律拒绝</b>：
+     * 一对一约束下换绑必须显式先解绑，服务端不做隐式转移。
+     *
+     * <p>冲突时记 warn 日志（含双方用户名与微信标识，仅供站长排查），
+     * 但对外文案不回显占用方账号名，防账号枚举。
+     */
     private Mono<UserConnection> connect(String username, String identity) {
         return findConnection(identity)
                 .flatMap(existing -> {
-                    existing.getSpec().setUsername(username);
-                    return client.update(existing);
+                    var owner = existing.getSpec().getUsername();
+                    if (username.equals(owner)) {
+                        // 同一账号重复绑同一个微信：幂等成功，不重复建记录
+                        return Mono.just(existing);
+                    }
+                    log.warn("【UniHalo】微信绑定冲突（微信已绑其他账号）：微信标识已绑定账号 {}，"
+                            + "账号 {} 的绑定请求被拒绝", owner, username);
+                    return Mono.<UserConnection>error(
+                            BizErrorCode.WECHAT_ALREADY_BOUND.toException());
                 })
-                .switchIfEmpty(Mono.defer(() -> {
-                    var connection = new UserConnection();
-                    connection.setMetadata(new Metadata());
-                    connection.getMetadata().setGenerateName("wechat-");
-                    var spec = new UserConnection.UserConnectionSpec();
-                    spec.setRegistrationId(Constants.WECHAT_REGISTRATION_ID);
-                    spec.setUsername(username);
-                    spec.setProviderUserId(identity);
-                    connection.setSpec(spec);
-                    return client.create(connection);
-                }));
+                .switchIfEmpty(Mono.defer(() -> findConnectionByUsername(username)
+                        .flatMap(owned -> {
+                            log.warn("【UniHalo】微信绑定冲突（账号已绑其他微信）：账号 {} 已绑定"
+                                            + "微信 {}，绑定新微信的请求被拒绝",
+                                    username, owned.getSpec().getProviderUserId());
+                            return Mono.<UserConnection>error(
+                                    BizErrorCode.ACCOUNT_ALREADY_BOUND.toException());
+                        })
+                        .switchIfEmpty(Mono.defer(
+                                () -> createConnection(username, identity)))));
+    }
+
+    /** 新建绑定关系（调用方已确保双向均无冲突）。 */
+    private Mono<UserConnection> createConnection(String username, String identity) {
+        var connection = new UserConnection();
+        connection.setMetadata(new Metadata());
+        connection.getMetadata().setGenerateName("wechat-");
+        var spec = new UserConnection.UserConnectionSpec();
+        spec.setRegistrationId(Constants.WECHAT_REGISTRATION_ID);
+        spec.setUsername(username);
+        spec.setProviderUserId(identity);
+        connection.setSpec(spec);
+        return client.create(connection);
+    }
+
+    /**
+     * 按用户名查该账号已有的微信绑定（一对一约束的<b>反向</b>校验）。
+     *
+     * <p>旧实现只按微信身份查重、从不按用户名查重，于是同一个账号能绑多个微信、
+     * 攒下多条 {@code UserConnection}；而查询与解绑都只取第一条，
+     * 造成「解绑后仍能微信登录」。这里只要存在任意一条就拒绝再绑。
+     */
+    private Mono<UserConnection> findConnectionByUsername(String username) {
+        return UserConnectionSupport.newest(connectionsOf(username));
+    }
+
+    /** 列出该账号的全部微信绑定关系（含历史重复记录）。 */
+    private Flux<UserConnection> connectionsOf(String username) {
+        return client.list(UserConnection.class,
+                connection -> connection.getSpec() != null
+                        && Constants.WECHAT_REGISTRATION_ID.equals(
+                                connection.getSpec().getRegistrationId())
+                        && username.equals(connection.getSpec().getUsername()),
+                null);
     }
 
     /**
@@ -674,13 +830,12 @@ public class AuthServiceImpl implements AuthService {
     }
 
     private Mono<UserConnection> findConnection(String identity) {
-        return client.list(UserConnection.class,
-                        connection -> connection.getSpec() != null
-                                && Constants.WECHAT_REGISTRATION_ID.equals(
-                                        connection.getSpec().getRegistrationId())
-                                && identity.equals(connection.getSpec().getProviderUserId()),
-                        null)
-                .next();
+        return UserConnectionSupport.newest(client.list(UserConnection.class,
+                connection -> connection.getSpec() != null
+                        && Constants.WECHAT_REGISTRATION_ID.equals(
+                                connection.getSpec().getRegistrationId())
+                        && identity.equals(connection.getSpec().getProviderUserId()),
+                null));
     }
 
     /**
@@ -704,10 +859,10 @@ public class AuthServiceImpl implements AuthService {
      */
     private AuthException unexpectedWechatFailure(Throwable e) {
         if (isWechatFailure(e)) {
-            return new AuthException("WECHAT_LOGIN_FAILED", e.getMessage());
+            return BizErrorCode.WECHAT_LOGIN_FAILED.toException(e.getMessage());
         }
         log.warn("【UniHalo】微信登录出现未预期的错误", e);
-        return new AuthException("WECHAT_LOGIN_FAILED", "微信登录失败，请稍后重试");
+        return BizErrorCode.WECHAT_LOGIN_FAILED.toException();
     }
 
     private static String identity(WechatService.WechatSession session) {

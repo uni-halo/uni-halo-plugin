@@ -3,7 +3,6 @@ package cn.ialley.unihalo.endpoint;
 import java.util.Map;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.core.context.ReactiveSecurityContextHolder;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
@@ -14,6 +13,7 @@ import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
 import cn.ialley.unihalo.constants.Constants;
 import cn.ialley.unihalo.exception.AuthException;
+import cn.ialley.unihalo.exception.BizErrorCode;
 import cn.ialley.unihalo.services.AuthService;
 import cn.ialley.unihalo.vo.RegisterForm;
 import reactor.core.publisher.Mono;
@@ -59,10 +59,15 @@ public class AuthEndpoint implements CustomEndpoint {
                 .GET(Constants.AUTH_API_BASE_PATH + "/bind/wechat/qr/tickets/{ticket}",
                         this::bindTicketStatus)
                 .POST(Constants.AUTH_API_BASE_PATH + "/bind/wechat/qr/tickets/{ticket}/confirm",
-                        this::confirmBindTicket)
+                        this::scanBindTicket)
+                .POST(Constants.AUTH_API_BASE_PATH + "/bind/wechat/qr/tickets/{ticket}/approve",
+                        this::approveBindTicket)
+                .POST(Constants.AUTH_API_BASE_PATH + "/bind/wechat/qr/tickets/{ticket}/reject",
+                        this::rejectBindTicket)
                 .POST(Constants.AUTH_API_BASE_PATH + "/-/logout", this::logout)
                 .POST(Constants.AUTH_API_BASE_PATH + "/-/password/set", this::setInitialPassword)
                 .GET(Constants.AUTH_API_BASE_PATH + "/profile", this::profile)
+                .GET(Constants.AUTH_API_BASE_PATH + "/token-check", this::tokenCheck)
                 .GET(Constants.AUTH_API_BASE_PATH + "/my/wechat-binding", this::myWechatBinding)
                 .DELETE(Constants.AUTH_API_BASE_PATH + "/my/wechat-binding", this::unbindWechat)
                 .build();
@@ -72,7 +77,7 @@ public class AuthEndpoint implements CustomEndpoint {
         var clientIp = clientIpOf(request);
         return request.bodyToMono(PasswordLoginRequest.class)
                 .switchIfEmpty(Mono.error(
-                        new AuthException("BAD_REQUEST", "缺少请求体")))
+                        BizErrorCode.BAD_REQUEST.toException("缺少请求体")))
                 .flatMap(body -> authService.loginByPassword(
                         body.username(), body.password(), clientIp))
                 .flatMap(result -> ServerResponse.ok().bodyValue(result))
@@ -82,7 +87,7 @@ public class AuthEndpoint implements CustomEndpoint {
     private Mono<ServerResponse> loginByWechat(ServerRequest request) {
         return request.bodyToMono(WechatLoginRequest.class)
                 .switchIfEmpty(Mono.error(
-                        new AuthException("BAD_REQUEST", "缺少请求体")))
+                        BizErrorCode.BAD_REQUEST.toException("缺少请求体")))
                 .flatMap(body -> authService.loginByWechat(body.code()))
                 .flatMap(result -> ServerResponse.ok().bodyValue(result))
                 .onErrorResume(AuthEndpoint::handleFailure);
@@ -96,7 +101,7 @@ public class AuthEndpoint implements CustomEndpoint {
         var clientIp = clientIpOf(request);
         return request.bodyToMono(RegisterRequest.class)
                 .switchIfEmpty(Mono.error(
-                        new AuthException("BAD_REQUEST", "缺少请求体")))
+                        BizErrorCode.BAD_REQUEST.toException("缺少请求体")))
                 .map(body -> new RegisterForm(body.username(), body.displayName(),
                         body.password(), body.confirmPassword(),
                         body.email(), body.emailCode(), body.agreedToTerms()))
@@ -109,17 +114,17 @@ public class AuthEndpoint implements CustomEndpoint {
     private Mono<ServerResponse> registerByWechat(ServerRequest request) {
         return request.bodyToMono(WechatLoginRequest.class)
                 .switchIfEmpty(Mono.error(
-                        new AuthException("BAD_REQUEST", "缺少请求体")))
+                        BizErrorCode.BAD_REQUEST.toException("缺少请求体")))
                 .flatMap(body -> authService.registerByWechat(body.code()))
                 .flatMap(result -> ServerResponse.ok().bodyValue(result))
                 .onErrorResume(AuthEndpoint::handleFailure);
     }
 
     private Mono<ServerResponse> bindWechat(ServerRequest request) {
-        return currentIdentity()
+        return currentUser()
                 .flatMap(identity -> request.bodyToMono(WechatLoginRequest.class)
                         .switchIfEmpty(Mono.error(
-                                new AuthException("BAD_REQUEST", "缺少请求体")))
+                                BizErrorCode.BAD_REQUEST.toException("缺少请求体")))
                         .flatMap(body -> authService.bindWechat(identity.username(), body.code())))
                 .then(ServerResponse.ok().bodyValue(Map.of("success", true)))
                 .onErrorResume(AuthEndpoint::handleFailure);
@@ -129,7 +134,7 @@ public class AuthEndpoint implements CustomEndpoint {
      * UC 侧创建扫码绑定票据：要求登录身份（PAT 或会话），票据创建即锁定该用户名。
      */
     private Mono<ServerResponse> createBindTicket(ServerRequest request) {
-        return currentIdentity()
+        return currentUser()
                 .flatMap(identity -> authService.createBindTicket(identity.username()))
                 .flatMap(ticket -> ServerResponse.ok().bodyValue(Map.of(
                         "ticket", ticket.ticket(),
@@ -139,25 +144,89 @@ public class AuthEndpoint implements CustomEndpoint {
                 .onErrorResume(AuthEndpoint::handleFailure);
     }
 
-    /** UC 侧轮询票据状态（等待扫码 / 已确认 / 已过期）。 */
+    /**
+     * 轮询票据状态（匿名可调），供 UC 与小程序两端共用。
+     *
+     * <p>响应中的 {@code mine} 是给小程序端的<b>登录态预检</b>：带了有效令牌时返回
+     * 「当前登录账号是否就是票据归属」（true/false）；匿名调用恒为 null（无登录态可比，
+     * 匿名扫码本来就是合法主流程）。只回答是不是「你的票」，不回显归属用户名——
+     * 该接口匿名可查，返回归属名等于凭一张二维码照片探测站内用户名。
+     *
+     * <p>预检结果仅供客户端提前给出失败提示，<b>不是</b>安全边界：
+     * 真正的归属裁决始终在 confirm（{@link #scanBindTicket}）时由服务端完成。
+     */
     private Mono<ServerResponse> bindTicketStatus(ServerRequest request) {
         var ticket = request.pathVariable("ticket");
         return authService.bindTicketStatus(ticket)
-                .flatMap(status -> ServerResponse.ok()
-                        .bodyValue(Map.of("ticket", status.ticket(),
-                                "status", status.status().name())))
+                .flatMap(status -> currentIdentityOrNull()
+                        .flatMap(identity -> {
+                            var visitor = identity.username();
+                            var anonymous = visitor == null
+                                    || Constants.ANONYMOUS_USER.equals(visitor);
+                            var body = new java.util.HashMap<String, Object>();
+                            body.put("ticket", status.ticket());
+                            body.put("status", status.status().name());
+                            // 失败原因（仅 FAILED 有值），让 UC 弹窗能给出可执行提示，
+                            // 而不是让用户干等到二维码过期
+                            body.put("reason", status.reason() == null ? "" : status.reason());
+                            // 扫码方微信标识的脱敏尾号（仅 SCANNED 有值），
+                            // 供 PC 端核对「是谁在扫」，不给完整 openid
+                            body.put("hint", status.hint() == null ? "" : status.hint());
+                            if (anonymous) {
+                                body.put("mine", null);
+                                return ServerResponse.ok().bodyValue(body);
+                            }
+                            return authService.bindTicketOwner(ticket)
+                                    .map(owner -> owner != null && owner.equals(visitor))
+                                    .defaultIfEmpty(Boolean.FALSE)
+                                    .flatMap(mine -> {
+                                        body.put("mine", mine);
+                                        return ServerResponse.ok().bodyValue(body);
+                                    });
+                        }))
                 .onErrorResume(AuthEndpoint::handleFailure);
     }
 
     /**
-     * 小程序端确认绑定（匿名调用）：身份由 wx.login() 的 code 换取，
-     * 绑定目标用户名在票据创建时已锁定，客户端无法指定。
+     * 小程序端扫码（匿名可调）：身份由 wx.login() 的 code 换取，绑定目标用户名在票据
+     * 创建时已锁定，客户端无法指定。
+     *
+     * <p>只登记微信身份，<b>不建立绑定</b>，等 PC 端 {@link #approveBindTicket} 确认。
+     * 若小程序端已登录另一个账号，服务端直接拒绝（见
+     * {@link cn.ialley.unihalo.exception.BizErrorCode#BIND_SIGNED_IN_OTHER_ACCOUNT}）——
+     * 这一点要求客户端带上登录态，未登录时保持匿名调用不变。
      */
-    private Mono<ServerResponse> confirmBindTicket(ServerRequest request) {
+    private Mono<ServerResponse> scanBindTicket(ServerRequest request) {
         var ticket = request.pathVariable("ticket");
-        return request.bodyToMono(WechatLoginRequest.class)
-                .switchIfEmpty(Mono.error(new AuthException("BAD_REQUEST", "缺少请求体")))
-                .flatMap(body -> authService.confirmBindTicket(ticket, body.code()))
+        return currentIdentityOrNull()
+                .flatMap(identity -> request.bodyToMono(WechatLoginRequest.class)
+                        .switchIfEmpty(Mono.error(
+                                BizErrorCode.BAD_REQUEST.toException("缺少请求体")))
+                        .flatMap(body -> authService.scanBindTicket(ticket, body.code(),
+                                identity.username())))
+                .then(ServerResponse.ok().bodyValue(Map.of("success", true)))
+                .onErrorResume(AuthEndpoint::handleFailure);
+    }
+
+    /**
+     * PC 端确认绑定：必须由票据归属者本人调用（匿名一律拒绝）。
+     *
+     * <p>这是两阶段模型的第二枪 —— 票据泄露最多让攻击者「扫个码」，
+     * 没有本人这一步确认绑不上。
+     */
+    private Mono<ServerResponse> approveBindTicket(ServerRequest request) {
+        var ticket = request.pathVariable("ticket");
+        return currentUser()
+                .flatMap(identity -> authService.approveBindTicket(ticket, identity.username()))
+                .then(ServerResponse.ok().bodyValue(Map.of("success", true)))
+                .onErrorResume(AuthEndpoint::handleFailure);
+    }
+
+    /** PC 端拒绝本次扫码（用户在弹窗里点「取消」）：票据落到 FAILED 并回传原因。 */
+    private Mono<ServerResponse> rejectBindTicket(ServerRequest request) {
+        var ticket = request.pathVariable("ticket");
+        return currentUser()
+                .flatMap(identity -> authService.rejectBindTicket(ticket, identity.username()))
                 .then(ServerResponse.ok().bodyValue(Map.of("success", true)))
                 .onErrorResume(AuthEndpoint::handleFailure);
     }
@@ -166,7 +235,7 @@ public class AuthEndpoint implements CustomEndpoint {
         return currentIdentity()
                 .flatMap(identity -> {
                     if (identity.patName() == null) {
-                        return Mono.error(new AuthException("UNAUTHENTICATED", "未登录"));
+                        return Mono.error(BizErrorCode.UNAUTHENTICATED.toException());
                     }
                     return authService.logout(identity.patName(), identity.username());
                 })
@@ -179,12 +248,10 @@ public class AuthEndpoint implements CustomEndpoint {
      * 仅「从未自主设置过密码」的用户可用，防滥用见服务层注解判定。
      */
     private Mono<ServerResponse> setInitialPassword(ServerRequest request) {
-        return currentIdentity()
-                .filter(identity -> !Constants.ANONYMOUS_USER.equals(identity.username()))
-                .switchIfEmpty(Mono.error(new AuthException("UNAUTHENTICATED", "未登录")))
+        return currentUser()
                 .flatMap(identity -> request.bodyToMono(SetPasswordRequest.class)
                         .switchIfEmpty(Mono.error(
-                                new AuthException("BAD_REQUEST", "缺少请求体")))
+                                BizErrorCode.BAD_REQUEST.toException("缺少请求体")))
                         .flatMap(body -> authService.setInitialPassword(
                                 identity.username(), body.newPassword())))
                 .then(ServerResponse.ok().bodyValue(Map.of("success", true)))
@@ -194,6 +261,27 @@ public class AuthEndpoint implements CustomEndpoint {
     private Mono<ServerResponse> profile(ServerRequest request) {
         return currentIdentity()
                 .flatMap(identity -> authService.profile(identity.username()))
+                .flatMap(result -> ServerResponse.ok().bodyValue(result))
+                .onErrorResume(AuthEndpoint::handleFailure);
+    }
+
+    /**
+     * 令牌探活（App 端启动 / 回前台时调用）：200 = 有效，401 = 已失效
+     * （exp 过期 / 被新设备互踢 / 已吊销）。
+     *
+     * <p>无效令牌在认证链上就不成立，请求会以匿名身份到达本端点，
+     * 由 {@link #currentUser()} 统一拒绝并收敛为 401 —— 端点本身无需
+     * 判别失效原因；能进入服务层的都是「认证链认为有效」的令牌，
+     * 服务层只做 revoked / expiresAt 的显式兜底（fail closed）。
+     *
+     * <p>补充说明 401 与 403 的分工：与本插件业务接口不同，本端点对
+     * 「有效但权限不足」的概念不敏感——探活只回答「令牌还活着吗」，
+     * 权限问题留给各业务接口自行裁决，客户端不必在这里区分二者。
+     */
+    private Mono<ServerResponse> tokenCheck(ServerRequest request) {
+        return currentUser()
+                .flatMap(identity ->
+                        authService.tokenCheck(identity.username(), identity.patName()))
                 .flatMap(result -> ServerResponse.ok().bodyValue(result))
                 .onErrorResume(AuthEndpoint::handleFailure);
     }
@@ -212,10 +300,7 @@ public class AuthEndpoint implements CustomEndpoint {
      * 匿名身份一律拒绝，不做无害空转。
      */
     private Mono<ServerResponse> unbindWechat(ServerRequest request) {
-        return currentIdentity()
-                .filter(identity -> !Constants.ANONYMOUS_USER.equals(identity.username()))
-                .switchIfEmpty(Mono.error(
-                        new AuthException("UNAUTHENTICATED", "未登录")))
+        return currentUser()
                 .flatMap(identity -> authService.unbindMyWechat(identity.username()))
                 .then(ServerResponse.ok().bodyValue(Map.of("success", true)))
                 .onErrorResume(AuthEndpoint::handleFailure);
@@ -235,8 +320,32 @@ public class AuthEndpoint implements CustomEndpoint {
                     }
                     return new Identity(auth.getName(), patName);
                 })
-                .switchIfEmpty(Mono.error(
-                        new AuthException("UNAUTHENTICATED", "未登录")));
+                .switchIfEmpty(Mono.error(BizErrorCode.UNAUTHENTICATED.toException()));
+    }
+
+    /**
+     * 取当前登录身份；无令牌/无上下文时返回 {@code username=null} 的占位，不报错。
+     *
+     * <p>用于「允许匿名但需要感知来访身份」的端点（如扫码 confirm）：
+     * 匿名就是 {@code anonymousUser}，带了令牌就能看出他是不是登录着别的账号。
+     */
+    private Mono<Identity> currentIdentityOrNull() {
+        return currentIdentity().defaultIfEmpty(new Identity(null, null));
+    }
+
+    /**
+     * 取当前登录身份，并<b>显式拒绝匿名</b>（fail-closed）。
+     *
+     * 该组 API 对匿名全量放行（role-anonymous 授予 {@code resources:* verbs:*}），
+     * 匿名请求的 {@code Authentication#getName} 是 {@code anonymousUser}。
+     * 写操作端点若不在这一层拦住，匿名调用就会以 anonymousUser 身份落数据 ——
+     * 典型后果：把他人已绑定的微信关系改绑到 anonymousUser，导致对方微信登录失效。
+     * 因此绑定类写接口一律走这里，而不是 {@link #currentIdentity()}。
+     */
+    private Mono<Identity> currentUser() {
+        return currentIdentity()
+                .filter(identity -> !Constants.ANONYMOUS_USER.equals(identity.username()))
+                .switchIfEmpty(Mono.error(BizErrorCode.UNAUTHENTICATED.toException()));
     }
 
     /**
@@ -253,8 +362,9 @@ public class AuthEndpoint implements CustomEndpoint {
                     .bodyValue(Map.of("code", auth.getCode(), "message", auth.getMessage()));
         }
         log.warn("【UniHalo】认证接口出现未预期的错误", e);
-        return ServerResponse.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .bodyValue(Map.of("code", "INTERNAL_ERROR", "message", "服务异常，请稍后重试"));
+        var fallback = BizErrorCode.INTERNAL_ERROR;
+        return ServerResponse.status(fallback.getStatus())
+                .bodyValue(Map.of("code", fallback.getCode(), "message", fallback.getMessage()));
     }
 
     /**

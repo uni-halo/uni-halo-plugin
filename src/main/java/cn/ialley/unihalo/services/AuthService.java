@@ -5,6 +5,7 @@ import cn.ialley.unihalo.services.BindTicketService;
 import cn.ialley.unihalo.vo.LoginResult;
 import cn.ialley.unihalo.vo.ProfileVo;
 import cn.ialley.unihalo.vo.RegisterForm;
+import cn.ialley.unihalo.vo.TokenCheckVo;
 import cn.ialley.unihalo.vo.WechatBindingVo;
 
 /**
@@ -84,12 +85,47 @@ public interface AuthService {
     Mono<BindTicketService.TicketStatus> bindTicketStatus(String ticket);
 
     /**
-     * 小程序端确认绑定：消费票据，把扫码微信身份绑定到票据创建时锁定的用户。
+     * 查询票据归属用户名，仅供「小程序端登录态预检」比对使用，<b>禁止</b>回显给客户端
+     * （status 接口匿名可调，返回归属用户名等于凭一张二维码照片探测站内用户名）。
      *
-     * @param ticket 票据号
-     * @param code   wx.login() 得到的临时登录凭证（换取微信身份）
+     * @param ticket 票据号；票据不存在或已过期未消费时为空 Mono
      */
-    Mono<Void> confirmBindTicket(String ticket, String code);
+    Mono<String> bindTicketOwner(String ticket);
+
+    /**
+     * 小程序端扫码（第一阶段）：换出微信身份并登记到票据，<b>不建立绑定</b>。
+     *
+     * <p>真正的绑定要等 PC 端 {@link #approveBindTicket} 确认。拆成两阶段的理由见
+     * {@link BindTicketService}：票据必然暴露在二维码里，扫码即绑定等于把
+     * 「拿到二维码」等价于「可以绑走这个账号」。
+     *
+     * <p>登录态校验放在这里、且<b>在消费票据之前</b>：手机端登录着 B 却扫了 A 的码时，
+     * 直接拒绝并保留票据（用户退出登录后同一个码还能用），而不是白废一个二维码。
+     *
+     * @param ticket   票据号
+     * @param code     wx.login() 得到的临时登录凭证（换取微信身份）
+     * @param visitor  小程序端当前登录的 Halo 用户名；未登录/匿名传 null
+     */
+    Mono<Void> scanBindTicket(String ticket, String code, String visitor);
+
+    /**
+     * PC 端确认绑定（第二阶段）：把扫码时暂存的微信身份绑定到票据锁定的账号。
+     *
+     * <p>确认者必须是票据创建者本人（服务端按 {@code username} 与票据归属比对），
+     * 防止他人代确认。成功后发站内通知并落 {@code CONFIRMED} 终态。
+     *
+     * @param ticket   票据号
+     * @param username 当前登录的 UC 用户（票据归属者）
+     */
+    Mono<Void> approveBindTicket(String ticket, String username);
+
+    /**
+     * PC 端拒绝本次扫码（用户看到扫码提示后点「取消」）。
+     *
+     * @param ticket   票据号
+     * @param username 当前登录的 UC 用户（票据归属者）
+     */
+    Mono<Void> rejectBindTicket(String ticket, String username);
 
     /**
      * 吊销当前令牌（置 revoked，不影响 JWT 本身）。
@@ -98,6 +134,22 @@ public interface AuthService {
      * @param username 归属用户
      */
     Mono<Void> logout(String patName, String username);
+
+    /**
+     * 探测当前令牌是否仍有效（App 端启动 / 回前台时调用）。
+     *
+     * 能进入本方法说明认证链已通过 JWT 验签与 PAT 存在性校验——无效令牌
+     * （验签失败 / exp 过期 / 扩展被互踢删除）在过滤器层就不成立，请求会以
+     * 匿名身份到达端点，由端点侧 {@code currentUser()} 拒绝并收敛为 401。
+     * 此处再做三道显式兜底（fail closed），防止官方认证链语义变化导致漏判：
+     * PAT 扩展缺失、归属人不符、已吊销（revoked）或已过 {@code spec.expiresAt}
+     * 均按 401 拒绝。
+     *
+     * @param username 当前登录用户（匿名请求在端点侧已被拒绝，不会进入）
+     * @param patName  PAT 扩展名；为空表示非令牌登录（如浏览器会话 Cookie），
+     *                 认证链放行即有效，无令牌元数据可回传
+     */
+    Mono<TokenCheckVo> tokenCheck(String username, String patName);
 
     /**
      * 当前登录用户的资料与权限。只读，不签发新令牌。

@@ -37,3 +37,38 @@ spec:
       提示：
       1. 初始密码已失效，此后请使用新密码进行账号密码登录与修改密码验证。
       2. 如非本人操作，请立即联系站长处理并修改密码。
+---
+apiVersion: notification.halo.run/v1alpha1
+kind: NotificationTemplate
+metadata:
+  name: uni-halo-wechat-bound-template
+spec:
+  reasonSelector:
+    reasonType: uni-halo-wechat-bound
+    language: default
+  template:
+    title: "微信绑定成功"
+    rawBody: |-
+      你的账号已于 [(${boundAt})] 成功绑定微信（绑定方式：[(${bindWay})]）。
+
+      提示：
+      1. 绑定后可直接使用微信小程序一键登录本账号。
+      2. 一个微信只能绑定一个账号，一个账号也只能绑定一个微信。
+      3. 如非本人操作，请立即联系站长处理。
+---
+apiVersion: notification.halo.run/v1alpha1
+kind: NotificationTemplate
+metadata:
+  name: uni-halo-wechat-unbound-template
+spec:
+  reasonSelector:
+    reasonType: uni-halo-wechat-unbound
+    language: default
+  template:
+    title: "已解除微信绑定"
+    rawBody: |-
+      你的账号已于 [(${unboundAt})] 解除微信绑定（操作方：[(${operator})]）。
+
+      提示：
+      1. 解绑后将无法使用微信一键登录，请改用账号密码登录，或重新绑定微信。
+      2. 如非本人操作，请立即联系站长处理并修改密码。

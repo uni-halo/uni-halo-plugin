@@ -318,9 +318,16 @@ export const bannerApi = {
 // ===== 微信绑定（用户详情选项卡） =====
 
 export const wechatUserApi = {
-  /** 查询某个用户的微信绑定状态；未绑定时返回 bound=false */
-  getBinding: (username: string) =>
-    http.get<WechatBinding>(`${PLUGIN_BASE}/wechat-users/${username}/binding`),
+  /**
+   * 查询某个用户的微信绑定状态；未绑定时返回 bound=false。
+   *
+   * @param reveal 传 true 才返回完整 openid（服务端会记审计日志），
+   *               排查「微信登不上」需要拿它去微信侧核对时才用；默认只给脱敏值。
+   */
+  getBinding: (username: string, reveal = false) =>
+    http.get<WechatBinding>(
+      `${PLUGIN_BASE}/wechat-users/${username}/binding${reveal ? "?reveal=true" : ""}`,
+    ),
   /** 解绑：只删绑定关系，不删除 Halo 用户 */
   unbind: (username: string) =>
     http.delete<{ success: boolean }>(`${PLUGIN_BASE}/wechat-users/${username}/binding`),
@@ -333,10 +340,31 @@ const AUTH_BASE = `${PUBLIC_BASE}/auth`;
 export const ucWechatBindingApi = {
   /** 当前登录用户的微信绑定状态 */
   getMyBinding: () => http.get<WechatBinding>(`${AUTH_BASE}/my/wechat-binding`),
+  /**
+   * 当前登录用户自助解绑（幂等：未绑定时同样返回成功）。
+   *
+   * 走公开组 auth 端点而非 Console 的 wechat-users：UC 用户不需要管理员权限，
+   * 服务端从安全上下文取身份，只能解绑自己；解绑后会给用户发站内通知。
+   */
+  unbindMyWechat: () =>
+    http.delete<{ success: boolean }>(`${AUTH_BASE}/my/wechat-binding`),
   /** 创建扫码绑定票据，qrContent = uh-bindwx-{ticket} */
   createBindTicket: () =>
     http.post<BindTicketIssued>(`${AUTH_BASE}/bind/wechat/qr/tickets`),
-  /** 轮询票据状态：PENDING 等待扫码 / CONFIRMED 已绑定 / EXPIRED 已过期 */
+  /**
+   * 轮询票据状态：PENDING 等待扫码 / SCANNED 已扫码待确认 / CONFIRMED 已绑定
+   * / FAILED 已失败或已拒绝 / EXPIRED 已过期
+   */
   getTicketStatus: (ticket: string) =>
     http.get<BindTicketStatus>(`${AUTH_BASE}/bind/wechat/qr/tickets/${ticket}`),
+  /** 确认绑定（两阶段第二阶段）：只有票据归属者本人能调用，匿名会被拒绝 */
+  approveTicket: (ticket: string) =>
+    http.post<{ success: boolean }>(
+      `${AUTH_BASE}/bind/wechat/qr/tickets/${ticket}/approve`,
+    ),
+  /** 拒绝本次扫码：票据落到 FAILED 并回传原因，二维码不再可用 */
+  rejectTicket: (ticket: string) =>
+    http.post<{ success: boolean }>(
+      `${AUTH_BASE}/bind/wechat/qr/tickets/${ticket}/reject`,
+    ),
 };

@@ -12,7 +12,7 @@ spec:
   homepage: https://uni-halo.ialley.cn/
   repo: https://github.com/uni-halo/uni-halo-plugin
   issues: https://github.com/uni-halo/uni-halo-plugin/issues
-  displayName: "Uni Halo"
+  displayName: "UniHalo"
   description: "免费开源的 UniHalo v3.x 跨平台移动端配套配置插件。"
   settingName: uni-halo-plugin-settings
   configMapName: uni-halo-plugin-configmap

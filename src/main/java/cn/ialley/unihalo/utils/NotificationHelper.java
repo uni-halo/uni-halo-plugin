@@ -37,6 +37,19 @@ public class NotificationHelper {
     public static final String REASON_USER_REGISTERED = "uni-halo-user-registered";
     /** 事件类型：首次设置密码成功。 */
     public static final String REASON_PASSWORD_SET = "uni-halo-password-set";
+    /** 事件类型：微信绑定成功。 */
+    public static final String REASON_WECHAT_BOUND = "uni-halo-wechat-bound";
+    /** 事件类型：解除微信绑定。 */
+    public static final String REASON_WECHAT_UNBOUND = "uni-halo-wechat-unbound";
+
+    /** 绑定方式：小程序内一键绑定。 */
+    public static final String BIND_WAY_APP = "微信小程序一键绑定";
+    /** 绑定方式：UC 扫码绑定。 */
+    public static final String BIND_WAY_SCAN = "扫码绑定";
+    /** 解绑操作方：用户本人。 */
+    public static final String OPERATOR_SELF = "本人操作";
+    /** 解绑操作方：站点管理员（Console 用户详情代解绑）。 */
+    public static final String OPERATOR_ADMIN = "站点管理员";
 
     private final NotificationReasonEmitter reasonEmitter;
     private final NotificationCenter notificationCenter;
@@ -60,6 +73,37 @@ public class NotificationHelper {
         attributes.put("setAt", now());
         return subscribeOnce(username, REASON_PASSWORD_SET)
                 .then(emit(username, REASON_PASSWORD_SET, attributes));
+    }
+
+    /**
+     * 微信绑定成功通知：attributes 含 username/boundAt/bindWay。
+     *
+     * <p>绑定是账号入口的变更，必须让用户可感知：否则微信被他人误绑、
+     * 或本人操作后无从核对。
+     */
+    public Mono<Void> emitWechatBound(String username, String bindWay) {
+        var attributes = new HashMap<String, Object>();
+        attributes.put("username", username);
+        attributes.put("boundAt", now());
+        attributes.put("bindWay", bindWay);
+        return subscribeOnce(username, REASON_WECHAT_BOUND)
+                .then(emit(username, REASON_WECHAT_BOUND, attributes));
+    }
+
+    /**
+     * 解除微信绑定通知：attributes 含 username/unboundAt/operator。
+     *
+     * <p>管理员代解绑尤其需要通知：用户会突然无法微信登录，不告知将无从排查。
+     *
+     * @param operator 操作方文案，取 {@link #OPERATOR_SELF} 或 {@link #OPERATOR_ADMIN}
+     */
+    public Mono<Void> emitWechatUnbound(String username, String operator) {
+        var attributes = new HashMap<String, Object>();
+        attributes.put("username", username);
+        attributes.put("unboundAt", now());
+        attributes.put("operator", operator);
+        return subscribeOnce(username, REASON_WECHAT_UNBOUND)
+                .then(emit(username, REASON_WECHAT_UNBOUND, attributes));
     }
 
     /** 为用户订阅指定事件类型（expression 过滤仅接收本人事件）。 */

@@ -906,8 +906,10 @@ export interface WechatBinding {
   username: string;
   /** 是否已绑定微信 */
   bound: boolean;
-  /** 绑定的微信标识（openid 或 unionid），未绑定为 undefined */
+  /** 绑定的微信标识（openid 或 unionid）——**服务端默认只给脱敏值**，未绑定为 undefined */
   providerUserId?: string;
+  /** 完整微信标识：仅在管理员显式查看时返回，普通查询一律 undefined */
+  providerUserIdFull?: string;
   /** 绑定关系最近一次更新时间（RFC3339），未绑定为 undefined */
   boundAt?: string;
 }
@@ -924,8 +926,22 @@ export interface BindTicketIssued {
 /** 扫码绑定票据轮询状态 */
 export interface BindTicketStatus {
   ticket: string;
-  /** PENDING 等待扫码 / CONFIRMED 已绑定 / EXPIRED 已过期 */
-  status: "PENDING" | "CONFIRMED" | "EXPIRED";
+  /**
+   * PENDING 等待扫码 / SCANNED 已扫码待确认 / CONFIRMED 已绑定
+   * / FAILED 绑定失败或已拒绝 / EXPIRED 已过期
+   *
+   * FAILED 必须有：确认与绑定分两步，没有失败终态时轮询会把「绑定失败」
+   * 也显示成绑定成功。
+   *
+   * SCANNED 是两阶段确认的第一枪：扫码只登记微信身份，必须本人在弹窗里
+   * 点确认才真正绑定 —— 票据二维码会被屏幕共享/截图外传，扫码即绑定等于
+   * 把「拿到二维码」等价于「可以绑走这个账号」。
+   */
+  status: "PENDING" | "SCANNED" | "CONFIRMED" | "FAILED" | "EXPIRED";
+  /** 失败原因文案（仅 FAILED 有值，其余为空串），取自服务端业务错误码 message */
+  reason?: string;
+  /** 扫码方微信标识的脱敏尾号（仅 SCANNED 有值），供本人核对「是谁在扫」 */
+  hint?: string;
 }
 
 /** getConfigs 顶层 maintenance 键（additive，仅 scheduled/active 时由服务端输出；

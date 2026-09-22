@@ -26,8 +26,20 @@ public class AuthException extends RuntimeException {
     /** 请求参数/状态无效（如票据过期）。 */
     public static final int STATUS_BAD_REQUEST = 400;
 
+    /**
+     * 资源冲突（唯一性约束被破坏）。
+     *
+     * 用于「一对一」类约束：同一个微信绑第二个账号、同一个账号绑第二个微信。
+     * 与 400 的区别是 —— 400 是「你这请求不对，改改再来」，409 是「请求没问题，
+     * 但和已有状态冲突，得先处理掉冲突那一方」。
+     */
+    public static final int STATUS_CONFLICT = 409;
+
     /** 请求过于频繁（限流）。 */
     public static final int STATUS_TOO_MANY_REQUESTS = 429;
+
+    /** 兜底：未预期的服务端异常。 */
+    public static final int STATUS_INTERNAL_ERROR = 500;
 
     private final String code;
 
@@ -41,5 +53,15 @@ public class AuthException extends RuntimeException {
         super(message);
         this.code = code;
         this.status = status;
+    }
+
+    /** 按业务错误码总表构造（推荐入口，避免散写字符串常量）。 */
+    public AuthException(BizErrorCode errorCode) {
+        this(errorCode.getCode(), errorCode.getMessage(), errorCode.getStatus());
+    }
+
+    /** 按业务错误码总表构造并覆盖文案（动态内容，code 与 status 不变）。 */
+    public AuthException(BizErrorCode errorCode, String message) {
+        this(errorCode.getCode(), message, errorCode.getStatus());
     }
 }

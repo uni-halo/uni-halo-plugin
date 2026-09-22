@@ -14,7 +14,7 @@ import {
   VTag,
 } from "@halo-dev/components";
 import { useQuery, useQueryClient } from "@tanstack/vue-query";
-import { computed } from "vue";
+import { computed, ref } from "vue";
 import type { DetailedUser } from "@halo-dev/api-client";
 import { wechatUserApi } from "@/api";
 
@@ -24,10 +24,23 @@ const queryClient = useQueryClient();
 
 const username = computed(() => props.user?.user?.metadata?.name ?? "");
 
+/**
+ * 完整 openid 默认不下发（服务端只给脱敏值），排查需要时由管理员显式点开 ——
+ * 每次查看服务端都会记审计日志，所以不要默认开着。
+ */
+const reveal = ref(false);
+
 const { data: binding, isLoading } = useQuery({
-  queryKey: ["uni-halo:wechat-binding", username],
-  queryFn: () => wechatUserApi.getBinding(username.value),
+  queryKey: ["uni-halo:wechat-binding", username, reveal],
+  queryFn: () => wechatUserApi.getBinding(username.value, reveal.value),
   enabled: computed(() => !!username.value),
+});
+
+const identityText = computed(() => {
+  if (!binding.value?.bound) {
+    return "-";
+  }
+  return binding.value.providerUserIdFull || binding.value.providerUserId || "-";
 });
 
 const boundAtText = computed(() => {
@@ -37,21 +50,25 @@ const boundAtText = computed(() => {
   return Number.isNaN(date.getTime()) ? raw : date.toLocaleString();
 });
 
-const invalidate = () => {
-  queryClient.invalidateQueries({ queryKey: ["uni-halo:wechat-binding", username.value] });
-};
-
 const handleUnbind = () => {
   Dialog.warning({
     title: "解除微信绑定",
     description:
-      "解绑后该用户将无法使用微信一键登录，需要重新绑定或改用账号密码登录。Halo 账号本身不会被删除。",
+      "解绑后该用户将无法使用微信一键登录，需要重新绑定或改用账号密码登录。Halo 账号本身不会被删除，解绑后会向该用户发送站内通知。",
     confirmText: "确定解绑",
     cancelText: "取消",
     onConfirm: async () => {
       await wechatUserApi.unbind(username.value);
-      Toast.success("已解除绑定");
-      invalidate();
+      Toast.success("已解除绑定，已通知该用户");
+      // 本地直接置为未绑定，不立即重查：Halo 删除扩展是两阶段异步，
+      // 删除指令返回后残留的 deleting 记录仍可能让重查拿到 bound=true，
+      // 管理员会以为解绑没生效。下次进入用户详情即为最终状态。
+      queryClient.setQueryData(["uni-halo:wechat-binding", username.value], {
+        username: username.value,
+        bound: false,
+        providerUserId: undefined,
+        boundAt: undefined,
+      });
     },
   });
 };
@@ -73,8 +90,11 @@ const handleUnbind = () => {
 
       <dl class="grid gap-y-3 text-sm" style="grid-template-columns: 96px 1fr">
         <dt class="text-gray-600">微信标识</dt>
-        <dd class="break-all font-mono text-gray-900">
-          {{ binding.providerUserId || "-" }}
+        <dd class="flex flex-wrap items-center gap-2">
+          <span class="break-all font-mono text-gray-900">{{ identityText }}</span>
+          <VButton size="sm" type="secondary" @click="reveal = !reveal">
+            {{ reveal ? "隐藏" : "显示完整" }}
+          </VButton>
         </dd>
         <dt class="text-gray-600">绑定时间</dt>
         <dd class="text-gray-900">{{ boundAtText }}</dd>
@@ -95,7 +115,7 @@ const handleUnbind = () => {
         </span>
       </div>
       <p class="text-sm text-gray-500">
-        若希望该用户用微信登录进这个已有账号，需在小程序端登录后调用绑定接口关联。
+        若希望该用户用微信登录进这个已有账号，需在小程序端扫码绑定。
       </p>
     </div>
   </div>

@@ -3,7 +3,7 @@ kind: ReasonType
 metadata:
   name: uni-halo-user-registered
 spec:
-  displayName: "注册欢迎（UniHalo）"
+  displayName: "[UH] 注册欢迎"
   description: "移动端新用户注册成功后的欢迎通知，包含用户名、昵称与初始密码"
   properties:
     - name: username
@@ -28,7 +28,7 @@ kind: ReasonType
 metadata:
   name: uni-halo-password-set
 spec:
-  displayName: "密码设置成功（UniHalo）"
+  displayName: "[UH] 密码设置成功"
   description: "用户首次设置专属密码成功后的确认通知"
   properties:
     - name: username
@@ -38,4 +38,46 @@ spec:
     - name: setAt
       type: string
       description: "设置时间（RFC3339）"
+      optional: false
+---
+apiVersion: notification.halo.run/v1alpha1
+kind: ReasonType
+metadata:
+  name: uni-halo-wechat-bound
+spec:
+  displayName: "[UH] 微信绑定成功"
+  description: "账号成功绑定微信后的通知，绑定后可使用微信一键登录"
+  properties:
+    - name: username
+      type: string
+      description: "用户名"
+      optional: false
+    - name: boundAt
+      type: string
+      description: "绑定时间（RFC3339）"
+      optional: false
+    - name: bindWay
+      type: string
+      description: "绑定方式（微信小程序一键绑定 / 扫码绑定）"
+      optional: false
+---
+apiVersion: notification.halo.run/v1alpha1
+kind: ReasonType
+metadata:
+  name: uni-halo-wechat-unbound
+spec:
+  displayName: "[UH] 解除微信绑定"
+  description: "账号解除微信绑定后的通知，解绑后无法使用微信一键登录"
+  properties:
+    - name: username
+      type: string
+      description: "用户名"
+      optional: false
+    - name: unboundAt
+      type: string
+      description: "解绑时间（RFC3339）"
+      optional: false
+    - name: operator
+      type: string
+      description: "操作方（本人操作 / 站点管理员）"
       optional: false
