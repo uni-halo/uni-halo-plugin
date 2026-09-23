@@ -301,7 +301,7 @@ onUnmounted(stopPolling);
     <div v-else-if="binding.bound" class="flex flex-col gap-4">
       <div class="flex items-center gap-2">
         <VTag type="success">已绑定</VTag>
-        <span class="text-sm text-gray-600">当前账号已关联微信，可以使用微信小程序一键登录</span>
+        <span class="text-sm text-gray-600">当前账号已关联微信，可以在小程序登录该账号了</span>
       </div>
 
       <dl class="grid gap-y-3 text-sm" style="grid-template-columns: 96px 1fr">

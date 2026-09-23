@@ -132,7 +132,7 @@ public class FeatureConfig extends AbstractExtension {
     public static class MomentPage {
         /** 是否显示评论列表 */
         private Boolean showCommentList;
-        /** 是否开启评论 */
+        /** 是否开启评论（服务端经系统设置 comment.enable 注入，无手动开关） */
         private Boolean enableComment;
     }
 

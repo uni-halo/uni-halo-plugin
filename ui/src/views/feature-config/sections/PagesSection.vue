@@ -723,19 +723,15 @@ function restoreMineDefaults(group: "common" | "other") {
 
   <!-- 页面与排版 → 瞬间页 -->
   <template v-if="subTab === 'moment'">
+    <p class=":uno: mb-3 text-xs text-gray-400">
+      评论开关：「开启评论」跟随 Halo 官方后台「系统 → 评论设置 → 启用评论」；「显示评论列表」仅控制瞬间详情页评论列表区域的显隐。
+    </p>
     <div class=":uno: flex items-center justify-between gap-4 border-b border-gray-100 pb-3">
       <div>
         <div class=":uno: text-sm text-gray-700">显示评论列表</div>
         <div class=":uno: mt-0.5 text-xs text-gray-400">瞬间详情页是否展示评论列表区域</div>
       </div>
       <VSwitch v-model="formState.spec.pages.moment!.showCommentList" />
-    </div>
-    <div class=":uno: mt-4 flex items-center justify-between gap-4 border-b border-gray-100 pb-3">
-      <div>
-        <div class=":uno: text-sm text-gray-700">开启评论</div>
-        <div class=":uno: mt-0.5 text-xs text-gray-400">瞬间卡片与详情页是否展示评论入口</div>
-      </div>
-      <VSwitch v-model="formState.spec.pages.moment!.enableComment" />
     </div>
   </template>
 

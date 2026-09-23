@@ -206,7 +206,7 @@ spec:
       formSchema:
         - $formkit: group
           name: floatProfileWidget
-          label: 悬浮名片卡片
+          label: 悬浮信息卡片
           children:
             - $formkit: switch
               name: enabled

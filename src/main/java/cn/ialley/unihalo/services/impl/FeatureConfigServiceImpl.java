@@ -24,6 +24,7 @@ import cn.ialley.unihalo.scheme.FeatureConfig.LoveDiaryPage;
 import cn.ialley.unihalo.scheme.FeatureConfig.Maintenance;
 import cn.ialley.unihalo.scheme.FeatureConfig.ModuleSwitch;
 import cn.ialley.unihalo.scheme.FeatureConfig.MinePage;
+import cn.ialley.unihalo.scheme.FeatureConfig.MomentPage;
 import cn.ialley.unihalo.scheme.FeatureConfig.PageTitles;
 import cn.ialley.unihalo.scheme.FeatureConfig.Pages;
 import cn.ialley.unihalo.scheme.FeatureConfig.PostDetailPage;
@@ -81,7 +82,9 @@ public class FeatureConfigServiceImpl implements FeatureConfigService {
 
     /**
      * 系统设置「评论-启用评论」（ConfigMap system → comment.enable）注入
-     * postDetail.enableComment，供客户端控制评论按钮显隐。
+     * postDetail.enableComment 与 moment.enableComment，供客户端控制评论按钮显隐；
+     * 两处均不再提供手动开关，统一跟随系统评论总开关。
+     * moment 缺失时兜底创建默认结构（showCommentList=true）。
      */
     private Mono<FeatureConfig> applySystemCommentEnable(FeatureConfig config) {
         return client.fetch(ConfigMap.class, "system")
@@ -97,9 +100,23 @@ public class FeatureConfigServiceImpl implements FeatureConfigService {
                 .map(commentNode -> {
                     boolean enable = commentNode != null && commentNode.isObject()
                             && commentNode.path("enable").asBoolean(true);
-                    if (config.getSpec() != null && config.getSpec().getPages() != null
-                            && config.getSpec().getPages().getPostDetail() != null) {
-                        config.getSpec().getPages().getPostDetail().setEnableComment(enable);
+                    if (config.getSpec() != null && config.getSpec().getPages() != null) {
+                        var pages = config.getSpec().getPages();
+                        // 两处评论开关均为服务端注入（无手动开关）；节点缺失时兜底创建，
+                        // 防止存量单例脏数据（pages.postDetail/moment 为 null）跳过注入
+                        if (pages.getPostDetail() == null) {
+                            PostDetailPage postDetail = new PostDetailPage();
+                            postDetail.setShowComment(true);
+                            postDetail.setCopyrightEnabled(true);
+                            pages.setPostDetail(postDetail);
+                        }
+                        pages.getPostDetail().setEnableComment(enable);
+                        if (pages.getMoment() == null) {
+                            MomentPage moment = new MomentPage();
+                            moment.setShowCommentList(true);
+                            pages.setMoment(moment);
+                        }
+                        pages.getMoment().setEnableComment(enable);
                     }
                     return config;
                 });

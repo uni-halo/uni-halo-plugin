@@ -175,7 +175,6 @@ function defaultSpec(): FeatureConfigSpec {
       disclaimer: { content: "" },
       moment: {
         showCommentList: true,
-        enableComment: true,
       },
       // 用户协议页/隐私政策页（独立两对象；内容留空 = app 端注册页回退静态提示文案）
       userAgreement: { content: "" },

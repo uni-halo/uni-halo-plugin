@@ -30,8 +30,12 @@ const username = computed(() => props.user?.user?.metadata?.name ?? "");
  */
 const reveal = ref(false);
 
+// key 用原始值（username/reveal 的 .value），解绑后 setQueryData 才能命中同一份缓存；
+// 整体包成 computed 让 key 随 username / reveal 变化自动重新查询。
+const bindingQueryKey = computed(() => ["uni-halo:wechat-binding", username.value, reveal.value]);
+
 const { data: binding, isLoading } = useQuery({
-  queryKey: ["uni-halo:wechat-binding", username, reveal],
+  queryKey: bindingQueryKey,
   queryFn: () => wechatUserApi.getBinding(username.value, reveal.value),
   enabled: computed(() => !!username.value),
 });
@@ -63,7 +67,7 @@ const handleUnbind = () => {
       // 本地直接置为未绑定，不立即重查：Halo 删除扩展是两阶段异步，
       // 删除指令返回后残留的 deleting 记录仍可能让重查拿到 bound=true，
       // 管理员会以为解绑没生效。下次进入用户详情即为最终状态。
-      queryClient.setQueryData(["uni-halo:wechat-binding", username.value], {
+      queryClient.setQueryData(bindingQueryKey.value, {
         username: username.value,
         bound: false,
         providerUserId: undefined,

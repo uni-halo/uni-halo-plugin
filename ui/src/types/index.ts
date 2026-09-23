@@ -731,6 +731,7 @@ export interface FeatureConfigPages {
   /** 瞬间页评论配置 */
   moment?: {
     showCommentList?: boolean;
+    /** 是否开启评论（服务端经系统设置 comment.enable 注入，无手动开关） */
     enableComment?: boolean;
   };
   /** 文章详情页内容与版权文案 */

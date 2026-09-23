@@ -12,14 +12,28 @@ spec:
       你的账号已创建成功，以下是你的账号信息，请妥善保管：
 
       用户名：[(${username})]
-      昵  称：[(${displayName})]
+      个人昵称：[(${displayName})]
       初始密码：[(${password})]
       注册时间：[(${registeredAt})]
 
       提示：
       1. 初始密码仅用于「账号密码登录」与「修改密码」时验证身份，微信一键登录无需密码。
-      2. 建议尽快前往「我的资料-修改密码」修改为你的专属密码，修改后本条消息中的初始密码立即失效。
+      2. 建议尽快前往「我的资料-修改密码」修改为你的新密码，修改后本条消息中的初始密码立即失效。
       3. 本消息仅你本人可见，请勿将密码告知任何人。
+    htmlBody: |-
+      <p>你的账号已创建成功，以下是你的账号信息，请妥善保管：</p>
+      <ul>
+        <li>用户名：[(${username})]</li>
+        <li>个人昵称：[(${displayName})]</li>
+        <li>初始密码：[(${password})]</li>
+        <li>注册时间：[(${registeredAt})]</li>
+      </ul>
+      <p><strong>提示：</strong></p>
+      <ol>
+        <li>初始密码仅用于「账号密码登录」与「修改密码」时验证身份，微信一键登录无需密码。</li>
+        <li>建议尽快前往「我的资料-修改密码」修改为你的新密码，修改后本条消息中的初始密码立即失效。</li>
+        <li>本消息仅你本人可见，请勿将密码告知任何人。</li>
+      </ol>
 ---
 apiVersion: notification.halo.run/v1alpha1
 kind: NotificationTemplate
@@ -32,11 +46,18 @@ spec:
   template:
     title: "密码设置成功"
     rawBody: |-
-      你已于 [(${setAt})] 成功设置专属密码。
+      你已于 [(${setAt})] 成功设置新密码。
 
       提示：
       1. 初始密码已失效，此后请使用新密码进行账号密码登录与修改密码验证。
       2. 如非本人操作，请立即联系站长处理并修改密码。
+    htmlBody: |-
+      <p>你已于 [(${setAt})] 成功设置新密码。</p>
+      <p><strong>提示：</strong></p>
+      <ol>
+        <li>初始密码已失效，此后请使用新密码进行账号密码登录与修改密码验证。</li>
+        <li>如非本人操作，请立即联系站长处理并修改密码。</li>
+      </ol>
 ---
 apiVersion: notification.halo.run/v1alpha1
 kind: NotificationTemplate
@@ -49,12 +70,22 @@ spec:
   template:
     title: "微信绑定成功"
     rawBody: |-
-      你的账号已于 [(${boundAt})] 成功绑定微信（绑定方式：[(${bindWay})]）。
+      你的账号已于 [(${boundAt})] 成功绑定微信
+      绑定方式：[(${bindWay})]
 
       提示：
       1. 绑定后可直接使用微信小程序一键登录本账号。
       2. 一个微信只能绑定一个账号，一个账号也只能绑定一个微信。
       3. 如非本人操作，请立即联系站长处理。
+    htmlBody: |-
+      <p>你的账号已于 [(${boundAt})] 成功绑定微信</p>
+      <p>绑定方式：[(${bindWay})]</p>
+      <p><strong>提示：</strong></p>
+      <ol>
+        <li>绑定后可直接使用微信小程序一键登录本账号。</li>
+        <li>一个微信只能绑定一个账号，一个账号也只能绑定一个微信。</li>
+        <li>如非本人操作，请立即联系站长处理。</li>
+      </ol>
 ---
 apiVersion: notification.halo.run/v1alpha1
 kind: NotificationTemplate
@@ -67,8 +98,17 @@ spec:
   template:
     title: "已解除微信绑定"
     rawBody: |-
-      你的账号已于 [(${unboundAt})] 解除微信绑定（操作方：[(${operator})]）。
+      你的账号已于 [(${unboundAt})] 解除微信绑定
+      操作方：[(${operator})]
 
       提示：
       1. 解绑后将无法使用微信一键登录，请改用账号密码登录，或重新绑定微信。
       2. 如非本人操作，请立即联系站长处理并修改密码。
+    htmlBody: |-
+      <p>你的账号已于 [(${unboundAt})] 解除微信绑定</p>
+      <p>操作方：[(${operator})]</p>
+      <p><strong>提示：</strong></p>
+      <ol>
+        <li>解绑后将无法使用微信一键登录，请改用账号密码登录，或重新绑定微信。</li>
+        <li>如非本人操作，请立即联系站长处理并修改密码。</li>
+      </ol>
