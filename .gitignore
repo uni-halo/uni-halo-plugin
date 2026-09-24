@@ -86,3 +86,5 @@ application-local.properties
 .docs/
 .design/
 .atomcode/
+# 临时文件
+_tmp*
