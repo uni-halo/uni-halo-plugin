@@ -14,7 +14,6 @@ import cn.ialley.unihalo.scheme.MiniProgramLinkGroup;
 import cn.ialley.unihalo.scheme.MiniProgramLinkSubmission;
 import cn.ialley.unihalo.scheme.Notice;
 import cn.ialley.unihalo.scheme.NoticeType;
-import cn.ialley.unihalo.scheme.QRCodeInfo;
 import cn.ialley.unihalo.utils.PluginSecretProvider;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -55,13 +54,6 @@ public class UniHaloPlugin extends BasePlugin {
         // 签名密钥不可用即拒绝启动（fail closed）：相册/模块解锁签名依赖它，
         // 任何内置回退密钥都会重现开源硬编码密钥漏洞
         secretProvider.initialize().block(Duration.ofSeconds(10));
-
-        schemeManager.register(QRCodeInfo.class, indexSpecs -> {
-            indexSpecs.add(IndexSpecs.<QRCodeInfo, String>single("key", String.class)
-                    .indexFunc(QRCodeInfo::getKey));
-            indexSpecs.add(IndexSpecs.<QRCodeInfo, String>single("postId", String.class)
-                    .indexFunc(QRCodeInfo::getPostId));
-        });
 
         schemeManager.register(AppInfo.class, indexSpecs -> {
             indexSpecs.add(IndexSpecs.<AppInfo, String>single("spec.appid", String.class)
@@ -191,7 +183,6 @@ public class UniHaloPlugin extends BasePlugin {
         // 防御式清理：start() 中途失败时部分 scheme 可能尚未注册，
         // schemeManager.get 未命中会抛 SchemeNotFoundException，
         // 掩盖真正的启动错误（pf4j start 失败 → 调 stop 清理）。
-        unregisterQuietly(QRCodeInfo.class);
         unregisterQuietly(AppInfo.class);
         unregisterQuietly(AppVersion.class);
         unregisterQuietly(AuditDataConfig.class);

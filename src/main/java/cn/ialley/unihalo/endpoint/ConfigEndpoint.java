@@ -55,18 +55,6 @@ public class ConfigEndpoint implements CustomEndpoint {
                             .implementation(String.class)
                         );
                 })
-            .GET("/getQRCodeImg/{postId}", uniHaloService::getQRCodeImg,
-                    builder -> {
-                        builder.operationId("getQRCodeImg")
-                                .description("getQRCodeImg")
-                                .tag(ApiTag);
-                    })
-            .GET("/getQRCodeInfo/{key}", uniHaloService::getQRCodeInfo,
-                    builder -> {
-                        builder.operationId("getQRCodeInfo")
-                                .description("getQRCodeInfo")
-                                .tag(ApiTag);
-                    })
             .build();
     }
 

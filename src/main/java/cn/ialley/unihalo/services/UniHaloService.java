@@ -1,8 +1,6 @@
 package cn.ialley.unihalo.services;
 
 import tools.jackson.databind.JsonNode;
-import org.springframework.web.reactive.function.server.ServerRequest;
-import org.springframework.web.reactive.function.server.ServerResponse;
 import reactor.core.publisher.Mono;
 import java.util.Map;
 
@@ -27,18 +25,4 @@ public interface UniHaloService {
      * @return 配置
      */
     Mono<JsonNode> getAppConfigsByGroupName(String groupName);
-
-    /**
-     * 获取二维码图片。
-     *
-     * @author lywq
-     */
-    Mono<ServerResponse> getQRCodeImg(ServerRequest serverRequest);
-
-    /**
-     * 获取二维码信息。
-     *
-     * @author lywq
-     */
-    Mono<ServerResponse> getQRCodeInfo(ServerRequest serverRequest);
 }
