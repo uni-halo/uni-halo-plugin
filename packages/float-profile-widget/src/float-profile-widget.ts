@@ -3,7 +3,7 @@
  *
  * 使用 shadow DOM 自定义元素：样式完全内聚（外部主题样式无法穿透，组件
  * 样式也不会泄漏）；弹窗（申请表单 / 友链信息）渲染在 shadow DOM 内部，
- * 样式选择器直接用类名（修复此前「弹窗内按钮无样式」问题）。
+ * 样式选择器直接用类名。
  *
  * 数据源：
  *  - 申请提交：POST .../mini-program-links/submissions（验证码 query 参数，403 自动刷新）
@@ -17,7 +17,10 @@ import {
   CONFIGS_URL,
   EDGE_TRIGGER,
   LINK_SUBMIT_URL,
+  STATE_KEY,
   STORAGE_KEY,
+  loadWidgetState,
+  saveWidgetState,
 } from "./config";
 import { matchPage } from "./page-match";
 import { styles } from "./styles";
@@ -27,6 +30,7 @@ import type {
   FloatProfileWidgetConfig,
   MiniInfo,
 } from "./types";
+import type { WidgetPersistedState } from "./config";
 
 interface ApplyField {
   key: string;
@@ -180,16 +184,46 @@ export class FloatProfileWidgetElement extends LitElement {
     requestAnimationFrame(() => this.applyDefaultState());
   }
 
-  /** 默认状态：default（无操作）/ minimized（初始最小化） */
+  /** 默认状态：访客已存状态（跨页记忆）> 站长 defaultState > 无 */
   private applyDefaultState(): void {
-    if (this.config.defaultState === "minimized") {
-      const card = this.cardEl;
-      if (card) {
-        const rect = card.getBoundingClientRect();
-        this.miniDotStyle = `left:${Math.round(rect.left)}px;top:${Math.round(rect.top)}px;`;
-        this.minimized = true;
-      }
+    const card = this.cardEl;
+    if (!card) {
+      return;
     }
+    const saved = loadWidgetState();
+    if (saved) {
+      // 先恢复卡片自由位置（覆盖锚点定位），贴边/最小化都基于该位置计算
+      if (saved.cardPos) {
+        this.setFree(saved.cardPos.left, saved.cardPos.top);
+      }
+      if (saved.edge) {
+        this.hideToEdge(saved.edge, false);
+        return;
+      }
+      if (saved.minimized) {
+        if (saved.dotPos) {
+          this.miniDotStyle =
+            `left:${Math.round(saved.dotPos.left)}px;top:${Math.round(saved.dotPos.top)}px;`;
+        } else {
+          const rect = card.getBoundingClientRect();
+          this.miniDotStyle = `left:${Math.round(rect.left)}px;top:${Math.round(rect.top)}px;`;
+        }
+        this.minimized = true;
+        return;
+      }
+      return; // 展开态：位置已在上面恢复
+    }
+    if (this.config.defaultState === "minimized") {
+      const rect = card.getBoundingClientRect();
+      this.miniDotStyle = `left:${Math.round(rect.left)}px;top:${Math.round(rect.top)}px;`;
+      this.minimized = true;
+    }
+  }
+
+  /** 会话级持久化访客状态：读旧值打补丁后写回（附配置指纹） */
+  private persistState(patch: Partial<WidgetPersistedState>): void {
+    const current = loadWidgetState() ?? { minimized: false, edge: null };
+    saveWidgetState({ ...current, ...patch });
   }
 
   private isClosed(): boolean {
@@ -292,7 +326,17 @@ export class FloatProfileWidgetElement extends LitElement {
     this.dragState = null;
     card.classList.remove("uh-fpw-dragging");
     card.style.touchAction = "";
+    // 拖拽结束时的视口位置（此时 transform 已被 setFree 归零，rect 即 left/top）
+    const rect = card.getBoundingClientRect();
     this.maybeEdgeHide();
+    // 未触发贴边时记住拖拽后的自由位置（贴边场景由 hideToEdge 持久化 edge 状态）
+    if (!this.edgeTrigger) {
+      this.persistState({
+        edge: null,
+        minimized: false,
+        cardPos: { left: Math.round(rect.left), top: Math.round(rect.top) },
+      });
+    }
   }
 
   private setFree(left: number, top: number): void {
@@ -340,21 +384,34 @@ export class FloatProfileWidgetElement extends LitElement {
       }
     });
     if (side) {
-      // 完全隐藏：按当前视口位置精确位移（覆盖锚点 top/left/offset 残留，不留任何可见部分）
-      if (side === "left") {
-        card.style.transform = `translateX(${-(rect.left + rect.width)}px)`;
-      } else if (side === "right") {
-        card.style.transform = `translateX(${window.innerWidth - rect.left}px)`;
-      } else if (side === "top") {
-        card.style.transform = `translateY(${-(rect.top + rect.height)}px)`;
-      } else {
-        card.style.transform = `translateY(${window.innerHeight - rect.top}px)`;
-      }
-      card.classList.add("uh-fpw-edge", "uh-fpw-edge-" + side);
-      // 边缘触发把手：fixed 定位在对应视口边缘中点
-      this.edgeSide = side;
-      this.edgeTriggerStyle = this.buildEdgeTriggerStyle(side, rect);
-      this.edgeTrigger = true;
+      this.hideToEdge(side, true);
+    }
+  }
+
+  /** 隐藏到指定边（按当前视口位置精确位移）并显示触发把手；persist=是否写入会话状态 */
+  private hideToEdge(side: string, persist: boolean): void {
+    const card = this.cardEl;
+    if (!card) {
+      return;
+    }
+    const rect = card.getBoundingClientRect();
+    // 完全隐藏：按当前视口位置精确位移（覆盖锚点 top/left/offset 残留，不留任何可见部分）
+    if (side === "left") {
+      card.style.transform = `translateX(${-(rect.left + rect.width)}px)`;
+    } else if (side === "right") {
+      card.style.transform = `translateX(${window.innerWidth - rect.left}px)`;
+    } else if (side === "top") {
+      card.style.transform = `translateY(${-(rect.top + rect.height)}px)`;
+    } else {
+      card.style.transform = `translateY(${window.innerHeight - rect.top}px)`;
+    }
+    card.classList.add("uh-fpw-edge", "uh-fpw-edge-" + side);
+    // 边缘触发把手：fixed 定位在对应视口边缘中点
+    this.edgeSide = side;
+    this.edgeTriggerStyle = this.buildEdgeTriggerStyle(side, rect);
+    this.edgeTrigger = true;
+    if (persist) {
+      this.persistState({ edge: side as WidgetPersistedState["edge"], minimized: false });
     }
   }
 
@@ -390,7 +447,7 @@ export class FloatProfileWidgetElement extends LitElement {
     }
   }
 
-  /** 点击把手：完全恢复卡片（清贴边类与把手） */
+  /** 点击把手：完全恢复卡片（清贴边类与把手），并记住展开态 */
   private restoreFromEdge(): void {
     const card = this.cardEl;
     this.edgeTrigger = false;
@@ -409,6 +466,13 @@ export class FloatProfileWidgetElement extends LitElement {
         "uh-fpw-edge-top",
         "uh-fpw-edge-bottom",
       );
+      // 记住展开前的卡片位置，跨页恢复贴边/展开都基于它
+      const rect = card.getBoundingClientRect();
+      this.persistState({
+        edge: null,
+        minimized: false,
+        cardPos: { left: Math.round(rect.left), top: Math.round(rect.top) },
+      });
     }
   }
 
@@ -434,6 +498,13 @@ export class FloatProfileWidgetElement extends LitElement {
       "uh-fpw-edge-top",
       "uh-fpw-edge-bottom",
     );
+    // 记住最小化态与小球位置（小球即卡片当前视口位置），跨页恢复
+    this.persistState({
+      minimized: true,
+      edge: null,
+      dotPos: { left: Math.round(rect.left), top: Math.round(rect.top) },
+      cardPos: { left: Math.round(rect.left), top: Math.round(rect.top) },
+    });
   }
 
   private onRestoreClick(): void {
@@ -460,16 +531,24 @@ export class FloatProfileWidgetElement extends LitElement {
       if (!shown) {
         return;
       }
-      const curLeft = Number.parseInt(shown.style.left, 10) || 0;
-      const curTop = Number.parseInt(shown.style.top, 10) || 0;
+      let curLeft = Number.parseInt(shown.style.left, 10) || 0;
+      let curTop = Number.parseInt(shown.style.top, 10) || 0;
       const maxLeft = Math.max(0, window.innerWidth - shown.offsetWidth);
       const maxTop = Math.max(0, window.innerHeight - shown.offsetHeight);
       if (curLeft > maxLeft) {
+        curLeft = maxLeft;
         shown.style.left = maxLeft + "px";
       }
       if (curTop > maxTop) {
+        curTop = maxTop;
         shown.style.top = maxTop + "px";
       }
+      // 记住展开态与卡片最终位置（含视口约束修正），跨页恢复
+      this.persistState({
+        minimized: false,
+        edge: null,
+        cardPos: { left: curLeft, top: curTop },
+      });
     });
   }
 
@@ -513,6 +592,13 @@ export class FloatProfileWidgetElement extends LitElement {
     const drag = this.miniDotDrag;
     if (drag?.moved) {
       this.miniDotDragged = true; // click 处理器据此忽略本次恢复
+      // 小球拖拽落点写入状态，跨页保持在拖后的位置
+      const dot = this.renderRoot.querySelector(".uh-fpw-mini-dot") as HTMLElement | null;
+      if (dot && dot.style.left && dot.style.top) {
+        this.persistState({
+          dotPos: { left: Number.parseFloat(dot.style.left), top: Number.parseFloat(dot.style.top) },
+        });
+      }
     }
     this.miniDotDrag = null;
   }
@@ -526,6 +612,12 @@ export class FloatProfileWidgetElement extends LitElement {
       } catch {
         // sessionStorage 不可用时仅本次页面关闭
       }
+    }
+    // 关闭后清掉访客状态，避免下次会话残留最小化/贴边/位置
+    try {
+      sessionStorage.removeItem(STATE_KEY);
+    } catch {
+      // 忽略
     }
     const card = this.cardEl;
     if (card) {

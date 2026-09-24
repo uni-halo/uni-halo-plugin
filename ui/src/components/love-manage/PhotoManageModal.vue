@@ -3,6 +3,7 @@ import {Toast, VButton, VModal, VSpace} from "@halo-dev/components";
 import RiArrowUpLine from "~icons/ri/arrow-up-line";
 import RiArrowDownLine from "~icons/ri/arrow-down-line";
 import RiRefreshLine from "~icons/ri/refresh-line";
+import RiMapPinLine from "~icons/ri/map-pin-line";
 import {useQueryClient} from "@tanstack/vue-query";
 import {computed, reactive, ref, watch} from "vue";
 import ImagePreviewModal from "@/components/common/ImagePreviewModal.vue";
@@ -332,7 +333,10 @@ const handleRefresh = async () => {
                 </div>
                 <div class=":uno: flex items-center gap-1 text-[10px] text-gray-400">
                   <span v-if="photo.takenDate">{{ photo.takenDate }}</span>
-                  <span v-if="photo.location">📍 {{ photo.location }}</span>
+                  <span v-if="photo.location" class=":uno: flex items-center gap-0.5">
+                    <RiMapPinLine class=":uno: h-3 w-3 shrink-0" />
+                    {{ photo.location }}
+                  </span>
                 </div>
               </div>
               <div class=":uno: flex items-center justify-between gap-1 bg-gray-50 px-2 py-1">

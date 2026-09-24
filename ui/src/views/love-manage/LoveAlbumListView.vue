@@ -20,6 +20,7 @@ import PhotoManageModal from "@/components/love-manage/PhotoManageModal.vue";
 import FilterDropdown from "@/components/common/FilterDropdown.vue";
 import ImagePreviewModal from "@/components/common/ImagePreviewModal.vue";
 import { loveAlbumsApi } from "@/api";
+import RiLockLine from "~icons/ri/lock-line";
 import { LOVE_LIST_SORT_OPTIONS, type LoveAlbum } from "@/types";
 
 const { confirmDelete } = useDeletionFlow(["uni-halo:love-albums"]);
@@ -212,8 +213,9 @@ const onModalClose = () => {
               <span class=":uno: text-sm">暂无封面</span>
             </div>
             <span v-if="album.spec.passwordEnabled"
-              class=":uno: absolute right-2 top-2 rounded bg-gray-900/70 px-1.5 py-0.5 text-xs text-white">
-              🔒 已加密
+              class=":uno: absolute right-2 top-2 flex items-center gap-1 rounded bg-gray-900/70 px-1.5 py-0.5 text-xs text-white">
+              <RiLockLine class=":uno: h-3 w-3" />
+              已加密
             </span>
           </div>
           <div class=":uno: p-4">

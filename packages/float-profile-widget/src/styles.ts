@@ -3,7 +3,7 @@
  *
  * 组件使用 shadow DOM，样式完全内聚不泄漏、外部主题样式也无法穿透影响组件；
  * 弹窗（overlay/modal）渲染在 shadow DOM 内部，按钮等选择器直接用类名
- * （无需 .uh-fpw 前缀），修复了此前「弹窗内按钮无样式」的问题。
+ * （无需 .uh-fpw 前缀）。
  * 设计参考 app 端 glass（uh-styles / tabbar：半透明背景 + backdrop blur + 白色细边框 + 柔和阴影）。
  */
 import { css } from "lit";

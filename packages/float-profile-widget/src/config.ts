@@ -13,28 +13,55 @@ export const CONFIG: FloatProfileWidgetConfig | undefined =
 export const STORAGE_KEY = "uh-fpw-closed";
 export const EDGE_TRIGGER = 80; // 距视口边缘小于该值视为贴边
 
-/**
- * 旧版（uh-fmp-* 时代）存储键一次性迁移：新键为空且旧键存在时搬移后删除旧键。
- * 悬浮卡片关闭记忆走 sessionStorage、申请草稿走 localStorage，两个存储各自迁移。
- */
-function migrateLegacyKeys(newKey: string, legacyKey: string, storage: Storage): void {
+/** 悬浮窗访客状态（sessionStorage，会话级跨页记忆；新会话复位站长默认） */
+export interface WidgetPersistedState {
+  minimized: boolean;
+  edge: "left" | "right" | "top" | "bottom" | null;
+  /** 卡片自由位置（拖拽/恢复后），无则用锚点默认定位 */
+  cardPos?: { left: number; top: number };
+  /** 最小化小球位置 */
+  dotPos?: { left: number; top: number };
+  /** 配置指纹：站长改动布局类配置后旧位置作废 */
+  fp?: string;
+}
+
+export const STATE_KEY = "uh-fpw-state";
+
+/** 影响默认布局的配置组合指纹 */
+export function configFingerprint(): string {
+  if (!CONFIG) {
+    return "";
+  }
+  return [CONFIG.position, CONFIG.offsetX, CONFIG.offsetY, CONFIG.cardWidth].join("|");
+}
+
+/** 读取访客状态；配置指纹不匹配（站长改过布局配置）时作废清空 */
+export function loadWidgetState(): WidgetPersistedState | null {
   try {
-    if (storage.getItem(newKey) === null) {
-      const legacy = storage.getItem(legacyKey);
-      if (legacy !== null) {
-        storage.setItem(newKey, legacy);
-        storage.removeItem(legacyKey);
-      }
-    } else {
-      storage.removeItem(legacyKey);
+    const raw = sessionStorage.getItem(STATE_KEY);
+    if (!raw) {
+      return null;
     }
+    const state = JSON.parse(raw) as WidgetPersistedState;
+    if (state.fp !== configFingerprint()) {
+      sessionStorage.removeItem(STATE_KEY);
+      return null;
+    }
+    return state;
   } catch {
-    // 存储不可用时静默跳过，不影响挂载
+    return null;
   }
 }
 
-migrateLegacyKeys(STORAGE_KEY, "uh-fmp-closed", sessionStorage);
-migrateLegacyKeys("uh-fpw-apply-draft", "uh-fmp-apply-draft", localStorage);
+/** 写入访客状态（自动附带配置指纹） */
+export function saveWidgetState(state: WidgetPersistedState): void {
+  try {
+    state.fp = configFingerprint();
+    sessionStorage.setItem(STATE_KEY, JSON.stringify(state));
+  } catch {
+    // sessionStorage 不可用时静默跳过
+  }
+}
 
 // 公开接口（api.unihalo.ialley.cn 分组，匿名可访问；app 端同源接口）
 // 端点统一注册在组根路径（无 plugins/<插件名> 前缀段），对齐 Halo 角色模板规范

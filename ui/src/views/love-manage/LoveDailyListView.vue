@@ -23,6 +23,7 @@ import LoveDailyItemEditingModal from "@/components/love-manage/daily/LoveDailyI
 import FilterDropdown from "@/components/common/FilterDropdown.vue";
 import ImagePreviewModal from "@/components/common/ImagePreviewModal.vue";
 import { loveDailyApi } from "@/api";
+import RiChat3Line from "~icons/ri/chat-3-line";
 import {
   LOVE_DAILY_TIME_SORT_OPTIONS,
   LOVE_DAILY_VIEW_MODES,
@@ -353,8 +354,9 @@ const timelineDotClass = (status?: string) => {
                   {{ item.spec.content }}
                 </div>
                 <div v-if="item.spec.completeRemark"
-                  class=":uno: mt-2 rounded bg-[#f8385614] px-3 py-2 text-sm text-[#c22840]">
-                  💬 {{ item.spec.completeRemark }}
+                  class=":uno: mt-2 flex items-start gap-1.5 rounded bg-[#f8385614] px-3 py-2 text-sm text-[#c22840]">
+                  <RiChat3Line class=":uno: mt-0.5 h-3.5 w-3.5 shrink-0" />
+                  <span>{{ item.spec.completeRemark }}</span>
                 </div>
                 <div v-if="item.spec.images?.length" class=":uno: mt-3 grid grid-cols-3 gap-2 sm:grid-cols-4">
                   <img v-for="(url, index) in item.spec.images" :key="index" :src="url" :alt="item.spec.title || ''"

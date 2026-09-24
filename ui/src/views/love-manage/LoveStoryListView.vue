@@ -23,6 +23,7 @@ import LoveStoryEditingModal from "@/components/love-manage/story/LoveStoryEditi
 import FilterDropdown from "@/components/common/FilterDropdown.vue";
 import ImagePreviewModal from "@/components/common/ImagePreviewModal.vue";
 import { loveStoryApi } from "@/api";
+import RiMapPinLine from "~icons/ri/map-pin-line";
 import {
   LOVE_STORY_SORT_OPTIONS,
   LOVE_STORY_VIEW_MODES,
@@ -235,8 +236,10 @@ const onModalClose = () => {
                     <span v-if="story.spec.date" class=":uno: text-xs text-gray-500">
                       {{ story.spec.date }}
                     </span>
-                    <span v-if="story.spec.location" class=":uno: ml-2 text-xs text-gray-500">
-                      📍 {{ story.spec.location }}
+                    <span v-if="story.spec.location"
+                      class=":uno: ml-2 flex items-center gap-0.5 text-xs text-gray-500">
+                      <RiMapPinLine class=":uno: h-3 w-3 shrink-0" />
+                      {{ story.spec.location }}
                     </span>
                   </template>
                 </VEntityField>
@@ -298,7 +301,10 @@ const onModalClose = () => {
                 </div>
                 <div class=":uno: mt-1 flex items-center gap-3 text-xs text-gray-400">
                   <span v-if="story.spec.date">{{ story.spec.date }}</span>
-                  <span v-if="story.spec.location">📍 {{ story.spec.location }}</span>
+                  <span v-if="story.spec.location" class=":uno: flex items-center gap-0.5">
+                    <RiMapPinLine class=":uno: h-3 w-3 shrink-0" />
+                    {{ story.spec.location }}
+                  </span>
                 </div>
                 <div v-if="story.spec.content" class=":uno: mt-2 text-sm leading-relaxed text-gray-600"
                   v-html="story.spec.content" />
