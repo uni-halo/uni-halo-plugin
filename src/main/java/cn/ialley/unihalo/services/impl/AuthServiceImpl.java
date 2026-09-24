@@ -1087,10 +1087,6 @@ public class AuthServiceImpl implements AuthService {
         return values == null ? new String[0] : values;
     }
 
-    /**
-     * 随机强密码：Wx + 12 位随机十六进制 + a1!（总长 16 位，含大小写/数字/特殊字符，
-     * 满足 Halo 密码策略与「最长 16 位」要求；经注册欢迎通知告知本人）。
-     */
     /* ---------- 随机初始密码：uhc 前缀 + 数字/大小写/符号随机混合 ---------- */
 
     private static final String PASSWORD_DIGITS = "0123456789";

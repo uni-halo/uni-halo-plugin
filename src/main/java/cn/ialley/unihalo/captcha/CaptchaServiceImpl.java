@@ -80,6 +80,7 @@ public class CaptchaServiceImpl implements CaptchaService {
                         scopeEnabled(node, CaptchaScope.LINK_SUBMISSION),
                         scopeEnabled(node, CaptchaScope.LOVE_ALBUM_UNLOCK),
                         scopeEnabled(node, CaptchaScope.LOVE_MODULE_UNLOCK),
+                        scopeEnabled(node, CaptchaScope.REGISTER_EMAIL_CODE),
                         parseType(node.path(KEY_TYPE).asString(CaptchaType.ALPHANUMERIC.name())),
                         node.path(KEY_LENGTH).asInt(4),
                         node.path(KEY_RANGE).asInt(10)));
@@ -106,6 +107,7 @@ public class CaptchaServiceImpl implements CaptchaService {
 
     private record CaptchaConfig(boolean enabled, boolean linkSubmissionEnabled,
             boolean loveAlbumUnlockEnabled, boolean loveModuleUnlockEnabled,
+            boolean registerEmailCodeEnabled,
             CaptchaType type, int length, int range) {
 
         boolean scopeEnabled(CaptchaScope scope) {
@@ -116,6 +118,7 @@ public class CaptchaServiceImpl implements CaptchaService {
                 case LINK_SUBMISSION -> linkSubmissionEnabled;
                 case LOVE_ALBUM_UNLOCK -> loveAlbumUnlockEnabled;
                 case LOVE_MODULE_UNLOCK -> loveModuleUnlockEnabled;
+                case REGISTER_EMAIL_CODE -> registerEmailCodeEnabled;
             };
         }
     }
