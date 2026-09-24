@@ -4,7 +4,7 @@ metadata:
   name: uni-halo-user-registered
 spec:
   displayName: "[UH] 注册成功欢迎"
-  description: "移动端新用户注册成功后的欢迎通知，包含用户名、昵称、注册邮箱与初始密码（如有）"
+  description: "移动端新用户注册成功后的欢迎通知，包含用户名、昵称与注册邮箱"
   properties:
     - name: username
       type: string
@@ -17,10 +17,6 @@ spec:
     - name: email
       type: string
       description: "注册邮箱（未强制邮箱验证的微信静默注册可能为默认生成的 用户名@example.com）"
-      optional: true
-    - name: password
-      type: string
-      description: "初始密码明文（仅插件代生成密码的注册路径下发：微信静默注册 / 微信邮箱验证注册；账号密码注册不下发）"
       optional: true
     - name: registeredAt
       type: string
