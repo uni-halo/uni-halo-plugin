@@ -54,13 +54,23 @@ public class NotificationHelper {
     private final NotificationReasonEmitter reasonEmitter;
     private final NotificationCenter notificationCenter;
 
-    /** 注册欢迎通知：attributes 含 username/displayName/password/registeredAt。 */
+    /**
+     * 注册欢迎通知：attributes 含 username/displayName/registeredAt，password/email 可空。
+     *
+     * <p>微信静默注册、微信邮箱验证注册（插件代生成初始密码）时传入明文密码告知本人；
+     * 账号密码注册（用户自设密码）传 null，模板不出现密码行。邮箱为空时模板不出现邮箱行。
+     */
     public Mono<Void> emitUserRegistered(String username, String displayName,
-            String plainPassword) {
+            String plainPassword, String email) {
         var attributes = new HashMap<String, Object>();
         attributes.put("username", username);
         attributes.put("displayName", displayName);
-        attributes.put("password", plainPassword);
+        if (plainPassword != null && !plainPassword.isBlank()) {
+            attributes.put("password", plainPassword);
+        }
+        if (email != null && !email.isBlank()) {
+            attributes.put("email", email);
+        }
         attributes.put("registeredAt", now());
         return subscribeOnce(username, REASON_USER_REGISTERED)
                 .then(emit(username, REASON_USER_REGISTERED, attributes));

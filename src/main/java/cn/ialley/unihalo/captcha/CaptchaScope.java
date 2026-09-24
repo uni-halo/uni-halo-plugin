@@ -19,7 +19,10 @@ public enum CaptchaScope {
 
     /** 恋爱模块入口解锁（POST /love-modules/-/unlock，键 loveModuleUnlock；
      * 覆盖恋爱日记/恋爱故事/恋爱相册入口/恋爱清单等模块入口） */
-    LOVE_MODULE_UNLOCK("loveModuleUnlock");
+    LOVE_MODULE_UNLOCK("loveModuleUnlock"),
+
+    /** 注册邮箱验证码发送（POST /auth/-/send-register-email-code，键 registerEmailCode） */
+    REGISTER_EMAIL_CODE("registerEmailCode");
 
     private final String configKey;
 

@@ -49,15 +49,29 @@ public interface AuthService {
     Mono<LoginResult> registerByPassword(RegisterForm form, String clientIp);
 
     /**
-     * 微信一键注册并登录（注册页按钮，兼做「注册 + 登录」）。
-     *
-     * 与 {@link #loginByWechat} 同源同语义：wx.login code 换身份，已绑定则直接登录，
+     * 微信一键注册：与 {@link #loginByWechat} 同源同语义，已绑定则直接登录，
      * 未绑定则自动建号（建号走 {@code signUp}，注册开关关闭时 fail closed 拒绝）。
-     * 复用同一实现避免双路径漂移。
      *
      * @param code wx.login() 得到的临时登录凭证（一次性）
      */
     Mono<LoginResult> registerByWechat(String code);
+
+    /**
+     * 微信补邮箱注册（第二段）：站点开启「注册必须验证邮箱」后，微信一键注册会以
+     * {@code WECHAT_EMAIL_REQUIRED} 拒绝并下发 HMAC 票据（30 分钟），客户端补齐
+     * 邮箱与验证码后凭票据调用本方法完成注册并登录。
+     *
+     * <p>服务端会用 {@code code} 重新换取微信 openid 与票据比对，防止票据被截获后
+     * 由其他微信冒名注册；邮箱验证码由客户端在注册前经 Halo 匿名端点发往新邮箱，
+     * {@code signUp} 内部校验验证码有效性及与邮箱一致。
+     *
+     * @param ticket    一键注册被拦时下发的注册票据
+     * @param email     用户填写的邮箱
+     * @param emailCode 发往该邮箱的验证码
+     * @param code      重新获取的 wx.login() 临时登录凭证（一次性，用于二次校验身份）
+     */
+    Mono<LoginResult> registerByWechatEmail(String ticket, String email, String emailCode,
+            String code);
 
     /**
      * 已登录用户绑定微信（老账号主动关联，绑定后可用微信一键登录进这个账号）。

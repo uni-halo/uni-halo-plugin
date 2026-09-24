@@ -90,6 +90,17 @@ spec:
                       value: false
                   help: 开启后，恋爱日记/恋爱故事/恋爱相册/恋爱清单等模块入口解锁时需要输入验证码，防止暴力试密码。
                   validation: required
+                - $formkit: select
+                  name: registerEmailCode
+                  label: 注册邮箱验证码
+                  value: true
+                  options:
+                    - label: 开启
+                      value: true
+                    - label: 关闭
+                      value: false
+                  help: 开启后，App 端发送注册邮箱验证码前需要先完成图形验证码，防止邮件轰炸与验证码滥用。
+                  validation: required
             - $formkit: select
               if: "$get(captchaEnabled).value === true"
               name: type
@@ -115,6 +126,28 @@ spec:
               label: 算术范围
               value: 10
               help: 算术题运算数的取值范围（1~N）
+              validation: required
+        - $formkit: group
+          name: registerEmailCodeConfig
+          label: 注册邮箱验证码
+          children:
+            - $formkit: number
+              name: globalPerMinute
+              label: 全站每分钟上限
+              value: 30
+              help: 全站共享的发送总配额，防分布式滥用的最后防线；0 表示不限制（不建议）
+              validation: required
+            - $formkit: number
+              name: ipPerMinute
+              label: 单 IP 每分钟上限
+              value: 10
+              help: 按客户端源地址限制，防止单一来源刷验证码
+              validation: required
+            - $formkit: number
+              name: emailPerTenMinutes
+              label: 单邮箱每 10 分钟上限
+              value: 3
+              help: 防止单个邮箱被轰炸
               validation: required
     - group: integrationConfig
       label: 平台接入

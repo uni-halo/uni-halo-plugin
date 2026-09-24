@@ -1,5 +1,7 @@
 package cn.ialley.unihalo.exception;
 
+import java.util.Map;
+
 import lombok.Getter;
 
 /**
@@ -45,14 +47,26 @@ public class AuthException extends RuntimeException {
 
     private final int status;
 
+    /**
+     * 附加数据（可空）。个别业务分支需要随错误下发动态数据，
+     * 如 {@code WECHAT_EMAIL_REQUIRED} 携带补邮箱注册票据；
+     * 端点层仅在非空时并入错误响应体。
+     */
+    private final Map<String, Object> data;
+
     public AuthException(String code, String message) {
         this(code, message, STATUS_UNAUTHORIZED);
     }
 
     public AuthException(String code, String message, int status) {
+        this(code, message, status, null);
+    }
+
+    public AuthException(String code, String message, int status, Map<String, Object> data) {
         super(message);
         this.code = code;
         this.status = status;
+        this.data = data;
     }
 
     /** 按业务错误码总表构造（推荐入口，避免散写字符串常量）。 */
@@ -63,5 +77,10 @@ public class AuthException extends RuntimeException {
     /** 按业务错误码总表构造并覆盖文案（动态内容，code 与 status 不变）。 */
     public AuthException(BizErrorCode errorCode, String message) {
         this(errorCode.getCode(), message, errorCode.getStatus());
+    }
+
+    /** 按业务错误码总表构造并附加动态数据（如补邮箱注册票据）。 */
+    public AuthException(BizErrorCode errorCode, String message, Map<String, Object> data) {
+        this(errorCode.getCode(), message, errorCode.getStatus(), data);
     }
 }

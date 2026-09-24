@@ -1,8 +1,10 @@
 package cn.ialley.unihalo.endpoint;
 
 import java.util.Map;
+import java.util.regex.Pattern;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.core.context.ReactiveSecurityContextHolder;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
@@ -11,13 +13,19 @@ import org.springframework.web.reactive.function.server.RouterFunction;
 import org.springframework.web.reactive.function.server.RouterFunctions;
 import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
+import cn.ialley.unihalo.captcha.CaptchaScope;
+import cn.ialley.unihalo.captcha.CaptchaService;
+import cn.ialley.unihalo.captcha.CaptchaValidationException;
 import cn.ialley.unihalo.constants.Constants;
 import cn.ialley.unihalo.exception.AuthException;
 import cn.ialley.unihalo.exception.BizErrorCode;
 import cn.ialley.unihalo.services.AuthService;
+import cn.ialley.unihalo.utils.RegisterEmailCodeClient;
+import cn.ialley.unihalo.utils.RegisterEmailCodeRateLimiter;
 import cn.ialley.unihalo.vo.RegisterForm;
 import reactor.core.publisher.Mono;
 import run.halo.app.core.extension.endpoint.CustomEndpoint;
+import run.halo.app.infra.ExternalUrlSupplier;
 import run.halo.app.extension.GroupVersion;
 
 /**
@@ -33,10 +41,29 @@ import run.halo.app.extension.GroupVersion;
 @Component
 public class AuthEndpoint implements CustomEndpoint {
 
+    private static final Pattern EMAIL_PATTERN =
+            Pattern.compile("^[\\w.+-]+@[\\w-]+(\\.[\\w-]+)+$");
+
     private final AuthService authService;
 
-    public AuthEndpoint(AuthService authService) {
+    private final RegisterEmailCodeClient registerEmailCodeClient;
+
+    private final RegisterEmailCodeRateLimiter emailCodeRateLimiter;
+
+    private final ExternalUrlSupplier externalUrlSupplier;
+
+    private final CaptchaService captchaService;
+
+    public AuthEndpoint(AuthService authService,
+            RegisterEmailCodeClient registerEmailCodeClient,
+            RegisterEmailCodeRateLimiter emailCodeRateLimiter,
+            ExternalUrlSupplier externalUrlSupplier,
+            CaptchaService captchaService) {
         this.authService = authService;
+        this.registerEmailCodeClient = registerEmailCodeClient;
+        this.emailCodeRateLimiter = emailCodeRateLimiter;
+        this.externalUrlSupplier = externalUrlSupplier;
+        this.captchaService = captchaService;
     }
 
     @Override
@@ -52,7 +79,11 @@ public class AuthEndpoint implements CustomEndpoint {
                 .POST(Constants.AUTH_API_BASE_PATH + "/-/login", this::loginByPassword)
                 .POST(Constants.AUTH_API_BASE_PATH + "/login/wechat", this::loginByWechat)
                 .POST(Constants.AUTH_API_BASE_PATH + "/-/register", this::registerByPassword)
+                .POST(Constants.AUTH_API_BASE_PATH + "/-/send-register-email-code",
+                        this::sendRegisterEmailCode)
                 .POST(Constants.AUTH_API_BASE_PATH + "/register/wechat", this::registerByWechat)
+                .POST(Constants.AUTH_API_BASE_PATH + "/-/register/wechat-email",
+                        this::registerWechatEmail)
                 .POST(Constants.AUTH_API_BASE_PATH + "/bind/wechat", this::bindWechat)
                 .POST(Constants.AUTH_API_BASE_PATH + "/bind/wechat/qr/tickets",
                         this::createBindTicket)
@@ -110,12 +141,64 @@ public class AuthEndpoint implements CustomEndpoint {
                 .onErrorResume(AuthEndpoint::handleFailure);
     }
 
-    /** 微信一键注册并登录（已绑定则登录，未绑定自动建号，兼做「注册 + 登录」）。 */
+    /**
+     * 发送注册邮箱验证码：Halo 匿名端点在站点根下，CSRF 不豁免，小程序无法携带
+     * CSRF token 会 403，故经插件服务端完成 CSRF 握手后代发（保持 202 契约）。
+     */
+    private Mono<ServerResponse> sendRegisterEmailCode(ServerRequest request) {
+        var clientIp = clientIpOf(request);
+        if (clientIp == null || clientIp.isBlank()) {
+            return Mono.error(BizErrorCode.BAD_REQUEST.toException("无法识别请求来源"));
+        }
+        var baseUrl = externalUrlSupplier.getURL(request.exchange().getRequest()).toString();
+        return captchaService.requireValid(request, CaptchaScope.REGISTER_EMAIL_CODE)
+                .then(request.bodyToMono(SendEmailCodeRequest.class)
+                        .switchIfEmpty(Mono.error(
+                                BizErrorCode.BAD_REQUEST.toException("缺少请求体")))
+                        .map(body -> body.email() == null ? "" : body.email().trim())
+                        .filter(email -> EMAIL_PATTERN.matcher(email).matches())
+                        .switchIfEmpty(Mono.error(
+                                BizErrorCode.BAD_REQUEST.toException("请填写正确的邮箱")))
+                        .flatMap(email -> emailCodeRateLimiter
+                                .check(clientIp, email.toLowerCase())
+                                .thenReturn(email))
+                        .flatMap(email -> registerEmailCodeClient
+                                .send(baseUrl, email, clientIp)))
+                .then(ServerResponse.accepted().build())
+                .onErrorResume(CaptchaValidationException.class, this::captchaForbidden)
+                .onErrorMap(RegisterEmailCodeRateLimiter.QuotaExceededException.class,
+                        e -> BizErrorCode.TOO_MANY_ATTEMPTS.toException())
+                .onErrorResume(AuthEndpoint::handleFailure);
+    }
+
+    /** 验证码校验失败：403 返回提示与一枚新验证码（App 端展示后随下次请求携带）。 */
+    private Mono<ServerResponse> captchaForbidden(CaptchaValidationException e) {
+        return captchaService.generate()
+                .flatMap(captcha -> ServerResponse.status(HttpStatus.FORBIDDEN)
+                        .bodyValue(Map.of("message", e.getMessage(), "captcha", captcha)));
+    }
+
+    /** 微信一键注册（已绑定则登录，未绑定自动建号）。 */
     private Mono<ServerResponse> registerByWechat(ServerRequest request) {
         return request.bodyToMono(WechatLoginRequest.class)
                 .switchIfEmpty(Mono.error(
                         BizErrorCode.BAD_REQUEST.toException("缺少请求体")))
                 .flatMap(body -> authService.registerByWechat(body.code()))
+                .flatMap(result -> ServerResponse.ok().bodyValue(result))
+                .onErrorResume(AuthEndpoint::handleFailure);
+    }
+
+    /**
+     * 微信补邮箱注册（第二段）：站点开启注册邮箱验证时，一键注册被
+     * {@code WECHAT_EMAIL_REQUIRED} 拦下并下发票据，客户端补齐邮箱与验证码后
+     * 凭票据在此完成注册，返回结构与登录接口一致（{@code LoginResult}）。
+     */
+    private Mono<ServerResponse> registerWechatEmail(ServerRequest request) {
+        return request.bodyToMono(WechatEmailRegisterRequest.class)
+                .switchIfEmpty(Mono.error(
+                        BizErrorCode.BAD_REQUEST.toException("缺少请求体")))
+                .flatMap(body -> authService.registerByWechatEmail(
+                        body.ticket(), body.email(), body.emailCode(), body.code()))
                 .flatMap(result -> ServerResponse.ok().bodyValue(result))
                 .onErrorResume(AuthEndpoint::handleFailure);
     }
@@ -358,8 +441,14 @@ public class AuthEndpoint implements CustomEndpoint {
      */
     private static Mono<ServerResponse> handleFailure(Throwable e) {
         if (e instanceof AuthException auth) {
-            return ServerResponse.status(auth.getStatus())
-                    .bodyValue(Map.of("code", auth.getCode(), "message", auth.getMessage()));
+            var body = new java.util.HashMap<String, Object>();
+            body.put("code", auth.getCode());
+            body.put("message", auth.getMessage());
+            // 附加数据（如 WECHAT_EMAIL_REQUIRED 的注册票据）仅在存在时下发
+            if (auth.getData() != null && !auth.getData().isEmpty()) {
+                body.put("data", auth.getData());
+            }
+            return ServerResponse.status(auth.getStatus()).bodyValue(body);
         }
         log.warn("【UniHalo】认证接口出现未预期的错误", e);
         var fallback = BizErrorCode.INTERNAL_ERROR;
@@ -387,16 +476,25 @@ public class AuthEndpoint implements CustomEndpoint {
     public record WechatLoginRequest(String code) {
     }
 
+    /**
+     * 微信补邮箱注册请求体（{@code ticket/email/emailCode} 来自补邮箱弹层，
+     * {@code code} 为客户端重新获取的 wx.login 凭证，用于服务端二次校验微信身份）。
+     */
+    public record WechatEmailRegisterRequest(String ticket, String email, String emailCode,
+            String code) {
+    }
+
     /** 首次设置密码请求体。 */
     public record SetPasswordRequest(String newPassword) {
     }
 
-    /**
-     * 账号密码注册请求体（字段与 {@link RegisterForm} 一致，
-     * 收到后原样映射为表单交给服务层，校验逻辑在服务端 fail closed）。
-     */
+    /** 账号密码注册请求体（字段与 {@link RegisterForm} 一致，校验在服务层）。 */
     public record RegisterRequest(String username, String displayName, String password,
             String confirmPassword, String email, String emailCode, Boolean agreedToTerms) {
+    }
+
+    /** 发送注册邮箱验证码请求体（邮箱格式由官方端点 @Email 校验兜底）。 */
+    public record SendEmailCodeRequest(String email) {
     }
 
     private record Identity(String username, String patName) {

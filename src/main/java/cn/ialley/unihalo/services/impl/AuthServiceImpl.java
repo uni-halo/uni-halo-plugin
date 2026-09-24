@@ -2,6 +2,9 @@ package cn.ialley.unihalo.services.impl;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.security.SecureRandom;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -25,12 +28,14 @@ import cn.ialley.unihalo.utils.LoginAttemptGuard;
 import cn.ialley.unihalo.utils.LoginConfigResolver;
 import cn.ialley.unihalo.utils.NotificationHelper;
 import cn.ialley.unihalo.utils.UserConnectionSupport;
+import cn.ialley.unihalo.utils.WechatRegisterTicketManager;
 import cn.ialley.unihalo.vo.LoginConfig;
 import cn.ialley.unihalo.vo.LoginResult;
 import cn.ialley.unihalo.vo.ProfileVo;
 import cn.ialley.unihalo.vo.RegisterForm;
 import cn.ialley.unihalo.vo.TokenCheckVo;
 import cn.ialley.unihalo.vo.WechatBindingVo;
+import run.halo.app.extension.ConfigMap;
 import run.halo.app.core.extension.User;
 import run.halo.app.core.extension.UserConnection;
 import run.halo.app.core.extension.Role;
@@ -39,7 +44,9 @@ import run.halo.app.core.user.service.SignUpData;
 import run.halo.app.core.user.service.UserService;
 import run.halo.app.extension.Metadata;
 import run.halo.app.extension.ReactiveExtensionClient;
+import run.halo.app.infra.SystemSetting;
 import run.halo.app.security.PersonalAccessToken;
+import tools.jackson.databind.ObjectMapper;
 
 /**
  * 移动端登录实现。三种登录方式（密码 / 微信 / 已登录绑定微信）最终都收敛到
@@ -88,6 +95,10 @@ public class AuthServiceImpl implements AuthService {
     private final LoginAttemptGuard attemptGuard;
     private final BindTicketService bindTicketService;
     private final NotificationHelper notificationHelper;
+    private final WechatRegisterTicketManager registerTicketManager;
+
+    /** 系统设置 JSON 解析（ConfigMap system → user 组，与 FeatureConfigServiceImpl 同源）。 */
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Override
     public Mono<LoginResult> loginByPassword(String username, String rawPassword, String clientIp) {
@@ -120,9 +131,7 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public Mono<LoginResult> registerByPassword(RegisterForm form, String clientIp) {
         return Mono.defer(() -> {
-            // Bean Validation 不经过内部服务调用（那是 Web 层注解的职责），基础项自行把关，
-            // 提示语与 APP 端文案对齐；更细的格式校验（用户名 4-63 位、密码 ≥5 位、
-            // 邮箱格式/验证码、注册协议）由 Halo signUp 内部 fail closed 校验并在此映射成中文。
+            // 基础项自行把关；细粒度格式校验由 Halo signUp 完成，经 mapSignUpFailure 映射中文。
             if (form == null || isBlank(form.username()) || isBlank(form.displayName())
                     || isBlank(form.password())) {
                 return Mono.error(BizErrorCode.BAD_REQUEST
@@ -134,23 +143,70 @@ public class AuthServiceImpl implements AuthService {
             }
             return requireNotLocked(form.username(), clientIp)
                     .then(configResolver.config())
-                    .flatMap(config -> userService.signUp(toSignUpData(form))
-                            .doOnSuccess(user -> attemptGuard.resetUsername(form.username()))
-                            // signUp 失败先映射再计数：只有「用户可修复」的错误计入限流，
-                            // 与登录闸门共用（用户名 5 / IP 20 → 锁 15 分钟）
-                            .onErrorMap(this::mapSignUpFailure)
-                            .doOnError(AuthException.class,
-                                    e -> recordRegisterFailure(form.username(), clientIp, e))
+                    .flatMap(config -> mustVerifyEmailOnRegistration()
+                            .flatMap(emailVerifyRequired -> {
+                                var data = toSignUpData(form, emailVerifyRequired);
+                                return userService.signUp(data)
+                                        .doOnSuccess(user -> attemptGuard
+                                                .resetUsername(form.username()))
+                                        // 只把「用户可修复」的错误计入限流（与登录闸门共用）
+                                        .onErrorMap(this::mapSignUpFailure)
+                                        .doOnError(AuthException.class,
+                                                e -> recordRegisterFailure(form.username(), clientIp, e))
+                                        // 注册成功发欢迎通知；失败不阻断注册
+                                        .doOnSuccess(user -> notificationHelper
+                                                .emitUserRegistered(form.username(),
+                                                        form.displayName().trim(), null,
+                                                        data.getEmail())
+                                                .subscribe());
+                            })
                             .flatMap(user -> issueFor(user, config)));
         });
     }
 
     @Override
     public Mono<LoginResult> registerByWechat(String code) {
-        // 与微信登录同源：已绑定则登录，未绑定自动建号（signUp 内部校验注册开关，
-        // 关闭时 REGISTER_FORBIDDEN fail closed）。复用实现避免双路径漂移，
-        // 注册页按钮语义 =「没有账号就建号，有账号就登录」。
+        // 与微信登录同源：已绑定即登录，未绑定自动建号
         return loginByWechat(code);
+    }
+
+    @Override
+    public Mono<LoginResult> registerByWechatEmail(String ticket, String email, String emailCode,
+            String code) {
+        var verified = registerTicketManager.verify(ticket);
+        if (verified == null) {
+            return Mono.error(BizErrorCode.BAD_REQUEST
+                    .toException("注册会话已失效，请重新点击微信一键注册"));
+        }
+        if (isBlank(email) || isBlank(emailCode) || isBlank(code)) {
+            return Mono.error(BizErrorCode.BAD_REQUEST
+                    .toException("请填写邮箱与验证码"));
+        }
+        // 绑定身份与静默注册口径一致：unionid 优先（票据签发时已按此原则锁定）
+        var identity = verified.unionid() == null || verified.unionid().isBlank()
+                ? verified.openid() : verified.unionid();
+        return configResolver.config()
+                .filter(LoginConfig::wechatLoginEnabled)
+                .switchIfEmpty(Mono.error(
+                        BizErrorCode.WECHAT_LOGIN_DISABLED.toException()))
+                .flatMap(config -> configResolver.wechatCredential(config.wechatSecretName())
+                        .flatMap(credential -> wechatService.code2Session(
+                                credential.appId(), credential.appSecret(), code))
+                        // 用新提交的 wx.login code 二次换取微信身份，与票据比对：
+                        // 票据是「这个微信想注册」，二次校验确认「此刻操作的就是这个微信」，
+                        // 票据被截获也无法用别的微信冒名注册
+                        .filter(session -> verified.openid().equals(session.openid()))
+                        .switchIfEmpty(Mono.error(BizErrorCode.BAD_REQUEST
+                                .toException("微信身份校验失败，请重新操作")))
+                        .flatMap(session -> registerWechatUser(config, identity,
+                                email.trim(), emailCode.trim())
+                                // signUp 失败映射中文（验证码无效/邮箱被占/协议未同意等）
+                                .onErrorMap(this::mapSignUpFailure)
+                                .flatMap(user -> connect(user.getMetadata().getName(), identity)
+                                        .thenReturn(user))
+                                .flatMap(user -> issueFor(user, config))))
+                .onErrorMap(e -> !(e instanceof AuthException),
+                        this::unexpectedWechatFailure);
     }
 
     @Override
@@ -443,17 +499,58 @@ public class AuthServiceImpl implements AuthService {
                 });
     }
 
-    /** 表单 → Halo 注册数据（email/emailCode/agreedToTerms 原样透传，由 signUp 校验）。 */
-    private SignUpData toSignUpData(RegisterForm form) {
+    /**
+     * 表单 → Halo 注册数据（emailCode/agreedToTerms 原样透传，由 signUp 校验）。
+     * 邮箱：用户填写优先；未填写且站点未强制邮箱验证时兜底 {@code 用户名@example.com}。
+     */
+    private SignUpData toSignUpData(RegisterForm form, boolean emailVerifyRequired) {
         var data = new SignUpData();
         data.setUsername(form.username().trim());
         data.setDisplayName(form.displayName().trim());
         data.setPassword(form.password());
         data.setConfirmPassword(form.confirmPassword());
-        data.setEmail(isBlank(form.email()) ? null : form.email().trim());
+        data.setEmail(isBlank(form.email())
+                ? (emailVerifyRequired ? null : defaultEmail(form.username().trim()))
+                : form.email().trim());
         data.setEmailCode(isBlank(form.emailCode()) ? null : form.emailCode().trim());
         data.setAgreedToTerms(Boolean.TRUE.equals(form.agreedToTerms()));
         return data;
+    }
+
+    /**
+     * 站点是否要求注册时验证邮箱（系统设置 user.mustVerifyEmailOnRegistration）。
+     * 读取失败按未开启处理（signUp 内部对邮箱/验证码仍会校验）。
+     */
+    private Mono<Boolean> mustVerifyEmailOnRegistration() {
+        return client.fetch(ConfigMap.class, SystemSetting.SYSTEM_CONFIG)
+                .map(cm -> {
+                    var raw = cm.getData() == null
+                            ? null : cm.getData().get(SystemSetting.User.GROUP);
+                    if (raw == null || raw.isBlank()) {
+                        return false;
+                    }
+                    try {
+                        return objectMapper.readTree(raw)
+                                .path("mustVerifyEmailOnRegistration").asBoolean(false);
+                    } catch (Exception e) {
+                        log.warn("【UniHalo】解析系统设置 user 组失败，按未开启邮箱验证处理", e);
+                        return false;
+                    }
+                })
+                .defaultIfEmpty(false)
+                .onErrorResume(e -> {
+                    log.warn("【UniHalo】读取系统设置 user 组失败，按未开启邮箱验证处理", e);
+                    return Mono.just(false);
+                });
+    }
+
+    /**
+     * 注册默认邮箱：{@code 用户名@example.com}。
+     *
+     * 给新号兜底一个合法邮箱
+     */
+    private static String defaultEmail(String username) {
+        return username + "@example.com";
     }
 
     /**
@@ -516,10 +613,27 @@ public class AuthServiceImpl implements AuthService {
         return findConnection(session)
                 .flatMap(this::loadBoundUser)
                 .flatMap(user -> issueFor(user, config))
-                .switchIfEmpty(Mono.defer(() -> registerWechatUser(config, identity)
-                        .flatMap(user -> connect(user.getMetadata().getName(), identity)
-                                .thenReturn(user))
-                        .flatMap(user -> issueFor(user, config))));
+                .switchIfEmpty(Mono.defer(() -> requireEmailVerificationForSignup(session)
+                        .then(Mono.defer(() -> registerWechatUser(config, identity)
+                                .flatMap(user -> connect(user.getMetadata().getName(), identity)
+                                        .thenReturn(user))
+                                .flatMap(user -> issueFor(user, config))))));
+    }
+
+    /**
+     * 站点开启「注册必须验证邮箱」时拦截微信静默注册：signUp 对空邮箱 fail closed，
+     * 故不建号，签发短时 HMAC 票据随 {@code WECHAT_EMAIL_REQUIRED} 下发，
+     * 客户端补齐邮箱 + 验证码后走 {@link #registerByWechatEmail(String, String, String, String)}。
+     */
+    private Mono<Void> requireEmailVerificationForSignup(WechatService.WechatSession session) {
+        return mustVerifyEmailOnRegistration().flatMap(required -> {
+            if (!required) {
+                return Mono.empty();
+            }
+            var ticket = registerTicketManager.issue(session.openid(), session.unionid());
+            return Mono.error(new AuthException(BizErrorCode.WECHAT_EMAIL_REQUIRED,
+                    BizErrorCode.WECHAT_EMAIL_REQUIRED.getMessage(), java.util.Map.of("ticket", ticket)));
+        });
     }
 
     /**
@@ -567,6 +681,10 @@ public class AuthServiceImpl implements AuthService {
         return Mono.just(user);
     }
 
+    private Mono<User> registerWechatUser(LoginConfig config, String identity) {
+        return registerWechatUser(config, identity, null, null);
+    }
+
     /**
      * 自动注册，按配置的用户名类型生成用户名与昵称：
      * <ul>
@@ -575,14 +693,18 @@ public class AuthServiceImpl implements AuthService {
      * <li>uuid / hash：用户名 = {@code uhu- + 12 位标识段}（统一前缀 uhu-），
      * 昵称 = {@code 微信用户 + 6 位标识尾巴}。</li>
      * </ul>
+     *
+     * @param email     补邮箱注册路径的邮箱（静默注册传 null，走默认邮箱/强制验证逻辑）
+     * @param emailCode 补邮箱注册路径的验证码（静默注册传 null）
      */
-    private Mono<User> registerWechatUser(LoginConfig config, String identity) {
+    private Mono<User> registerWechatUser(LoginConfig config, String identity,
+            String email, String emailCode) {
         var type = config.usernameType();
         if (LoginConfig.TYPE_UUID.equals(type)) {
             return createWithCandidateUsernames(
                     Flux.range(0, MAX_USERNAME_ATTEMPTS)
                             .map(i -> randomUuidUsername()),
-                    config);
+                    config, email, emailCode);
         }
         if (LoginConfig.TYPE_HASH.equals(type)) {
             var base = hashedUsername(identity);
@@ -592,22 +714,22 @@ public class AuthServiceImpl implements AuthService {
                     Flux.concat(Flux.just(base),
                             Flux.range(1, MAX_USERNAME_ATTEMPTS - 1)
                                     .map(i -> base + i)),
-                    config);
+                    config, email, emailCode);
         }
-        // prefix_seq（默认，存量行为不变）
+        // prefix_seq（默认）
         var prefix = config.usernamePrefix();
         return nextSequence(prefix)
                 .flatMap(start -> createWithCandidateUsernames(
                         Flux.range(start, MAX_USERNAME_ATTEMPTS)
                                 .map(seq -> prefix + String.format(SEQUENCE_FORMAT, seq)),
-                        config));
+                        config, email, emailCode));
     }
 
     /** 依次尝试候选用户名，第一个创建成功的即返回；全部占用才报错。 */
     private Mono<User> createWithCandidateUsernames(Flux<String> candidates,
-            LoginConfig config) {
+            LoginConfig config, String email, String emailCode) {
         return candidates
-                .concatMap(username -> signUp(username, config)
+                .concatMap(username -> signUp(username, config, email, emailCode)
                         // 并发抢号等 DuplicateName 场景吞掉本次，继续试下一个候选；
                         // 其余错误（未开放注册/默认角色未配置等）直接透出终止。
                         .onErrorResume(e -> isDuplicateName(e) ? Mono.empty() : Mono.error(e)))
@@ -655,31 +777,54 @@ public class AuthServiceImpl implements AuthService {
                 : name.substring(0, Constants.DISPLAY_NAME_MAX_LENGTH);
     }
 
+    private Mono<User> signUp(String username, LoginConfig config) {
+        return signUp(username, config, null, null);
+    }
+
     /**
      * 创建用户：昵称 = {@code 微信用户 + 6 位标识尾巴}（prefix_seq 为序号），
      * 超过 {@link Constants#DISPLAY_NAME_MAX_LENGTH} 字符硬性截断。
+     *
+     * @param email     补邮箱注册路径的邮箱（非空时连同验证码写入注册数据，
+     *                  由 signUp 校验验证码与邮箱一致）；静默注册传 null
+     * @param emailCode 补邮箱注册路径的验证码（随 email 一同传入）
      */
-    private Mono<User> signUp(String username, LoginConfig config) {
-        var data = new SignUpData();
-        data.setUsername(username);
-        data.setDisplayName(displayName(username, config));
-        // 初始密码按设置页类型取值：固定密码（所有自动注册用户共用，需≥5位，
-        // 不满足回落随机）或随机强密码（默认）；密码会经注册欢迎通知告知本人。
-        var plainPassword = LoginConfig.PASSWORD_TYPE_FIXED.equals(config.passwordType())
-                ? config.fixedPassword()
-                : randomPassword();
-        data.setPassword(plainPassword);
-        data.setConfirmPassword(plainPassword);
-        // 微信一键登录是服务端静默注册，无表单勾选动作；Halo 仅在系统设置配置了
-        // 必读协议页时才校验该值，未配置时校验整体跳过，置 true 两种情况均通过。
-        // 用户侧的协议确认由 app 端登录前流程承担。
-        data.setAgreedToTerms(true);
-        return userService.signUp(data)
-                // 注册成功后发欢迎通知（含用户名/昵称/初始密码，仅此一次；失败不阻断注册）
-                .doOnSuccess(user -> notificationHelper
-                        .emitUserRegistered(username, data.getDisplayName(), plainPassword)
-                        .subscribe())
-                .onErrorResume(e -> {
+    private Mono<User> signUp(String username, LoginConfig config, String email,
+            String emailCode) {
+        return mustVerifyEmailOnRegistration().flatMap(emailVerifyRequired -> {
+            var data = new SignUpData();
+            data.setUsername(username);
+            data.setDisplayName(displayName(username, config));
+            // 初始密码按设置页类型取值：固定密码（所有自动注册用户共用，需≥5位，
+            // 不满足回落随机）或随机强密码（默认）；密码会经注册欢迎通知告知本人。
+            var plainPassword = LoginConfig.PASSWORD_TYPE_FIXED.equals(config.passwordType())
+                    ? config.fixedPassword()
+                    : randomPassword();
+            data.setPassword(plainPassword);
+            data.setConfirmPassword(plainPassword);
+            if (email != null) {
+                // 补邮箱注册路径：邮箱与验证码由客户端提供（验证码在注册前已发往
+                // 该邮箱），signUp 内部校验验证码有效性及与邮箱一致
+                data.setEmail(email);
+                data.setEmailCode(emailCode);
+            } else {
+                // 静默注册路径：默认邮箱兜底（仅站点未强制邮箱验证时）——
+                // 用户名@example.com，规避空邮箱问题；强制验证时保持空邮箱
+                // （上游 requireEmailVerificationForSignup 已拦截，不会走到这里）
+                data.setEmail(emailVerifyRequired ? null : defaultEmail(username));
+            }
+            // 微信一键登录是服务端静默注册，无表单勾选动作；Halo 仅在系统设置配置了
+            // 必读协议页时才校验该值，未配置时校验整体跳过，置 true 两种情况均通过。
+            // 用户侧的协议确认由 app 端登录前流程承担。
+            data.setAgreedToTerms(true);
+            return userService.signUp(data)
+                    // 注册成功后发欢迎通知（含用户名/昵称/注册邮箱/初始密码，仅此一次；
+                    // 失败不阻断注册）
+                    .doOnSuccess(user -> notificationHelper
+                            .emitUserRegistered(username, data.getDisplayName(), plainPassword,
+                                    data.getEmail())
+                            .subscribe())
+                    .onErrorResume(e -> {
                     // 并发抢号（用户名已被占用）时吞掉本次，让调用方继续试下一个序号；
                     // 连试 MAX_USERNAME_ATTEMPTS 次都失败才向上抛业务错误。
                     // 其余失败（站点未开放注册、默认角色未配置等配置问题）必须透出：
@@ -704,7 +849,8 @@ public class AuthServiceImpl implements AuthService {
                     }
                     log.warn("【UniHalo】微信自动注册用户名 {} 创建失败", username, e);
                     return Mono.error(e);
-                });
+                    });
+        });
     }
 
     private static boolean isDuplicateName(Throwable e) {
@@ -945,8 +1091,41 @@ public class AuthServiceImpl implements AuthService {
      * 随机强密码：Wx + 12 位随机十六进制 + a1!（总长 16 位，含大小写/数字/特殊字符，
      * 满足 Halo 密码策略与「最长 16 位」要求；经注册欢迎通知告知本人）。
      */
+    /* ---------- 随机初始密码：uhc 前缀 + 数字/大小写/符号随机混合 ---------- */
+
+    private static final String PASSWORD_DIGITS = "0123456789";
+
+    private static final String PASSWORD_UPPER = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
+    private static final String PASSWORD_LOWER = "abcdefghijklmnopqrstuvwxyz";
+
+    private static final String PASSWORD_SYMBOLS = "!@#$%^&*";
+
+    private static final String PASSWORD_ALPHABET =
+            PASSWORD_DIGITS + PASSWORD_UPPER + PASSWORD_LOWER + PASSWORD_SYMBOLS;
+
+    private static final int PASSWORD_RANDOM_LENGTH = 13;
+
+    private static final SecureRandom PASSWORD_RANDOM = new SecureRandom();
+
+    /**
+     * 生成随机初始密码：{@code uhc} 前缀 + 随机数字/大小写字母/符号混合，无固定后缀；
+     * 随机段保证四类字符各至少一个（先各取一枚，其余从全池随机，最后洗牌）。
+     */
     private static String randomPassword() {
-        var hex = UUID.randomUUID().toString().replace("-", "");
-        return "Wx" + hex.substring(0, 12) + "a1!";
+        var chars = new ArrayList<Character>(PASSWORD_RANDOM_LENGTH);
+        chars.add(PASSWORD_DIGITS.charAt(PASSWORD_RANDOM.nextInt(PASSWORD_DIGITS.length())));
+        chars.add(PASSWORD_UPPER.charAt(PASSWORD_RANDOM.nextInt(PASSWORD_UPPER.length())));
+        chars.add(PASSWORD_LOWER.charAt(PASSWORD_RANDOM.nextInt(PASSWORD_LOWER.length())));
+        chars.add(PASSWORD_SYMBOLS.charAt(PASSWORD_RANDOM.nextInt(PASSWORD_SYMBOLS.length())));
+        for (int i = chars.size(); i < PASSWORD_RANDOM_LENGTH; i++) {
+            chars.add(PASSWORD_ALPHABET.charAt(PASSWORD_RANDOM.nextInt(PASSWORD_ALPHABET.length())));
+        }
+        Collections.shuffle(chars, PASSWORD_RANDOM);
+        var sb = new StringBuilder("uhc");
+        for (char c : chars) {
+            sb.append(c);
+        }
+        return sb.toString();
     }
 }

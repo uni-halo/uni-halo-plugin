@@ -41,14 +41,14 @@ public record LoginConfig(
                 Constants.WECHAT_PASSWORD_TYPE_RANDOM, null, 30);
     }
 
-    /** 用户名类型枚举值：前缀 + 两位序号（默认，存量行为不变）。 */
+    /** 用户名类型枚举值：前缀 + 两位序号（默认）。 */
     public static final String TYPE_PREFIX_SEQ = Constants.WECHAT_USERNAME_TYPE_PREFIX_SEQ;
     /** 用户名类型枚举值：uhu- + 随机 UUID 前 12 位。 */
     public static final String TYPE_UUID = Constants.WECHAT_USERNAME_TYPE_UUID;
     /** 用户名类型枚举值：uhu- + 微信身份哈希前 12 位（确定性，可复用原用户名）。 */
     public static final String TYPE_HASH = Constants.WECHAT_USERNAME_TYPE_HASH;
 
-    /** 密码类型枚举值：随机强密码（默认，存量行为不变）。 */
+    /** 密码类型枚举值：随机强密码（默认）。 */
     public static final String PASSWORD_TYPE_RANDOM = Constants.WECHAT_PASSWORD_TYPE_RANDOM;
     /** 密码类型枚举值：固定密码（所有自动注册用户共用）。 */
     public static final String PASSWORD_TYPE_FIXED = Constants.WECHAT_PASSWORD_TYPE_FIXED;

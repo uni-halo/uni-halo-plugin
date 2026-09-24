@@ -147,6 +147,13 @@ public enum BizErrorCode {
     REGISTER_FORBIDDEN("REGISTER_FORBIDDEN", "未开放新用户注册",
             AuthException.STATUS_FORBIDDEN),
 
+    /**
+     * 微信一键注册被邮箱验证拦截：随错误下发补邮箱注册票据（{@code data.ticket}），
+     * 客户端凭票据 + 邮箱 + 验证码走补邮箱注册接口完成注册。
+     */
+    WECHAT_EMAIL_REQUIRED("WECHAT_EMAIL_REQUIRED",
+            "已开启验证邮箱，请补充邮箱完成注册", AuthException.STATUS_BAD_REQUEST),
+
     /** 注册失败（用户名候选全部占用或内部错误）。 */
     REGISTER_FAILED("REGISTER_FAILED", "注册失败，请稍后重试",
             AuthException.STATUS_UNAUTHORIZED),
