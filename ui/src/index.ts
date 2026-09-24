@@ -125,7 +125,7 @@ export default definePlugin({
         path: baseRoutePath('/love'),
         name: 'LoveManage',
         component: () => import('@/views/love-manage/LoveManageLayout.vue'),
-        redirect: baseRoutePath('/love/albums'),
+        redirect: baseRoutePath('/love/info'),
         meta: {
           title: '恋爱管理',
           searchable: false,

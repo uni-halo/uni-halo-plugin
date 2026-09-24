@@ -58,7 +58,7 @@ const handleSave = async () => {
   <VPageHeader title="UniHalo-恋爱信息">
     <template #actions>
       <VSpace>
-        <SubmitButton type="primary" :loading="isLoading" text="保存" @submit="handleSave" />
+        <SubmitButton type="secondary" :loading="isLoading" text="保存修改" @submit="handleSave" />
       </VSpace>
     </template>
   </VPageHeader>
