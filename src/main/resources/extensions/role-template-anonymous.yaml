@@ -11,6 +11,8 @@ metadata:
     rbac.authorization.halo.run/ui-permissions: |
       ["plugin:uni-halo:config:view"]
 rules:
+  # 通配授权：本组（api.unihalo.ialley.cn）端点均为刻意公开，公开端点无需在此登记；
+  # 新增敏感/需鉴权端点禁止挂到该分组，必须走 console/uc 分组
   - apiGroups: [ "api.unihalo.ialley.cn" ]
     resources: [ "*" ]
     verbs: [ "*" ]

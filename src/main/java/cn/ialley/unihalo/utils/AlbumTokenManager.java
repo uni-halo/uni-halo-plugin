@@ -13,7 +13,8 @@ import org.springframework.stereotype.Component;
  * 恋爱相册解锁 token 工具（HMAC-SHA256 无状态签名）。
  *
  * token 格式：base64url(albumName).expiry.hex(signature)。verify 时校验
- * 相册名匹配、签名一致且未过期（默认有效期 30 分钟）。
+ * 相册名匹配、签名一致且未过期（默认有效期 30 分钟）。签名密钥由
+ * {@link PluginSecretProvider} 启动期生成并持久化，源码不含有效密钥。
  *
  * @author 小莫唐尼
  */
@@ -22,12 +23,13 @@ public class AlbumTokenManager {
 
     private static final String HMAC_ALGORITHM = "HmacSHA256";
 
-    /**
-     * 签名密钥：插件内置常量。token 为短期访问凭证，密钥不随插件配置暴露。
-     */
-    private static final String SECRET = "uni-halo-love-album-token-secret-v1";
-
     private static final long TTL_MILLIS = 30 * 60 * 1000L;
+
+    private final PluginSecretProvider secretProvider;
+
+    public AlbumTokenManager(PluginSecretProvider secretProvider) {
+        this.secretProvider = secretProvider;
+    }
 
     /**
      * 为指定相册签发解锁 token。
@@ -70,10 +72,10 @@ public class AlbumTokenManager {
         }
     }
 
-    private static String sign(String payload) {
+    private String sign(String payload) {
         try {
             Mac mac = Mac.getInstance(HMAC_ALGORITHM);
-            mac.init(new SecretKeySpec(SECRET.getBytes(StandardCharsets.UTF_8), HMAC_ALGORITHM));
+            mac.init(new SecretKeySpec(secretProvider.requireSecret(), HMAC_ALGORITHM));
             byte[] raw = mac.doFinal(payload.getBytes(StandardCharsets.UTF_8));
             StringBuilder sb = new StringBuilder(raw.length * 2);
             for (byte b : raw) {

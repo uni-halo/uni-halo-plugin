@@ -9,11 +9,10 @@ import static cn.ialley.unihalo.constants.Constants.BASIC_DOMAIN_NAME;
 import static cn.ialley.unihalo.constants.Constants.PLUGIN_API_VERSION;
 
 /**
- * @author: lywq
- * @date: 2024/08/01 11:27
- * @version: v1.0.0
- * @description:
- **/
+ * 二维码信息扩展模型：按 key 或文章 ID 关联二维码图片地址。
+ *
+ * @author lywq
+ */
 @Data
 @EqualsAndHashCode(callSuper = true)
 @GVK(group = BASIC_DOMAIN_NAME, version = PLUGIN_API_VERSION,

@@ -4,11 +4,10 @@ import cn.ialley.unihalo.scheme.QRCodeInfo;
 import reactor.core.publisher.Mono;
 
 /**
- * @author: lywq
- * @date: 2024/08/01 15:25
- * @version: v1.0.0
- * @description:
- **/
+ * 二维码信息服务。
+ *
+ * @author lywq
+ */
 public interface QRCodeInfoService {
 
     Mono<QRCodeInfo> fetchByKey(String key);

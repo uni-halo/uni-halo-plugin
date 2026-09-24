@@ -15,6 +15,7 @@ import cn.ialley.unihalo.scheme.MiniProgramLinkSubmission;
 import cn.ialley.unihalo.scheme.Notice;
 import cn.ialley.unihalo.scheme.NoticeType;
 import cn.ialley.unihalo.scheme.QRCodeInfo;
+import cn.ialley.unihalo.utils.PluginSecretProvider;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import run.halo.app.extension.Extension;
@@ -23,6 +24,8 @@ import run.halo.app.extension.exception.SchemeNotFoundException;
 import run.halo.app.extension.index.IndexSpecs;
 import run.halo.app.plugin.BasePlugin;
 import run.halo.app.plugin.PluginContext;
+
+import java.time.Duration;
 
 /**
  * Plugin main class to manage the lifecycle of the plugin.
@@ -37,14 +40,21 @@ import run.halo.app.plugin.PluginContext;
 public class UniHaloPlugin extends BasePlugin {
 
     private final SchemeManager schemeManager;
+    private final PluginSecretProvider secretProvider;
 
-    public UniHaloPlugin(PluginContext pluginContext, SchemeManager schemeManager) {
+    public UniHaloPlugin(PluginContext pluginContext, SchemeManager schemeManager,
+            PluginSecretProvider secretProvider) {
         super(pluginContext);
         this.schemeManager = schemeManager;
+        this.secretProvider = secretProvider;
     }
 
     @Override
     public void start() {
+
+        // 签名密钥不可用即拒绝启动（fail closed）：相册/模块解锁签名依赖它，
+        // 任何内置回退密钥都会重现开源硬编码密钥漏洞
+        secretProvider.initialize().block(Duration.ofSeconds(10));
 
         schemeManager.register(QRCodeInfo.class, indexSpecs -> {
             indexSpecs.add(IndexSpecs.<QRCodeInfo, String>single("key", String.class)

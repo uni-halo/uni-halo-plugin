@@ -1,15 +1,14 @@
 package cn.ialley.unihalo.utils;
 
-/**
- * @author: lywq
- * @date: 2024/07/31 23:10
- * @version: v1.0.0
- * @description:
- **/
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+/**
+ * 短期令牌内存缓存（单值 + TTL），过期由定时任务兜底清理。
+ *
+ * @author lywq
+ */
 @Component
 @EnableScheduling
 public class TokenManager {

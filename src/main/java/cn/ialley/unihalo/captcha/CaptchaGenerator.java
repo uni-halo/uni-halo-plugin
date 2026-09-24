@@ -7,8 +7,8 @@ import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.security.SecureRandom;
 import java.util.Base64;
-import java.util.Random;
 import javax.imageio.ImageIO;
 
 /**
@@ -26,7 +26,8 @@ public final class CaptchaGenerator {
     private static final String CHARS =
             "23456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz";
 
-    private static final Random RANDOM = new Random();
+    /** 验证码是防爆破的安全控制，随机源必须不可预测 */
+    private static final SecureRandom RANDOM = new SecureRandom();
 
     private CaptchaGenerator() {
     }

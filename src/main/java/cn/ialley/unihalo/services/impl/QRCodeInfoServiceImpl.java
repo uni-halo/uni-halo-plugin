@@ -17,11 +17,10 @@ import org.springframework.data.domain.Sort;
 import static run.halo.app.extension.index.query.Queries.equal;
 
 /**
- * @author: lywq
- * @date: 2024/08/01 15:29
- * @version: v1.0.0
- * @description:
- **/
+ * 二维码信息服务实现。
+ *
+ * @author lywq
+ */
 @Service
 @RequiredArgsConstructor
 public class QRCodeInfoServiceImpl implements QRCodeInfoService {

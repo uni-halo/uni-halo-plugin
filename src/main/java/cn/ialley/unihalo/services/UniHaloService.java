@@ -20,7 +20,7 @@ public interface UniHaloService {
      */
     Mono<Map<String, JsonNode>> getAppConfigs();
 
-    /*
+    /**
      * 根据分组名称获取移动端的配置
      *
      * @param groupName 分组名称
@@ -29,22 +29,16 @@ public interface UniHaloService {
     Mono<JsonNode> getAppConfigsByGroupName(String groupName);
 
     /**
-     * 获取二维码图片
+     * 获取二维码图片。
      *
-     * @param serverRequest: 
-     * @return: reactor.core.publisher.Mono<org.springframework.web.reactive.function.server.ServerResponse>
-     * @author: lywq
-     * @date: 2024/07/31 22:43
-     **/
+     * @author lywq
+     */
     Mono<ServerResponse> getQRCodeImg(ServerRequest serverRequest);
 
     /**
-     * 获取二维码信息
+     * 获取二维码信息。
      *
-     * @param serverRequest:
-     * @return: reactor.core.publisher.Mono<org.springframework.web.reactive.function.server.ServerResponse>
-     * @author: lywq
-     * @date: 2024/08/01 16:27
-     **/
+     * @author lywq
+     */
     Mono<ServerResponse> getQRCodeInfo(ServerRequest serverRequest);
 }

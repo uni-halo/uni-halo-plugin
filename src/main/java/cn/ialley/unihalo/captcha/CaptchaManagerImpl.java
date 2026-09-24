@@ -13,7 +13,8 @@ import reactor.core.scheduler.Schedulers;
  * 验证码管理实现（轻量内存缓存，零第三方依赖）。
  *
  * 缓存为 ConcurrentHashMap（key = 验证码 id），1 分钟过期（写入时记录
- * 过期时间戳，读取/生成时惰性清理），容量上限 100（超出先清理过期项）。
+ * 过期时间戳，读取/生成时惰性清理），容量上限 100（超出先清理过期项，
+ * 仍满则淘汰最旧条目——洪泛下攻击者条目互相挤占，正常用户不受影响）。
  *
  * @author 小莫唐尼
  */
@@ -74,7 +75,8 @@ public class CaptchaManagerImpl implements CaptchaManager {
     }
 
     /**
-     * 超出容量上限时清理过期项（惰性）。
+     * 超出容量上限时先清理过期项（惰性）；仍超限则淘汰最旧条目，
+     * 不拒绝生成（拒绝会让攻击者先填满缓存来阻断正常用户）。
      */
     private void evictExpired() {
         if (cache.size() < MAX_CACHE_SIZE) {
@@ -82,6 +84,20 @@ public class CaptchaManagerImpl implements CaptchaManager {
         }
         long now = clock.get();
         cache.entrySet().removeIf(entry -> entry.getValue().expireAt() < now);
+        while (cache.size() >= MAX_CACHE_SIZE) {
+            String oldestKey = null;
+            long oldest = Long.MAX_VALUE;
+            for (var entry : cache.entrySet()) {
+                if (entry.getValue().expireAt() < oldest) {
+                    oldest = entry.getValue().expireAt();
+                    oldestKey = entry.getKey();
+                }
+            }
+            if (oldestKey == null) {
+                break;
+            }
+            cache.remove(oldestKey);
+        }
     }
 
     private record Entry(String code, long expireAt) {

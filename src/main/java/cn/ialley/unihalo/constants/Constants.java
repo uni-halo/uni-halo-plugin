@@ -233,7 +233,10 @@ public class Constants {
         "uc." + BASIC_DOMAIN_API_NAME + "/" + PLUGIN_API_VERSION;
 
     /**
-     * 自定义接口分组名称
+     * 自定义接口分组名称（匿名可访问）。
+     * <p>此分组经 role-template-anonymous 全量匿名放行（resources/verbs 通配），
+     * 仅限公开数据端点；任何敏感/需鉴权端点必须挂到
+     * {@link #CONSOLE_CUSTOM_API_GROUP_NAME} 或 {@link #UC_CUSTOM_API_GROUP_NAME}。
      */
     public static final String PUBLIC_CUSTOM_API_GROUP_NAME =
         BASIC_DOMAIN_API_NAME + "/" + PLUGIN_API_VERSION;
