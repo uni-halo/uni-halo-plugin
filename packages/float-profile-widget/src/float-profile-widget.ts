@@ -15,7 +15,6 @@ import {
   CAPTCHA_URL,
   CONFIG,
   CONFIGS_URL,
-  EDGE_TRIGGER,
   LINK_SUBMIT_URL,
   STATE_KEY,
   STORAGE_KEY,
@@ -117,9 +116,6 @@ export class FloatProfileWidgetElement extends LitElement {
     applyTab: { state: true },
     screenshotRows: { state: true },
     minimized: { state: true },
-    edgeTrigger: { state: true },
-    edgeSide: { state: true },
-    edgeTriggerStyle: { state: true },
     miniDotStyle: { state: true },
   };
 
@@ -136,9 +132,6 @@ export class FloatProfileWidgetElement extends LitElement {
   declare applyTab: "basic" | "author";
   declare screenshotRows: string[];
   declare minimized: boolean;
-  declare edgeTrigger: boolean;
-  declare edgeSide: string;
-  declare edgeTriggerStyle: string;
   declare miniDotStyle: string;
 
   private config: FloatProfileWidgetConfig;
@@ -163,9 +156,6 @@ export class FloatProfileWidgetElement extends LitElement {
     this.applyTab = "basic";
     this.screenshotRows = [""];
     this.minimized = false;
-    this.edgeTrigger = false;
-    this.edgeSide = "";
-    this.edgeTriggerStyle = "";
     this.miniDotStyle = "";
   }
 
@@ -192,13 +182,9 @@ export class FloatProfileWidgetElement extends LitElement {
     }
     const saved = loadWidgetState();
     if (saved) {
-      // 先恢复卡片自由位置（覆盖锚点定位），贴边/最小化都基于该位置计算
+      // 先恢复卡片自由位置（覆盖锚点定位），最小化恢复基于该位置计算
       if (saved.cardPos) {
         this.setFree(saved.cardPos.left, saved.cardPos.top);
-      }
-      if (saved.edge) {
-        this.hideToEdge(saved.edge, false);
-        return;
       }
       if (saved.minimized) {
         if (saved.dotPos) {
@@ -222,7 +208,7 @@ export class FloatProfileWidgetElement extends LitElement {
 
   /** 会话级持久化访客状态：读旧值打补丁后写回（附配置指纹） */
   private persistState(patch: Partial<WidgetPersistedState>): void {
-    const current = loadWidgetState() ?? { minimized: false, edge: null };
+    const current = loadWidgetState() ?? { minimized: false };
     saveWidgetState({ ...current, ...patch });
   }
 
@@ -268,13 +254,13 @@ export class FloatProfileWidgetElement extends LitElement {
     card.style.transform = "translate(" + tx + ", " + ty + ")";
   }
 
-  // ===== 拖拽（Pointer Events）+ 贴边隐藏 =====
+  // ===== 拖拽（Pointer Events）=====
   private onPointerDown(e: PointerEvent): void {
     if (!this.config.dragEnabled) {
       return; // 后台未开启拖拽：不响应拖拽
     }
     const target = e.target as HTMLElement | null;
-    // 操作按钮（关闭/最小化/申请/友链/恢复/贴边把手）不触发拖拽：
+    // 操作按钮（关闭/最小化/申请/友链/恢复）不触发拖拽：
     // 否则 setPointerCapture + preventDefault 会干扰 click 合成事件
     if (
       target &&
@@ -282,8 +268,7 @@ export class FloatProfileWidgetElement extends LitElement {
         target.closest(".uh-fpw-minimize") ||
         target.closest(".uh-fpw-actions") ||
         target.closest(".uh-fpw-overlay") ||
-        target.closest(".uh-fpw-mini-dot") ||
-        target.closest(".uh-fpw-edge-trigger"))
+        target.closest(".uh-fpw-mini-dot"))
     ) {
       return;
     }
@@ -298,7 +283,6 @@ export class FloatProfileWidgetElement extends LitElement {
       left: rect.left,
       top: rect.top,
     };
-    this.restoreFromEdge(); // 拖拽开始时清除贴边状态与把手
     card.classList.add("uh-fpw-dragging");
     card.style.touchAction = "none";
     card.setPointerCapture(e.pointerId);
@@ -328,15 +312,11 @@ export class FloatProfileWidgetElement extends LitElement {
     card.style.touchAction = "";
     // 拖拽结束时的视口位置（此时 transform 已被 setFree 归零，rect 即 left/top）
     const rect = card.getBoundingClientRect();
-    this.maybeEdgeHide();
-    // 未触发贴边时记住拖拽后的自由位置（贴边场景由 hideToEdge 持久化 edge 状态）
-    if (!this.edgeTrigger) {
-      this.persistState({
-        edge: null,
-        minimized: false,
-        cardPos: { left: Math.round(rect.left), top: Math.round(rect.top) },
-      });
-    }
+    // 记住拖拽后的自由位置，跨页保持
+    this.persistState({
+      minimized: false,
+      cardPos: { left: Math.round(rect.left), top: Math.round(rect.top) },
+    });
   }
 
   private setFree(left: number, top: number): void {
@@ -349,131 +329,6 @@ export class FloatProfileWidgetElement extends LitElement {
     card.style.right = "auto";
     card.style.bottom = "auto";
     card.style.transform = "translate(0, 0)";
-    card.classList.remove("uh-fpw-edge");
-  }
-
-  private maybeEdgeHide(): void {
-    if (!this.config.edgeHideEnabled) {
-      return;
-    }
-    const card = this.cardEl;
-    if (!card) {
-      return;
-    }
-    const rect = card.getBoundingClientRect();
-    const distances: Record<string, number> = {
-      left: rect.left,
-      right: window.innerWidth - rect.right,
-      top: rect.top,
-      bottom: window.innerHeight - rect.bottom,
-    };
-    let side: string | null = null;
-    // 触发阈值：配置 edgeHideDistance（0 视为未设置，兜底最小有效值 4px 防贴边失效；未配置回退 80）
-    const rawDistance = this.config.edgeHideDistance;
-    const configured =
-      rawDistance === undefined || rawDistance === null
-        ? NaN
-        : rawDistance === 0
-          ? 4
-          : Number(rawDistance);
-    let min = Number.isFinite(configured) ? configured : EDGE_TRIGGER;
-    (["left", "right", "top", "bottom"] as const).forEach((key) => {
-      if (distances[key] < min) {
-        min = distances[key];
-        side = key;
-      }
-    });
-    if (side) {
-      this.hideToEdge(side, true);
-    }
-  }
-
-  /** 隐藏到指定边（按当前视口位置精确位移）并显示触发把手；persist=是否写入会话状态 */
-  private hideToEdge(side: string, persist: boolean): void {
-    const card = this.cardEl;
-    if (!card) {
-      return;
-    }
-    const rect = card.getBoundingClientRect();
-    // 完全隐藏：按当前视口位置精确位移（覆盖锚点 top/left/offset 残留，不留任何可见部分）
-    if (side === "left") {
-      card.style.transform = `translateX(${-(rect.left + rect.width)}px)`;
-    } else if (side === "right") {
-      card.style.transform = `translateX(${window.innerWidth - rect.left}px)`;
-    } else if (side === "top") {
-      card.style.transform = `translateY(${-(rect.top + rect.height)}px)`;
-    } else {
-      card.style.transform = `translateY(${window.innerHeight - rect.top}px)`;
-    }
-    card.classList.add("uh-fpw-edge", "uh-fpw-edge-" + side);
-    // 边缘触发把手：fixed 定位在对应视口边缘中点
-    this.edgeSide = side;
-    this.edgeTriggerStyle = this.buildEdgeTriggerStyle(side, rect);
-    this.edgeTrigger = true;
-    if (persist) {
-      this.persistState({ edge: side as WidgetPersistedState["edge"], minimized: false });
-    }
-  }
-
-  /** 触发把手内联定位（贴左/右 → 竖把手，贴顶/底 → 横把手，对齐边缘中点） */
-  private buildEdgeTriggerStyle(side: string, rect: DOMRect): string {
-    const cx = rect.left + rect.width / 2;
-    const cy = rect.top + rect.height / 2;
-    const gap = 2;
-    // 35px 长度的一半（17.5），把手中点对齐卡片边缘中点
-    if (side === "left") {
-      return `left:${gap}px;top:${Math.round(cy - 17.5)}px;`;
-    }
-    if (side === "right") {
-      return `right:${gap}px;top:${Math.round(cy - 17.5)}px;`;
-    }
-    if (side === "top") {
-      return `top:${gap}px;left:${Math.round(cx - 17.5)}px;`;
-    }
-    return `bottom:${gap}px;left:${Math.round(cx - 17.5)}px;`;
-  }
-
-  private onEdgeTriggerEnter(): void {
-    const card = this.cardEl;
-    if (card) {
-      card.classList.add("uh-fpw-edge-hover");
-    }
-  }
-
-  private onEdgeTriggerLeave(): void {
-    const card = this.cardEl;
-    if (card) {
-      card.classList.remove("uh-fpw-edge-hover");
-    }
-  }
-
-  /** 点击把手：完全恢复卡片（清贴边类与把手），并记住展开态 */
-  private restoreFromEdge(): void {
-    const card = this.cardEl;
-    this.edgeTrigger = false;
-    this.edgeSide = "";
-    this.edgeTriggerStyle = "";
-    if (card) {
-      // 仅在实际贴边时才清除内联位移，避免误清锚点 transform 导致首次点击位置跳动
-      if (card.classList.contains("uh-fpw-edge")) {
-        card.style.transform = "";
-      }
-      card.classList.remove(
-        "uh-fpw-edge",
-        "uh-fpw-edge-hover",
-        "uh-fpw-edge-left",
-        "uh-fpw-edge-right",
-        "uh-fpw-edge-top",
-        "uh-fpw-edge-bottom",
-      );
-      // 记住展开前的卡片位置，跨页恢复贴边/展开都基于它
-      const rect = card.getBoundingClientRect();
-      this.persistState({
-        edge: null,
-        minimized: false,
-        cardPos: { left: Math.round(rect.left), top: Math.round(rect.top) },
-      });
-    }
   }
 
   // ===== 最小化 =====
@@ -486,22 +341,9 @@ export class FloatProfileWidgetElement extends LitElement {
     const rect = card.getBoundingClientRect();
     this.miniDotStyle = `left:${Math.round(rect.left)}px;top:${Math.round(rect.top)}px;`;
     this.minimized = true;
-    this.edgeTrigger = false; // 最小化后隐藏贴边触发把手
-    // 最小化后不再贴边（小图保持原位）
-    if (card.classList.contains("uh-fpw-edge")) {
-      card.style.transform = ""; // 仅贴边时清除内联位移，恢复后卡片正常显示
-    }
-    card.classList.remove(
-      "uh-fpw-edge",
-      "uh-fpw-edge-left",
-      "uh-fpw-edge-right",
-      "uh-fpw-edge-top",
-      "uh-fpw-edge-bottom",
-    );
     // 记住最小化态与小球位置（小球即卡片当前视口位置），跨页恢复
     this.persistState({
       minimized: true,
-      edge: null,
       dotPos: { left: Math.round(rect.left), top: Math.round(rect.top) },
       cardPos: { left: Math.round(rect.left), top: Math.round(rect.top) },
     });
@@ -546,7 +388,6 @@ export class FloatProfileWidgetElement extends LitElement {
       // 记住展开态与卡片最终位置（含视口约束修正），跨页恢复
       this.persistState({
         minimized: false,
-        edge: null,
         cardPos: { left: curLeft, top: curTop },
       });
     });
@@ -613,7 +454,7 @@ export class FloatProfileWidgetElement extends LitElement {
         // sessionStorage 不可用时仅本次页面关闭
       }
     }
-    // 关闭后清掉访客状态，避免下次会话残留最小化/贴边/位置
+    // 关闭后清掉访客状态，避免下次会话残留最小化/位置
     try {
       sessionStorage.removeItem(STATE_KEY);
     } catch {
@@ -857,7 +698,6 @@ export class FloatProfileWidgetElement extends LitElement {
         @pointermove=${this.onPointerMove}
         @pointerup=${this.onPointerEnd}
         @pointercancel=${this.onPointerEnd}
-        @mouseleave=${this.onEdgeTriggerLeave}
       >
         <div class="uh-fpw-main" ?hidden=${this.minimized}>
           <div class="uh-fpw-topbar">
@@ -901,18 +741,6 @@ export class FloatProfileWidgetElement extends LitElement {
               ${c.imageUrl ? html`<img src=${normalizeImageUrl(c.imageUrl)} alt="" />` : ""}
               <span class="uh-fpw-mini-plus">+</span>
             </button>`
-        : ""}
-      ${this.edgeTrigger
-        ? html`
-            <button
-              type="button"
-              class="uh-fpw-edge-trigger uh-fpw-edge-trigger-${this.edgeSide}"
-              style=${this.edgeTriggerStyle}
-              @mouseenter=${this.onEdgeTriggerEnter}
-              @mouseleave=${this.onEdgeTriggerLeave}
-              @click=${this.restoreFromEdge}
-              aria-label="展开悬浮窗"
-            ></button>`
         : ""}
     `;
   }

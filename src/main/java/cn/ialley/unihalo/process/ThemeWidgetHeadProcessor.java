@@ -122,8 +122,6 @@ public class ThemeWidgetHeadProcessor implements TemplateHeadProcessor {
         config.put("dragEnabled", node.path("dragEnabled").asBoolean(true));
         config.put("defaultState", node.path("defaultState").asString("default"));
         config.put("closeEnabled", node.path("closeEnabled").asBoolean(true));
-        config.put("edgeHideEnabled", node.path("edgeHideEnabled").asBoolean(true));
-        config.put("edgeHideDistance", node.path("edgeHideDistance").asInt(24));
         config.put("rememberClosed", node.path("rememberClosed").asBoolean(true));
         config.put("miniProgramApply", node.path("miniProgramApply").asBoolean(false));
         return config;

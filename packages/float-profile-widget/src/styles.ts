@@ -33,7 +33,6 @@ export const styles = css`
     cursor: default;
     max-width: 40vw;
     line-height: 1.4;
-    transition: transform 0.3s ease;
   }
   /* 允许拖拽（dragEnabled）时显示抓手光标 */
   .uh-fpw-draggable {
@@ -144,7 +143,7 @@ export const styles = css`
     border-radius: 50%;
     overflow: hidden;
     position: fixed;
-    z-index: 2147482999; /* 与贴边把手一致：浮在最上层，避免被页面元素遮挡无法点击 */
+    z-index: 2147482999; /* 浮在最上层，避免被页面元素遮挡无法点击 */
     cursor: pointer;
     background: rgba(255, 255, 255, 0.95);
     box-shadow: 0 0 16px rgba(0, 0, 0, 0.25);
@@ -176,36 +175,6 @@ export const styles = css`
   .uh-fpw.uh-fpw-dragging {
     transition: none !important;
     cursor: default;
-  }
-
-  /* ===== 贴边隐藏（完全隐藏 + 边缘触发把手，JS 控制 hover 类滑出） ===== */
-  .uh-fpw.uh-fpw-edge-left { transform: translateX(-100%); }
-  .uh-fpw.uh-fpw-edge-right { transform: translateX(100%); }
-  .uh-fpw.uh-fpw-edge-top { transform: translateY(-100%); }
-  .uh-fpw.uh-fpw-edge-bottom { transform: translateY(100%); }
-  .uh-fpw.uh-fpw-edge-hover {
-    transform: translate(0, 0) !important;
-  }
-  /* 边缘触发把手（贴边后露出的触发元素，hover 滑出、点击完全恢复） */
-  .uh-fpw-edge-trigger {
-    position: fixed;
-    width: 8px;
-    height: 35px;
-    border: none;
-    border-radius: 4px;
-    padding: 0;
-    background: rgb(255, 255, 255, 0.85);
-    box-shadow: 0 0 12px rgba(0, 0, 0, 0.15);
-    cursor: pointer;
-    z-index: 99999999;
-  }
-  .uh-fpw-edge-trigger:hover {
-    background: #1A1B1D;
-  }
-  .uh-fpw-edge-trigger-top,
-  .uh-fpw-edge-trigger-bottom {
-    width: 35px;
-    height: 8px;
   }
 
   /* ===== 关闭动画 ===== */

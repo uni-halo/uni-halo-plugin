@@ -21,8 +21,6 @@ export interface FloatProfileWidgetConfig {
   dragEnabled: boolean;
   defaultState: "default" | "minimized";
   closeEnabled: boolean;
-  edgeHideEnabled: boolean;
-  edgeHideDistance: number;
   rememberClosed: boolean;
   miniProgramApply: boolean;
 }

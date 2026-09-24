@@ -156,84 +156,10 @@ spec:
           name: pluginConfig
           label: 第三方插件
           children:
-            - $formkit: group
-              name: toolsPlugin
-              label: 工具箱插件
-              value:
-                enabled: false
-                pluginId: "PluginTools"
-                Authorization: ""
-                verifyCodeType: "scan"
-                scanCodeUrl: ""
-                rewardedVideoAdId: ""
-              children:
-                - $el: div
-                  attrs:
-                    class: "formkit-help text-xs mt-2 text-gray-500 flex items-center mb-1 cursor-pointer"
-                    innerHTML: "说明：来自【作者：<a href='https://blog.muyin.site' title='前往作者博客' target='_blank' class='text-blue-500 hover:text-blue-700'>柳意梧情</a>】的<a href='https://auth.muyin.site/docs/PluginTools' title='前往获取Tools工具箱插件' target='_blank' class='text-blue-500 hover:text-blue-700'>Tools工具箱插件</a>，用于开启支持笔记加密访问。"
-                - $formkit: select
-                  name: enabled
-                  id: toolsPluginEnabled
-                  label: 是否启用
-                  value: false
-                  options:
-                    - label: 启用
-                      value: true
-                    - label: 关闭
-                      value: false
-                  validation: required
-                - $formkit: text
-                  if: "$get(toolsPluginEnabled).value === true"
-                  name: pluginId
-                  label: 插件ID
-                  value: "PluginTools"
-                  validation: required
-                - $el: div
-                  if: "$get(toolsPluginEnabled).value === true"
-                  attrs:
-                    class: "formkit-help text-xs text-gray-500"
-                    innerHTML: "插件信息的ID，<a href='/console/plugins/PluginTools#:~:text=ID-,PluginTools' title='前往获取插件ID' target='_blank' class='text-blue-500 hover:text-blue-700'>获取插件ID</a>。"
-                - $formkit: text
-                  if: "$get(toolsPluginEnabled).value === true"
-                  name: Authorization
-                  label: 授权Token
-                  value: ""
-                  validation: required
-                - $el: div
-                  if: "$get(toolsPluginEnabled).value === true"
-                  attrs:
-                    class: "formkit-help text-xs text-gray-500"
-                    innerHTML: "Tools工具箱插件设置的认证token，<a href='/console/plugins/PluginTools?tab=basic#:~:text=模板设置-,认证token' title='前往获取认证token' target='_blank' class='text-blue-500 hover:text-blue-700'>获取认证token</a>。"
-                - $formkit: radio
-                  if: "$get(toolsPluginEnabled).value === true"
-                  id: verifyCodeType
-                  name: verifyCodeType
-                  key: verifyCodeType
-                  label: 验证码获取方式
-                  value: "scan"
-                  options:
-                    - label: 微信公众号获取
-                      value: scan
-                    - label: 小程序广告获取
-                      value: advert
-                  help: 验证码获取方式，可以前往笔记单独设置验证码获取方式。
-                  validation: required
-                - $formkit: attachment
-                  if: "$get(verifyCodeType).value === 'scan'"
-                  name: scanCodeUrl
-                  key: scanCodeUrl
-                  label: 扫码链接
-                  value: ""
-                  help: 扫码链接，请填写二维码图片的链接。
-                  validation: required
-                - $formkit: text
-                  if: "$get(verifyCodeType).value === 'advert'"
-                  name: rewardedVideoAdId
-                  key: rewardedVideoAdId
-                  label: 视频广告ID
-                  value: ""
-                  help: 广告ID，请在 微信小程序广告管理中获取。
-                  validation: required
+            - $el: div
+              attrs:
+                class: "formkit-help text-xs text-gray-500"
+                innerHTML: "当前暂无插件。"
     - group: themeWidgetConfig
       label: 主题组件
       formSchema:
@@ -363,28 +289,17 @@ spec:
               id: floatingWindowCloseEnabled
               label: 允许关闭
               value: true
-            - $formkit: switch
-              name: edgeHideEnabled
-              id: floatingWindowEdgeHideEnabled
-              label: 贴边隐藏
-              value: true
             - $formkit: select
               name: defaultState
               id: floatingWindowDefaultState
               label: 默认状态
               value: default
               options:
-                - label: 默认
+                - label: 卡片
                   value: default
-                - label: 最小化
+                - label: 小球
                   value: minimized
-              help: 页面加载后的初始状态。
-            - $formkit: number
-              name: edgeHideDistance
-              id: floatingWindowEdgeHideDistance
-              label: 贴边触发距离(px)
-              value: 24
-              validation: required
+              help: 页面加载后的初始形态：完整卡片或最小化小球。
             - $formkit: switch
               name: rememberClosed
               id: floatingWindowRememberClosed
