@@ -427,26 +427,7 @@ spec:
               label: 自动注册用户名前缀
               value: unihalo
               validation: required
-              help: 仅「使用前缀」类型生效。用户名 = 前缀 + 两位递增序号，如 unihalo01、unihalo02。只允许小写字母、数字和连字符，不能以连字符开头或结尾；前缀加两位序号后总长度需在 4-63 之间。自动注册的初始密码为随机强密码，不对外提供，这类用户通过微信登录即可。
-            - $formkit: select
-              if: "$get(wechatLoginEnabled).value === true"
-              name: wechatPasswordType
-              id: wechatPasswordType
-              label: 自动注册初始密码类型
-              value: random
-              options:
-                - label: 随机强密码（推荐）
-                  value: random
-                - label: 固定密码
-                  value: fixed
-              help: 随机密码不对外提供，用户只能通过微信登录，初始密码会通过注册欢迎通知告知本人；固定密码为所有自动注册用户的共用密码，可用于账号密码登录，请自行承担弱口令风险。
-            - $formkit: password
-              if: "$get(wechatLoginEnabled).value === true && $get(wechatPasswordType).value === 'fixed'"
-              name: wechatFixedPassword
-              id: wechatFixedPassword
-              label: 固定密码
-              validation: required|length:6,16
-              help: 仅「固定密码」类型生效，所有自动注册用户共用此密码，长度 6-16 位；建议设置后尽快通知用户修改。会通过注册欢迎通知告知本人。
+              help: 仅「使用前缀」类型生效。用户名 = 前缀 + 两位递增序号，如 unihalo01、unihalo02。只允许小写字母、数字和连字符，不能以连字符开头或结尾；前缀加两位序号后总长度需在 4-63 之间。自动注册的账号初始密码随机生成且不对外提供，用户可在客户端内自行设置密码。
             - $formkit: number
               name: tokenTtlDays
               label: 令牌有效期（天）

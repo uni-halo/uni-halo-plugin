@@ -156,7 +156,7 @@ public class AuthServiceImpl implements AuthService {
                                         // 注册成功发欢迎通知；失败不阻断注册
                                         .doOnSuccess(user -> notificationHelper
                                                 .emitUserRegistered(form.username(),
-                                                        form.displayName().trim(), null,
+                                                        form.displayName().trim(),
                                                         data.getEmail())
                                                 .subscribe());
                             })
@@ -182,9 +182,8 @@ public class AuthServiceImpl implements AuthService {
             return Mono.error(BizErrorCode.BAD_REQUEST
                     .toException("请填写邮箱与验证码"));
         }
-        // 绑定身份与静默注册口径一致：unionid 优先（票据签发时已按此原则锁定）
-        var identity = verified.unionid() == null || verified.unionid().isBlank()
-                ? verified.openid() : verified.unionid();
+        // 票据中的 unionid（签发时缺失为 null）
+        var ticketUnionid = isBlank(verified.unionid()) ? null : verified.unionid();
         return configResolver.config()
                 .filter(LoginConfig::wechatLoginEnabled)
                 .switchIfEmpty(Mono.error(
@@ -192,17 +191,30 @@ public class AuthServiceImpl implements AuthService {
                 .flatMap(config -> configResolver.wechatCredential(config.wechatSecretName())
                         .flatMap(credential -> wechatService.code2Session(
                                 credential.appId(), credential.appSecret(), code))
-                        // 用新提交的 wx.login code 二次换取微信身份，与票据比对：
-                        // 票据是「这个微信想注册」，二次校验确认「此刻操作的就是这个微信」，
-                        // 票据被截获也无法用别的微信冒名注册
-                        .filter(session -> verified.openid().equals(session.openid()))
+                        // 用新提交的 wx.login code 二次换取微信身份，与票据完整比对：
+                        // openid 必须一致；票据签发时若已含 unionid，还须与本次接口返回一致，
+                        // 任何一项不符即拒绝。绑定身份取本次接口实时返回（unionid 优先），
+                        // 不沿用票据值 —— 确保绑定关系始终与微信侧当前身份一致
+                        .map(session -> {
+                            if (!verified.openid().equals(session.openid())) {
+                                throw wechatIdentityMismatch();
+                            }
+                            var sessionUnionid = isBlank(session.unionid())
+                                    ? null : session.unionid();
+                            if (ticketUnionid != null
+                                    && !ticketUnionid.equals(sessionUnionid)) {
+                                throw wechatIdentityMismatch();
+                            }
+                            return session;
+                        })
                         .switchIfEmpty(Mono.error(BizErrorCode.BAD_REQUEST
                                 .toException("微信身份校验失败，请重新操作")))
-                        .flatMap(session -> registerWechatUser(config, identity,
+                        .flatMap(session -> registerWechatUser(config, identity(session),
                                 email.trim(), emailCode.trim())
                                 // signUp 失败映射中文（验证码无效/邮箱被占/协议未同意等）
                                 .onErrorMap(this::mapSignUpFailure)
-                                .flatMap(user -> connect(user.getMetadata().getName(), identity)
+                                .flatMap(user -> connect(user.getMetadata().getName(),
+                                        identity(session))
                                         .thenReturn(user))
                                 .flatMap(user -> issueFor(user, config))))
                 .onErrorMap(e -> !(e instanceof AuthException),
@@ -795,11 +807,9 @@ public class AuthServiceImpl implements AuthService {
             var data = new SignUpData();
             data.setUsername(username);
             data.setDisplayName(displayName(username, config));
-            // 初始密码按设置页类型取值：固定密码（所有自动注册用户共用，需≥5位，
-            // 不满足回落随机）或随机强密码（默认）；密码会经注册欢迎通知告知本人。
-            var plainPassword = LoginConfig.PASSWORD_TYPE_FIXED.equals(config.passwordType())
-                    ? config.fixedPassword()
-                    : randomPassword();
+            // 初始密码一律随机生成：仅用于满足 signUp 的密码必填约束，不对外提供、
+            // 不随任何通知下发；密码登录由用户在 App 内首次设密（免旧密码通道）后启用。
+            var plainPassword = randomPassword();
             data.setPassword(plainPassword);
             data.setConfirmPassword(plainPassword);
             if (email != null) {
@@ -818,10 +828,10 @@ public class AuthServiceImpl implements AuthService {
             // 用户侧的协议确认由 app 端登录前流程承担。
             data.setAgreedToTerms(true);
             return userService.signUp(data)
-                    // 注册成功后发欢迎通知（含用户名/昵称/注册邮箱/初始密码，仅此一次；
+                    // 注册成功后发欢迎通知（仅用户名/昵称/注册邮箱，不含任何密码信息；
                     // 失败不阻断注册）
                     .doOnSuccess(user -> notificationHelper
-                            .emitUserRegistered(username, data.getDisplayName(), plainPassword,
+                            .emitUserRegistered(username, data.getDisplayName(),
                                     data.getEmail())
                             .subscribe())
                     .onErrorResume(e -> {
@@ -1009,6 +1019,11 @@ public class AuthServiceImpl implements AuthService {
         }
         log.warn("【UniHalo】微信登录出现未预期的错误", e);
         return BizErrorCode.WECHAT_LOGIN_FAILED.toException();
+    }
+
+    /** 票据身份与本次微信接口返回不一致：统一收敛为业务错误，不区分具体差异项。 */
+    private static AuthException wechatIdentityMismatch() {
+        return BizErrorCode.BAD_REQUEST.toException("微信身份校验失败，请重新操作");
     }
 
     private static String identity(WechatService.WechatSession session) {

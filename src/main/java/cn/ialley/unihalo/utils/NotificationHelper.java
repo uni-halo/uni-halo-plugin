@@ -55,19 +55,15 @@ public class NotificationHelper {
     private final NotificationCenter notificationCenter;
 
     /**
-     * 注册欢迎通知：attributes 含 username/displayName/registeredAt，password/email 可空。
+     * 注册欢迎通知：attributes 仅含 username/displayName/registeredAt/email。
      *
-     * <p>微信静默注册、微信邮箱验证注册（插件代生成初始密码）时传入明文密码告知本人；
-     * 账号密码注册（用户自设密码）传 null，模板不出现密码行。邮箱为空时模板不出现邮箱行。
+     * <p>不携带任何密码信息：密码不出现在通知属性或正文中（避免明文密码持久化
+     * 到站内通知），密码登录由用户在 App 内自行设置密码后启用。邮箱为空时模板不出现邮箱行。
      */
-    public Mono<Void> emitUserRegistered(String username, String displayName,
-            String plainPassword, String email) {
+    public Mono<Void> emitUserRegistered(String username, String displayName, String email) {
         var attributes = new HashMap<String, Object>();
         attributes.put("username", username);
         attributes.put("displayName", displayName);
-        if (plainPassword != null && !plainPassword.isBlank()) {
-            attributes.put("password", plainPassword);
-        }
         if (email != null && !email.isBlank()) {
             attributes.put("email", email);
         }

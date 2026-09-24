@@ -16,6 +16,9 @@ import org.springframework.stereotype.Component;
  * 最终注册时服务端还会用客户端新提交的 wx.login code 二次换取 openid 与票据比对，
  * 票据泄露不等于账号可冒注册。
  *
+ * <p>签名密钥来自 {@link PluginSecretProvider}（站点级随机密钥，启动期生成并持久化
+ * 到插件私有 ConfigMap），源码不含有效密钥，杜绝离线伪造票据。
+ *
  * @author 小莫唐尼
  */
 @Component
@@ -23,10 +26,11 @@ public class WechatRegisterTicketManager {
 
     private static final String HMAC_ALGORITHM = "HmacSHA256";
 
-    /**
-     * 签名密钥：插件内置常量。票据为短期注册凭证，密钥不随插件配置暴露。
-     */
-    private static final String SECRET = "uni-halo-wechat-register-ticket-secret-v1";
+    private final PluginSecretProvider secretProvider;
+
+    public WechatRegisterTicketManager(PluginSecretProvider secretProvider) {
+        this.secretProvider = secretProvider;
+    }
 
     private static final long TTL_MILLIS = 30 * 60 * 1000L;
 
@@ -83,11 +87,11 @@ public class WechatRegisterTicketManager {
                 .encodeToString(value.getBytes(StandardCharsets.UTF_8));
     }
 
-    private static String sign(String openidPart, String unionidPart, long expiry) {
+    private String sign(String openidPart, String unionidPart, long expiry) {
         String payload = openidPart + "." + unionidPart + "." + expiry;
         try {
             Mac mac = Mac.getInstance(HMAC_ALGORITHM);
-            mac.init(new SecretKeySpec(SECRET.getBytes(StandardCharsets.UTF_8), HMAC_ALGORITHM));
+            mac.init(new SecretKeySpec(secretProvider.requireSecret(), HMAC_ALGORITHM));
             byte[] raw = mac.doFinal(payload.getBytes(StandardCharsets.UTF_8));
             StringBuilder sb = new StringBuilder(raw.length * 2);
             for (byte b : raw) {

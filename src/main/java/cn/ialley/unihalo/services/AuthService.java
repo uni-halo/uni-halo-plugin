@@ -61,7 +61,8 @@ public interface AuthService {
      * {@code WECHAT_EMAIL_REQUIRED} 拒绝并下发 HMAC 票据（30 分钟），客户端补齐
      * 邮箱与验证码后凭票据调用本方法完成注册并登录。
      *
-     * <p>服务端会用 {@code code} 重新换取微信 openid 与票据比对，防止票据被截获后
+     * <p>服务端会用 {@code code} 重新换取微信身份并与票据完整比对（openid 必须一致，
+     * 票据含 unionid 时还须与本次接口返回一致），防止票据被截获后
      * 由其他微信冒名注册；邮箱验证码由客户端在注册前经 Halo 匿名端点发往新邮箱，
      * {@code signUp} 内部校验验证码有效性及与邮箱一致。
      *
