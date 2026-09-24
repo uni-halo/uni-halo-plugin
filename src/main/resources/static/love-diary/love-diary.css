@@ -307,7 +307,7 @@ body:has(.uh-love-wrap) {
   padding: 52px;
 }
 
-/* auto 外壳（跟随主题布局）：wrap 收紧为卡片观感 —— 小内边距 + 圆角，
+/* auto 布局（跟随主题）：wrap 收紧为卡片观感 —— 小内边距 + 圆角，
    standalone 维持 52px 大留白。外壳标记类见模板 th:classappend='uh-love-shell-*' */
 .uh-love-wrap.uh-love-shell-auto {
   padding: 16px;

@@ -31,7 +31,7 @@ public class LoveDiaryThemeConfig {
     /** 原始配置：清单路径（同上） */
     private String rawRouteDaily;
 
-    /** 页面外壳：{@code auto}（跟随主题布局）| {@code standalone}（独立页面） */
+    /** 页面布局：{@code auto}（跟随主题）| {@code standalone}（独立页面，默认） */
     private String layoutMode;
 
     /** 强调色（hex，已校验） */
@@ -50,7 +50,7 @@ public class LoveDiaryThemeConfig {
         config.setRawRouteStories("stories");
         config.setRawRouteAlbums("albums");
         config.setRawRouteDaily("daily");
-        config.setLayoutMode("auto");
+        config.setLayoutMode("standalone");
         config.setPrimaryColor("#f83856");
         config.setShowOverview(true);
         return config;

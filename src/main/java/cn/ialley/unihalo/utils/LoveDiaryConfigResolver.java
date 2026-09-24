@@ -87,7 +87,7 @@ public class LoveDiaryConfigResolver {
         config.setRawRouteAlbums(routes.path("albums").asString(DEFAULT_ROUTE_ALBUMS));
         config.setRawRouteDaily(routes.path("daily").asString(DEFAULT_ROUTE_DAILY));
 
-        config.setLayoutMode(oneOf(node.path("layoutMode").asString("auto"), LAYOUT_MODES, "auto"));
+        config.setLayoutMode(oneOf(node.path("layoutMode").asString("standalone"), LAYOUT_MODES, "standalone"));
         config.setPrimaryColor(color(node.path("primaryColor").asString(DEFAULT_PRIMARY_COLOR)));
         config.setShowOverview(node.path("showOverview").asBoolean(true));
         return config;

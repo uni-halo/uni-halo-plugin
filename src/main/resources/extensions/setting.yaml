@@ -355,15 +355,15 @@ spec:
                   help: 同上。
             - $formkit: radio
               name: layoutMode
-              label: 页面外壳
-              value: auto
+              label: 页面布局
+              value: standalone
               options:
-                - label: 跟随主题布局
+                - label: 跟随主题
                   value: auto
                 - label: 独立页面
                   value: standalone
               validation: required
-              help: 跟随主题布局时复用主题的页头/页脚与整体外壳；独立页面则不依赖主题的 layout 契约，便于主题未适配时兜底。
+              help: 跟随主题时复用主题的页头/页脚与整体外壳；独立页面则不依赖主题的 layout 契约，便于主题未适配时兜底。
             - $formkit: color
               name: primaryColor
               id: loveDiaryPrimaryColor
