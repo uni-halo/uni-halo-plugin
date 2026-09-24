@@ -13,7 +13,9 @@ spec:
 
       用户名：[(${username})]
       个人昵称：[(${displayName})]
-      [(${email != null ? '注册邮箱：' + email + '\n' : ''})][(${password != null ? '初始密码：' + password + '\n' : ''})]注册时间：[(${registeredAt})]
+      <th:block th:if="${email != null}">注册邮箱：[(${email})]
+      </th:block><th:block th:if="${password != null}">初始密码：[(${password})]
+      </th:block>注册时间：[(${registeredAt})]
 
       提示：
       1. 初始密码（如有）仅用于「账号密码登录」与「修改密码」时验证身份，微信一键登录无需密码。
