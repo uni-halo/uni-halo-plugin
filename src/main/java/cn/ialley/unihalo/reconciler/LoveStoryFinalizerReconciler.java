@@ -5,9 +5,7 @@ import org.springframework.stereotype.Component;
 import run.halo.app.extension.ExtensionClient;
 
 /**
- * {@link LoveStory} 统一删除语义 Reconciler。
- *
- * 删除故事走基类统一删除流程（删除中过渡默认 1s），清理钩子默认空。
+ * 恋爱故事（LoveStory）的删除收尾：等待删除过渡期后移除 finalizer，交由框架完成物理删除。
  *
  * @author 小莫唐尼
  */

@@ -33,7 +33,6 @@ export interface AppVersionSpec {
   type?: "native_app" | "wgt";
   version?: string;
   versionCode?: number;
-  isDeleted?: boolean;
   minUniVersion?: string;
   url?: string;
   stablePublish?: boolean;

@@ -5,9 +5,7 @@ import org.springframework.stereotype.Component;
 import run.halo.app.extension.ExtensionClient;
 
 /**
- * {@link Notice} 统一删除语义 Reconciler。
- *
- * 删除公告走基类统一删除流程（删除中过渡默认 1s）。无级联子资源，清理钩子默认空。
+ * 公告（Notice）的删除收尾：等待删除过渡期后移除 finalizer，交由框架完成物理删除。
  *
  * @author 小莫唐尼
  */

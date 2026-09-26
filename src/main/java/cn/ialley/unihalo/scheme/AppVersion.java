@@ -67,11 +67,6 @@ public class AppVersion extends AbstractExtension {
         private Integer versionCode;
 
         /**
-         * 软删除标记：true 表示已删除（数据保留，列表中标记展示，不可恢复）
-         */
-        private Boolean isDeleted;
-
-        /**
          * wgt 所需最低原生 App 版本
          */
         private String minUniVersion;

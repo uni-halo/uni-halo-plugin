@@ -5,10 +5,7 @@ import org.springframework.stereotype.Component;
 import run.halo.app.extension.ExtensionClient;
 
 /**
- * {@link AppInfo} 统一删除语义 Reconciler。
- *
- * 删除前置业务校验（已有已发布 AppVersion 时 400）在 Service 层保留；
- * 校验通过后走基类统一删除流程（删除中过渡默认 1s）。无级联子资源，清理钩子默认空。
+ * 应用信息（AppInfo）的删除收尾：等待删除过渡期后移除 finalizer，交由框架完成物理删除。
  *
  * @author 小莫唐尼
  */

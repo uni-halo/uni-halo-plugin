@@ -41,9 +41,7 @@ const platformText = computed(() => {
   return props.version.spec.platform?.join(" / ") || "";
 });
 
-const isDeleted = computed(() => {
-  return props.version.spec.isDeleted === true;
-});
+const isDeleting = computed(() => !!props.version.metadata.deletionTimestamp);
 
 const publishedText = computed(() => {
   return props.version.metadata.creationTimestamp
@@ -77,9 +75,10 @@ const publishedText = computed(() => {
       <VEntityField>
         <template #description>
           <VStatusDot
-            v-if="isDeleted"
-            state="error"
-            text="已删除"
+            v-if="isDeleting"
+            v-tooltip="'删除中'"
+            state="warning"
+            text="删除中"
           />
           <VStatusDot
             v-else
@@ -112,13 +111,13 @@ const publishedText = computed(() => {
       <VDropdownItem @click="emit('publish', version.spec.appid || '')">
         发布新版
       </VDropdownItem>
-      <VDropdownItem :disabled="isDeleted" @click="emit('toggle', version)">
+      <VDropdownItem :disabled="isDeleting" @click="emit('toggle', version)">
         {{ version.spec.stablePublish ? "下线" : "上线" }}
       </VDropdownItem>
-      <VDropdownItem :disabled="isDeleted" @click="emit('editing', version)">
+      <VDropdownItem :disabled="isDeleting" @click="emit('editing', version)">
         编辑
       </VDropdownItem>
-      <VDropdownItem :disabled="isDeleted" type="danger" @click="emit('delete', version)">
+      <VDropdownItem :disabled="isDeleting" type="danger" @click="emit('delete', version)">
         删除
       </VDropdownItem>
     </template>

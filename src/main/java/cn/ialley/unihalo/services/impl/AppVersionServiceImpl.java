@@ -7,6 +7,7 @@ import java.util.concurrent.ThreadLocalRandom;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import cn.ialley.unihalo.scheme.AppInfo;
 import cn.ialley.unihalo.scheme.AppVersion;
 import cn.ialley.unihalo.services.AppVersionService;
 import cn.ialley.unihalo.utils.VersionComparator;
@@ -20,6 +21,7 @@ import run.halo.app.infra.ExternalLinkProcessor;
 
 import static run.halo.app.extension.index.query.Queries.and;
 import static run.halo.app.extension.index.query.Queries.equal;
+import static run.halo.app.extension.index.query.Queries.isNull;
 
 /**
  * 应用版本服务实现
@@ -58,9 +60,11 @@ public class AppVersionServiceImpl implements AppVersionService {
             metadata.setName(generateName());
             metadata.setCreationTimestamp(Instant.now());
             appVersion.setMetadata(metadata);
+            // 先挤掉同 appid+平台交集+同类型的旧上线版本，再保存，避免窗口期同时存在多条上线记录
             return validateVersionGreaterThanLatest(appVersion, metadata.getName())
+                    .then(offlinePreviousStableIfNeeded(appVersion))
                     .then(client.create(appVersion));
-        }).flatMap(saved -> offlinePreviousStableIfNeeded(saved));
+        });
     }
 
     @Override
@@ -77,14 +81,16 @@ public class AppVersionServiceImpl implements AppVersionService {
                     Mono<Void> validation = versionChanged
                             ? validateVersionGreaterThanLatest(appVersion, name)
                             : Mono.empty();
-                    return validation.then(client.update(appVersion));
-                })
-                .flatMap(saved -> offlinePreviousStableIfNeeded(saved));
+                    // 先挤掉其他上线版本再保存，避免窗口期同时存在多条上线记录
+                    return validation
+                            .then(offlinePreviousStableIfNeeded(appVersion))
+                            .then(client.update(appVersion));
+                });
     }
 
     /**
      * 校验新版本的版本名称（version）与应用版本号（versionCode）均大于该应用
-     * 已发布（未删除）记录中的最大值；excludeName 用于编辑时排除自身。
+     * 已发布记录中的最大值；excludeName 用于编辑时排除自身。
      */
     private Mono<Void> validateVersionGreaterThanLatest(AppVersion current, String excludeName) {
         String appid = current.getSpec().getAppid();
@@ -98,7 +104,6 @@ public class AppVersionServiceImpl implements AppVersionService {
                 .fieldQuery(equal("spec.appid", appid))
                 .build();
         return client.listAll(AppVersion.class, listOptions, Sort.unsorted())
-                .filter(v -> !Boolean.TRUE.equals(v.getSpec().getIsDeleted()))
                 .filter(v -> !v.getMetadata().getName().equals(excludeName))
                 .collectList()
                 .flatMap(others -> {
@@ -137,13 +142,7 @@ public class AppVersionServiceImpl implements AppVersionService {
                         return Mono.error(
                                 new IllegalArgumentException("该版本已上线，不能删除，请先下线"));
                     }
-                    // 软删除：标记 isDeleted 保留数据，不可恢复
-                    if (current.getSpec().getIsDeleted() == null) {
-                        current.getSpec().setIsDeleted(true);
-                    } else {
-                        current.getSpec().setIsDeleted(true);
-                    }
-                    return client.update(current);
+                    return client.delete(current);
                 })
                 .then();
     }
@@ -158,23 +157,36 @@ public class AppVersionServiceImpl implements AppVersionService {
         String targetPlatform = isBlank(platform) ? PLATFORM_ANDROID : platform;
         var listOptions = ListOptions.builder()
                 .fieldQuery(and(
+                        isNull("metadata.deletionTimestamp"),
                         equal("spec.appid", appid),
                         equal("spec.stablePublish", true)))
                 .build();
 
-        // 按创建时间倒序，取各类型最新的一条（排除已软删除）
-        return client.listAll(AppVersion.class, listOptions,
-                        Sort.by(Sort.Direction.DESC, "metadata.creationTimestamp"))
-                .filter(v -> !Boolean.TRUE.equals(v.getSpec().getIsDeleted()))
-                .filter(v -> v.getSpec().getPlatform() != null
-                        && v.getSpec().getPlatform().contains(targetPlatform))
-                .collectList()
-                .flatMap(records -> {
-                    if (records.isEmpty()) {
-                        return Mono.just(UpgradeResult.error(-101, "暂无更新或检查appid是否填写正确"));
+        // 先验证 appid 是否已登记（区分"应用不存在"与"平台无上线版本"，便于排障）
+        var appInfoOptions = ListOptions.builder()
+                .fieldQuery(and(
+                        isNull("metadata.deletionTimestamp"),
+                        equal("spec.appid", appid)))
+                .build();
+        return client.listAll(AppInfo.class, appInfoOptions, Sort.unsorted())
+                .hasElements()
+                .flatMap(appExists -> {
+                    if (!Boolean.TRUE.equals(appExists)) {
+                        return Mono.just(UpgradeResult.error(-101, "应用不存在，请检查appid是否填写正确"));
                     }
-                    return Mono.just(determineUpgrade(records, appVersion, wgtVersion,
-                            targetPlatform, isUniappX));
+                    return client.listAll(AppVersion.class, listOptions,
+                                    Sort.by(Sort.Direction.DESC, "metadata.creationTimestamp"))
+                            .filter(v -> v.getSpec().getPlatform() != null
+                                    && v.getSpec().getPlatform().contains(targetPlatform))
+                            .collectList()
+                            .flatMap(records -> {
+                                if (records.isEmpty()) {
+                                    return Mono.just(UpgradeResult.error(-101,
+                                            "该平台暂无上线版本或检查appid是否填写正确"));
+                                }
+                                return Mono.just(determineUpgrade(records, appVersion, wgtVersion,
+                                        targetPlatform, isUniappX));
+                            });
                 })
                 // 附件库返回的 url 为相对路径，转成带外部链接的绝对路径供 app 端下载
                 .map(result -> {
@@ -213,8 +225,9 @@ public class AppVersionServiceImpl implements AppVersionService {
         boolean wgtUpdate = VersionComparator.compare(dbVersion, wgtVersion) == 1;
 
         if (appUpdate && wgtUpdate) {
-            if (!isBlank(minUniVersion)
-                    && VersionComparator.compare(minUniVersion, appVersion) <= 0) {
+            // 未配置 min_uni_version 时视为不限制 uni-app 运行时版本，允许 wgt 更新
+            if (isBlank(minUniVersion)
+                    || VersionComparator.compare(minUniVersion, appVersion) <= 0) {
                 return UpgradeResult.of(101, "wgt更新", stablePublishDb);
             }
             if (hasAppPackage
@@ -274,7 +287,6 @@ public class AppVersionServiceImpl implements AppVersionService {
                 .build();
 
         return client.listAll(AppVersion.class, listOptions, Sort.unsorted())
-                .filter(v -> !Boolean.TRUE.equals(v.getSpec().getIsDeleted()))
                 .filter(v -> !v.getMetadata().getName().equals(current.getMetadata().getName()))
                 .filter(v -> hasPlatformOverlap(v, current))
                 .doOnNext(v -> v.getSpec().setStablePublish(false))

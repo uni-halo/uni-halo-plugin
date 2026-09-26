@@ -5,10 +5,7 @@ import org.springframework.stereotype.Component;
 import run.halo.app.extension.ExtensionClient;
 
 /**
- * {@link MiniProgramLinkGroup} 统一删除语义 Reconciler。
- *
- * 删除分组不影响组内链接（链接按 name 引用分组），走基类统一删除流程；
- * 删除中过渡默认 1s，清理钩子默认空。
+ * 小程序链接分组（MiniProgramLinkGroup）的删除收尾：等待删除过渡期后移除 finalizer，交由框架完成物理删除；不影响组内链接。
  *
  * @author 小莫唐尼
  */

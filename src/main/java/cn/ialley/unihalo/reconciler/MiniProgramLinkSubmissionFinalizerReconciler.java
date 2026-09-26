@@ -5,10 +5,7 @@ import org.springframework.stereotype.Component;
 import run.halo.app.extension.ExtensionClient;
 
 /**
- * {@link MiniProgramLinkSubmission} 统一删除语义 Reconciler。
- *
- * 删除公开投稿走基类统一删除流程（删除中过渡默认 1s），清理钩子默认空；
- * 注意删除中窗口内公开接口须排除该对象（读路径过滤规则）。
+ * 小程序链接投稿（MiniProgramLinkSubmission）的删除收尾：等待删除过渡期后移除 finalizer，交由框架完成物理删除。
  *
  * @author 小莫唐尼
  */

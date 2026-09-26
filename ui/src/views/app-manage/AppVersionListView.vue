@@ -1,6 +1,5 @@
 <script lang="ts" setup>
 import {
-  Dialog,
   IconAddCircle,
   IconGrid,
   IconRefreshLine,
@@ -17,6 +16,8 @@ import {
 import { useQuery, useQueryClient } from "@tanstack/vue-query";
 import { ref, watch } from "vue";
 import { useRoute } from "vue-router";
+import { useDeletionFlow } from "@/composables/useDeletionFlow";
+import { deletingRefetchInterval } from "@/utils/query";
 import AppVersionEditingModal from "../../components/app-manage/version/AppVersionEditingModal.vue";
 import AppVersionListItem from "../../components/app-manage/version/AppVersionListItem.vue";
 import FilterDropdown from "../../components/common/FilterDropdown.vue";
@@ -26,6 +27,7 @@ import type { AppInfo, AppVersion } from "@/types";
 
 const queryClient = useQueryClient();
 const route = useRoute();
+const { confirmDelete } = useDeletionFlow(["uni-halo:app-versions"]);
 
 const page = ref(1);
 const size = ref(20);
@@ -77,6 +79,7 @@ const { data: versions, isLoading, isFetching, refetch } = useQuery({
     total.value = result.total;
     return result;
   },
+  refetchInterval: (data) => deletingRefetchInterval(data),
 });
 
 const handleCheckAllChange = (e: Event) => {
@@ -108,24 +111,12 @@ watch(
 );
 
 const handleDeleteInBatch = () => {
-  Dialog.warning({
+  confirmDelete({
     title: "确定要删除选中的版本吗？",
-    description: "该操作不可恢复。",
-    confirmType: "danger",
-    confirmText: "确定",
-    cancelText: "取消",
-    onConfirm: async () => {
-      try {
-        await Promise.all(
-          selectedVersionNames.value.map((name) => appVersionsApi.delete(name))
-        );
-        selectedVersionNames.value = [];
-        Toast.success("删除成功");
-      } catch (error) {
-        Toast.error((error as Error).message);
-      } finally {
-        queryClient.invalidateQueries({ queryKey: ["uni-halo:app-versions"] });
-      }
+    names: selectedVersionNames.value,
+    doDelete: appVersionsApi.delete,
+    onSuccess: () => {
+      selectedVersionNames.value = [];
     },
   });
 };
@@ -155,22 +146,11 @@ const handleToggle = async (version: AppVersion) => {
 };
 
 const handleDelete = (version: AppVersion) => {
-  Dialog.warning({
+  confirmDelete({
     title: "确定要删除该版本吗？",
     description: "删除之后将无法恢复。",
-    confirmType: "danger",
-    confirmText: "确定",
-    cancelText: "取消",
-    onConfirm: async () => {
-      try {
-        await appVersionsApi.delete(version.metadata.name);
-        Toast.success("删除成功");
-      } catch (error) {
-        Toast.error((error as Error).message);
-      } finally {
-        queryClient.invalidateQueries({ queryKey: ["uni-halo:app-versions"] });
-      }
-    },
+    names: [version.metadata.name],
+    doDelete: appVersionsApi.delete,
   });
 };
 

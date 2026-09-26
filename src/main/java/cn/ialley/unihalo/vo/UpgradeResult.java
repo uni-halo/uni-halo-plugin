@@ -64,6 +64,22 @@ public class UpgradeResult {
     @JsonProperty("stable_publish")
     private Boolean stablePublish;
 
+    /**
+     * 应用商店列表（对齐客户端 UniUpgradeCenterResult.store_list；
+     * 当前无多商店分发能力，恒为 null 且不输出，iOS/Harmony 走 url 跳转）
+     */
+    @JsonProperty("store_list")
+    private List<StoreListItem> storeList;
+
+    @Data
+    public static class StoreListItem {
+        private Boolean enable;
+        private String id;
+        private String name;
+        private String scheme;
+        private Integer priority;
+    }
+
     public static UpgradeResult error(int code, String message) {
         UpgradeResult result = new UpgradeResult();
         result.setCode(code);

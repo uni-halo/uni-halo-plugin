@@ -5,10 +5,7 @@ import org.springframework.stereotype.Component;
 import run.halo.app.extension.ExtensionClient;
 
 /**
- * {@link LoveAlbum} 统一删除语义 Reconciler。
- *
- * 照片内嵌于 spec（非子资源），删除相册即整体删除，走基类统一删除流程；
- * 删除中过渡默认 1s，清理钩子默认空。
+ * 恋爱相册（LoveAlbum）的删除收尾：等待删除过渡期后移除 finalizer，交由框架完成物理删除。
  *
  * @author 小莫唐尼
  */
