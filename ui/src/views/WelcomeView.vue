@@ -37,8 +37,8 @@ import RiLoginCircleLine from '~icons/ri/login-circle-line'
 import RiEditBoxLine from '~icons/ri/edit-box-line'
 import RiToolsLine from '~icons/ri/tools-line'
 
-import mpPng from '@/assets/mp.png'
-import qqqunPng from '@/assets/qqqun.png'
+import mpImg from '@/assets/mp.jpeg'
+import qqqunImg from '@/assets/qqqun.jpeg'
 import wxPng from '@/assets/wx.png'
 import zfbPng from '@/assets/zfb.png'
 import qqPng from '@/assets/qq.png'
@@ -367,11 +367,11 @@ const activeUiPreviewTab = ref('main')
         <div class="grid grid-cols-2 gap-4 max-w-2xl mx-auto">
           <div
             class="box-border p-2 rounded-2xl overflow-hidden bg-white shadow-sm border border-slate-100 flex items-center justify-center">
-            <img :src="mpPng" alt="小程序二维码" class="w-full h-full object-contain rounded-lg" />
+            <img :src="mpImg" alt="小程序二维码" class="w-full h-full object-contain rounded-lg" />
           </div>
           <div
             class="box-border p-2 rounded-2xl overflow-hidden bg-white shadow-sm border border-slate-100 flex items-center justify-center">
-            <img :src="qqqunPng" alt="QQ 交流群" class="w-full h-full object-contain rounded-lg" />
+            <img :src="qqqunImg" alt="QQ 交流群" class="w-full h-full object-contain rounded-lg" />
           </div>
         </div>
       </div>

@@ -6,10 +6,12 @@ import RiDragMove2Line from "~icons/ri/drag-move-2-line";
 import RiArrowDownSLine from "~icons/ri/arrow-down-s-line";
 import RiArrowUpSLine from "~icons/ri/arrow-up-s-line";
 import RiDeleteBinLine from "~icons/ri/delete-bin-6-line";
+import RiEdit2Line from "~icons/ri/edit-2-line";
 import RiImageLine from "~icons/ri/image-line";
 import RichTextEditorField from "@/components/common/RichTextEditorField.vue";
 import AuditCandidatesModal from "@/components/audit-config/AuditCandidatesModal.vue";
 import FeatureEntryCandidatesModal from "@/components/feature-config/FeatureEntryCandidatesModal.vue";
+import FeatureEntryEditModal from "@/components/feature-config/FeatureEntryEditModal.vue";
 import { FeatureConfigFormKey } from "@/views/feature-config/form-context";
 import {
   DEFAULT_MY_PAGE_COMMON_KEYS,
@@ -256,6 +258,34 @@ const handleQuickNavConfirm = (selected: FeatureEntry[]) => {
   quickNavModalVisible.value = false;
 };
 
+// ===== 自定义功能入口候选库（spec.pages.customEntries，候选弹窗内维护）=====
+
+/** 自定义条目库（读写 formState） */
+const customEntries = computed<FeatureConfigQuickNavigationItem[]>(
+  () => formState.value.spec.pages.customEntries || []
+);
+
+const setCustomEntries = (value: FeatureConfigQuickNavigationItem[]) => {
+  formState.value.spec.pages.customEntries = value;
+};
+
+/** 新增自定义条目 */
+const handleCustomCreate = (entry: FeatureConfigQuickNavigationItem) => {
+  setCustomEntries([...customEntries.value, entry]);
+};
+
+/** 更新自定义条目（按 key 原位替换） */
+const handleCustomUpdate = (entry: FeatureConfigQuickNavigationItem) => {
+  setCustomEntries(customEntries.value.map((it) =>
+    it.key === entry.key ? { ...entry } : it
+  ));
+};
+
+/** 删除自定义条目 */
+const handleCustomDelete = (entry: FeatureConfigQuickNavigationItem) => {
+  setCustomEntries(customEntries.value.filter((it) => it.key !== entry.key));
+};
+
 /** 删除某项快捷导航 */
 const removeQuickNavItem = (item: FeatureConfigQuickNavigationItem) => {
   const list = formState.value.spec.pages.home.quickNavigation || [];
@@ -408,6 +438,50 @@ const removeMineFeature = (group: "common" | "other", item: FeatureConfigQuickNa
   }
 };
 
+// ===== 功能入口编辑弹窗（首页快捷导航 / 我的页面两组共用）=====
+
+/** 编辑弹窗当前条目（null=关闭；编辑对象为列表内快照的深拷贝，确认后按引用写回） */
+const editingEntry = ref<FeatureConfigQuickNavigationItem | null>(null);
+
+/** 编辑目标定位（confirm 时按索引在对应列表中原位替换；旧数据可能存在重复 key，索引更精确） */
+const editingSource = ref<{ list: "home" | "common" | "other", index: number } | null>(null);
+
+/** 打开编辑弹窗（任一列表条目） */
+const openEntryEdit = (
+  list: "home" | "common" | "other",
+  index: number,
+  item: FeatureConfigQuickNavigationItem
+) => {
+  editingSource.value = { list, index };
+  editingEntry.value = item;
+};
+
+/** 编辑确认：按索引原位替换对应列表中的条目 */
+const handleEntryEditConfirm = (draft: FeatureConfigQuickNavigationItem) => {
+  const { list, index } = editingSource.value || {};
+  if (list === "home") {
+    const target = formState.value.spec.pages.home.quickNavigation || [];
+    if (index != null && index < target.length) {
+      target[index] = { ...draft };
+      formState.value.spec.pages.home.quickNavigation = [...target];
+    }
+  } else if (list === "common") {
+    if (index != null && index < mineCommonFeatures.value.length) {
+      const next = [...mineCommonFeatures.value];
+      next[index] = { ...draft };
+      mineCommonFeatures.value = next;
+    }
+  } else if (list === "other") {
+    if (index != null && index < mineOtherFeatures.value.length) {
+      const next = [...mineOtherFeatures.value];
+      next[index] = { ...draft };
+      mineOtherFeatures.value = next;
+    }
+  }
+  editingEntry.value = null;
+  editingSource.value = null;
+};
+
 /** 恢复默认：恢复为注册表对应组的默认配置（全部快照字段、排序/visible 一并恢复；
  * 对齐 app 端 about.vue navList：常用 8 项 / 其他 3 项，由显式 key 列表派生） */
 function restoreMineDefaults(group: "common" | "other") {
@@ -524,6 +598,11 @@ function restoreMineDefaults(group: "common" | "other") {
               <span>显示</span>
               <VSwitch v-model="item.visible" />
             </div>
+            <!-- 编辑 -->
+            <button type="button" class=":uno: shrink-0 text-gray-400 transition-all hover:text-primary" title="编辑"
+              @click="openEntryEdit('home', index, item)">
+              <RiEdit2Line class=":uno: h-4 w-4" />
+            </button>
             <!-- 删除 -->
             <button type="button" class=":uno: shrink-0 text-gray-400 transition-all hover:text-red-600" title="删除"
               @click="removeQuickNavItem(item)">
@@ -636,8 +715,8 @@ function restoreMineDefaults(group: "common" | "other") {
                   outer-class=":uno: min-w-0 flex-1 !pt-0" />
               </div>
               <!-- 提示（subTitle，app 端展示为功能入口副标题） -->
-              <div class=":uno: flex min-w-0 flex-1 items-center gap-2">
-                <span class=":uno: w-10 shrink-0 text-xs text-gray-700">提示</span>
+              <div v-if="false" class=":uno: flex min-w-0 flex-1 items-center gap-2">
+                <span class=":uno: w-10 shrink-0 text-xs text-gray-700">副标题</span>
                 <FormKit v-model="item.subTitle" :name="`mypage_common_subtitle_${index}`" type="text"
                   placeholder="如 博主常用联系方式" outer-class=":uno: min-w-0 flex-1 !pt-0" />
               </div>
@@ -656,6 +735,10 @@ function restoreMineDefaults(group: "common" | "other") {
                 <span>显示</span>
                 <VSwitch v-model="item.visible" />
               </div>
+              <button type="button" class=":uno: shrink-0 text-gray-400 transition-all hover:text-primary" title="编辑"
+                @click="openEntryEdit('common', index, item)">
+                <RiEdit2Line class=":uno: h-4 w-4" />
+              </button>
               <button type="button" class=":uno: shrink-0 text-gray-400 transition-all hover:text-red-600" title="删除"
                 @click="removeMineFeature('common', item)">
                 <RiDeleteBinLine class=":uno: h-4 w-4" />
@@ -689,8 +772,8 @@ function restoreMineDefaults(group: "common" | "other") {
                   outer-class=":uno: min-w-0 flex-1 !pt-0" />
               </div>
               <!-- 提示（subTitle，app 端展示为功能入口副标题） -->
-              <div class=":uno: flex min-w-0 flex-1 items-center gap-2">
-                <span class=":uno: w-10 shrink-0 text-xs text-gray-700">提示</span>
+              <div v-if="false" class=":uno: flex min-w-0 flex-1 items-center gap-2">
+                <span class=":uno: w-10 shrink-0 text-xs text-gray-700">副标题</span>
                 <FormKit v-model="item.subTitle" :name="`mypage_other_subtitle_${index}`" type="text"
                   placeholder="如 首页布局、卡片样式等本地偏好" outer-class=":uno: min-w-0 flex-1 !pt-0" />
               </div>
@@ -709,6 +792,10 @@ function restoreMineDefaults(group: "common" | "other") {
                 <span>显示</span>
                 <VSwitch v-model="item.visible" />
               </div>
+              <button type="button" class=":uno: shrink-0 text-gray-400 transition-all hover:text-primary" title="编辑"
+                @click="openEntryEdit('other', index, item)">
+                <RiEdit2Line class=":uno: h-4 w-4" />
+              </button>
               <button type="button" class=":uno: shrink-0 text-gray-400 transition-all hover:text-red-600" title="删除"
                 @click="removeMineFeature('other', item)">
                 <RiDeleteBinLine class=":uno: h-4 w-4" />
@@ -795,15 +882,23 @@ function restoreMineDefaults(group: "common" | "other") {
   <AuditCandidatesModal v-if="categoryModalVisible" type="category" :selected="categoryModalSelected" :max="3"
     @update:visible="categoryModalVisible = false" @confirm="handleCategoryConfirm" />
 
-  <!-- 首页快捷导航「添加」候选弹窗（统一清单：展示全部注册表条目，已配置置灰禁选，确认后追加） -->
+  <!-- 首页快捷导航「添加」候选弹窗（统一清单：内置注册表+自定义条目，已配置置灰禁选，确认后追加） -->
   <FeatureEntryCandidatesModal v-if="quickNavModalVisible"
     :selected-keys="(formState.spec.pages.home.quickNavigation || []).map((i) => i.key || '')"
-    @update:visible="quickNavModalVisible = false" @confirm="(selected) => handleQuickNavConfirm(selected)" />
+    :custom-entries="customEntries"
+    @update:visible="quickNavModalVisible = false" @confirm="(selected) => handleQuickNavConfirm(selected)"
+    @create="handleCustomCreate" @update="handleCustomUpdate" @delete="handleCustomDelete" />
 
   <!-- 关于页功能入口候选弹窗（common/other 两组共用；统一清单展示全部注册表条目，按组追加） -->
   <FeatureEntryCandidatesModal v-if="mineModalGroup" :selected-keys="(mineModalGroup === 'common'
     ? mineCommonFeatures
     : mineOtherFeatures
   ).map((i) => i.key || '')
-    " @update:visible="mineModalGroup = null" @confirm="(selected) => handleMineConfirm(selected, mineModalGroup!)" />
+    " :custom-entries="customEntries" @update:visible="mineModalGroup = null"
+    @confirm="(selected) => handleMineConfirm(selected, mineModalGroup!)"
+    @create="handleCustomCreate" @update="handleCustomUpdate" @delete="handleCustomDelete" />
+
+  <!-- 功能入口全字段编辑弹窗（首页快捷导航 / 我的页面两组共用；v-if 控制挂载，避免常驻弹窗） -->
+  <FeatureEntryEditModal v-if="editingEntry" :entry="editingEntry" @update:entry="editingEntry = $event"
+    @confirm="handleEntryEditConfirm" />
 </template>

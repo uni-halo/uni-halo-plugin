@@ -149,6 +149,8 @@ public class FeatureConfig extends AbstractExtension {
         /** 我的页面功能入口（常用功能/其他功能两组，配置并入「博主页」tab，
          * 随 {@code featureConfig.pages.mine} 下发） */
         private MinePage mine;
+        /** 自定义功能入口候选库（候选弹窗「新增/编辑/删除」的持久化数据源；内置注册表只读） */
+        private List<QuickNavigationItem> customEntries;
         /** 免责声明页（不再需要启用开关，仅内容） */
         private DisclaimerPage disclaimer;
         /** 文章详情页内容与版权文案 */
@@ -259,18 +261,35 @@ public class FeatureConfig extends AbstractExtension {
         private String title;
         /** 副标题（对标 app 端 rightText，如「全部文章」，可空） */
         private String subTitle;
-        /** 图标颜色（十六进制色值，如 #03A9F4） */
+        /** 文字颜色（十六进制色值，如 #03A9F4） */
         private String color;
+        /** 图标颜色（图标字体渲染色，缺省回落 color） */
+        private String iconColor;
         /** 背景色（rgba 半透明值） */
         private String bgColor;
         /** 图标字体前缀（如 uhemoji2-icon） */
         private String iconPrefix;
         /** 图标名（如 -mask） */
         private String icon;
+        /** 多风格图标集合（key 风格标识 / prefix 字体前缀 / iconName 图标名） */
+        private List<NavIconStyle> icons;
+        /** 当前生效风格 key（缺省取 icons[0]） */
+        private String iconMode;
         /** 跳转路径（小程序页面路径） */
         private String path;
         /** 是否显示 */
         private Boolean visible;
+    }
+
+    /** 多风格图标项（app 端按 iconMode 匹配渲染，缺省取首项） */
+    @Data
+    public static class NavIconStyle {
+        /** 风格标识（ri=remixicon / emoji-font=emoji 字体 / emoji-icon=纯 emoji 字符） */
+        private String key;
+        /** 图标字体类名前缀（纯 emoji 字符时为空串） */
+        private String prefix;
+        /** 图标名（纯 emoji 字符时存字符本身） */
+        private String iconName;
     }
 
     /** 博主页（资料卡视觉与常用功能布局） */

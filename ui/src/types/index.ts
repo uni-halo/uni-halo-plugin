@@ -713,6 +713,8 @@ export interface FeatureConfigPages {
   /** 我的页面功能入口（常用功能/其他功能两组，配置并入「博主页」tab，
    * 经 getConfigs 下发 featureConfig.pages.mine） */
   mine?: FeatureConfigMinePage;
+  /** 自定义功能入口候选库（候选弹窗「新增/编辑/删除」的持久化数据源；内置注册表只读） */
+  customEntries?: FeatureConfigQuickNavigationItem[];
   /** 免责声明页（不再需要启用开关，仅内容） */
   disclaimer?: {
     content?: string;
@@ -752,16 +754,32 @@ export interface FeatureConfigQuickNavigationItem {
   subTitle?: string;
   /** 图标颜色（十六进制色值，如 #03A9F4） */
   color?: string;
+  /** 图标颜色（图标字体渲染色，缺省回落 color） */
+  iconColor?: string;
   /** 背景色（rgba 半透明值） */
   bgColor?: string;
   /** 图标字体前缀（如 uhemoji2-icon） */
   iconPrefix?: string;
   /** 图标名（如 -mask） */
   icon?: string;
+  /** 多风格图标集合（key 风格标识，prefix 字体前缀，iconName 图标名） */
+  icons?: FeatureConfigNavIconStyle[];
+  /** 当前生效风格 key，缺省取 icons[0] */
+  iconMode?: string;
   /** 跳转路径（小程序页面路径） */
   path?: string;
   /** 是否显示 */
   visible?: boolean;
+}
+
+/** 多风格图标项（app 端按 iconMode 匹配渲染，缺省取首项） */
+export interface FeatureConfigNavIconStyle {
+  /** 风格标识（ri=remixicon / emoji-font=emoji 字体 / emoji-icon=纯 emoji 字符） */
+  key: string;
+  /** 图标字体类名前缀（纯 emoji 字符时为空串） */
+  prefix: string;
+  /** 图标名（纯 emoji 字符时存字符本身） */
+  iconName: string;
 }
 
 /** 我的页面功能入口（常用功能/其他功能两组，条目复用快捷导航项结构，

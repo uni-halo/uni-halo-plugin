@@ -338,7 +338,8 @@ provide(FeatureConfigFormKey, { formState, save: handleSave });
 <template>
   <VPageHeader title="UniHalo-功能设置">
     <template #actions>
-      <div class=":uno: flex items-center">
+      <div class=":uno: flex items-center gap-x-4">
+        <div class="text-xs text-orange-500"> 提示：该页面所有的操作都需要点击 保存设置 按钮才会保存成功 </div>
         <VSpace>
           <SubmitButton type="secondary" :loading="isLoading" text="保存设置" @submit="handleSave" />
         </VSpace>

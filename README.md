@@ -231,7 +231,7 @@ pnpm build:h5    # H5
 - **插件提交 issue**：https://github.com/uni-halo/uni-halo-plugin/issues
 - **应用提交 issue**：https://github.com/uni-halo/uni-halo/issues
 
-![QQ交流群](https://gcore.jsdelivr.net/gh/uni-halo/uni-halo-static/images/qqqun.png)
+![QQ交流群](https://gcore.jsdelivr.net/gh/uni-halo/uni-halo-static/images/qqqun.jpeg)
 
 ## 🤝 参与贡献
 
