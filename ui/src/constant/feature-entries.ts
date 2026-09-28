@@ -20,7 +20,7 @@ function dualIcons(riName: string, emojiPrefix: string, emojiName: string): Feat
  * 统一功能入口注册表
  */
 export const FEATURE_ENTRY_REGISTRY: FeatureEntry[] = [
-  // ===== 我的页面-常用功能（默认 8 项，顺序即展示顺序）=====
+  // ===== 我的页面-常用功能（默认 10 项，顺序即展示顺序）=====
   {key: "contact-blogger", title: "联系博主", subTitle: "博主常用联系方式", color: "#FF9800", iconColor: "#FF9800", bgColor: "#FF980024", iconPrefix: "uhemoji2-icon", icon: "-wink", icons: dualIcons("mail-line", "uhemoji2-icon", "-wink"), iconMode: "emoji-font", path: "/pages-blog/contact/contact", visible: true, group: "common"},
   {key: "notice", title: "通知公告", subTitle: "站点公告与通知", color: "#9C27B0", iconColor: "#9C27B0", bgColor: "#9C27B024", iconPrefix: "uhemoji-icon", icon: "-sleeping", icons: dualIcons("notification-2-line", "uhemoji-icon", "-sleeping"), iconMode: "emoji-font", path: "/pages-blog/notice/notice", visible: true, group: "common"},
   {key: "favorites", title: "我的收藏", subTitle: "笔记和瞬间收藏", color: "#FFB300", iconColor: "#FFB300", bgColor: "#FFB30024", iconPrefix: "uhemoji2-icon", icon: "-smiling", icons: dualIcons("star-smile-line", "uhemoji2-icon", "-smiling"), iconMode: "emoji-font", path: "/pages-blog/favorites/favorites", visible: true, group: "common"},
@@ -44,9 +44,9 @@ export const FEATURE_ENTRY_REGISTRY: FeatureEntry[] = [
  */
 export const DEFAULT_QUICK_NAV_KEYS = ["love", "contact-blogger", "favorites", "friend-links", "aboutProject"];
 
-/** 我的页面-常用功能默认 8 项 */
+/** 我的页面-常用功能默认 10 项 */
 export const DEFAULT_MY_PAGE_COMMON_KEYS = [
-  "contact-blogger", "notice", "favorites", "love", "friend-links", "archives", "vote", "data-visual",
+  "contact-blogger", "notice", "favorites", "love", "friend-links", "archives", "vote", "data-visual", "portfolio", "douban",
 ];
 
 /** 我的页面-其他功能默认 5 项（顺序即展示顺序，与服务端默认一致） */

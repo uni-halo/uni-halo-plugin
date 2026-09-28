@@ -166,8 +166,8 @@ function defaultSpec(): FeatureConfigSpec {
         commonFeaturesMode: "grid",
         copyrightConfig: { enabled: true, content: "「 2022 uni-halo 丨 开源项目@小莫唐尼 」" },
       },
-      // 我的页面功能入口：默认填充注册表条目，对齐 app 端 about.vue navList
-      // （常用 8 项 / 其他 3 项，与后端 FeatureConfigServiceImpl 默认一致）
+      // 我的页面功能入口：默认填充注册表条目
+      // （常用 10 项 / 其他 5 项，与后端 FeatureConfigServiceImpl 默认一致）
       mine: {
         commonFeatures: featureEntriesByKeys(DEFAULT_MY_PAGE_COMMON_KEYS).map(toQuickNavigationItem),
         otherFeatures: featureEntriesByKeys(DEFAULT_MY_PAGE_OTHER_KEYS).map(toQuickNavigationItem),

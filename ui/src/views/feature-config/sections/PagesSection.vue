@@ -483,7 +483,7 @@ const handleEntryEditConfirm = (draft: FeatureConfigQuickNavigationItem) => {
 };
 
 /** 恢复默认：恢复为注册表对应组的默认配置（全部快照字段、排序/visible 一并恢复；
- * 对齐 app 端 about.vue navList：常用 8 项 / 其他 3 项，由显式 key 列表派生） */
+ * 常用 10 项 / 其他 5 项，由显式 key 列表派生） */
 function restoreMineDefaults(group: "common" | "other") {
   const label = group === "common" ? "常用功能" : "其他功能";
   Dialog.warning({
