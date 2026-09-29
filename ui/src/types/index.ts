@@ -695,6 +695,8 @@ export interface FeatureConfigPages {
     /** 快捷导航项列表（每项可配置名称/排序/显示隐藏，排序=数组顺序） */
     quickNavigation?: FeatureConfigQuickNavigationItem[];
     useCategory?: boolean;
+    /** 是否显示一言（依赖轻言插件） */
+    useHitokoto?: boolean;
     /** 首页分类栏展示的分类引用（固定 3 个，数据在「分类管理」维护） */
     categories?: FeatureConfigCategoryItem[];
   };

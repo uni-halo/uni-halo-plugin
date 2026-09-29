@@ -158,6 +158,7 @@ function defaultSpec(): FeatureConfigSpec {
         // 快捷导航默认 5 项（对齐客户端 uh-home-quick-nav 默认 navList；由注册表显式 key 列表派生）
         quickNavigation: featureEntriesByKeys(DEFAULT_QUICK_NAV_KEYS).map(toQuickNavigationItem),
         useCategory: true,
+        useHitokoto: true,
         categories: [],
       },
       blogger: {

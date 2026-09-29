@@ -250,6 +250,8 @@ public class FeatureConfig extends AbstractExtension {
         private List<QuickNavigationItem> quickNavigation;
         /** 是否显示分类（精品文章分类） */
         private Boolean useCategory;
+        /** 是否显示一言（依赖轻言插件） */
+        private Boolean useHitokoto;
         /** 首页分类栏展示的分类引用（固定 3 个，数据在「分类管理」维护） */
         private List<CategoryItem> categories;
     }

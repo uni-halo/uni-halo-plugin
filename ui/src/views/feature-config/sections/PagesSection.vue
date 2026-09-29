@@ -551,6 +551,13 @@ function restoreMineDefaults(group: "common" | "other") {
   <template v-if="subTab === 'home'">
     <div class=":uno: flex items-center justify-between gap-4 border-b border-gray-100 py-3">
       <div>
+        <div class=":uno: text-sm text-gray-700">显示一言</div>
+        <div class=":uno: mt-0.5 text-xs text-gray-400">依赖【轻言】插件</div>
+      </div>
+      <VSwitch v-model="formState.spec.pages.home.useHitokoto" />
+    </div>
+    <div class=":uno: flex items-center justify-between gap-4 border-b border-gray-100 py-3">
+      <div>
         <div class=":uno: text-sm text-gray-700">显示快捷导航</div>
         <div class=":uno: mt-0.5 text-xs text-gray-400">首页顶部快捷入口</div>
       </div>
@@ -660,7 +667,6 @@ function restoreMineDefaults(group: "common" | "other") {
           </div>
         </VueDraggable>
       </div>
-
     </div>
   </template>
 
