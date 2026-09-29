@@ -173,7 +173,7 @@ pnpm build:h5    # H5
 
 ## 📚 使用文档
 
-- [插件配置](https://uni-halo-doc.ialley.cn/deploy/config)：插件设置（基本设置、安全控制、平台接入、主题展示、移动端登录）说明
+- [插件配置](https://uni-halo-doc.ialley.cn/deploy/config)：插件设置（基本设置、安全控制、平台接入、主题组件、主题模板、移动端登录）说明
 - [控制台功能](https://uni-halo-doc.ialley.cn/plugin/console)：内容管理（横幅、公告、友链、恋爱日记等）使用说明
 - [移动端登录 · 使用与配置](https://uni-halo-doc.ialley.cn/plugin/mobile-login)：站点管理员如何开通与配置登录能力
 - [移动端登录 · 接口文档](https://uni-halo-doc.ialley.cn/plugin/mobile-login-api)：App / 小程序端如何对接
