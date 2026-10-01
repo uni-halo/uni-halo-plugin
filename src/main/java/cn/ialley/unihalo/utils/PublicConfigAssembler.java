@@ -1,7 +1,11 @@
 package cn.ialley.unihalo.utils;
 
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import cn.ialley.unihalo.scheme.FeatureConfig;
 import tools.jackson.databind.JsonNode;
@@ -15,18 +19,19 @@ import tools.jackson.databind.node.ObjectNode;
  * 输出 = setting.yaml 活组白名单 + 功能设置单例 spec（脱敏）+ 服务端计算态：
  * {@code featureConfig} 为 {@link FeatureConfig} spec 整体下发（密码相关字段
  * {@code passwordHash/password/passwordRemoved} 绝不出服务端）；{@code safetyConfig /
- * integrationConfig / themeWidgetConfig / themeTemplateConfig} 白名单透传；{@code loginConfig} 仅输出登录方式开关，
- * Secret 资源名、令牌有效期与注册策略不外发；{@code maintenance} 为 additive 顶层键，
- * 按 spec.maintenance 时间窗口计算，仅 scheduled/active 时输出（键缺失 = 未维护）。
- * 其余设置组一律不透传——白名单制，新增组须同步此处。
+ * themeWidgetConfig / themeTemplateConfig} 白名单透传；{@code integrationConfig} 组装输出
+ * （AI助手的 chatPrompt 追加应用信息/博主资料/社交信息，其余内容透传）；
+ * {@code loginConfig} 仅输出登录方式开关，Secret 资源名、令牌有效期与注册策略不外发；
+ * {@code maintenance} 为 additive 顶层键，按 spec.maintenance 时间窗口计算，
+ * 仅 scheduled/active 时输出（键缺失 = 未维护）。其余设置组一律不透传——白名单制，新增组须同步此处。
  *
  * @author 小莫唐尼
  */
 public class PublicConfigAssembler {
 
-    /** 设置组白名单：原样透传（setting.yaml 新增组须同步维护） */
+    /** 设置组白名单：原样透传（setting.yaml 新增组须同步维护；integrationConfig 走组装） */
     private static final String[] PASSTHROUGH_GROUPS = {
-        "themeWidgetConfig", "themeTemplateConfig", "safetyConfig", "integrationConfig"};
+        "themeWidgetConfig", "themeTemplateConfig", "safetyConfig"};
 
     /**
      * 插件 Spring 上下文未注册 Jackson 3 ObjectMapper bean，故内部自行创建
@@ -64,6 +69,11 @@ public class PublicConfigAssembler {
                 if (node != null && node.isObject()) {
                     root.set(group, node);
                 }
+            }
+            // integrationConfig：AI助手组装输出（chatPrompt 追加站点信息），其余内容透传
+            JsonNode integration = settings.get("integrationConfig");
+            if (integration != null && integration.isObject()) {
+                root.set("integrationConfig", assembleIntegration(integration, config));
             }
         }
         JsonNode spec = sanitizeFeatureSpec(toSpecTree(config));
@@ -121,6 +131,91 @@ public class PublicConfigAssembler {
             }
         }
         return out;
+    }
+
+    /**
+     * integrationConfig 组装：pluginConfig.aiAssistant 存在且站点信息非空时，
+     * 把应用信息/博主资料/社交信息追加到 chatPrompt 之后；aiAssistant 缺失或站点信息
+     * 为空时原样返回（未配置过 = 维持现状），pluginConfig 下其余插件节点保持透传。
+     */
+    private static JsonNode assembleIntegration(JsonNode node, FeatureConfig config) {
+        JsonNode pluginConfig = node.get("pluginConfig");
+        JsonNode assistant = pluginConfig != null && pluginConfig.isObject()
+                ? pluginConfig.get("aiAssistant") : null;
+        if (assistant == null || !assistant.isObject()) {
+            return node;
+        }
+        String siteInfo = buildProfileText(config);
+        if (siteInfo.isEmpty()) {
+            return node;
+        }
+        ObjectNode out = (ObjectNode) node.deepCopy();
+        ObjectNode assistantOut = (ObjectNode) ((ObjectNode) out.get("pluginConfig")).get("aiAssistant");
+        String chat = jsonText(assistant.get("chatPrompt"));
+        assistantOut.put("chatPrompt", chat == null || chat.isBlank() ? siteInfo : chat + "\n\n" + siteInfo);
+        return out;
+    }
+
+    /**
+     * 站点信息提示词文本（FeatureConfig.spec.profile 序列化）：应用信息/博主资料/
+     * 社交信息逐行拼装，社交项过滤 visible && content 后按 priority 降序输出；
+     * 全部字段缺失时返回空串（调用方不追加，避免空段落）。
+     */
+    private static String buildProfileText(FeatureConfig config) {
+        if (config == null || config.getSpec() == null || config.getSpec().getProfile() == null) {
+            return "";
+        }
+        FeatureConfig.Profile profile = config.getSpec().getProfile();
+        List<String> lines = new ArrayList<>();
+        if (profile.getAppInfo() != null && notBlank(profile.getAppInfo().getName())) {
+            lines.add("应用名称：" + profile.getAppInfo().getName().trim());
+        }
+        FeatureConfig.Blogger blogger = profile.getBlogger();
+        if (blogger != null) {
+            if (notBlank(blogger.getNickname())) {
+                lines.add("博主昵称：" + blogger.getNickname().trim());
+            }
+            if (notBlank(blogger.getDescription())) {
+                lines.add("博主简介：" + blogger.getDescription().trim());
+            }
+            if (notBlank(blogger.getIntro())) {
+                lines.add("博主介绍：" + htmlToText(blogger.getIntro()));
+            }
+            if (notBlank(blogger.getWebsite())) {
+                lines.add("博主主页：" + blogger.getWebsite().trim());
+            }
+            if (notBlank(blogger.getEmail())) {
+                lines.add("博主邮箱：" + blogger.getEmail().trim());
+            }
+        }
+        FeatureConfig.Social social = profile.getSocial();
+        if (social != null && social.getItems() != null) {
+            String accounts = social.getItems().stream()
+                    .filter(item -> Boolean.TRUE.equals(item.getVisible()) && notBlank(item.getContent()))
+                    .sorted(Comparator.comparing(FeatureConfig.SocialItem::getPriority,
+                            Comparator.nullsLast(Comparator.reverseOrder())))
+                    .map(item -> notBlank(item.getName())
+                            ? item.getName().trim() + " " + item.getContent().trim()
+                            : item.getContent().trim())
+                    .collect(Collectors.joining("；"));
+            if (!accounts.isEmpty()) {
+                lines.add("社交账号：" + accounts);
+            }
+        }
+        if (lines.isEmpty()) {
+            return "";
+        }
+        return "【站点信息（系统自动附加，请勿修改）】\n" + String.join("\n", lines);
+    }
+
+    /** 富文本 HTML 转纯文本（剥标签 + 合并空白），限长 300 字符，供提示词拼接 */
+    private static String htmlToText(String html) {
+        String text = html.replaceAll("<[^>]+>", " ").replaceAll("\\s+", " ").trim();
+        return text.length() > 300 ? text.substring(0, 300) : text;
+    }
+
+    private static boolean notBlank(String value) {
+        return value != null && !value.isBlank();
     }
 
     /**
