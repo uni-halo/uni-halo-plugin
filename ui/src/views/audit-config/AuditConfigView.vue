@@ -24,10 +24,12 @@ import RiDeleteBinLine from "~icons/ri/delete-bin-6-line";
 import RiImageLine from "~icons/ri/image-line";
 import RiShieldCheckLine from "~icons/ri/shield-check-line";
 import AuditCandidatesModal from "@/components/audit-config/AuditCandidatesModal.vue";
-import { auditDataApi } from "@/api";
+import AuditHiddenNavModal from "@/components/audit-config/AuditHiddenNavModal.vue";
+import { auditDataApi, featureConfigApi } from "@/api";
 import {
   type AuditCandidateType,
   type AuditDataRef,
+  type FeatureConfigQuickNavigationItem,
 } from "@/types";
 
 const queryClient = useQueryClient();
@@ -91,6 +93,12 @@ const saving = ref(false);
 /** 审核模式开关（AuditDataConfig.spec.enabled，随本页整体保存） */
 const auditEnabled = ref(false);
 
+/** 审核期间隐藏的功能入口 key 列表（spec.hiddenNavKeys，随本页整体保存） */
+const hiddenNavKeys = ref<string[]>([]);
+
+/** 隐藏入口选择弹窗显隐 */
+const hiddenNavModal = ref(false);
+
 /** 当前展示的数据分类（左侧切换，默认文章） */
 const activeType = ref<AuditCandidateType>("post");
 
@@ -103,6 +111,16 @@ const { data: detail, isLoading, isFetching, refetch } = useQuery({
   queryKey: ["uni-halo:audit-data"],
   queryFn: () => auditDataApi.get(),
 });
+
+// 自定义功能入口候选库（spec.pages.customEntries，隐藏入口弹窗的动态数据源）
+const { data: featureConfig } = useQuery({
+  queryKey: ["uni-halo:feature-config"],
+  queryFn: () => featureConfigApi.get(),
+});
+
+const customEntries = computed<FeatureConfigQuickNavigationItem[]>(
+  () => featureConfig.value?.spec?.pages?.customEntries || []
+);
 
 // 已选引用（对象快照：name + title/cover/subTitle/extra，VueDraggable 直接绑定实现拖拽排序）
 const selectedItems = reactive<Record<AuditCandidateType, AuditDataRef[]>>({
@@ -131,10 +149,18 @@ const buildSpec = () => ({
   galleryGroups: selectedItems.galleryGroup,
   moments: selectedItems.moment,
   linkGroups: selectedItems.linkGroup,
+  // 归一化为数组：服务端/存量数据异常时保证 dirty 对比与保存结构稳定
+  hiddenNavKeys: Array.isArray(hiddenNavKeys.value) ? hiddenNavKeys.value : [],
 });
 
 /** 是否有未保存修改 */
 const dirty = computed(() => JSON.stringify(buildSpec()) !== initialSnapshot.value);
+
+/** 服务端数据是否已完成首次回填（首次回填不受 dirty 保护限制） */
+let hydrated = false;
+
+/** 下次 refetch 强制回填（手动刷新按钮用，允许覆盖未保存修改） */
+const forceHydrate = ref(false);
 
 watch(
   () => detail.value,
@@ -142,6 +168,12 @@ watch(
     if (!val) {
       return;
     }
+    // 编辑中（有未保存修改）忽略后台 refetch 回灌，避免覆盖正在编辑的状态；手动刷新可强制回填
+    if (hydrated && dirty.value && !forceHydrate.value) {
+      return;
+    }
+    forceHydrate.value = false;
+    hydrated = true;
     const spec = val.config.spec || {};
     (Object.keys(SPEC_FIELD) as AuditCandidateType[]).forEach((type) => {
       const field = SPEC_FIELD[type];
@@ -149,10 +181,22 @@ watch(
       validNames[type] = new Set((val.selections?.[type] || []).map((item) => item.name));
     });
     auditEnabled.value = val.config.spec.enabled === true;
-    initialSnapshot.value = JSON.stringify(spec);
+    // 服务端返回非数组时（存量数据/异常）回退默认勾选，避免多选组件拿到异常值
+    hiddenNavKeys.value = Array.isArray(spec.hiddenNavKeys)
+      ? spec.hiddenNavKeys
+      : ["vote", "notice"];
+    // 基线取 buildSpec() 而非原始 spec：存量配置缺新字段时不会被误判为「有未保存修改」
+    initialSnapshot.value = JSON.stringify(buildSpec());
   },
   { immediate: true }
 );
+
+/** 手动刷新（强制回灌服务端数据，覆盖本地未保存修改） */
+const handleRefresh = async () => {
+  forceHydrate.value = true;
+  await refetch();
+  forceHydrate.value = false;
+};
 
 /** 引用已删除（服务端最新详情缺失）→ 标记失效 */
 const isInvalid = (type: AuditCandidateType, item: AuditDataRef) =>
@@ -228,6 +272,8 @@ const handleSave = async () => {
       spec: buildSpec(),
     });
     Toast.success("保存成功");
+    // 先以本地当前值同步基线（dirty=false），保存后的 refetch 才能正常回灌服务端数据（剔除失效引用等）
+    initialSnapshot.value = JSON.stringify(buildSpec());
     await queryClient.invalidateQueries({ queryKey: ["uni-halo:audit-data"] });
   } catch (error) {
     Toast.error((error as Error).message);
@@ -244,7 +290,7 @@ const handleSave = async () => {
   <VPageHeader title="UniHalo-审核模式">
     <template #actions>
       <VSpace>
-        <VButton @click="refetch">
+        <VButton @click="handleRefresh">
           <template #icon>
             <IconRefreshLine class="w-4 h-4" :class="{ 'animate-spin text-gray-900': isFetching }" />
           </template>
@@ -264,7 +310,7 @@ const handleSave = async () => {
         <RiShieldCheckLine class=":uno: mt-0.5 h-5 w-5 shrink-0 text-primary" />
         <div class=":uno: text-sm leading-6 text-gray-500">
           审核模式开启后，小程序端（微信审核等场景）<b class=":uno: text-gray-700">仅展示以下挑选的数据</b>，
-          数据均为站内真实数据的引用，被删除后自动标记<span class=":uno: text-red-500">已失效</span>，保存时剔除。
+          并 <b class=":uno: text-gray-700">自动关闭登录、注册、评论、AI 助手入口</b>。
         </div>
       </div>
       <div class=":uno: mt-3 flex items-center justify-between gap-4 border-t border-gray-100 pt-3">
@@ -276,7 +322,44 @@ const handleSave = async () => {
         </div>
         <VSwitch v-model="auditEnabled" />
       </div>
+      <!-- 开启后自动禁用的功能（服务端 getConfigs 输出层覆盖，无需配置） -->
+      <div class=":uno: mt-3 border-t border-gray-100 pt-3">
+        <div class=":uno: text-sm text-gray-700">开启后自动禁用</div>
+        <div class=":uno: mt-1.5 text-xs text-gray-400">
+          以下功能（UniHalo App 端）在审核模式开启期间由服务端直接下发关闭状态，无需配置，关闭审核模式后自动还原：
+        </div>
+        <div class=":uno: mt-2 flex flex-wrap gap-2">
+          <span class=":uno: rounded-full bg-gray-100 px-2.5 py-1 text-xs text-gray-600">
+            登录入口（密码 / 微信一键登录）
+          </span>
+          <span class=":uno: rounded-full bg-gray-100 px-2.5 py-1 text-xs text-gray-600">
+            注册入口
+          </span>
+          <span class=":uno: rounded-full bg-gray-100 px-2.5 py-1 text-xs text-gray-600">
+            评论（瞬间页 / 笔记详情页）
+          </span>
+          <span class=":uno: rounded-full bg-gray-100 px-2.5 py-1 text-xs text-gray-600">
+            移动端 AI 助手
+          </span>
+        </div>
+      </div>
+      <!-- 隐藏功能入口（下拉多选；命中项在首页快捷导航 / 我的页面不再显示） -->
+      <div class=":uno: mt-3 border-t border-gray-100 pt-3">
+        <div class=":uno: text-sm text-gray-700">隐藏功能入口</div>
+        <div class=":uno: mt-1.5 text-xs text-gray-400">
+          选中的功能入口在审核模式开启期间不显示（首页快捷导航 / 我的页面）。
+        </div>
+        <div class=":uno: mt-2 flex items-center gap-2">
+          <VButton size="sm" @click="hiddenNavModal = true">
+            选择隐藏入口（{{ hiddenNavKeys.length }}）
+          </VButton>
+        </div>
+      </div>
     </VCard>
+
+    <!-- 隐藏功能入口选择弹窗（确认后整体写入 spec.hiddenNavKeys；候选含自定义功能入口） -->
+    <AuditHiddenNavModal v-if="hiddenNavModal" :selected-keys="hiddenNavKeys" :custom-entries="customEntries"
+      @update:visible="hiddenNavModal = $event" @confirm="hiddenNavKeys = $event" />
 
     <!-- 左右布局：左侧数据分类列表 + 右侧当前分类内容 -->
     <div class=":uno: flex flex-col gap-4 lg:flex-row">

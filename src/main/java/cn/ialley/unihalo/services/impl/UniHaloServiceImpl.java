@@ -4,6 +4,8 @@ import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.node.JsonNodeFactory;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
+import cn.ialley.unihalo.scheme.AuditDataConfig;
+import cn.ialley.unihalo.services.AuditDataService;
 import cn.ialley.unihalo.services.FeatureConfigService;
 import cn.ialley.unihalo.services.UniHaloService;
 import cn.ialley.unihalo.utils.PublicConfigAssembler;
@@ -11,6 +13,7 @@ import reactor.core.publisher.Mono;
 import run.halo.app.plugin.ReactiveSettingFetcher;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -24,6 +27,7 @@ public class UniHaloServiceImpl implements UniHaloService {
 
     private final ReactiveSettingFetcher settingFetcher;
     private final FeatureConfigService featureConfigService;
+    private final AuditDataService auditDataService;
     private final PublicConfigAssembler publicConfigAssembler = new PublicConfigAssembler();
 
     /**
@@ -33,11 +37,10 @@ public class UniHaloServiceImpl implements UniHaloService {
      */
     @Override
     public Mono<Map<String, JsonNode>> getAppConfigs() {
-        return settingFetcher.getSettingValues()
-                .defaultIfEmpty(Map.of())
-                .flatMap(settings -> featureConfigService.get()
-                        .map(featureConfig -> toMap(
-                                publicConfigAssembler.assemble(settings, featureConfig))));
+        return Mono.zip(settingFetcher.getSettingValues().defaultIfEmpty(Map.of()),
+                        featureConfigService.get(), auditDataService.get())
+                .map(tuple -> toMap(publicConfigAssembler.assemble(tuple.getT1(), tuple.getT2(),
+                        isAuditModeEnabled(tuple.getT3()), auditHiddenNavKeys(tuple.getT3()))));
     }
 
     /*
@@ -48,14 +51,28 @@ public class UniHaloServiceImpl implements UniHaloService {
      */
     @Override
     public Mono<JsonNode> getAppConfigsByGroupName(String groupName) {
-        return settingFetcher.getSettingValues()
-                .defaultIfEmpty(Map.of())
-                .flatMap(settings -> featureConfigService.get()
-                        .map(featureConfig -> {
-                            JsonNode root = publicConfigAssembler.assemble(settings, featureConfig);
-                            JsonNode group = root.get(groupName);
-                            return group == null ? JsonNodeFactory.instance.objectNode() : group;
-                        }));
+        return Mono.zip(settingFetcher.getSettingValues().defaultIfEmpty(Map.of()),
+                        featureConfigService.get(), auditDataService.get())
+                .map(tuple -> {
+                    JsonNode root = publicConfigAssembler.assemble(tuple.getT1(), tuple.getT2(),
+                            isAuditModeEnabled(tuple.getT3()), auditHiddenNavKeys(tuple.getT3()));
+                    JsonNode group = root.get(groupName);
+                    return group == null ? JsonNodeFactory.instance.objectNode() : group;
+                });
+    }
+
+    /** 审核模式开关（AuditDataConfig.spec.enabled，单例缺失/字段缺失视为关闭） */
+    private static boolean isAuditModeEnabled(AuditDataConfig config) {
+        return config != null && config.getSpec() != null
+                && Boolean.TRUE.equals(config.getSpec().getEnabled());
+    }
+
+    /** 审核期间隐藏的功能入口 key 列表（缺失返回空列表） */
+    private static List<String> auditHiddenNavKeys(AuditDataConfig config) {
+        if (config == null || config.getSpec() == null || config.getSpec().getHiddenNavKeys() == null) {
+            return List.of();
+        }
+        return config.getSpec().getHiddenNavKeys();
     }
 
     private static Map<String, JsonNode> toMap(JsonNode root) {

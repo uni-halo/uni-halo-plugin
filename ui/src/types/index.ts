@@ -494,6 +494,8 @@ export interface AuditDataConfigSpec {
   linkGroups?: AuditDataRef[];
   /** 备注（如「微信审核用模拟数据」） */
   description?: string;
+  /** 审核期间隐藏的功能入口 key 列表（命中项 App 端快捷导航/我的页面不显示） */
+  hiddenNavKeys?: string[];
 }
 
 export interface AuditDataConfig {

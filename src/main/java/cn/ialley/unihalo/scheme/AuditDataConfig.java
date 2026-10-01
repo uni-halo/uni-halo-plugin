@@ -66,6 +66,12 @@ public class AuditDataConfig extends AbstractExtension {
          * 备注（如「微信审核用模拟数据」）
          */
         private String description;
+
+        /**
+         * 审核期间隐藏的功能入口 key 列表（匹配快捷导航/我的页面功能项的 key，
+         * 命中项 visible=false；仅输出态覆盖 getConfigs，不改落库配置）
+         */
+        private List<String> hiddenNavKeys;
     }
 
     /**

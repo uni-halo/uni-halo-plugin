@@ -3,8 +3,10 @@ package cn.ialley.unihalo.utils;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import cn.ialley.unihalo.scheme.FeatureConfig;
@@ -40,24 +42,39 @@ public class PublicConfigAssembler {
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     /**
-     * 合成公开配置输出（维护状态按当前时刻判定）。
+     * 合成公开配置输出（维护状态按当前时刻判定，无审核覆盖）。
      *
      * @param settings 当前插件设置（ReactiveSettingFetcher.getSettingValues 结果，可为空）
      * @param config   功能设置单例（可能为 null 或 spec 为空，此时 featureConfig 键不输出）
      */
     public ObjectNode assemble(Map<String, JsonNode> settings, FeatureConfig config) {
-        return assemble(settings, config, Instant.now());
+        return assemble(settings, config, false, List.of(), Instant.now());
     }
 
     /**
-     * 合成公开配置输出（维护状态判定时钟可注入，便于测试覆盖
-     * scheduled/active/到点自动结束等分支）。
+     * 合成公开配置输出（审核模式覆盖 + 维护状态按当前时刻判定）。
      *
-     * @param settings 当前插件设置（可为空）
-     * @param config   功能设置单例（可能为 null 或 spec 为空）
-     * @param now      维护状态判定的当前时刻（见 {@link MaintenanceResolver}）
+     * @param settings      当前插件设置（可为空）
+     * @param config        功能设置单例（可能为 null 或 spec 为空）
+     * @param auditMode     审核模式开关（true = 输出层覆盖登录/评论开关）
+     * @param hiddenNavKeys 审核期间隐藏的功能入口 key 列表（命中项 visible=false）
      */
-    public ObjectNode assemble(Map<String, JsonNode> settings, FeatureConfig config, Instant now) {
+    public ObjectNode assemble(Map<String, JsonNode> settings, FeatureConfig config,
+            boolean auditMode, List<String> hiddenNavKeys) {
+        return assemble(settings, config, auditMode, hiddenNavKeys, Instant.now());
+    }
+
+    /**
+     * 合成公开配置输出（审核覆盖与维护状态判定时钟均可注入，便于测试覆盖）。
+     *
+     * @param settings      当前插件设置（可为空）
+     * @param config        功能设置单例（可能为 null 或 spec 为空）
+     * @param auditMode     审核模式开关（true = 输出层覆盖登录/评论开关）
+     * @param hiddenNavKeys 审核期间隐藏的功能入口 key 列表（命中项 visible=false）
+     * @param now           维护状态判定的当前时刻（见 {@link MaintenanceResolver}）
+     */
+    public ObjectNode assemble(Map<String, JsonNode> settings, FeatureConfig config,
+            boolean auditMode, List<String> hiddenNavKeys, Instant now) {
         ObjectNode root = JsonNodeFactory.instance.objectNode();
         if (settings != null) {
             JsonNode login = settings.get("loginConfig");
@@ -98,7 +115,74 @@ public class PublicConfigAssembler {
                 }
             }
         }
+        if (auditMode) {
+            applyAuditModeOverride(root, hiddenNavKeys);
+        }
         return root;
+    }
+
+    /**
+     * 审核模式输出层覆盖（纯输出态，不改落库配置，开关关闭即自动还原）：
+     * 登录入口（密码/微信）两开关置 false；瞬间页/笔记详情页评论显隐与
+     * 评论开关置 false；hiddenNavKeys 命中的功能入口（首页快捷导航/
+     * 我的页面功能项）visible 置 false；移动端 AI 助手开关置 false。
+     */
+    private static void applyAuditModeOverride(ObjectNode root, List<String> hiddenNavKeys) {
+        JsonNode login = root.get("loginConfig");
+        if (login != null && login.isObject()) {
+            JsonNode client = login.get("client");
+            ObjectNode clientOut = client != null && client.isObject()
+                    ? (ObjectNode) client : ((ObjectNode) login).putObject("client");
+            clientOut.put("passwordLoginEnabled", false);
+            clientOut.put("wechatLoginEnabled", false);
+        }
+        JsonNode integration = root.get("integrationConfig");
+        if (integration != null && integration.isObject()) {
+            // deepCopy 后再改：integrationConfig 可能与入参 settings 同源，避免污染源节点
+            ObjectNode integrationOut = (ObjectNode) integration.deepCopy();
+            JsonNode pluginConfig = integrationOut.get("pluginConfig");
+            JsonNode assistant = pluginConfig != null && pluginConfig.isObject()
+                    ? pluginConfig.get("aiAssistant") : null;
+            if (assistant != null && assistant.isObject()) {
+                ((ObjectNode) assistant).put("enabled", false);
+                root.set("integrationConfig", integrationOut);
+            }
+        }
+        JsonNode pages = root.path("featureConfig").path("pages");
+        if (pages.isObject()) {
+            JsonNode postDetail = pages.get("postDetail");
+            if (postDetail != null && postDetail.isObject()) {
+                ((ObjectNode) postDetail).put("showComment", false);
+                ((ObjectNode) postDetail).put("enableComment", false);
+            }
+            JsonNode moment = pages.get("moment");
+            if (moment != null && moment.isObject()) {
+                ((ObjectNode) moment).put("showCommentList", false);
+                ((ObjectNode) moment).put("enableComment", false);
+            }
+            if (hiddenNavKeys != null && !hiddenNavKeys.isEmpty()) {
+                Set<String> keys = new HashSet<>(hiddenNavKeys);
+                hideNavEntries(pages.path("home").path("quickNavigation"), keys);
+                hideNavEntries(pages.path("mine").path("commonFeatures"), keys);
+                hideNavEntries(pages.path("mine").path("otherFeatures"), keys);
+            }
+        }
+    }
+
+    /**
+     * 审核期间隐藏功能入口：入口列表（quickNavigation/commonFeatures/otherFeatures）
+     * 中 key 命中 hiddenNavKeys 的项 visible 置 false（置值不删除，关闭审核自动还原）。
+     */
+    private static void hideNavEntries(JsonNode list, Set<String> keys) {
+        if (!list.isArray()) {
+            return;
+        }
+        for (JsonNode item : list) {
+            if (item != null && item.isObject()
+                    && keys.contains(item.path("key").asString(""))) {
+                ((ObjectNode) item).put("visible", false);
+            }
+        }
     }
 
     private JsonNode toSpecTree(FeatureConfig config) {
