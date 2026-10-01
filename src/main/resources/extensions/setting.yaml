@@ -164,7 +164,7 @@ spec:
                   name: enabled
                   label: 启用移动端 AI 助手
                   value: true
-                  help: 关闭后 App 端不再显示 AI 助手入口（对话能力依赖 智阅全能AI助手 插件），同时如果 【智阅全能AI助手】没有安装或者没有启用也不会显示
+                  help: 关闭后 App 端不再显示 AI 助手入口、同时以下情形之一，也无法使用：1.【智阅全能AI助手】没有安装或者未启用也不会显示、2.【智阅全能AI助手-AI设置-AI接口安全-启用AI防盗链】设置为开启。
                 - $formkit: textarea
                   name: chatPrompt
                   label: 对话提示词
@@ -238,6 +238,27 @@ spec:
                     - 仅允许跳转上述清单中的站内页面，清单之外的请求（含外部网页）一律不输出动作块。
                     - type 必须按清单标注选择，不要自行判断；name 必须输出，不要省略。
                   help: UniHalo App 端跳转协议提示词，非必要不要修改
+                - $el: div
+                  attrs:
+                    style: >-
+                      margin-top: 8px; padding: 10px 12px; border: 1px dashed #d1d5db;
+                      border-radius: 4px; background: #f9fafb;
+                  children:
+                    - $el: div
+                      attrs:
+                        style: 'font-size: 13px; font-weight: 600; color: #374151; margin-bottom: 6px;'
+                      children: 需补充到【智阅全能AI助手-角色设置-前台 Agent 角色/RAG问答角色】插件的提示词（复制下方文本到该插件设置的提示词配置中（可放到末尾），提升 App 端跳转稳定性）：
+                    - $el: pre
+                      attrs:
+                        style: >-
+                          margin: 0; white-space: pre-wrap; word-break: break-all;
+                          padding: 10px 12px; border: 1px solid #e5e7eb; border-radius: 4px;
+                          background: #ffffff; font-size: 12px; line-height: 1.8; color: #374151;
+                          user-select: all; cursor: text;
+                      children: |-
+                        规则：本站点已对接 UniHalo App 端（移动端）。当请求来自 UniHalo App 端（系统提示词中出现 UniHalo App 标识）时：
+                        1、禁止调用 open_halo_resource、open_current_page_link 等资源打开类内置工具，App 端没有浏览器，调用它们会导致功能失败；禁止输出 openResource 之类的内置工具参数格式。
+                        2、需要打开站内页面或文章时，请忽略资源打开类工具，直接按 UniHalo App 端系统提示词中的页面跳转协议输出动作块（@@UNI_HALO_APP_ACTION@@），url 只能使用 /pages/ 或 /pages-blog/ 开头的 App 内路径。
     - group: themeWidgetConfig
       label: 主题组件
       formSchema:
