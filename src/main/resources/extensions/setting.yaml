@@ -101,6 +101,17 @@ spec:
                       value: false
                   help: 开启后，App 端发送注册邮箱验证码前需要先完成图形验证码，防止邮件轰炸与验证码滥用。
                   validation: required
+                - $formkit: select
+                  name: resetEmailCode
+                  label: 重置邮箱验证码
+                  value: true
+                  options:
+                    - label: 开启
+                      value: true
+                    - label: 关闭
+                      value: false
+                  help: 开启后，App 端发送密码重置邮箱验证码前需要先完成图形验证码，防止邮件轰炸与验证码滥用。
+                  validation: required
             - $formkit: select
               if: "$get(captchaEnabled).value === true"
               name: type
@@ -148,6 +159,28 @@ spec:
               label: 单邮箱每 10 分钟上限
               value: 3
               help: 防止单个邮箱被轰炸
+              validation: required
+        - $formkit: group
+          name: resetEmailCodeConfig
+          label: 重置邮箱验证码
+          children:
+            - $formkit: number
+              name: globalPerMinute
+              label: 全站每分钟上限
+              value: 30
+              help: 全站共享的发送总配额，防分布式滥用的最后防线；0 表示不限制（不建议）
+              validation: required
+            - $formkit: number
+              name: ipPerMinute
+              label: 单 IP 每分钟上限
+              value: 10
+              help: 按客户端源地址限制，防止单一来源刷验证码
+              validation: required
+            - $formkit: number
+              name: usernamePerTenMinutes
+              label: 单用户名每 10 分钟上限
+              value: 3
+              help: 防止单个账号的绑定邮箱被轰炸（与注册限流隔离）
               validation: required
     - group: integrationConfig
       label: 平台接入

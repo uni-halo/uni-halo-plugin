@@ -195,4 +195,28 @@ public interface AuthService {
      * @param newPassword 新密码明文
      */
     Mono<Void> setInitialPassword(String username, String newPassword);
+
+    /**
+     * 发送密码重置邮箱验证码（匿名端点）：校验账号存在且邮箱已验证后，
+     * 生成 6 位重置码并签发 HMAC 票据，经 Halo 邮件通道发往该邮箱；
+     * 返回票据供客户端在重置时回传（不透明、不可伪造）。统一 202 契约。
+     *
+     * @param username  目标用户名
+     * @param clientIp  来源 IP（TCP 源地址），用于限流；未知时传 null
+     * @return 签发的不透明重置票据
+     */
+    Mono<String> sendResetEmailCode(String username, String clientIp);
+
+    /**
+     * 凭邮箱重置码重置密码（匿名端点）：校验票据签名 + 重置码 + 未过期 + 账号一致，
+     * 经 Halo 原生 {@code UserService#updateWithRawPassword} 写入新密码（不绕过密码策略），
+     * 打 {@code password-set-by-user} 注解，吊销该用户名下全部 PAT（改密即踢全部设备），
+     * 并发送确认通知。
+     *
+     * @param username    目标用户名（须与发码时一致）
+     * @param ticket      发送验证码时签发的票据
+     * @param code        用户从邮件收取的 6 位重置码
+     * @param newPassword 新密码明文
+     */
+    Mono<Void> resetPassword(String username, String ticket, String code, String newPassword);
 }

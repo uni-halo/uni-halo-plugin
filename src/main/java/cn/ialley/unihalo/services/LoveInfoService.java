@@ -12,7 +12,7 @@ import static cn.ialley.unihalo.constants.Constants.LOVE_INFO_SINGLETON_NAME;
  */
 public interface LoveInfoService {
 
-    /** 单例固定资源名（对齐 Constants.LOVE_INFO_SINGLETON_NAME） */
+    /** 单例固定资源名（LoveInfo 唯一实例的资源标识） */
     String LOVE_INFO_NAME = LOVE_INFO_SINGLETON_NAME;
 
     /**

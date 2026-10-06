@@ -4,9 +4,6 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.util.Base64;
 
-import javax.crypto.Mac;
-import javax.crypto.spec.SecretKeySpec;
-
 import org.springframework.stereotype.Component;
 
 /**
@@ -20,8 +17,6 @@ import org.springframework.stereotype.Component;
  */
 @Component
 public class AlbumTokenManager {
-
-    private static final String HMAC_ALGORITHM = "HmacSHA256";
 
     private static final long TTL_MILLIS = 30 * 60 * 1000L;
 
@@ -73,17 +68,6 @@ public class AlbumTokenManager {
     }
 
     private String sign(String payload) {
-        try {
-            Mac mac = Mac.getInstance(HMAC_ALGORITHM);
-            mac.init(new SecretKeySpec(secretProvider.requireSecret(), HMAC_ALGORITHM));
-            byte[] raw = mac.doFinal(payload.getBytes(StandardCharsets.UTF_8));
-            StringBuilder sb = new StringBuilder(raw.length * 2);
-            for (byte b : raw) {
-                sb.append(String.format("%02x", b));
-            }
-            return sb.toString();
-        } catch (Exception e) {
-            throw new IllegalStateException("HMAC 签名失败", e);
-        }
+        return Hmac.sha256Hex(secretProvider.requireSecret(), payload);
     }
 }

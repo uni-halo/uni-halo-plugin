@@ -9,7 +9,7 @@ import cn.ialley.unihalo.scheme.AppVersion;
 
 /**
  * 升级检测结果（checkVersion），字段与 uni-upgrade-center-app 的
- * UniUpgradeCenterResult 对齐（snake_case），保证 app 端零改动。
+ * （字段采用 snake_case 命名，与移动端既有解析逻辑兼容）。
  *
  * @author 小莫唐尼
  */
@@ -65,7 +65,7 @@ public class UpgradeResult {
     private Boolean stablePublish;
 
     /**
-     * 应用商店列表（对齐客户端 UniUpgradeCenterResult.store_list；
+     * 应用商店列表（多渠道下载入口；
      * 当前无多商店分发能力，恒为 null 且不输出，iOS/Harmony 走 url 跳转）
      */
     @JsonProperty("store_list")

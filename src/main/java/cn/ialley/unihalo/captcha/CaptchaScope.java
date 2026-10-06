@@ -22,7 +22,10 @@ public enum CaptchaScope {
     LOVE_MODULE_UNLOCK("loveModuleUnlock"),
 
     /** 注册邮箱验证码发送（POST /auth/-/send-register-email-code，键 registerEmailCode） */
-    REGISTER_EMAIL_CODE("registerEmailCode");
+    REGISTER_EMAIL_CODE("registerEmailCode"),
+
+    /** 密码重置邮箱验证码发送（POST /auth/-/send-reset-email-code，键 resetEmailCode） */
+    RESET_EMAIL_CODE("resetEmailCode");
 
     private final String configKey;
 

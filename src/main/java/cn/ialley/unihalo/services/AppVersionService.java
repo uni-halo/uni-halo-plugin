@@ -24,7 +24,7 @@ public interface AppVersionService {
     Mono<Void> delete(String name);
 
     /**
-     * 升级检测（公开接口，对齐 uni-upgrade-center 云函数 checkVersion 逻辑）。
+     * 升级检测（公开接口，判定是否有新版本可供更新）。
      *
      * @param appid      应用标识
      * @param appVersion 当前原生 App 版本号

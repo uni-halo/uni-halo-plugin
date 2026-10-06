@@ -1,7 +1,7 @@
 package cn.ialley.unihalo.captcha;
 
 /**
- * 验证码类型（对齐官方 plugin-comment-widget）。
+ * 验证码类型（区分图形等不同呈现方式）。
  *
  * @author 小莫唐尼
  */

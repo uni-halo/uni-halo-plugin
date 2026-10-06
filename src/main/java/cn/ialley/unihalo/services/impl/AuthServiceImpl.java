@@ -26,7 +26,9 @@ import cn.ialley.unihalo.services.PatIssuer;
 import cn.ialley.unihalo.services.WechatService;
 import cn.ialley.unihalo.utils.LoginAttemptGuard;
 import cn.ialley.unihalo.utils.LoginConfigResolver;
+import cn.ialley.unihalo.utils.EmailService;
 import cn.ialley.unihalo.utils.NotificationHelper;
+import cn.ialley.unihalo.utils.ResetEmailCodeTicketManager;
 import cn.ialley.unihalo.utils.UserConnectionSupport;
 import cn.ialley.unihalo.utils.WechatRegisterTicketManager;
 import cn.ialley.unihalo.vo.LoginConfig;
@@ -96,6 +98,8 @@ public class AuthServiceImpl implements AuthService {
     private final BindTicketService bindTicketService;
     private final NotificationHelper notificationHelper;
     private final WechatRegisterTicketManager registerTicketManager;
+    private final ResetEmailCodeTicketManager resetEmailCodeTicketManager;
+    private final EmailService emailService;
 
     /** 系统设置 JSON 解析（ConfigMap system → user 组，与 FeatureConfigServiceImpl 同源）。 */
     private final ObjectMapper objectMapper = new ObjectMapper();
@@ -427,6 +431,78 @@ public class AuthServiceImpl implements AuthService {
                 });
     }
 
+    /**
+     * 发送密码重置邮箱验证码（匿名端点）：校验账号存在且邮箱已验证后生成 6 位重置码，
+     * 签发 HMAC 票据（含当前密码哈希，用于关闭重放窗口）并经 Halo 邮件通道发往绑定邮箱。
+     * 返回不透明票据供客户端重置时回传（不可伪造）。
+     */
+    @Override
+    public Mono<String> sendResetEmailCode(String username, String clientIp) {
+        if (isBlank(username)) {
+            return Mono.error(BizErrorCode.BAD_REQUEST.toException("请输入用户名"));
+        }
+        String name = username.trim();
+        return client.fetch(User.class, name)
+                .switchIfEmpty(Mono.error(BizErrorCode.USER_NOT_FOUND.toException()))
+                .flatMap(user -> {
+                    var spec = user.getSpec();
+                    String email = spec == null ? null : spec.getEmail();
+                    Boolean verified = spec == null ? null : spec.isEmailVerified();
+                    // 严格门禁：仅 emailVerified 明确为 true 才允许走邮箱重置；
+                    // null（历史账号未显式验证）与 false 一律拒绝，fail-closed。
+                    if (isBlank(email) || verified != Boolean.TRUE) {
+                        return Mono.error(BizErrorCode.EMAIL_NOT_VERIFIED.toException());
+                    }
+                    // 6 位重置码：明文不入库，仅参与 HMAC 票据签名
+                    String code = generateResetCode();
+                    String passwordHash = spec == null ? null : spec.getPassword();
+                    String ticket = resetEmailCodeTicketManager.issue(name, code, passwordHash);
+                    // 仅当邮件真正发出才下发票据；发送失败（SMTP 未配置/异常）则报错，
+                    // 不下发「假成功」票据，避免用户卡在收不到码的界面
+                    return emailService.sendResetCodeEmail(email, null, code, 10)
+                            .flatMap(sent -> sent
+                                    ? Mono.just(ticket)
+                                    : Mono.error(BizErrorCode.EMAIL_SEND_FAILED.toException()));
+                });
+    }
+
+    /**
+     * 凭邮箱重置码重置密码（匿名端点）：校验票据签名 + 重置码 + 未过期 + 账号一致后，
+     * 经 Halo 原生 UserService 写入新密码（不绕过密码策略），打 password-set-by-user 注解，
+     * 吊销该用户名下全部 PAT（改密即踢全部设备），并发送确认通知。
+     */
+    @Override
+    public Mono<Void> resetPassword(String username, String ticket, String code,
+            String newPassword) {
+        if (isBlank(username) || isBlank(ticket) || isBlank(code)) {
+            return Mono.error(BizErrorCode.BAD_REQUEST.toException("请求参数不完整"));
+        }
+        if (isBlank(newPassword) || newPassword.length() < Constants.PASSWORD_MIN_LENGTH) {
+            return Mono.error(BizErrorCode.BAD_REQUEST.toException(
+                    "密码长度至少 " + Constants.PASSWORD_MIN_LENGTH + " 位"));
+        }
+        String name = username.trim();
+        return client.fetch(User.class, name)
+                .switchIfEmpty(Mono.error(BizErrorCode.USER_NOT_FOUND.toException()))
+                .flatMap(user -> {
+                    String passwordHash = user.getSpec() == null ? null : user.getSpec().getPassword();
+                    // 校验票据：签名 + 重置码 + 未过期 + 账号一致；密码哈希变化（已改密）则失败
+                    String verified = resetEmailCodeTicketManager.verify(ticket, code, passwordHash);
+                    if (verified == null || !verified.equals(name)) {
+                        return Mono.error(BizErrorCode.RESET_CODE_INVALID.toException());
+                    }
+                    return userService.updateWithRawPassword(name, newPassword)
+                            .then(Mono.defer(() -> markPasswordSet(name)))
+                            // 改密即踢全部设备：吊销该用户名下全部 PAT（含手动创建令牌）
+                            .then(Mono.defer(() -> patIssuer.revokeAllForUser(name)))
+                            .then(Mono.defer(() -> {
+                                // 重置成功作废票据（双保险，签名已因密码哈希变化失效）
+                                resetEmailCodeTicketManager.consume(ticket);
+                                return notificationHelper.emitPasswordSet(name);
+                            }));
+                });
+    }
+
     /** 在用户注解上标记「已自主设置过密码」，幂等。 */
     private Mono<Void> markPasswordSet(String username) {
         return client.fetch(User.class, username)
@@ -612,6 +688,11 @@ public class AuthServiceImpl implements AuthService {
         if (ACCOUNTABLE_REGISTER_CODES.contains(e.getCode())) {
             attemptGuard.recordFailure(username, clientIp);
         }
+    }
+
+    /** 生成 6 位数字重置码（000000~999999，前导补零）。 */
+    private static String generateResetCode() {
+        return String.format("%06d", PASSWORD_RANDOM.nextInt(1_000_000));
     }
 
     private static boolean isBlank(String value) {

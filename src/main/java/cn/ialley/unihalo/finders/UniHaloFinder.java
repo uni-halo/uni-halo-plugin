@@ -15,7 +15,7 @@ import run.halo.app.extension.ListResult;
  * 全部方法只读、不抛异常、空结果返回空 {@code ListResult}；锁判定在本层完成，
  * 模块锁定时返回空结果，绝不把业务字段交给模板；返回展示用脱敏 VO，不含敏感字段。
  *
- * 返回裸 {@code ListResult}（对齐 Halo 官方 Finder）：Finder 不碰 HTTP，拼 URL 是
+ * 返回裸 {@code ListResult}：Finder 不碰 HTTP，拼 URL 是
  * {@code LoveDiaryRouter} 的职责，它把结果包成 {@code UrlContextListResult} 放进 model，
  * 模板侧 {@code prevUrl}/{@code nextUrl} 等用法照旧可用。
  *

@@ -3,7 +3,7 @@ package cn.ialley.unihalo.vo;
 /**
  * 移动端账号密码注册表单（{@code POST /auth/register} 请求体）。
  *
- * 字段对齐 Halo {@code SignUpData}：注册开关（系统设置「允许注册」）、用户名/昵称限制、
+ * 注册表单字段：注册开关（系统设置「允许注册」）、用户名/昵称限制、
  * 默认角色、注册协议（requiredAgreementPages 时必须 agreedToTerms）与注册邮箱验证
  * （mustVerifyEmailOnRegistration 时必须 email + emailCode）均由
  * {@code UserService.signUp} 内部校验（fail closed），本模型仅做透传；

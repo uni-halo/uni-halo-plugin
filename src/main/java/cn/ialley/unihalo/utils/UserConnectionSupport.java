@@ -12,7 +12,7 @@ import run.halo.app.core.extension.UserConnection;
 /**
  * 微信绑定关系（{@code UserConnection}）的取值规则与重复告警收口。
  *
- * <p>背景（P1-5 绑定非原子）：绑定是「查重 → 创建」两步，中间既无锁也无唯一约束，
+ * <p>绑定是「查重 → 创建」两步，中间既无锁也无唯一约束，
  * 同一微信身份并发绑定仍可能落两条记录；历史数据里还有 openid → unionid 回落
  * 造成的重复。而历史代码一律 {@code Flux#next()}，取到哪条取决于 Halo list 的
  * 返回顺序（未定义），表现为「同一个微信随机登进两个账号」「解绑一条后仍能登录」。

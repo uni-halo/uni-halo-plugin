@@ -22,6 +22,7 @@ import cn.ialley.unihalo.exception.BizErrorCode;
 import cn.ialley.unihalo.services.AuthService;
 import cn.ialley.unihalo.utils.RegisterEmailCodeClient;
 import cn.ialley.unihalo.utils.RegisterEmailCodeRateLimiter;
+import cn.ialley.unihalo.utils.ResetEmailCodeRateLimiter;
 import cn.ialley.unihalo.vo.RegisterForm;
 import reactor.core.publisher.Mono;
 import run.halo.app.core.extension.endpoint.CustomEndpoint;
@@ -50,6 +51,8 @@ public class AuthEndpoint implements CustomEndpoint {
 
     private final RegisterEmailCodeRateLimiter emailCodeRateLimiter;
 
+    private final ResetEmailCodeRateLimiter resetEmailCodeRateLimiter;
+
     private final ExternalUrlSupplier externalUrlSupplier;
 
     private final CaptchaService captchaService;
@@ -57,11 +60,13 @@ public class AuthEndpoint implements CustomEndpoint {
     public AuthEndpoint(AuthService authService,
             RegisterEmailCodeClient registerEmailCodeClient,
             RegisterEmailCodeRateLimiter emailCodeRateLimiter,
+            ResetEmailCodeRateLimiter resetEmailCodeRateLimiter,
             ExternalUrlSupplier externalUrlSupplier,
             CaptchaService captchaService) {
         this.authService = authService;
         this.registerEmailCodeClient = registerEmailCodeClient;
         this.emailCodeRateLimiter = emailCodeRateLimiter;
+        this.resetEmailCodeRateLimiter = resetEmailCodeRateLimiter;
         this.externalUrlSupplier = externalUrlSupplier;
         this.captchaService = captchaService;
     }
@@ -97,6 +102,10 @@ public class AuthEndpoint implements CustomEndpoint {
                         this::rejectBindTicket)
                 .POST(Constants.AUTH_API_BASE_PATH + "/-/logout", this::logout)
                 .POST(Constants.AUTH_API_BASE_PATH + "/-/password/set", this::setInitialPassword)
+                .POST(Constants.AUTH_API_BASE_PATH + "/-/send-reset-email-code",
+                        this::sendResetEmailCode)
+                .POST(Constants.AUTH_API_BASE_PATH + "/-/reset-password",
+                        this::resetPassword)
                 .GET(Constants.AUTH_API_BASE_PATH + "/profile", this::profile)
                 .GET(Constants.AUTH_API_BASE_PATH + "/token-check", this::tokenCheck)
                 .GET(Constants.AUTH_API_BASE_PATH + "/my/wechat-binding", this::myWechatBinding)
@@ -341,6 +350,52 @@ public class AuthEndpoint implements CustomEndpoint {
                 .onErrorResume(AuthEndpoint::handleFailure);
     }
 
+    /**
+     * 发送密码重置邮箱验证码（匿名端点）：校验账号存在且绑定邮箱已验证后，
+     * 经插件服务端直接发往账号绑定邮箱（复用 Halo SMTP，无需 CSRF 握手），
+     * 返回不透明 HMAC 票据供客户端在重置时回传（不可伪造，绑定用户名 + 有效期 +
+     * 重置码 + 密码哈希，改密后仍可用旧码则签名失效）。
+     */
+    private Mono<ServerResponse> sendResetEmailCode(ServerRequest request) {
+        var clientIp = clientIpOf(request);
+        if (clientIp == null || clientIp.isBlank()) {
+            return Mono.error(BizErrorCode.BAD_REQUEST.toException("无法识别请求来源"));
+        }
+        return captchaService.requireValid(request, CaptchaScope.RESET_EMAIL_CODE)
+                .then(request.bodyToMono(SendResetEmailCodeRequest.class)
+                        .switchIfEmpty(Mono.error(
+                                BizErrorCode.BAD_REQUEST.toException("缺少请求体")))
+                        .map(body -> body.username() == null ? "" : body.username().trim())
+                        .filter(name -> !name.isBlank())
+                        .switchIfEmpty(Mono.error(
+                                BizErrorCode.BAD_REQUEST.toException("请输入用户名")))
+                        .flatMap(username -> resetEmailCodeRateLimiter
+                                .check(clientIp, username.toLowerCase())
+                                .thenReturn(username))
+                        .flatMap(username -> authService.sendResetEmailCode(username, clientIp)
+                                .flatMap(ticket -> ServerResponse.ok()
+                                        .bodyValue(Map.of("ticket", ticket)))))
+                .onErrorResume(CaptchaValidationException.class, this::captchaForbidden)
+                .onErrorMap(ResetEmailCodeRateLimiter.QuotaExceededException.class,
+                        e -> BizErrorCode.TOO_MANY_ATTEMPTS.toException())
+                .onErrorResume(AuthEndpoint::handleFailure);
+    }
+
+    /**
+     * 凭邮箱重置码重置密码（匿名端点）：校验票据签名 + 重置码 + 未过期 + 账号一致后，
+     * 经 Halo 原生 UserService 写入新密码（不绕过密码策略），打 password-set-by-user 注解，
+     * 吊销该用户名下全部 PAT（改密即踢全部设备），并发送确认通知。
+     */
+    private Mono<ServerResponse> resetPassword(ServerRequest request) {
+        return request.bodyToMono(ResetPasswordRequest.class)
+                .switchIfEmpty(Mono.error(
+                        BizErrorCode.BAD_REQUEST.toException("缺少请求体")))
+                .flatMap(body -> authService.resetPassword(
+                        body.username(), body.ticket(), body.code(), body.newPassword()))
+                .then(ServerResponse.ok().bodyValue(Map.of("success", true)))
+                .onErrorResume(AuthEndpoint::handleFailure);
+    }
+
     private Mono<ServerResponse> profile(ServerRequest request) {
         return currentIdentity()
                 .flatMap(identity -> authService.profile(identity.username()))
@@ -495,6 +550,19 @@ public class AuthEndpoint implements CustomEndpoint {
 
     /** 发送注册邮箱验证码请求体（邮箱格式由官方端点 @Email 校验兜底）。 */
     public record SendEmailCodeRequest(String email) {
+    }
+
+    /** 发送密码重置验证码请求体（用户名即重置目标，邮箱由服务端按账号查得）。 */
+    public record SendResetEmailCodeRequest(String username) {
+    }
+
+    /**
+     * 密码重置请求体：{@code ticket} 为发码时下发的不透明票据（绑定用户名 + 有效期 +
+     * 重置码 + 密码哈希），{@code code} 为用户从邮件收取的 6 位重置码，
+     * {@code newPassword} 为新密码明文。
+     */
+    public record ResetPasswordRequest(String username, String ticket, String code,
+            String newPassword) {
     }
 
     private record Identity(String username, String patName) {

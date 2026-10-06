@@ -35,6 +35,7 @@ public class EmailService {
 
     private static final String NOTIFIER_SECRET_NAME = "notifier-setting-secret";
     private static final String NOTIFIER_SECRET_KEY = "default-email-notifier.json";
+    private static final String SENDER_KEY = "sender";
     private static final String SETTING_GROUP_LINK_CONFIG = "linkConfig";
     private static final String SETTING_KEY_SEND_EMAIL = "sendEmail";
 
@@ -74,33 +75,64 @@ public class EmailService {
                     String subject = STATUS_APPROVED.equals(spec.getStatus())
                             ? "【" + siteName + "】友情链接审核通过通知"
                             : "【" + siteName + "】友情链接审核未通过通知";
-                    String content = buildHtml(spec, siteName);
-                    return sendEmail(spec.getEmail(), subject, content);
+                String content = buildHtml(spec, siteName);
+                return sendEmail(spec.getEmail(), subject, content).then();
                 });
     }
 
     /**
-     * 读取 Halo 内置邮件通知器 SMTP 配置并发送；配置缺失或发送失败不抛出。
+     * 发送密码重置验证码邮件。复用 Halo 内置邮件通知器 SMTP 配置，
+     * 发送失败仅记日志，不阻塞重置主流程。
+     *
+     * @param to       收件邮箱（服务端按账号查得，客户端无法指定任意邮箱轰炸）
+     * @param siteName 站点名（用于邮件标题/正文，空则回落默认）
+     * @param code     6 位重置码
+     * @param minutes  有效期（分钟）
      */
-    private Mono<Void> sendEmail(String to, String subject, String content) {
+    /**
+     * 发送密码重置验证码邮件。复用 Halo 内置邮件通知器 SMTP 配置，
+     * 返回是否实际发出（false = 配置缺失或发送异常，调用方据此决定是否下发重置票据）。
+     *
+     * @param to       收件邮箱（服务端按账号查得，客户端无法指定任意邮箱轰炸）
+     * @param siteName 站点名（用于邮件标题/正文，空则回落默认）
+     * @param code     6 位重置码
+     * @param minutes  有效期（分钟）
+     * @return true=邮件已发出；false=未发出（配置缺失或异常）
+     */
+    public Mono<Boolean> sendResetCodeEmail(String to, String siteName, String code, int minutes) {
+        if (isBlank(to) || isBlank(code)) {
+            return Mono.just(false);
+        }
+        String name = isBlank(siteName) ? SITE_NAME_DEFAULT : siteName;
+        String subject = "【" + name + "】密码重置验证码";
+        String content = buildResetHtml(name, code, minutes);
+        return sendEmail(to, subject, content);
+    }
+
+    /**
+     * 读取 Halo 内置邮件通知器 SMTP 配置并发送；返回是否实际发出（配置缺失/异常返回 false，
+     * 不抛出，由调用方决定后续——重置流程据此不下发票据，避免「假成功」）。
+     */
+    private Mono<Boolean> sendEmail(String to, String subject, String content) {
         return client.fetch(Secret.class, NOTIFIER_SECRET_NAME)
                 .map(Secret::getStringData)
                 .mapNotNull(data -> data.get(NOTIFIER_SECRET_KEY))
-                .map(value -> parseConfig(value))
+                .map(this::parseSenderConfig)
                 .filter(JsonNode::isObject)
                 .flatMap(config -> {
                     try {
                         send(config, to, subject, content);
-                        log.info("审核邮件发送成功：to={}, subject={}", to, subject);
+                        log.info("邮件发送成功：to={}, subject={}", to, subject);
+                        return Mono.just(true);
                     } catch (Exception e) {
-                        log.error("审核邮件发送失败：to={}", to, e);
+                        log.error("邮件发送失败：to={}", to, e);
+                        return Mono.just(false);
                     }
-                    return Mono.<Void>empty();
                 })
-                .switchIfEmpty(Mono.defer(() -> {
-                    log.warn("未找到 Halo 邮件通知器 SMTP 配置（Secret={}），跳过邮件发送",
+                .switchIfEmpty(Mono.fromCallable(() -> {
+                    log.warn("未找到 Halo 邮件通知器 SMTP 配置（Secret={}），无法发送邮件",
                             NOTIFIER_SECRET_NAME);
-                    return Mono.<Void>empty();
+                    return false;
                 }));
     }
 
@@ -133,6 +165,16 @@ public class EmailService {
         mailSender.send(message);
     }
 
+    /**
+     * 解析 Secret 中的 JSON 并解包 sender 配置：Halo 以 {@code {"sender":{...}}} 包装存储
+     * （对齐 DefaultNotifierConfigStore.fetchSenderConfig），兼容历史裸对象结构。
+     */
+    private JsonNode parseSenderConfig(String value) {
+        JsonNode root = parseConfig(value);
+        JsonNode sender = root.path(SENDER_KEY);
+        return sender.isObject() ? sender : root;
+    }
+
     private JsonNode parseConfig(String value) {
         try {
             return objectMapper.readTree(value);
@@ -160,6 +202,20 @@ public class EmailService {
                 + result + reasonBlock
                 + "<p style='margin:16px 0 0;color:#9ca3af;font-size:12px;'>此邮件由 "
                 + siteName + " 自动发送，请勿直接回复。</p></div>";
+    }
+
+    private String buildResetHtml(String siteName, String code, int minutes) {
+        return "<div style='max-width:520px;margin:0 auto;padding:24px;font-family:-apple-system,"
+                + "Segoe UI,Roboto,sans-serif;font-size:14px;color:#1f2937;line-height:1.7;'>"
+                + "<p style='margin:0 0 12px;color:#111827;font-size:18px;font-weight:600;'>"
+                + escape(siteName) + " 密码重置</p>"
+                + "<p style='margin:0 0 8px;'>您正在申请重置账号密码，验证码如下：</p>"
+                + "<p style='margin:12px 0;font-size:24px;font-weight:700;letter-spacing:4px;color:#059669;'>"
+                + escape(code) + "</p>"
+                + "<p style='margin:0 0 8px;color:#6b7280;'>验证码 " + minutes
+                + " 分钟内有效，且仅能用于本次重置。若非本人操作，请忽略此邮件并留意账号安全。</p>"
+                + "<p style='margin:16px 0 0;color:#9ca3af;font-size:12px;'>此邮件由 "
+                + escape(siteName) + " 自动发送，请勿直接回复。</p></div>";
     }
 
     private static String escape(String value) {

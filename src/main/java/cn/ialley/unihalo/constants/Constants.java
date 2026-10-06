@@ -3,7 +3,7 @@ package cn.ialley.unihalo.constants;
 /**
  * 插件使用到的常量定义
  *
- * <p>接口路径约定（对齐 Halo 官方角色模板规范）：自定义端点统一注册在
+ * <p>接口路径约定：自定义端点统一注册在
  * {@code /apis/<group>/<version>/<resource>[/<name>[/<subresource>]]} 的
  * <b>组根路径</b>（无 {@code plugins/<插件名>} 前缀段）。若在前缀里多加一段，
  * RequestInfoFactory 会把该段解析为 resourceName、把真正的资源段解析成
@@ -122,7 +122,7 @@ public class Constants {
     /** 昵称最大长度（Halo 控制台展示考虑，硬性截断兜底）。 */
     public static final int DISPLAY_NAME_MAX_LENGTH = 16;
 
-    /** 首次设置密码的最小长度（对齐 Halo SignUpData.password 的 @Size(min = 5)）。 */
+    /** 首次设置密码的最小长度（下限为 5）。 */
     public static final int PASSWORD_MIN_LENGTH = 5;
 
     /** 用户注解键：标记「已自主设置过密码」，首次设密接口据此关闭免旧密码通道。 */
@@ -295,7 +295,7 @@ public class Constants {
     public static final String PAGE_SEGMENT = "page";
 
     /**
-     * 默认分页大小（与 Halo {@code ModelConst.DEFAULT_PAGE_SIZE} 对齐）。
+     * 默认分页大小（列表默认每页条数）。
      */
     public static final int DEFAULT_PAGE_SIZE = 10;
 

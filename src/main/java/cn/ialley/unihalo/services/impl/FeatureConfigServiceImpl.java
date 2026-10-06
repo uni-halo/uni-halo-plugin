@@ -249,7 +249,7 @@ public class FeatureConfigServiceImpl implements FeatureConfigService {
     }
 
     /**
-     * 默认 spec（对齐旧 setting.yaml 的 value 缺省）。
+     * 默认 spec（出厂兜底缺省值）。
      */
     private Spec buildDefaultSpec() {
         Spec spec = new Spec();
@@ -277,7 +277,7 @@ public class FeatureConfigServiceImpl implements FeatureConfigService {
     }
 
     private static FeatureConfig.Preferences buildDefaultPreferences() {
-        // 与客户端内置默认对齐：三个列表页统一 single + image_bottom；
+        // 三个列表页统一 single + image_bottom；
         // 卡片样式统一组件 layout 值（image_*）
         FeatureConfig.Preferences preferences = new FeatureConfig.Preferences();
         preferences.setHomeListLayout("single");
@@ -291,10 +291,10 @@ public class FeatureConfigServiceImpl implements FeatureConfigService {
         preferences.setCategoryArticlesCardType("image_bottom");
         preferences.setTagArticlesListLayout("single");
         preferences.setTagArticlesCardType("image_bottom");
-        // 与客户端内置默认对齐：头像外观默认方形（square/circle）
+        // 头像外观默认方形（square/circle）
         preferences.setAvatarShape("square");
         FeatureConfig.LinkPage linkPage = new FeatureConfig.LinkPage();
-        // 与客户端内置默认对齐：全屏打开小程序（navigateToMiniProgram）
+        // 全屏打开小程序（navigateToMiniProgram）
         linkPage.setMiniProgramOpenMode("fullscreen");
         preferences.setLinkPage(linkPage);
         return preferences;
@@ -391,7 +391,7 @@ public class FeatureConfigServiceImpl implements FeatureConfigService {
 
         HomePage home = new HomePage();
         home.setUseQuickNavigation(true);
-        // 快捷导航默认 5 项（对齐客户端 uh-home-quick-nav 默认 navList，
+        // 快捷导航默认 5 项（名称/图标/跳转等字段，
         // 控制台可逐项配置）
         home.setQuickNavigation(defaultQuickNavigation());
         home.setUseCategory(true);
@@ -424,7 +424,7 @@ public class FeatureConfigServiceImpl implements FeatureConfigService {
         pages.setPostDetail(postDetail);
 
         // 我的页面功能入口：默认填充注册表条目（常用功能/其他功能），
-        // 与前端 ui/src/constant/feature-entries.ts 注册表对齐
+        // 功能入口注册表（名称/图标/跳转）
         MinePage mine = new MinePage();
         mine.setCommonFeatures(defaultMineCommonFeatures());
         mine.setOtherFeatures(defaultMineOtherFeatures());
@@ -567,7 +567,7 @@ public class FeatureConfigServiceImpl implements FeatureConfigService {
 
     /**
      * 默认 love：恋爱日记入口仅密码（无 enabled 开关，入口显隐由页面设置-
-     * 快捷导航/关于页功能入口注册表控制）；三模块入口默认值对齐 app 端 love.vue
+     * 快捷导航/关于页功能入口注册表控制）；三模块入口默认值（名称/副标题/图标）
      * 硬编码（title/subTitle 文案 + 颜色/图标背景色/跳转路径，priority 1/2/3）。
      * 恋爱页背景图由 spec.love.diaryPage.bgImageUrl 承担（默认留空）。
      */
@@ -600,7 +600,7 @@ public class FeatureConfigServiceImpl implements FeatureConfigService {
     }
 
     /**
-     * 三模块入口默认值（对齐 app 端 love.vue 现有硬编码：名称/副标题文案、
+     * 三模块入口默认值（名称/副标题文案、
      * title/subTitle 颜色（hex8）、图标背景色、图标字体前缀与图标名、跳转路径与排序）。
      */
     private static ModuleSwitch defaultLoveModule(boolean enabled, String title,

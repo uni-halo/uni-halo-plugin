@@ -144,6 +144,27 @@ public class PatIssuerImpl implements PatIssuer, InitializingBean {
                 .then();
     }
 
+    /**
+     * 吊销该用户名下全部 PAT（含手动创建的令牌）：重置密码后旧令牌立即失效，
+     * 实现「改密即踢全部设备」。删除扩展后 {@code PatAuthenticationManager} 拉不到
+     * PAT 即拒绝，旧令牌立刻失效，不依赖 {@code PatCleanupService} 周期扫描。
+     */
+    @Override
+    public Mono<Void> revokeAllForUser(String username) {
+        return client.list(PersonalAccessToken.class,
+                        pat -> username.equals(pat.getSpec().getUsername()), null)
+                .flatMap(pat -> {
+                    pat.getSpec().setRevoked(true);
+                    pat.getSpec().setRevokesAt(Instant.now());
+                    return client.update(pat);
+                })
+                .then()
+                .onErrorResume(e -> {
+                    log.warn("【UniHalo】吊销用户 {} 的全部令牌失败", username, e);
+                    return Mono.empty();
+                });
+    }
+
     private Mono<IssuedToken> sign(PersonalAccessToken pat) {
         return Mono.deferContextual(contextView -> {
             try {

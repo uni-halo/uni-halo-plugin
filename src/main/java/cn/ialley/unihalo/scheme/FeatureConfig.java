@@ -270,7 +270,7 @@ public class FeatureConfig extends AbstractExtension {
         private List<CategoryItem> categories;
     }
 
-    /** 快捷导航项（字段与客户端 uh-home-quick-nav 对齐） */
+    /** 快捷导航项（名称/图标/跳转等字段） */
     @Data
     public static class QuickNavigationItem {
         private String key;
@@ -469,7 +469,7 @@ public class FeatureConfig extends AbstractExtension {
     /**
      * 友链信息：
  *   - {@link MiniInfo} 小程序信息：小程序端「申请信息」弹窗（uh-links-mini-info）展示；
- *   - {@link SiteInfo} 站点信息：本站站点名片，字段对齐 Halo 官方友链提交 API
+ *   - {@link SiteInfo} 站点信息：本站站点名片（站点名/简介/头像等字段）
      *       （plugin-links {@code link-applications} 请求体：displayName/url/logo/description/backlink/feedUrls）。
      * 随 {@code featureConfig.linkInfo} 下发客户端。
      */
@@ -479,7 +479,7 @@ public class FeatureConfig extends AbstractExtension {
         private Boolean submissionEnabled;
         /** 小程序信息（小程序名称/太阳码/跳转地址/描述/申请说明） */
         private MiniInfo miniInfo;
-        /** 站点信息（本站站点名片，字段对齐 Halo 官方友链提交 API） */
+        /** 站点信息（本站站点名片，含站点名/简介/头像等字段） */
         private SiteInfo siteInfo;
     }
 
@@ -502,7 +502,7 @@ public class FeatureConfig extends AbstractExtension {
         private String applyRemark;
     }
 
-    /** 站点信息（字段对齐 Halo 官方 plugin-links 友链提交 API：link-applications 请求体） */
+    /** 站点信息（站点名/简介/头像等名片字段） */
     @Data
     public static class SiteInfo {
         /** 网站名称（官方 displayName） */

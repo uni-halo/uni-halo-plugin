@@ -39,6 +39,14 @@ public interface PatIssuer {
     Mono<Void> revoke(String patName, String username);
 
     /**
+     * 吊销指定用户名下的全部 PAT（含用户手动创建的令牌，不仅本插件签发的）。
+     * 用于「改密即踢全部设备」：重置密码后旧令牌立即失效，避免改密不踢人。
+     *
+     * @param username 目标用户
+     */
+    Mono<Void> revokeAllForUser(String username);
+
+    /**
      * 签发能力是否可用（启动自检结果）。不可用时应关闭对外登录能力。
      */
     boolean available();

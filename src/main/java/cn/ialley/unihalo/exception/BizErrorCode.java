@@ -165,7 +165,20 @@ public enum BizErrorCode {
 
     /** 已自主设置过密码，免旧密码通道关闭。 */
     PASSWORD_ALREADY_SET("PASSWORD_ALREADY_SET", "密码已设置，请使用旧密码修改",
-            AuthException.STATUS_FORBIDDEN);
+            AuthException.STATUS_FORBIDDEN),
+
+    /** 账号邮箱未验证，无法走邮箱重置密码流程（引导先登录验证邮箱）。 */
+    EMAIL_NOT_VERIFIED("EMAIL_NOT_VERIFIED",
+            "该账号邮箱未验证，无法重置密码，请先登录后在「我的资料」中验证邮箱",
+            AuthException.STATUS_BAD_REQUEST),
+
+    /** 重置邮件发送失败（SMTP 未配置或服务端异常）；不下发重置票据，避免「假成功」。 */
+    EMAIL_SEND_FAILED("EMAIL_SEND_FAILED", "重置邮件发送失败，请稍后重试或联系站点管理员",
+            AuthException.STATUS_INTERNAL_ERROR),
+
+    /** 密码重置验证码无效或已过期（含尝试超限）。 */
+    RESET_CODE_INVALID("RESET_CODE_INVALID", "重置验证码无效或已过期，请重新获取",
+            AuthException.STATUS_BAD_REQUEST);
 
     private final String code;
 

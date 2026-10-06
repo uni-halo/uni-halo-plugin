@@ -12,7 +12,7 @@ import java.util.Base64;
 import javax.imageio.ImageIO;
 
 /**
- * 图形验证码生成器（AWT 绘制，对齐官方 plugin-comment-widget 方案）。
+ * 图形验证码生成器（AWT 绘制，生成含干扰线与噪点的图片验证码）。
  *
  * 支持两种类型：{@link CaptchaType#ALPHANUMERIC}（字符，去掉易混淆字符）、
  * {@link CaptchaType#ARITHMETIC}（算术题，答案是算式结果）。图片输出 PNG

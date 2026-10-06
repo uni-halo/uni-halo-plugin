@@ -198,7 +198,7 @@ public class AppVersionServiceImpl implements AppVersionService {
     }
 
     /**
-     * 核心升级判定，对齐 uni-upgrade-center checkVersion 云函数：
+     * 核心升级判定（比较当前版本号与远端版本号，决定升级动作）：
      * 1. 取 native_app 与 wgt 各一条（均为 stable_publish 且平台匹配，按创建时间倒序最新）；
      * 2. 选版本号最大的包（版本相同取 wgt；uni-app x 的 Android 无 wgt 升级）；
      * 3. 库中 version 须同时大于 appVersion 与 wgtVersion 才判定有更新；
