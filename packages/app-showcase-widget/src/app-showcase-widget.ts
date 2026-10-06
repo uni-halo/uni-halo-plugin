@@ -1,16 +1,20 @@
 /**
- * UniHalo 主题悬浮卡片（小程序太阳码）Lit 组件。
+ * UniHalo 主题应用展示面板 Lit 组件。
  *
  * 使用 shadow DOM 自定义元素：样式完全内聚（外部主题样式无法穿透，组件
- * 样式也不会泄漏）；弹窗（申请表单 / 友链信息）渲染在 shadow DOM 内部，
- * 样式选择器直接用类名。
+ * 样式也不会泄漏）。两种形态：展开面板 ↔ 最小化小球；展开面板按顶部
+ * 标题栏拖拽，小球无条件可拖。「提交申请 / 友链信息 / 条目详情」为独立
+ * 居中弹窗，面板保持原位。
  *
  * 数据源：
+ *  - 条目数据：window.__UNI_HALO_APP_SHOWCASE_WIDGET__ 注入的
+ *    miniProgramItems / appItems 数组（setting.yaml 管理），按来源数组
+ *    打类型标（小程序 / App）。
  *  - 申请提交：POST .../mini-program-links/submissions（验证码 query 参数，403 自动刷新）
- *  - 友链信息：GET .../getConfigs → featureConfig.linkInfo.miniInfo（小程序信息）
- *    + featureConfig.profile.blogger（博主信息）
+ *  - 友链信息：GET .../getConfigs → featureConfig.linkInfo.miniInfo + featureConfig.profile.blogger
  */
 import { LitElement, html } from "lit";
+import QRCode from "qrcode";
 import {
   CAPTCHA_URL,
   CONFIG,
@@ -24,10 +28,13 @@ import {
 import { matchPage } from "./page-match";
 import { styles } from "./styles";
 import type {
+  AppItem,
+  AppShowcaseWidgetConfig,
   BloggerInfo,
   CaptchaResponse,
-  FloatProfileWidgetConfig,
   MiniInfo,
+  MiniProgramItem,
+  ShowcaseEntry,
 } from "./types";
 import type { WidgetPersistedState } from "./config";
 
@@ -35,7 +42,7 @@ interface ApplyField {
   key: string;
   label: string;
   required: boolean;
-  type?: "text" | "textarea" | "select";
+  type?: "text" | "textarea";
   placeholder?: string;
 }
 
@@ -47,7 +54,15 @@ interface LinkInfoRow {
   copyable?: boolean;
 }
 
-/** 最小化小图拖拽中间态 */
+/** 面板拖拽中间态 */
+interface DragState {
+  startX: number;
+  startY: number;
+  left: number;
+  top: number;
+}
+
+/** 小球拖拽中间态 */
 interface MiniDotDrag {
   startX: number;
   startY: number;
@@ -75,15 +90,11 @@ const AUTHOR_FIELDS: ApplyField[] = [
   { key: "email", label: "邮箱（选填，用于审核结果通知）", required: false },
 ];
 
-interface DragState {
-  startX: number;
-  startY: number;
-  left: number;
-  top: number;
-}
-
 /** 申请表单草稿缓存 key：输入自动保存，提交成功后清空（验证码不缓存） */
-const DRAFT_KEY = "uh-fpw-apply-draft";
+const DRAFT_KEY = "uh-asw-apply-draft";
+
+/** 条目二维码缓存（app 无码图时按链接生成） */
+const qrCache = new Map<string, string>();
 
 /**
  * 图片地址规范化：http(s):// 或 // 协议相对或 data: 原样返回；
@@ -99,64 +110,73 @@ function normalizeImageUrl(url?: string): string {
   return window.location.origin + (url.startsWith("/") ? url : "/" + url);
 }
 
-export class FloatProfileWidgetElement extends LitElement {
+export class AppShowcaseWidgetElement extends LitElement {
   static styles = [styles];
 
   static properties = {
+    tab: { state: true },
+    minimized: { state: true },
+    panelStyle: { state: true },
+    dotStyle: { state: true },
+    detail: { state: true },
+    detailQr: { state: true },
     applyOpen: { state: true },
-    linksOpen: { state: true },
     applySubmitting: { state: true },
+    applyTab: { state: true },
     captchaId: { state: true },
     captchaSrc: { state: true },
+    screenshotRows: { state: true },
+    linksOpen: { state: true },
     linksLoading: { state: true },
     linksError: { state: true },
     miniInfo: { state: true },
     blogger: { state: true },
-    groupOptions: { state: true },
-    applyTab: { state: true },
-    screenshotRows: { state: true },
-    minimized: { state: true },
-    miniDotStyle: { state: true },
   };
 
+  declare tab: "all" | "miniprogram" | "app";
+  declare minimized: boolean;
+  declare panelStyle: string;
+  declare dotStyle: string;
+  declare detail: ShowcaseEntry | null;
+  declare detailQr: string;
   declare applyOpen: boolean;
-  declare linksOpen: boolean;
   declare applySubmitting: boolean;
+  declare applyTab: "basic" | "author";
   declare captchaId: string;
   declare captchaSrc: string;
+  declare screenshotRows: string[];
+  declare linksOpen: boolean;
   declare linksLoading: boolean;
   declare linksError: boolean;
   declare miniInfo: MiniInfo | null;
   declare blogger: BloggerInfo | null;
-  declare groupOptions: Array<{ value: string; label: string }>;
-  declare applyTab: "basic" | "author";
-  declare screenshotRows: string[];
-  declare minimized: boolean;
-  declare miniDotStyle: string;
 
-  private config: FloatProfileWidgetConfig;
-  private dragState: DragState | null = null;
+  private config: AppShowcaseWidgetConfig;
+  private panelDrag: DragState | null = null;
   private miniDotDrag: MiniDotDrag | null = null;
   private miniDotDragged = false;
 
   constructor() {
     super();
     // 入口（index.ts）已校验 CONFIG 非空
-    this.config = CONFIG as FloatProfileWidgetConfig;
+    this.config = CONFIG as AppShowcaseWidgetConfig;
+    this.tab = "all";
+    this.minimized = false;
+    this.panelStyle = "";
+    this.dotStyle = "";
+    this.detail = null;
+    this.detailQr = "";
     this.applyOpen = false;
-    this.linksOpen = false;
     this.applySubmitting = false;
+    this.applyTab = "basic";
     this.captchaId = "";
     this.captchaSrc = "";
+    this.screenshotRows = [""];
+    this.linksOpen = false;
     this.linksLoading = false;
     this.linksError = false;
     this.miniInfo = null;
     this.blogger = null;
-    this.groupOptions = [];
-    this.applyTab = "basic";
-    this.screenshotRows = [""];
-    this.minimized = false;
-    this.miniDotStyle = "";
   }
 
   connectedCallback(): void {
@@ -176,20 +196,20 @@ export class FloatProfileWidgetElement extends LitElement {
 
   /** 默认状态：访客已存状态（跨页记忆）> 站长 defaultState > 无 */
   private applyDefaultState(): void {
-    const card = this.cardEl;
-    if (!card) {
+    const panel = this.panelEl;
+    if (!panel) {
       return;
     }
     const saved = loadWidgetState();
     if (saved) {
-      // 先恢复卡片自由位置（覆盖锚点定位），最小化恢复基于该位置计算
-      if (saved.cardPos) {
-        this.setFree(saved.cardPos.left, saved.cardPos.top);
+      // 先恢复面板自由位置（覆盖锚点定位），最小化恢复基于该位置计算
+      if (saved.panelPos) {
+        this.setFree(saved.panelPos.left, saved.panelPos.top);
       }
       if (saved.minimized) {
         // 无 dotPos 时留空走锚点 CSS 定位：页面初始布局未完成时测量恒为 0，不可靠
         if (saved.dotPos) {
-          this.miniDotStyle =
+          this.dotStyle =
             `left:${Math.round(saved.dotPos.left)}px;top:${Math.round(saved.dotPos.top)}px;`;
         }
         this.minimized = true;
@@ -199,7 +219,7 @@ export class FloatProfileWidgetElement extends LitElement {
     }
     if (this.config.defaultState === "minimized") {
       // 不测量：主题常在初始化期间隐藏 body，此时卡片无布局盒子，测量恒为 0；
-      // 小球直接用与卡片同款锚点 CSS 定位
+      // 小球直接用与面板同款锚点 CSS 定位
       this.minimized = true;
     }
   }
@@ -222,18 +242,23 @@ export class FloatProfileWidgetElement extends LitElement {
     }
   }
 
-  private get cardEl(): HTMLElement | null {
-    return this.renderRoot.querySelector(".uh-fpw");
+  private get panelEl(): HTMLElement | null {
+    return this.renderRoot.querySelector(".uh-asw");
+  }
+
+  private get miniDotEl(): HTMLElement | null {
+    return this.renderRoot.querySelector(".uh-asw-mini-dot");
   }
 
   // ===== 定位：9 向锚点 + 偏移 =====
   private applyPosition(): void {
-    const card = this.cardEl;
-    if (!card) {
+    const panel = this.panelEl;
+    if (!panel) {
       return;
     }
     // 锚点 class 由模板 class 表达式管理（classList.add 会在重渲染时被 Lit 覆盖抹除）
-    card.style.transform = this.anchorTransform(this.config.position || "bottom-right");
+    panel.style.width = (Number(this.config.panelWidth) || 340) + "px";
+    panel.style.transform = this.anchorTransform(this.config.position || "bottom-right");
   }
 
   /** 锚点偏移 transform：居中类锚点按 -50% 基准，其余直接平移 */
@@ -251,98 +276,95 @@ export class FloatProfileWidgetElement extends LitElement {
     return "translate(" + tx + ", " + ty + ")";
   }
 
-  // ===== 拖拽（Pointer Events）=====
-  private onPointerDown(e: PointerEvent): void {
+  private setFree(left: number, top: number): void {
+    const panel = this.panelEl;
+    if (!panel) {
+      return;
+    }
+    panel.style.left = left + "px";
+    panel.style.top = top + "px";
+    panel.style.right = "auto";
+    panel.style.bottom = "auto";
+    panel.style.transform = "translate(0, 0)";
+  }
+
+  private clampToViewport(left: number, top: number, el: HTMLElement): [number, number] {
+    const left2 = Math.max(0, Math.min(left, window.innerWidth - el.offsetWidth));
+    const top2 = Math.max(0, Math.min(top, window.innerHeight - el.offsetHeight));
+    return [left2, top2];
+  }
+
+  // ===== 面板拖拽（按住顶部标题栏，dragEnabled 控制） =====
+  private onHeaderPointerDown(e: PointerEvent): void {
     if (!this.config.dragEnabled) {
       return; // 后台未开启拖拽：不响应拖拽
     }
     const target = e.target as HTMLElement | null;
-    // 操作按钮（关闭/最小化/申请/友链/恢复）不触发拖拽：
-    // 否则 setPointerCapture + preventDefault 会干扰 click 合成事件
-    if (
-      target &&
-      (target.closest(".uh-fpw-close") ||
-        target.closest(".uh-fpw-minimize") ||
-        target.closest(".uh-fpw-actions") ||
-        target.closest(".uh-fpw-overlay") ||
-        target.closest(".uh-fpw-mini-dot"))
-    ) {
+    // 操作按钮与页签按钮不触发拖拽：避免 setPointerCapture 干扰 click 合成事件
+    if (target && target.closest("button")) {
       return;
     }
-    const card = this.cardEl;
-    if (!card) {
+    const panel = this.panelEl;
+    if (!panel) {
       return;
     }
-    const rect = card.getBoundingClientRect();
-    this.dragState = {
+    const rect = panel.getBoundingClientRect();
+    this.panelDrag = {
       startX: e.clientX,
       startY: e.clientY,
       left: rect.left,
       top: rect.top,
     };
-    card.classList.add("uh-fpw-dragging");
-    card.style.touchAction = "none";
-    card.setPointerCapture(e.pointerId);
+    panel.classList.add("uh-asw-dragging");
+    (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
     e.preventDefault();
   }
 
-  private onPointerMove(e: PointerEvent): void {
-    const dragState = this.dragState;
-    const card = this.cardEl;
-    if (!dragState || !card) {
+  private onHeaderPointerMove(e: PointerEvent): void {
+    const drag = this.panelDrag;
+    const panel = this.panelEl;
+    if (!drag || !panel) {
       return;
     }
-    let left = dragState.left + (e.clientX - dragState.startX);
-    let top = dragState.top + (e.clientY - dragState.startY);
-    left = Math.max(0, Math.min(left, window.innerWidth - card.offsetWidth));
-    top = Math.max(0, Math.min(top, window.innerHeight - card.offsetHeight));
+    const [left, top] = this.clampToViewport(
+      drag.left + (e.clientX - drag.startX),
+      drag.top + (e.clientY - drag.startY),
+      panel,
+    );
     this.setFree(left, top);
   }
 
-  private onPointerEnd(): void {
-    const card = this.cardEl;
-    if (!this.dragState || !card) {
+  private onHeaderPointerEnd(): void {
+    const panel = this.panelEl;
+    if (!this.panelDrag || !panel) {
       return;
     }
-    this.dragState = null;
-    card.classList.remove("uh-fpw-dragging");
-    card.style.touchAction = "";
+    this.panelDrag = null;
+    panel.classList.remove("uh-asw-dragging");
     // 拖拽结束时的视口位置（此时 transform 已被 setFree 归零，rect 即 left/top）
-    const rect = card.getBoundingClientRect();
+    const rect = panel.getBoundingClientRect();
     // 记住拖拽后的自由位置，跨页保持
     this.persistState({
       minimized: false,
-      cardPos: { left: Math.round(rect.left), top: Math.round(rect.top) },
+      panelPos: { left: Math.round(rect.left), top: Math.round(rect.top) },
     });
-  }
-
-  private setFree(left: number, top: number): void {
-    const card = this.cardEl;
-    if (!card) {
-      return;
-    }
-    card.style.left = left + "px";
-    card.style.top = top + "px";
-    card.style.right = "auto";
-    card.style.bottom = "auto";
-    card.style.transform = "translate(0, 0)";
   }
 
   // ===== 最小化 =====
   private onMinimizeClick(): void {
-    const card = this.cardEl;
-    if (!card) {
+    const panel = this.panelEl;
+    if (!panel) {
       return;
     }
-    // 记录卡片当前视口位置：小图作为独立 fixed 元素定位到该处（不影响卡片样式）
-    const rect = card.getBoundingClientRect();
-    this.miniDotStyle = `left:${Math.round(rect.left)}px;top:${Math.round(rect.top)}px;`;
+    // 记录面板当前视口位置：小球作为独立 fixed 元素定位到该处（不影响面板样式）
+    const rect = panel.getBoundingClientRect();
+    this.dotStyle = `left:${Math.round(rect.left)}px;top:${Math.round(rect.top)}px;`;
     this.minimized = true;
-    // 记住最小化态与小球位置（小球即卡片当前视口位置），跨页恢复
+    // 记住最小化态与小球位置（小球即面板当前视口位置），跨页恢复
     this.persistState({
       minimized: true,
       dotPos: { left: Math.round(rect.left), top: Math.round(rect.top) },
-      cardPos: { left: Math.round(rect.left), top: Math.round(rect.top) },
+      panelPos: { left: Math.round(rect.left), top: Math.round(rect.top) },
     });
   }
 
@@ -351,52 +373,45 @@ export class FloatProfileWidgetElement extends LitElement {
       this.miniDotDragged = false;
       return; // 刚拖拽过，忽略本次 click（防拖拽松手误触发恢复）
     }
-    if (!this.miniDotStyle) {
-      // 小球处于锚点定位（默认小球态）：卡片直接展开，保持锚点位置
+    if (!this.dotStyle) {
+      // 小球处于锚点定位（默认小球态）：面板直接展开，保持锚点位置
       this.minimized = false;
       this.persistState({ minimized: false });
       return;
     }
-    // 恢复：把卡片移动到小球当前位置（小球可被拖到任意位置，卡片应跟随出现，
-    // 而不是回到最小化前的位置）
-    const dot = this.renderRoot.querySelector(".uh-fpw-mini-dot") as HTMLElement | null;
-    const card = this.cardEl;
-    if (dot && card) {
+    // 恢复：把面板移动到小球当前位置（小球可被拖到任意位置，面板应跟随出现）
+    const dot = this.miniDotEl;
+    const panel = this.panelEl;
+    if (dot && panel) {
       const rect = dot.getBoundingClientRect();
-      card.style.left = Math.round(rect.left) + "px";
-      card.style.top = Math.round(rect.top) + "px";
-      card.style.right = "auto";
-      card.style.bottom = "auto";
-      card.style.transform = ""; // 清除锚点 transform（center 等 -50% 偏移），定位精确
+      panel.style.left = Math.round(rect.left) + "px";
+      panel.style.top = Math.round(rect.top) + "px";
+      panel.style.right = "auto";
+      panel.style.bottom = "auto";
+      panel.style.transform = ""; // 清除锚点 transform（center 等 -50% 偏移），定位精确
     }
     this.minimized = false;
-    // 卡片显示后按实际尺寸约束到视口内（小球贴近屏幕底部/右侧时，卡片不超出屏幕）
+    // 面板显示后按实际尺寸约束到视口内（小球贴近屏幕底部/右侧时，面板不超出屏幕）
     this.updateComplete.then(() => {
-      const shown = this.cardEl;
+      const shown = this.panelEl;
       if (!shown) {
         return;
       }
-      let curLeft = Number.parseInt(shown.style.left, 10) || 0;
-      let curTop = Number.parseInt(shown.style.top, 10) || 0;
-      const maxLeft = Math.max(0, window.innerWidth - shown.offsetWidth);
-      const maxTop = Math.max(0, window.innerHeight - shown.offsetHeight);
-      if (curLeft > maxLeft) {
-        curLeft = maxLeft;
-        shown.style.left = maxLeft + "px";
+      const left = Number.parseInt(shown.style.left, 10) || 0;
+      const top = Number.parseInt(shown.style.top, 10) || 0;
+      const [l, t] = this.clampToViewport(left, top, shown);
+      if (l !== left || t !== top) {
+        this.setFree(l, t);
       }
-      if (curTop > maxTop) {
-        curTop = maxTop;
-        shown.style.top = maxTop + "px";
-      }
-      // 记住展开态与卡片最终位置（含视口约束修正），跨页恢复
+      // 记住展开态与面板最终位置（含视口约束修正），跨页恢复
       this.persistState({
         minimized: false,
-        cardPos: { left: curLeft, top: curTop },
+        panelPos: { left: l, top: t },
       });
     });
   }
 
-  // ===== 最小化小图拖拽（独立 fixed 元素，不受 dragEnabled 约束，无条件可拖） =====
+  // ===== 最小化小球拖拽（独立 fixed 元素，不受 dragEnabled 约束，无条件可拖） =====
   private onMiniDotPointerDown(e: PointerEvent): void {
     const dot = e.currentTarget as HTMLElement;
     const rect = dot.getBoundingClientRect();
@@ -425,8 +440,11 @@ export class FloatProfileWidgetElement extends LitElement {
       return;
     }
     const dot = e.currentTarget as HTMLElement;
-    const left = Math.max(0, Math.min(drag.left + dx, window.innerWidth - dot.offsetWidth));
-    const top = Math.max(0, Math.min(drag.top + dy, window.innerHeight - dot.offsetHeight));
+    const [left, top] = this.clampToViewport(
+      drag.left + dx,
+      drag.top + dy,
+      dot,
+    );
     // 直接写内联样式，避免 state 重渲染干扰指针捕获
     dot.style.left = left + "px";
     dot.style.top = top + "px";
@@ -437,7 +455,7 @@ export class FloatProfileWidgetElement extends LitElement {
     if (drag?.moved) {
       this.miniDotDragged = true; // click 处理器据此忽略本次恢复
       // 小球拖拽落点写入状态，跨页保持在拖后的位置
-      const dot = this.renderRoot.querySelector(".uh-fpw-mini-dot") as HTMLElement | null;
+      const dot = this.miniDotEl;
       if (dot && dot.style.left && dot.style.top) {
         this.persistState({
           dotPos: { left: Number.parseFloat(dot.style.left), top: Number.parseFloat(dot.style.top) },
@@ -463,19 +481,91 @@ export class FloatProfileWidgetElement extends LitElement {
     } catch {
       // 忽略
     }
-    const card = this.cardEl;
-    if (card) {
-      card.classList.add("uh-fpw-closing");
+    const panel = this.panelEl;
+    if (panel) {
+      panel.classList.add("uh-asw-closing");
       setTimeout(() => this.remove(), 200);
     } else {
       this.remove();
     }
   }
 
+  // ===== 条目数据合并（按来源数组打类型标，priority 越大越靠前） =====
+  private get entries(): ShowcaseEntry[] {
+    const c = this.config;
+    const minis: ShowcaseEntry[] = (c.miniProgramItems || [])
+      .filter((item: MiniProgramItem) => item.displayName?.trim())
+      .map((item: MiniProgramItem) => ({
+        type: "miniprogram" as const,
+        typeLabel: "小程序",
+        displayName: item.displayName?.trim() || "",
+        group: item.group?.trim() || "",
+        icon: normalizeImageUrl(item.icon),
+        codeImage: normalizeImageUrl(item.codeImage),
+        appId: item.appId?.trim() || "",
+        path: item.path?.trim() || "",
+        link: "",
+        description: item.description?.trim() || "",
+        priority: Number(item.priority) || 0,
+      }));
+    const apps: ShowcaseEntry[] = (c.appItems || [])
+      .filter((item: AppItem) => item.displayName?.trim())
+      .map((item: AppItem) => ({
+        type: "app" as const,
+        typeLabel: "App",
+        displayName: item.displayName?.trim() || "",
+        group: item.group?.trim() || "",
+        icon: normalizeImageUrl(item.icon),
+        codeImage: normalizeImageUrl(item.codeImage),
+        appId: "",
+        path: "",
+        link: item.link?.trim() || "",
+        description: item.description?.trim() || "",
+        priority: Number(item.priority) || 0,
+      }));
+    return [...minis, ...apps].sort((a, b) => b.priority - a.priority);
+  }
+
+  private get visibleEntries(): ShowcaseEntry[] {
+    if (this.tab === "all") {
+      return this.entries;
+    }
+    return this.entries.filter((entry) => entry.type === this.tab);
+  }
+
+  // ===== 条目详情弹窗 =====
+  private async openDetail(entry: ShowcaseEntry): Promise<void> {
+    this.detail = entry;
+    this.detailQr = "";
+    if (entry.type === "app" && !entry.codeImage && entry.link) {
+      // App 无码图时按链接生成二维码（带缓存）
+      const cached = qrCache.get(entry.link);
+      if (cached) {
+        this.detailQr = cached;
+        return;
+      }
+      try {
+        const dataUrl = await QRCode.toDataURL(entry.link, { margin: 1, width: 512 });
+        qrCache.set(entry.link, dataUrl);
+        // 请求期间可能已切换详情，仅当前条目仍匹配时回填
+        if (this.detail === entry) {
+          this.detailQr = dataUrl;
+        }
+      } catch {
+        // 生成失败保持空白，由 tip 文案提示
+      }
+    }
+  }
+
+  private closeDetail(): void {
+    this.detail = null;
+    this.detailQr = "";
+  }
+
   // ===== 弹窗通用 =====
   private onOverlayClick(e: Event): void {
     const target = e.target as HTMLElement;
-    if (target.classList.contains("uh-fpw-overlay")) {
+    if (target.classList.contains("uh-asw-overlay")) {
       this.closeModals();
     }
   }
@@ -483,6 +573,7 @@ export class FloatProfileWidgetElement extends LitElement {
   private closeModals(): void {
     this.applyOpen = false;
     this.linksOpen = false;
+    this.closeDetail();
   }
 
   // ===== 申请弹窗 =====
@@ -494,7 +585,7 @@ export class FloatProfileWidgetElement extends LitElement {
   }
 
   private restoreDraft(): void {
-    const form = this.renderRoot.querySelector(".uh-fpw-form") as HTMLFormElement | null;
+    const form = this.renderRoot.querySelector(".uh-asw-form") as HTMLFormElement | null;
     if (!form) {
       return;
     }
@@ -531,7 +622,7 @@ export class FloatProfileWidgetElement extends LitElement {
 
   /** 输入即自动保存草稿：刷新/关闭页面后重新打开仍显示已填内容 */
   private saveDraft(): void {
-    const form = this.renderRoot.querySelector(".uh-fpw-form") as HTMLFormElement | null;
+    const form = this.renderRoot.querySelector(".uh-asw-form") as HTMLFormElement | null;
     if (!form) {
       return;
     }
@@ -559,7 +650,7 @@ export class FloatProfileWidgetElement extends LitElement {
 
   /** 重置：清空表单与本地草稿 */
   private resetApply(): void {
-    const form = this.renderRoot.querySelector(".uh-fpw-form") as HTMLFormElement | null;
+    const form = this.renderRoot.querySelector(".uh-asw-form") as HTMLFormElement | null;
     if (form) {
       form.reset();
     }
@@ -596,7 +687,7 @@ export class FloatProfileWidgetElement extends LitElement {
     const form = e.target as HTMLFormElement;
     // 手动校验必填字段（表单 novalidate：原生校验对隐藏面板的 required 不生效）
     const requiredChecks: Array<{ key: string; message: string; panel?: "basic" | "author" }> = [
-      { key: "displayName", message: "请填写小程序名称", panel: "basic" },
+      { key: "displayName", message: "请填写应用名称", panel: "basic" },
       { key: "miniProgramCode", message: "请填写太阳码图片地址", panel: "basic" },
       { key: "captchaCode", message: "请输入验证码" },
     ];
@@ -690,46 +781,64 @@ export class FloatProfileWidgetElement extends LitElement {
   // ===== 渲染 =====
   override render() {
     const c = this.config;
-    const size = Number(c.cardWidth) || 100;
-    // 小球定位：有像素位置（手动最小化/拖拽记忆）用像素；否则与卡片同款锚点 CSS 定位
-    const dotCls = this.miniDotStyle ? "uh-fpw-mini-dot" : `uh-fpw-mini-dot uh-fpw-pos-${c.position || "bottom-right"}`;
-    const dotStyleVal = this.miniDotStyle || this.anchorTransform(c.position || "bottom-right");
+    const entryIcon = normalizeImageUrl(c.entryIcon);
+    // 小球定位：有像素位置（手动最小化/拖拽记忆）用像素；否则与面板同款锚点 CSS 定位
+    const dotCls = this.dotStyle ? "uh-asw-mini-dot" : `uh-asw-mini-dot uh-asw-pos-${c.position || "bottom-right"}`;
+    const dotStyleVal = this.dotStyle || this.anchorTransform(c.position || "bottom-right");
     return html`
       ${this.applyOpen ? this.renderApplyModal() : ""}
       ${this.linksOpen ? this.renderLinksModal() : ""}
+      ${this.detail ? this.renderDetailModal(this.detail) : ""}
       <div
-        class="uh-fpw uh-fpw-pos-${c.position || "bottom-right"} ${c.dragEnabled ? "uh-fpw-draggable" : ""} ${this.minimized ? "uh-fpw-minimized" : ""}"
-        style="width:${size}px"
-        @pointerdown=${this.onPointerDown}
-        @pointermove=${this.onPointerMove}
-        @pointerup=${this.onPointerEnd}
-        @pointercancel=${this.onPointerEnd}
+        class="uh-asw uh-asw-pos-${c.position || "bottom-right"} ${c.dragEnabled ? "uh-asw-draggable" : ""} ${this.minimized ? "uh-asw-minimized" : ""}"
+        style=${this.panelStyle}
       >
-        <div class="uh-fpw-main" ?hidden=${this.minimized}>
-          <div class="uh-fpw-topbar">
-            <button type="button" class="uh-fpw-minimize" aria-label="最小化" @click=${this.onMinimizeClick}>&minus;</button>
+        <div
+          class="uh-asw-header"
+          @pointerdown=${this.onHeaderPointerDown}
+          @pointermove=${this.onHeaderPointerMove}
+          @pointerup=${this.onHeaderPointerEnd}
+          @pointercancel=${this.onHeaderPointerEnd}
+        >
+          ${entryIcon
+            ? html`<span class="uh-asw-header-icon"><img src=${entryIcon} alt="" /></span>`
+            : ""}
+          <span class="uh-asw-title">应用展示</span>
+          <span class="uh-asw-topbar">
+            <button type="button" class="uh-asw-topbar-btn" aria-label="最小化" @click=${this.onMinimizeClick}>&minus;</button>
             ${c.closeEnabled !== false
-              ? html`<button type="button" class="uh-fpw-close" aria-label="关闭悬浮窗" @click=${this.onCloseClick}>&times;</button>`
+              ? html`<button type="button" class="uh-asw-topbar-btn" aria-label="关闭悬浮面板" @click=${this.onCloseClick}>&times;</button>`
               : ""}
-          </div>
-          ${c.imageUrl
-            ? html`<img class="uh-fpw-img" src=${normalizeImageUrl(c.imageUrl)} alt=${c.name || "小程序太阳码"} />`
-            : ""}
-          ${c.name
-            ? html`<div class="uh-fpw-name" style="font-size:${Number(c.nameSize) || 14}px;color:${c.nameColor || "#333333"}">${c.name}</div>`
-            : ""}
-          ${c.description
-            ? html`<div class="uh-fpw-desc" style="font-size:${Number(c.descSize) || 12}px;color:${c.descColor || "#999999"}">${c.description}</div>`
-            : ""}
-          ${c.miniProgramApply
-            ? html`
-                <div class="uh-fpw-actions">
-                  <button type="button" class="uh-fpw-btn" @click=${this.openApply}>我要申请</button>
-                  <button type="button" class="uh-fpw-btn" @click=${this.openLinks}>友链信息</button>
-                  <div class="uh-fpw-hint">小程序申请和友链信息</div>
-                </div>`
-            : ""}
+          </span>
         </div>
+        <div class="uh-asw-body">
+          <div class="uh-asw-segmented">
+            <button
+              type="button"
+              class="uh-asw-seg-item ${this.tab === "all" ? "uh-asw-seg-active" : ""}"
+              @click=${() => (this.tab = "all")}
+            >全部</button>
+            <button
+              type="button"
+              class="uh-asw-seg-item ${this.tab === "miniprogram" ? "uh-asw-seg-active" : ""}"
+              @click=${() => (this.tab = "miniprogram")}
+            >小程序</button>
+            <button
+              type="button"
+              class="uh-asw-seg-item ${this.tab === "app" ? "uh-asw-seg-active" : ""}"
+              @click=${() => (this.tab = "app")}
+            >App</button>
+          </div>
+          ${this.renderEntries()}
+        </div>
+        ${c.applyEntryEnabled
+          ? html`
+              <div class="uh-asw-actions">
+                <button type="button" class="uh-asw-btn" @click=${this.openApply}>我要申请</button>
+                <button type="button" class="uh-asw-btn" @click=${this.openLinks}>友链信息</button>
+                <div class="uh-asw-hint">小程序申请和友链信息</div>
+              </div>`
+          : ""}
       </div>
       ${this.minimized
         ? html`
@@ -742,39 +851,116 @@ export class FloatProfileWidgetElement extends LitElement {
               @pointermove=${this.onMiniDotPointerMove}
               @pointerup=${this.onMiniDotPointerEnd}
               @pointercancel=${this.onMiniDotPointerEnd}
-              aria-label="恢复悬浮窗"
+              aria-label="恢复应用展示面板"
             >
-              ${c.imageUrl ? html`<img src=${normalizeImageUrl(c.imageUrl)} alt="" />` : ""}
-              <span class="uh-fpw-mini-plus">+</span>
+              ${entryIcon ? html`<img src=${entryIcon} alt="" />` : ""}
+              <span class="uh-asw-mini-plus">+</span>
             </button>`
         : ""}
     `;
   }
 
-  /** 申请表单字段渲染：text（默认）/ textarea / select（分组下拉） */
+  /** 条目列表渲染：按分组聚合（组顺序 = 排序后首次出现顺序），组内保持 priority 排序 */
+  private renderEntries() {
+    const entries = this.visibleEntries;
+    if (!entries.length) {
+      return html`<div class="uh-asw-empty">暂无内容</div>`;
+    }
+    const groups: Array<{ name: string; items: ShowcaseEntry[] }> = [];
+    entries.forEach((entry) => {
+      const name = entry.group || "未分组";
+      let group = groups.find((g) => g.name === name);
+      if (!group) {
+        group = { name, items: [] };
+        groups.push(group);
+      }
+      group.items.push(entry);
+    });
+    return groups.map(
+      (group) => html`
+        <div class="uh-asw-group-name">${group.name}</div>
+        ${group.items.map((entry) => this.renderEntry(entry))}
+      `,
+    );
+  }
+
+  private renderEntry(entry: ShowcaseEntry) {
+    const initial = entry.displayName.slice(0, 1);
+    const thumb = entry.codeImage || (entry.type === "app" && entry.link ? qrCache.get(entry.link) : "");
+    return html`
+      <div class="uh-asw-item" @click=${() => this.openDetail(entry)}>
+        <div class="uh-asw-item-icon ${entry.type}">${entry.icon ? html`<img src=${entry.icon} alt="" />` : initial}</div>
+        <div class="uh-asw-item-info">
+          <div class="uh-asw-item-name">${entry.displayName}<span class="uh-asw-tag">${entry.typeLabel}</span></div>
+          ${entry.description ? html`<div class="uh-asw-item-desc">${entry.description}</div>` : ""}
+        </div>
+        ${thumb ? html`<div class="uh-asw-item-thumb"><img src=${thumb} alt="" /></div>` : ""}
+      </div>
+    `;
+  }
+
+  /** 条目详情弹窗：小程序展示太阳码，App 展示码图或按链接生成的二维码 */
+  private renderDetailModal(entry: ShowcaseEntry) {
+    const isMini = entry.type === "miniprogram";
+    const qrSrc = isMini ? entry.codeImage : entry.codeImage || this.detailQr;
+    const initial = entry.displayName.slice(0, 1);
+    return html`
+      <div class="uh-asw-overlay" @click=${this.onOverlayClick}>
+        <div class="uh-asw-modal">
+          <div class="uh-asw-modal-header">
+            <div class="uh-asw-modal-title">${isMini ? "小程序详情" : "应用详情"}</div>
+            <button type="button" class="uh-asw-modal-close" aria-label="关闭" @click=${this.closeDetail}>&times;</button>
+          </div>
+          <div class="uh-asw-modal-body">
+            <div class="uh-asw-detail-head">
+              <div class="uh-asw-item-icon ${entry.type}">${entry.icon ? html`<img src=${entry.icon} alt="" />` : initial}</div>
+              <div>
+                <div class="uh-asw-detail-name">${entry.displayName}</div>
+                <div class="uh-asw-detail-desc">${entry.description || entry.typeLabel}</div>
+              </div>
+            </div>
+            ${qrSrc
+              ? html`<div class="uh-asw-qr-card"><img src=${qrSrc} alt=${isMini ? "小程序太阳码" : "二维码"} /></div>`
+              : html`<div class="uh-asw-qr-card"></div>`}
+            <div class="uh-asw-qr-tip">
+              ${isMini
+                ? "微信扫码打开小程序"
+                : entry.link
+                  ? "手机扫码直接打开链接"
+                  : "未配置链接，无法生成二维码"}
+            </div>
+            ${!isMini && entry.link
+              ? html`
+                  <div class="uh-asw-link-row">
+                    <input class="uh-asw-copy-input" type="text" readonly value=${entry.link} @click=${(e: Event) => (e.target as HTMLInputElement).select()} />
+                    <button type="button" class="uh-asw-btn" @click=${(e: Event) => this.copyText(entry.link, e.target as HTMLButtonElement)}>复制</button>
+                  </div>
+                  <div class="uh-asw-detail-actions">
+                    <button type="button" class="uh-asw-btn uh-asw-btn-primary" @click=${() => window.open(entry.link, "_blank", "noopener")}>立即打开</button>
+                    <button type="button" class="uh-asw-btn" @click=${this.closeDetail}>关闭</button>
+                  </div>`
+              : html`
+                  <div class="uh-asw-detail-actions">
+                    <button type="button" class="uh-asw-btn" @click=${this.closeDetail}>关闭</button>
+                  </div>`}
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  /** 申请表单字段渲染：text（默认）/ textarea */
   private renderApplyField(field: ApplyField) {
     const labelEl = html`<span>${field.label}${field.required ? " *" : ""}</span>`;
-    if (field.type === "select") {
-      return html`
-        <label class="uh-fpw-field">
-          ${labelEl}
-          <select name=${field.key} class="uh-fpw-select">
-            <option value="">未分组</option>
-            ${this.groupOptions.map(
-              (opt) => html`<option value=${opt.value}>${opt.label}</option>`,
-            )}
-          </select>
-        </label>`;
-    }
     if (field.type === "textarea") {
       return html`
-        <label class="uh-fpw-field">
+        <label class="uh-asw-field">
           ${labelEl}
-          <textarea name=${field.key} rows="2" class="uh-fpw-textarea" placeholder=${field.placeholder ?? ""}></textarea>
+          <textarea name=${field.key} rows="2" placeholder=${field.placeholder ?? ""}></textarea>
         </label>`;
     }
     return html`
-      <label class="uh-fpw-field">
+      <label class="uh-asw-field">
         ${labelEl}
         <input type="text" name=${field.key} ?required=${field.required} placeholder=${field.placeholder ?? ""} />
       </label>`;
@@ -782,43 +968,43 @@ export class FloatProfileWidgetElement extends LitElement {
 
   private renderApplyModal() {
     return html`
-      <div class="uh-fpw-overlay" @click=${this.onOverlayClick}>
-        <div class="uh-fpw-modal uh-fpw-modal-apply">
-          <div class="uh-fpw-modal-header">
-            <div class="uh-fpw-modal-title">小程序申请</div>
-            <button type="button" class="uh-fpw-modal-close" aria-label="关闭" @click=${this.closeModals}>&times;</button>
+      <div class="uh-asw-overlay" @click=${this.onOverlayClick}>
+        <div class="uh-asw-modal">
+          <div class="uh-asw-modal-header">
+            <div class="uh-asw-modal-title">小程序申请</div>
+            <button type="button" class="uh-asw-modal-close" aria-label="关闭" @click=${this.closeModals}>&times;</button>
           </div>
-          <div class="uh-fpw-segmented">
+          <div class="uh-asw-segmented-modal">
             <button
               type="button"
-              class="uh-fpw-seg-item ${this.applyTab === "basic" ? "uh-fpw-seg-active" : ""}"
+              class="uh-asw-seg-item ${this.applyTab === "basic" ? "uh-asw-seg-active" : ""}"
               @click=${() => (this.applyTab = "basic")}
             >基础信息</button>
             <button
               type="button"
-              class="uh-fpw-seg-item ${this.applyTab === "author" ? "uh-fpw-seg-active" : ""}"
+              class="uh-asw-seg-item ${this.applyTab === "author" ? "uh-asw-seg-active" : ""}"
               @click=${() => (this.applyTab = "author")}
             >作者信息</button>
           </div>
-          <div class="uh-fpw-modal-body uh-fpw-apply-body">
+          <div class="uh-asw-modal-body uh-asw-apply-body">
             <!-- novalidate：隐藏面板的 required 不参与原生校验，由提交时手动校验 -->
-            <form class="uh-fpw-form" novalidate @submit=${this.onApplySubmit} @input=${this.onFormInput}>
-              <div class="uh-fpw-apply-panels">
-                <div class="uh-fpw-apply-panel" ?hidden=${this.applyTab !== "basic"}>
+            <form class="uh-asw-form" novalidate @submit=${this.onApplySubmit} @input=${this.onFormInput}>
+              <div class="uh-asw-apply-panels">
+                <div class="uh-asw-apply-panel" ?hidden=${this.applyTab !== "basic"}>
                   ${BASIC_FIELDS.map((field) => this.renderApplyField(field))}
                   ${this.renderScreenshotRows()}
                 </div>
-                <div class="uh-fpw-apply-panel" ?hidden=${this.applyTab !== "author"}>
+                <div class="uh-asw-apply-panel" ?hidden=${this.applyTab !== "author"}>
                   ${AUTHOR_FIELDS.map((field) => this.renderApplyField(field))}
                 </div>
               </div>
-              <div class="uh-fpw-apply-footer">
-                <label class="uh-fpw-field uh-fpw-captcha-row">
+              <div class="uh-asw-apply-footer">
+                <label class="uh-asw-field uh-asw-captcha-row">
                   <span>验证码 *</span>
-                  <span class="uh-fpw-captcha-input">
+                  <span class="uh-asw-captcha-input">
                     <input type="text" name="captchaCode" required autocomplete="off" />
                     <img
-                      class="uh-fpw-captcha-img"
+                      class="uh-asw-captcha-img"
                       alt="验证码"
                       title="看不清？点击刷新"
                       src=${this.captchaSrc}
@@ -826,10 +1012,10 @@ export class FloatProfileWidgetElement extends LitElement {
                     />
                   </span>
                 </label>
-                <div class="uh-fpw-form-actions">
-                  <button type="button" class="uh-fpw-btn" @click=${this.resetApply}>重置</button>
-                  <button type="button" class="uh-fpw-btn" @click=${this.closeModals}>取消</button>
-                  <button type="submit" class="uh-fpw-btn uh-fpw-btn-primary" ?disabled=${this.applySubmitting}>
+                <div class="uh-asw-form-actions">
+                  <button type="button" class="uh-asw-btn" @click=${this.resetApply}>重置</button>
+                  <button type="button" class="uh-asw-btn" @click=${this.closeModals}>取消</button>
+                  <button type="submit" class="uh-asw-btn uh-asw-btn-primary" ?disabled=${this.applySubmitting}>
                     ${this.applySubmitting ? "提交中…" : "提交申请"}
                   </button>
                 </div>
@@ -844,13 +1030,13 @@ export class FloatProfileWidgetElement extends LitElement {
   /** 预览图动态添加：URL 输入行 + 删除按钮 + 底部「添加一张」 */
   private renderScreenshotRows() {
     return html`
-      <div class="uh-fpw-field">
+      <div class="uh-asw-field">
         <span>预览截图(可选)</span>
         ${this.screenshotRows.map(
           (url, index) => html`
-            <div class="uh-fpw-shot-row">
+            <div class="uh-asw-shot-row">
               <input
-                class="uh-fpw-shot-input"
+                class="uh-asw-shot-input"
                 type="text"
                 name="screenshots"
                 placeholder="https://…/image.png"
@@ -860,13 +1046,13 @@ export class FloatProfileWidgetElement extends LitElement {
               />
               <button
                 type="button"
-                class="uh-fpw-shot-remove"
+                class="uh-asw-shot-remove"
                 aria-label="删除该预览图"
                 @click=${() => this.removeScreenshotRow(index)}
               >&times;</button>
             </div>`,
         )}
-        <button type="button" class="uh-fpw-btn uh-fpw-shot-add" @click=${this.addScreenshotRow}>
+        <button type="button" class="uh-asw-btn uh-asw-shot-add" @click=${this.addScreenshotRow}>
           + 添加一张预览图
         </button>
       </div>`;
@@ -882,7 +1068,7 @@ export class FloatProfileWidgetElement extends LitElement {
     this.screenshotRows = [...this.screenshotRows, ""];
     // 新行渲染后自动滚动到底部（面板内滚动容器）
     this.updateComplete.then(() => {
-      const rows = this.renderRoot.querySelectorAll(".uh-fpw-shot-row");
+      const rows = this.renderRoot.querySelectorAll(".uh-asw-shot-row");
       const last = rows[rows.length - 1];
       if (last) {
         last.scrollIntoView({ block: "nearest", behavior: "smooth" });
@@ -915,31 +1101,31 @@ export class FloatProfileWidgetElement extends LitElement {
     const hasContent =
       miniRows.some((row) => row.value) || blogRows.some((row) => row.value);
     return html`
-      <div class="uh-fpw-overlay" @click=${this.onOverlayClick}>
-        <div class="uh-fpw-modal">
-          <div class="uh-fpw-modal-header">
-            <div class="uh-fpw-modal-title">小程序友链信息</div>
-            <button type="button" class="uh-fpw-modal-close" aria-label="关闭" @click=${this.closeModals}>&times;</button>
+      <div class="uh-asw-overlay" @click=${this.onOverlayClick}>
+        <div class="uh-asw-modal">
+          <div class="uh-asw-modal-header">
+            <div class="uh-asw-modal-title">小程序友链信息</div>
+            <button type="button" class="uh-asw-modal-close" aria-label="关闭" @click=${this.closeModals}>&times;</button>
           </div>
-          <div class="uh-fpw-modal-body">
+          <div class="uh-asw-modal-body">
             ${this.linksLoading
-              ? html`<div class="uh-fpw-loading">加载中…</div>`
+              ? html`<div class="uh-asw-loading">加载中…</div>`
               : this.linksError
-                ? html`<div class="uh-fpw-empty">加载失败，请稍后重试</div>`
+                ? html`<div class="uh-asw-loading">加载失败，请稍后重试</div>`
                 : !hasContent
-                  ? html`<div class="uh-fpw-empty">暂无友链信息</div>`
+                  ? html`<div class="uh-asw-loading">暂无友链信息</div>`
                   : html`
-                      <div class="uh-fpw-info-card">
-                        <div class="uh-fpw-info-card-title">小程序信息</div>
+                      <div class="uh-asw-info-card">
+                        <div class="uh-asw-info-card-title">小程序信息</div>
                         ${miniRows.map((row) => this.renderCopyRow(row.label, row.value, row))}
                       </div>
-                      <div class="uh-fpw-info-card">
-                        <div class="uh-fpw-info-card-title">博主信息</div>
+                      <div class="uh-asw-info-card">
+                        <div class="uh-asw-info-card-title">博主信息</div>
                         ${blogRows.map((row) => this.renderCopyRow(row.label, row.value, row))}
                       </div>
                       <button
                         type="button"
-                        class="uh-fpw-btn uh-fpw-copy-all"
+                        class="uh-asw-btn uh-asw-copy-all"
                         @click=${(e: Event) =>
                           this.copyText(this.collectLinkText(), e.target as HTMLButtonElement)}
                       >复制全部</button>
@@ -960,28 +1146,28 @@ export class FloatProfileWidgetElement extends LitElement {
     const input = textarea
       ? html`
           <textarea
-            class="uh-fpw-copy-input uh-fpw-copy-textarea"
+            class="uh-asw-copy-input uh-asw-copy-textarea"
             readonly
             rows="2"
             @click=${(e: Event) => (e.target as HTMLTextAreaElement).select()}
           >${value}</textarea>`
       : html`
           <input
-            class="uh-fpw-copy-input"
+            class="uh-asw-copy-input"
             type="text"
             readonly
             value=${value}
             @click=${(e: Event) => (e.target as HTMLInputElement).select()}
           />`;
     return html`
-      <div class="uh-fpw-copy-row">
-        <span class="uh-fpw-copy-label">${label}</span>
+      <div class="uh-asw-copy-row">
+        <span class="uh-asw-copy-label">${label}</span>
         ${input}
         ${copyable
           ? html`
               <button
                 type="button"
-                class="uh-fpw-btn uh-fpw-copy-btn"
+                class="uh-asw-btn uh-asw-copy-btn"
                 @click=${(e: Event) => this.copyText(value, e.target as HTMLButtonElement)}
               >复制</button>`
           : ""}
@@ -1043,4 +1229,4 @@ export class FloatProfileWidgetElement extends LitElement {
   }
 }
 
-customElements.define("uh-float-profile-widget", FloatProfileWidgetElement);
+customElements.define("uh-app-showcase-widget", AppShowcaseWidgetElement);

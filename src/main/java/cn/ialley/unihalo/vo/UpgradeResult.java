@@ -65,8 +65,26 @@ public class UpgradeResult {
     private Boolean stablePublish;
 
     /**
-     * 应用商店列表（多渠道下载入口；
-     * 当前无多商店分发能力，恒为 null 且不输出，iOS/Harmony 走 url 跳转）
+     * 下载方式：direct 直链下载（缺省）/ store 商店分发 / external 外部链接跳转
+     */
+    @JsonProperty("download_type")
+    private String downloadType;
+
+    /**
+     * 外部链接（download_type=external 时输出）：网盘/落地页地址，客户端跳系统浏览器
+     */
+    @JsonProperty("external_url")
+    private String externalUrl;
+
+    /**
+     * 外部链接的按钮文案（download_type=external 时输出），缺省「前往下载」
+     */
+    @JsonProperty("external_name")
+    private String externalName;
+
+    /**
+     * 应用商店列表（download_type=store 时输出，多渠道下载入口；
+     * 客户端按 priority 降序尝试跳转，全部失败回落 url 下载）
      */
     @JsonProperty("store_list")
     private List<StoreListItem> storeList;
@@ -103,6 +121,19 @@ public class UpgradeResult {
         result.setIsSilently(appVersion.getSpec().getIsSilently());
         result.setMinUniVersion(appVersion.getSpec().getMinUniVersion());
         result.setStablePublish(appVersion.getSpec().getStablePublish());
+        result.setDownloadType(appVersion.getSpec().getDownloadType());
+        result.setStoreList(appVersion.getSpec().getStoreList() == null ? null
+                : appVersion.getSpec().getStoreList().stream().map(channel -> {
+                    StoreListItem item = new StoreListItem();
+                    item.setEnable(channel.getEnable());
+                    item.setId(channel.getId());
+                    item.setName(channel.getName());
+                    item.setScheme(channel.getScheme());
+                    item.setPriority(channel.getPriority());
+                    return item;
+                }).toList());
+        result.setExternalUrl(appVersion.getSpec().getExternalUrl());
+        result.setExternalName(appVersion.getSpec().getExternalName());
         return result;
     }
 }

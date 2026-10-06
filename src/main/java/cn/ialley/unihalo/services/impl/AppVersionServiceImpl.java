@@ -193,6 +193,9 @@ public class AppVersionServiceImpl implements AppVersionService {
                     if (result.getUrl() != null && !result.getUrl().isBlank()) {
                         result.setUrl(externalLinkProcessor.processLink(result.getUrl()));
                     }
+                    if (result.getExternalUrl() != null && !result.getExternalUrl().isBlank()) {
+                        result.setExternalUrl(externalLinkProcessor.processLink(result.getExternalUrl()));
+                    }
                     return result;
                 });
     }

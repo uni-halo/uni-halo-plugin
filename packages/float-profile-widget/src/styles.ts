@@ -154,6 +154,16 @@ export const styles = css`
     height: 100%;
     object-fit: cover;
   }
+  /* 小球默认态复用卡片的 9 向锚点（不依赖 JS 测量，规避主题初始化期间 body 隐藏） */
+  .uh-fpw-mini-dot.uh-fpw-pos-top-left { top: 8px; left: 8px; }
+  .uh-fpw-mini-dot.uh-fpw-pos-top-center { top: 8px; left: 50%; }
+  .uh-fpw-mini-dot.uh-fpw-pos-top-right { top: 8px; right: 8px; }
+  .uh-fpw-mini-dot.uh-fpw-pos-right-center { top: 50%; right: 8px; }
+  .uh-fpw-mini-dot.uh-fpw-pos-bottom-right { bottom: 8px; right: 8px; }
+  .uh-fpw-mini-dot.uh-fpw-pos-bottom-center { bottom: 8px; left: 50%; }
+  .uh-fpw-mini-dot.uh-fpw-pos-bottom-left { bottom: 8px; left: 8px; }
+  .uh-fpw-mini-dot.uh-fpw-pos-left-center { top: 50%; left: 8px; }
+  .uh-fpw-mini-dot.uh-fpw-pos-center { top: 50%; left: 50%; }
   .uh-fpw-mini-plus {
     position: absolute;
     inset: 0;

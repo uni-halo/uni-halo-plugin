@@ -13,6 +13,7 @@ import run.halo.app.plugin.ReactiveSettingFetcher;
 import run.halo.app.theme.dialect.TemplateHeadProcessor;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.node.ArrayNode;
 import tools.jackson.databind.node.JsonNodeFactory;
 import tools.jackson.databind.node.ObjectNode;
 
@@ -47,7 +48,11 @@ public class ThemeWidgetHeadProcessor implements TemplateHeadProcessor {
         new WidgetSpec("floatProfileWidget", "__UNI_HALO_FLOAT_PROFILE_WIDGET__",
             "widgets/float-profile-widget/float-profile-widget.js");
 
-    private static final WidgetSpec[] WIDGETS = {FLOAT_PROFILE_WIDGET};
+    private static final WidgetSpec APP_SHOWCASE_WIDGET =
+        new WidgetSpec("appShowcaseWidget", "__UNI_HALO_APP_SHOWCASE_WIDGET__",
+            "widgets/app-showcase-widget/app-showcase-widget.js");
+
+    private static final WidgetSpec[] WIDGETS = {FLOAT_PROFILE_WIDGET, APP_SHOWCASE_WIDGET};
 
     private final ReactiveSettingFetcher settingFetcher;
     private final PluginWrapper pluginWrapper;
@@ -87,6 +92,11 @@ public class ThemeWidgetHeadProcessor implements TemplateHeadProcessor {
                         && node.path("imageUrl").asString("").isBlank()) {
                     return Mono.empty();
                 }
+                // 应用展示面板需已配置入口图标，否则视为未配置不注入
+                if (spec == APP_SHOWCASE_WIDGET
+                        && node.path("entryIcon").asString("").isBlank()) {
+                    return Mono.empty();
+                }
                 try {
                     IModelFactory factory = context.getModelFactory();
                     model.add(factory.createText(componentScript(spec, buildConfig(spec, node))));
@@ -100,12 +110,23 @@ public class ThemeWidgetHeadProcessor implements TemplateHeadProcessor {
     }
 
     /**
-     * 组装前端配置（缺失字段取默认值，字段显式置空时保持为空由前端不渲染）。
-     * 默认值统一收在 {@link #applyDefaults}，新增组件字段时在此追加。
+     * 组装前端配置（缺失字段取默认值，字段显式置空时保持为空由前端不渲染），
+     * 各组件默认值分别收在对应的 apply 方法中。
      */
     private ObjectNode buildConfig(WidgetSpec spec, JsonNode node) {
         ObjectNode config = JsonNodeFactory.instance.objectNode();
         config.put("enabled", node.path("enabled").asBoolean(false));
+        if (spec == APP_SHOWCASE_WIDGET) {
+            return applyAppShowcaseDefaults(config, node);
+        }
+        return applyFloatProfileDefaults(config, node);
+    }
+
+    /**
+     * 悬浮名片卡片的前端配置映射：提取展示文本、图片与布局字段，
+     * 缺失时回退内置默认值。
+     */
+    private ObjectNode applyFloatProfileDefaults(ObjectNode config, JsonNode node) {
         config.put("pageScope", node.path("pageScope").asString("all"));
         config.put("pagePatterns", node.path("pagePatterns").asString(""));
         config.put("position", node.path("position").asString("bottom-right"));
@@ -125,6 +146,35 @@ public class ThemeWidgetHeadProcessor implements TemplateHeadProcessor {
         config.put("rememberClosed", node.path("rememberClosed").asBoolean(true));
         config.put("miniProgramApply", node.path("miniProgramApply").asBoolean(false));
         return config;
+    }
+
+    /**
+     * 应用展示面板的前端配置映射：注入面板布局与两种条目数组，
+     * 条目数据整体透传由前端按来源数组打类型标。
+     */
+    private ObjectNode applyAppShowcaseDefaults(ObjectNode config, JsonNode node) {
+        config.put("entryIcon", node.path("entryIcon").asString(""));
+        config.put("pageScope", node.path("pageScope").asString("all"));
+        config.put("pagePatterns", node.path("pagePatterns").asString(""));
+        config.put("position", node.path("position").asString("bottom-right"));
+        config.put("offsetX", node.path("offsetX").asInt(0));
+        config.put("offsetY", node.path("offsetY").asInt(0));
+        config.put("panelWidth", node.path("panelWidth").asInt(340));
+        config.put("defaultState", node.path("defaultState").asString("minimized"));
+        config.put("dragEnabled", node.path("dragEnabled").asBoolean(true));
+        config.put("closeEnabled", node.path("closeEnabled").asBoolean(true));
+        config.put("rememberClosed", node.path("rememberClosed").asBoolean(false));
+        config.put("applyEntryEnabled", node.path("applyEntryEnabled").asBoolean(false));
+        config.set("miniProgramItems", asArrayOrEmpty(node.path("miniProgramItems")));
+        config.set("appItems", asArrayOrEmpty(node.path("appItems")));
+        return config;
+    }
+
+    /**
+     * 条目数组取值：非数组（缺失/配置异常）时返回空数组，保证前端拿到稳定结构。
+     */
+    private ArrayNode asArrayOrEmpty(JsonNode node) {
+        return node instanceof ArrayNode array ? array : JsonNodeFactory.instance.arrayNode();
     }
 
     private String componentScript(WidgetSpec spec, ObjectNode config) {

@@ -456,6 +456,222 @@ spec:
               label: 小程序申请
               value: false
               help: 开启后悬浮卡片底部显示「申请」「友链信息」两个按钮，点击分别弹出小程序申请表单与友链信息展示。
+        - $formkit: group
+          name: appShowcaseWidget
+          label: 应用展示
+          children:
+            - $formkit: switch
+              name: enabled
+              id: appShowcaseEnabled
+              label: 在主题显示应用展示面板
+              value: false
+              help: 开启后向主题页面注入应用展示悬浮面板（展开面板 / 最小化小球两种形态）。
+            - $formkit: iconify
+              name: entryIcon
+              id: appShowcaseEntryIcon
+              label: 入口图标
+              format: dataurl
+              value-only: true
+              validation: required
+              help: 面板标题与小球使用的图标，来自 Iconify 图标库。
+            - $formkit: select
+              name: pageScope
+              id: appShowcasePageScope
+              label: 显示范围
+              value: "all"
+              options:
+                - label: 全部页面
+                  value: "all"
+                - label: 仅以下路径显示
+                  value: "only"
+                - label: 以下路径不显示
+                  value: "except"
+              validation: required
+              help: 控制面板在哪些主题页面出现。「仅/排除」模式配合下方「路径模式」使用。
+            - $formkit: textarea
+              name: pagePatterns
+              id: appShowcasePagePatterns
+              label: 路径模式
+              value: ""
+              help: 每行一个路径模式，匹配当前页面 pathname。* 匹配任意非 / 字符，** 匹配任意字符（含 /）；留空或只写 / 表示仅首页。例如 /archives/** 匹配笔记详情页。
+            - $formkit: select
+              name: position
+              id: appShowcasePosition
+              label: 显示位置
+              value: "bottom-right"
+              options:
+                - label: 左上角
+                  value: "top-left"
+                - label: 顶部居中
+                  value: "top-center"
+                - label: 右上角
+                  value: "top-right"
+                - label: 右侧居中
+                  value: "right-center"
+                - label: 右下角
+                  value: "bottom-right"
+                - label: 底部居中
+                  value: "bottom-center"
+                - label: 左下角
+                  value: "bottom-left"
+                - label: 左侧居中
+                  value: "left-center"
+                - label: 屏幕居中
+                  value: "center"
+              validation: required
+              help: 面板的初始锚点位置；开启拖拽后按住标题栏可自由移动。
+            - $formkit: number
+              name: offsetX
+              id: appShowcaseOffsetX
+              label: 水平偏移(px)
+              value: 0
+              help: 相对锚点的水平微调，可填负数。
+            - $formkit: number
+              name: offsetY
+              id: appShowcaseOffsetY
+              label: 垂直偏移(px)
+              value: 0
+              help: 相对锚点的垂直微调，可填负数。
+            - $formkit: number
+              name: panelWidth
+              id: appShowcasePanelWidth
+              label: 面板宽度(px)
+              value: 340
+              validation: required
+            - $formkit: select
+              name: defaultState
+              id: appShowcaseDefaultState
+              label: 默认状态
+              value: minimized
+              options:
+                - label: 面板
+                  value: default
+                - label: 小球
+                  value: minimized
+              help: 页面加载后的初始形态：完整面板或最小化小球。
+            - $formkit: switch
+              name: dragEnabled
+              id: appShowcaseDragEnabled
+              label: 开启拖拽
+              value: true
+              help: 展开面板时按住顶部标题栏拖拽；最小化小球始终可拖。
+            - $formkit: switch
+              name: closeEnabled
+              id: appShowcaseCloseEnabled
+              label: 允许关闭
+              value: true
+            - $formkit: switch
+              name: rememberClosed
+              id: appShowcaseRememberClosed
+              label: 记住关闭状态
+              value: false
+              help: 开启后访客点击关闭，本次会话（当前标签页）内不再显示，下次打开浏览器仍会默认显示；关闭则每次刷新都重新显示。
+            - $formkit: switch
+              name: applyEntryEnabled
+              id: appShowcaseApplyEntry
+              label: 申请入口
+              value: false
+              help: 开启后面板底部显示「我要申请」「友链信息」两个按钮，点击分别弹出小程序申请表单与友链信息展示。
+            - $formkit: array
+              name: miniProgramItems
+              label: 小程序条目
+              value: []
+              min: 0
+              addButton: true
+              addLabel: 添加小程序
+              itemLabels:
+                - type: image
+                  label: $value.icon
+                - type: text
+                  label: $value.displayName
+                - type: text
+                  label: $value.group
+              children:
+                - $formkit: text
+                  name: displayName
+                  label: 名称
+                  validation: required
+                  value: ""
+                - $formkit: text
+                  name: group
+                  label: 分组
+                  value: ""
+                  help: 同名分组聚合展示，留空归入「未分组」。
+                - $formkit: attachment
+                  name: icon
+                  label: 应用图标
+                  value: ""
+                - $formkit: attachment
+                  name: codeImage
+                  label: 太阳码
+                  value: ""
+                  validation: required
+                  help: 小程序码图片。
+                - $formkit: text
+                  name: appId
+                  label: 小程序 AppID
+                  value: ""
+                - $formkit: text
+                  name: path
+                  label: 跳转页面路径
+                  value: ""
+                - $formkit: textarea
+                  name: description
+                  label: 描述
+                  value: ""
+                - $formkit: number
+                  name: priority
+                  label: 排序
+                  value: 0
+                  help: 越大越靠前，分区内生效。
+            - $formkit: array
+              name: appItems
+              label: App 条目
+              value: []
+              min: 0
+              addButton: true
+              addLabel: 添加 App
+              itemLabels:
+                - type: image
+                  label: $value.icon
+                - type: text
+                  label: $value.displayName
+                - type: text
+                  label: $value.group
+              children:
+                - $formkit: text
+                  name: displayName
+                  label: 名称
+                  validation: required
+                  value: ""
+                - $formkit: text
+                  name: group
+                  label: 分组
+                  value: ""
+                  help: 同名分组聚合展示，留空归入「未分组」。
+                - $formkit: attachment
+                  name: icon
+                  label: 应用图标
+                  value: ""
+                - $formkit: attachment
+                  name: codeImage
+                  label: 二维码
+                  value: ""
+                  help: 选填；留空时前台按链接自动生成二维码。
+                - $formkit: text
+                  name: link
+                  label: 跳转 / 下载链接
+                  validation: required|url
+                  value: ""
+                - $formkit: textarea
+                  name: description
+                  label: 描述
+                  value: ""
+                - $formkit: number
+                  name: priority
+                  label: 排序
+                  value: 0
+                  help: 越大越靠前，分区内生效。
     - group: themeTemplateConfig
       label: 主题模板
       formSchema:

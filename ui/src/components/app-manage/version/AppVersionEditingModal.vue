@@ -5,7 +5,46 @@ import { cloneDeep } from "lodash-es";
 import { computed, ref, watch } from "vue";
 import SubmitButton from "../../button/SubmitButton.vue";
 import { appVersionsApi } from "@/api";
-import type { AppInfo, AppVersion } from "@/types";
+import type { AppInfo, AppVersion, StoreChannel } from "@/types";
+
+// 商店渠道预设：scheme 需管理员按各商店规则填写（含安卓包名），仅预填名称/标识/优先级
+const STORE_PRESETS: Omit<StoreChannel, "enable">[] = [
+  { id: "huawei", name: "华为应用市场", priority: 100 },
+  { id: "xiaomi", name: "小米应用商店", priority: 90 },
+  { id: "oppo", name: "OPPO 软件商店", priority: 80 },
+  { id: "vivo", name: "vivo 应用商店", priority: 70 },
+  { id: "tencent", name: "应用宝", priority: 60 },
+];
+
+// 已添加的预设 id（chip 激活态判断）
+const addedStoreIds = computed(() =>
+  new Set((formState.value.spec.storeList || []).map((c) => c.id || ""))
+);
+
+// 预设 chip 点击切换:未添加则添加,已添加则移除
+const toggleStoreChannel = (preset: Omit<StoreChannel, "enable">) => {
+  const list = formState.value.spec.storeList || (formState.value.spec.storeList = []);
+  const index = list.findIndex((c) => c.id === preset.id);
+  if (index >= 0) {
+    removeStoreChannel(index);
+  } else {
+    addStoreChannel(preset);
+  }
+};
+
+const addStoreChannel = (preset?: Omit<StoreChannel, "enable">) => {
+  if (!formState.value.spec.storeList) {
+    formState.value.spec.storeList = [];
+  }
+  const channel: StoreChannel = preset
+    ? { enable: true, ...preset }
+    : { enable: true, id: "", name: "", scheme: "", priority: 10 };
+  formState.value.spec.storeList.push(channel);
+};
+
+const removeStoreChannel = (index: number) => {
+  formState.value.spec.storeList?.splice(index, 1);
+};
 
 const props = withDefaults(
   defineProps<{
@@ -55,10 +94,46 @@ const formState = ref<AppVersion>({
     versionCode: undefined,
     minUniVersion: "",
     url: "",
+    downloadType: "direct",
+    storeList: [],
+    externalUrl: "",
+    externalName: "",
     stablePublish: true,
     isSilently: false,
     isMandatory: false,
   },
+});
+
+// wgt 包仅支持应用内自更新，下载方式锁定直链
+watch(
+  () => formState.value.spec.type,
+  (type) => {
+    if (type === "wgt") {
+      formState.value.spec.downloadType = "direct";
+    }
+  }
+);
+
+// 下载地址的 label/help 按下载方式切换（三种形态均必填：
+// direct 为主要地址；store 为商店全部跳转失败后的默认地址；
+// external 为旧版客户端兜底地址——旧版不识别 download_type，拿 url 直接下载）
+const urlLabel = computed(() => {
+  if (formState.value.spec.downloadType === "direct") {
+    return "下载地址";
+  }
+  return "默认下载地址";
+});
+
+const urlHelp = computed(() => {
+  if (formState.value.spec.downloadType === "store") {
+    return "全部商店跳转失败后使用此地址下载，仅支持上传 .apk 格式文件，或直接输入下载地址";
+  }
+  if (formState.value.spec.downloadType === "external") {
+    return "旧版客户端将通过此地址直接下载，仅支持上传 .apk 格式文件，或直接输入下载地址";
+  }
+  return formState.value.spec.type === "wgt"
+    ? "仅支持上传 .wgt 格式文件，或直接输入下载地址"
+    : "仅支持上传 .apk 格式文件，或直接输入下载地址";
 });
 
 // 简单版本号比较（按 . 分段数字比较）
@@ -141,6 +216,8 @@ watch(
   (appVersion) => {
     if (appVersion) {
       formState.value = cloneDeep(appVersion);
+      // 存量记录无 downloadType，回填缺省直链
+      formState.value.spec.downloadType = formState.value.spec.downloadType || "direct";
       // 平台仅保留 Android（iOS / Harmony 已隐藏）
       if (formState.value.spec.platform?.length) {
         formState.value.spec.platform = formState.value.spec.platform.filter(
@@ -187,7 +264,7 @@ const handleSave = async () => {
 </script>
 
 <template>
-  <VModal ref="modal" :title="modalTitle" :width="640" @close="emit('close')">
+  <VModal ref="modal" :title="modalTitle" :width="720" @close="emit('close')">
     <FormKit
       id="app-version-form"
       type="form"
@@ -239,6 +316,98 @@ const handleSave = async () => {
         ]"
       />
       <FormKit
+        v-if="formState.spec.type !== 'wgt'"
+        v-model="formState.spec.downloadType"
+        name="downloadType"
+        label="下载方式"
+        type="radio"
+        :options="[
+          { label: '直链下载', value: 'direct' },
+          { label: '商店分发', value: 'store' },
+          { label: '外部链接', value: 'external' },
+        ]"
+      />
+
+      <!-- 商店分发：渠道编辑器（预设一键添加 + 行内编辑） -->
+      <div v-if="formState.spec.type !== 'wgt' && formState.spec.downloadType === 'store'" class="box-border pt-3">
+        <div class="store-section-head">
+          <span>应用商店分发</span>
+          <span class="store-section-tip">按优先级降序依次尝试跳转，全部失败后使用默认下载地址</span>
+        </div>
+        <div class="store-chips">
+          <button
+            v-for="preset in STORE_PRESETS"
+            :key="preset.id"
+            type="button"
+            class="store-chip"
+            :class="{ 'store-chip-active': addedStoreIds.has(preset.id || '') }"
+            @click="toggleStoreChannel(preset)"
+          >
+            + {{ preset.name }}
+          </button>
+          <button type="button" class="store-chip store-chip-custom" @click="addStoreChannel()">
+            + 自定义渠道
+          </button>
+        </div>
+        <div
+          v-for="(channel, index) in formState.spec.storeList"
+          :key="index"
+          class="store-row"
+        >
+          <label class="store-enable">
+            <input v-model="channel.enable" type="checkbox" /> 启用
+          </label>
+          <FormKit
+            v-model="channel.name"
+            :name="`store-name-${index}`"
+            type="text"
+            placeholder="渠道名称"
+            :outer-class="'store-cell'"
+          />
+          <FormKit
+            v-model="channel.scheme"
+            :name="`store-scheme-${index}`"
+            type="text"
+            placeholder="跳转 scheme，如 himarket://appmarket-v3/detail?appId=C12345678"
+            :outer-class="'store-cell'"
+          />
+          <FormKit
+            v-model="channel.priority"
+            :name="`store-priority-${index}`"
+            type="number"
+            placeholder="优先级"
+            :outer-class="'store-cell'"
+          />
+          <button type="button" class="store-remove" @click="removeStoreChannel(index)">✕</button>
+        </div>
+        <div v-if="!formState.spec.storeList?.length" class="store-empty">
+          尚未添加渠道，未添加时客户端将直接使用默认下载地址
+        </div>
+      </div>
+
+      <!-- 外部链接：网盘/落地页跳转 -->
+      <template v-if="formState.spec.type !== 'wgt' && formState.spec.downloadType === 'external'">
+        <FormKit
+          v-model="formState.spec.externalUrl"
+          name="externalUrl"
+          label="外部链接"
+          type="url"
+          validation="required"
+          :validation-messages="{ required: '外部链接不能为空' }"
+          placeholder="网盘或落地页地址，例如 https://pan.example.com/s/xxx"
+          help="客户端将跳转系统浏览器打开此链接，不做应用内下载"
+        />
+        <FormKit
+          v-model="formState.spec.externalName"
+          name="externalName"
+          label="按钮文案"
+          type="text"
+          placeholder="前往网盘下载"
+          help="升级弹窗主按钮文案，留空时显示「前往下载」"
+        />
+      </template>
+
+      <FormKit
         v-model="formState.spec.version"
         name="version"
         label="应用版本名称"
@@ -272,22 +441,12 @@ const handleSave = async () => {
       <FormKit
         v-model="formState.spec.url"
         name="url"
-        label="下载地址"
+        :label="urlLabel"
         type="attachment"
         validation="required"
-        :validation-messages="{ required: '下载地址不能为空' }"
+        :validation-messages="{ required: `${urlLabel}不能为空` }"
         :accepts="urlAccepts"
-        :help="formState.spec.type === 'wgt'
-          ? '仅支持上传 .wgt 格式文件，或直接输入下载地址'
-          : '仅支持上传 .apk 格式文件，或直接输入下载地址'"
-      />
-      <FormKit
-        v-model="formState.spec.url"
-        name="urlPreview"
-        label="地址预览"
-        type="text"
-        disabled
-        placeholder="选择附件后将在此显示下载地址"
+        :help="urlHelp"
       />
       <FormKit
         v-model="formState.spec.stablePublish"
@@ -324,3 +483,82 @@ const handleSave = async () => {
     </template>
   </VModal>
 </template>
+
+<style scoped>
+.store-section-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+.store-section-tip {
+  font-size: 0.75rem;
+  font-weight: 400;
+  color: var(--color-text-tertiary);
+}
+.store-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+.store-chip {
+  border: 1px solid transparent;
+  border-radius: 6px;
+  padding: 6px 14px;
+  font-size: 0.75rem;
+  color: #2fa37b;
+  background: #e4f8f1;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s, background-color 0.15s;
+}
+.store-chip:hover,
+.store-chip-active {
+  color: #fff;
+  border-color: #4ccba0;
+  background: #4ccba0;
+}
+.store-chip-custom {
+  color: #4ccba0;
+  background: transparent;
+  border: 1px dashed #4ccba0;
+}
+.store-chip-custom:hover {
+  color: #fff;
+  background: #4ccba0;
+  border-style: solid;
+}
+.store-row {
+  display: grid;
+  grid-template-columns: 52px minmax(0, 1fr) minmax(0, 1.6fr) 72px 28px;
+  gap: 6px;
+  align-items: center;
+  margin-bottom: 6px;
+}
+.store-enable {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.75rem;
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+}
+.store-cell {
+  margin-bottom: 0;
+}
+.store-remove {
+  border: none;
+  background: transparent;
+  color: var(--color-text-tertiary);
+  cursor: pointer;
+  font-size: 0.875rem;
+}
+.store-empty {
+  font-size: 0.75rem;
+  color: var(--color-text-tertiary);
+  padding: 6px 0;
+}
+</style>

@@ -72,9 +72,32 @@ public class AppVersion extends AbstractExtension {
         private String minUniVersion;
 
         /**
-         * 安装包下载/跳转链接；iOS 为 AppStore 链接
+         * 安装包下载/跳转链接；iOS 为 AppStore 链接。store 形态下作为全部商店
+         * 跳转失败时的回落下载地址，external 形态下作为旧版客户端兜底下载地址
          */
         private String url;
+
+        /**
+         * 下载方式：direct 直链下载（缺省）/ store 商店分发 / external 外部链接跳转。
+         * wgt 包恒为 direct；iOS 平台恒走 AppStore（url），不受此值影响
+         */
+        private String downloadType;
+
+        /**
+         * 应用商店分发渠道（downloadType=store 时生效；按 priority 降序尝试跳转）
+         */
+        private List<StoreChannel> storeList;
+
+        /**
+         * 外部链接（downloadType=external 时生效）：网盘/落地页地址，
+         * 客户端跳系统浏览器打开，不做应用内下载
+         */
+        private String externalUrl;
+
+        /**
+         * 外部链接的按钮文案（downloadType=external 时生效），缺省「前往下载」
+         */
+        private String externalName;
 
         /**
          * 是否上线发行（同 appid+platform+type 同时仅一个 true）
@@ -90,5 +113,37 @@ public class AppVersion extends AbstractExtension {
          * 是否强制更新
          */
         private Boolean isMandatory;
+    }
+
+    /**
+     * 应用商店分发渠道，字段与客户端 store_list 解析结构一一对应。
+     */
+    @Data
+    public static class StoreChannel {
+
+        /**
+         * 是否启用（未启用的渠道仅存库不下发）
+         */
+        private Boolean enable;
+
+        /**
+         * 渠道标识：huawei / xiaomi / oppo / vivo / tencent / 自定义
+         */
+        private String id;
+
+        /**
+         * 渠道显示名
+         */
+        private String name;
+
+        /**
+         * 商店跳转 scheme
+         */
+        private String scheme;
+
+        /**
+         * 优先级，数值大先尝试
+         */
+        private Integer priority;
     }
 }

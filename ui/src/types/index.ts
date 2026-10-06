@@ -24,6 +24,18 @@ export interface AppInfo {
   spec: AppInfoSpec;
 }
 
+/** 应用商店分发渠道 */
+export interface StoreChannel {
+  enable?: boolean;
+  id?: string;
+  name?: string;
+  scheme?: string;
+  priority?: number;
+}
+
+/** 下载方式 */
+export type DownloadType = "direct" | "store" | "external";
+
 export interface AppVersionSpec {
   appid?: string;
   name?: string;
@@ -35,6 +47,10 @@ export interface AppVersionSpec {
   versionCode?: number;
   minUniVersion?: string;
   url?: string;
+  downloadType?: DownloadType;
+  storeList?: StoreChannel[];
+  externalUrl?: string;
+  externalName?: string;
   stablePublish?: boolean;
   isSilently?: boolean;
   isMandatory?: boolean;
