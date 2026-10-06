@@ -657,6 +657,7 @@ export interface FeatureConfigSocialItem {
 
 /** 全站页面标题（页面设置-页面标题 tab 统一维护；app 端传入各页面 uh-navbar default-title，留空回退内置默认） */
 export interface FeatureConfigPageTitles {
+  /** 首页（预留，首页为自定义头部暂未消费） */
   home?: string;
   gallery?: string;
   category?: string;
@@ -677,6 +678,20 @@ export interface FeatureConfigPageTitles {
   votes?: string;
   voteDetail?: string;
   contact?: string;
+  /** 项目集页 */
+  portfolio?: string;
+  /** 项目详情页 */
+  portfolioDetail?: string;
+  /** 豆瓣页 */
+  douban?: string;
+  /** 足迹地图页 */
+  footprint?: string;
+  /** 瞬间详情页 */
+  momentDetail?: string;
+  /** 轮播详情页 */
+  bannerDetail?: string;
+  /** 个人主页 */
+  userProfile?: string;
   setting?: string;
   aboutProject?: string;
   disclaimer?: string;
@@ -778,7 +793,7 @@ export interface FeatureConfigQuickNavigationItem {
 
 /** 多风格图标项（app 端按 iconMode 匹配渲染，缺省取首项） */
 export interface FeatureConfigNavIconStyle {
-  /** 风格标识（ri=remixicon / emoji-font=emoji 字体 / emoji-icon=纯 emoji 字符） */
+  /** 风格标识（animal-font=动物字体 / emoji-font=emoji 字体 / ri=remixicon / emoji-icon=纯 emoji 字符） */
   key: string;
   /** 图标字体类名前缀（纯 emoji 字符时为空串） */
   prefix: string;

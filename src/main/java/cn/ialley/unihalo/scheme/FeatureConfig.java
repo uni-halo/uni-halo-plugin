@@ -181,7 +181,7 @@ public class FeatureConfig extends AbstractExtension {
     @Data
     public static class PageTitles {
         // ===== tabbar 页 =====
-        /** 首页 */
+        /** 首页（已废弃：首页为自定义头部无 navbar 标题，字段保留兼容旧配置反序列化） */
         private String home;
         /** 图库页 */
         private String gallery;
@@ -221,6 +221,18 @@ public class FeatureConfig extends AbstractExtension {
         private String voteDetail;
         /** 联系博主页 */
         private String contact;
+        /** 项目集页 */
+        private String portfolio;
+        /** 项目详情页 */
+        private String portfolioDetail;
+        /** 豆瓣页 */
+        private String douban;
+        /** 足迹地图页 */
+        private String footprint;
+        /** 瞬间详情页 */
+        private String momentDetail;
+        /** 轮播详情页 */
+        private String bannerDetail;
         /** 偏好设置页 */
         private String setting;
         /** 关于项目页 */
@@ -229,6 +241,8 @@ public class FeatureConfig extends AbstractExtension {
         private String disclaimer;
         /** 数据看板页 */
         private String dataVisual;
+        /** 个人主页 */
+        private String userProfile;
 
         // ===== 认证页 =====
         /** 登录页 */
@@ -269,9 +283,9 @@ public class FeatureConfig extends AbstractExtension {
         private String iconColor;
         /** 背景色（rgba 半透明值） */
         private String bgColor;
-        /** 图标字体前缀（如 uhemoji2-icon） */
+        /** 图标字体前缀（如 uhanimal-icon） */
         private String iconPrefix;
-        /** 图标名（如 -mask） */
+        /** 图标名（如 mask，uhanimal 单横杠拼接不带前导 "-"） */
         private String icon;
         /** 多风格图标集合（key 风格标识 / prefix 字体前缀 / iconName 图标名） */
         private List<NavIconStyle> icons;
