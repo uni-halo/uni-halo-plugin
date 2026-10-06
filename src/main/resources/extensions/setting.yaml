@@ -112,6 +112,17 @@ spec:
                       value: false
                   help: 开启后，App 端发送密码重置邮箱验证码前需要先完成图形验证码，防止邮件轰炸与验证码滥用。
                   validation: required
+                - $formkit: select
+                  name: login
+                  label: 账号密码登录
+                  value: false
+                  options:
+                    - label: 开启
+                      value: true
+                    - label: 关闭
+                      value: false
+                  help: 开启后，App 端账号密码登录需要先完成图形验证码（登录高频，默认关闭；开启后旧版本客户端将无法登录）。
+                  validation: required
             - $formkit: select
               if: "$get(captchaEnabled).value === true"
               name: type

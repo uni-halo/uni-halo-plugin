@@ -24,7 +24,7 @@ public interface CaptchaService {
      *
      * @param request 当前请求（读取 captchaId/captchaCode query 参数）
      * @param scope   生效范围（总开关开启且该 scope 开启时才要求验证码；
-     *                scope 配置缺省视为开启）
+     *                scope 配置缺省按 CaptchaScope.defaultEnabled 取值）
      */
     Mono<Void> requireValid(ServerRequest request, CaptchaScope scope);
 

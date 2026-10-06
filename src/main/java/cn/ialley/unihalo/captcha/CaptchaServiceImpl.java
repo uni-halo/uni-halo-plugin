@@ -13,10 +13,9 @@ import tools.jackson.databind.node.JsonNodeFactory;
  * 验证码业务服务实现。
  *
  * 配置读取自设置页 {@code captchaConfig} 分组：enabled（默认开）、scope
- * （生效范围：linkSubmission / loveAlbumUnlock，接口侧按范围生效，
- * 缺省视为开启）、type（默认 ALPHANUMERIC）、captchaLength（默认 4）、
- * arithmeticRange（默认 10）。总开关关闭或对应 scope 关闭时
- * {@link #requireValid(ServerRequest, CaptchaScope)} 直接放行。
+ * （生效范围，子键缺省时按 CaptchaScope.defaultEnabled 取值）、type
+ * （默认 ALPHANUMERIC）、captchaLength（默认 4）、arithmeticRange（默认 10）。
+ * 总开关关闭或对应 scope 关闭时 {@link #requireValid(ServerRequest, CaptchaScope)} 直接放行。
  *
  * @author 小莫唐尼
  */
@@ -82,20 +81,21 @@ public class CaptchaServiceImpl implements CaptchaService {
                         scopeEnabled(node, CaptchaScope.LOVE_MODULE_UNLOCK),
                         scopeEnabled(node, CaptchaScope.REGISTER_EMAIL_CODE),
                         scopeEnabled(node, CaptchaScope.RESET_EMAIL_CODE),
+                        scopeEnabled(node, CaptchaScope.LOGIN),
                         parseType(node.path(KEY_TYPE).asString(CaptchaType.ALPHANUMERIC.name())),
                         node.path(KEY_LENGTH).asInt(4),
                         node.path(KEY_RANGE).asInt(10)));
     }
 
     /**
-     * scope 子开关缺省视为开启（兼容旧 ConfigMap 无 scope 配置）。
+     * scope 子开关缺省值由各 scope 自身定义（login 缺省关闭，其余缺省开启）。
      */
     private static boolean scopeEnabled(JsonNode node, CaptchaScope scope) {
         JsonNode scopeNode = node.path(KEY_SCOPE);
         if (!scopeNode.isObject()) {
-            return true;
+            return scope.defaultEnabled();
         }
-        return scopeNode.path(scope.configKey()).asBoolean(true);
+        return scopeNode.path(scope.configKey()).asBoolean(scope.defaultEnabled());
     }
 
     private static CaptchaType parseType(String name) {
@@ -109,6 +109,7 @@ public class CaptchaServiceImpl implements CaptchaService {
     private record CaptchaConfig(boolean enabled, boolean linkSubmissionEnabled,
             boolean loveAlbumUnlockEnabled, boolean loveModuleUnlockEnabled,
             boolean registerEmailCodeEnabled, boolean resetEmailCodeEnabled,
+            boolean loginEnabled,
             CaptchaType type, int length, int range) {
 
         boolean scopeEnabled(CaptchaScope scope) {
@@ -121,6 +122,7 @@ public class CaptchaServiceImpl implements CaptchaService {
                 case LOVE_MODULE_UNLOCK -> loveModuleUnlockEnabled;
                 case REGISTER_EMAIL_CODE -> registerEmailCodeEnabled;
                 case RESET_EMAIL_CODE -> resetEmailCodeEnabled;
+                case LOGIN -> loginEnabled;
             };
         }
     }

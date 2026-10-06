@@ -115,12 +115,14 @@ public class AuthEndpoint implements CustomEndpoint {
 
     private Mono<ServerResponse> loginByPassword(ServerRequest request) {
         var clientIp = clientIpOf(request);
-        return request.bodyToMono(PasswordLoginRequest.class)
-                .switchIfEmpty(Mono.error(
-                        BizErrorCode.BAD_REQUEST.toException("缺少请求体")))
-                .flatMap(body -> authService.loginByPassword(
-                        body.username(), body.password(), clientIp))
-                .flatMap(result -> ServerResponse.ok().bodyValue(result))
+        return captchaService.requireValid(request, CaptchaScope.LOGIN)
+                .then(request.bodyToMono(PasswordLoginRequest.class)
+                        .switchIfEmpty(Mono.error(
+                                BizErrorCode.BAD_REQUEST.toException("缺少请求体")))
+                        .flatMap(body -> authService.loginByPassword(
+                                body.username(), body.password(), clientIp))
+                        .flatMap(result -> ServerResponse.ok().bodyValue(result)))
+                .onErrorResume(CaptchaValidationException.class, this::captchaForbidden)
                 .onErrorResume(AuthEndpoint::handleFailure);
     }
 
