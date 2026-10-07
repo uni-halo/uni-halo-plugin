@@ -3,7 +3,7 @@
  *
  * 组件使用 shadow DOM，样式完全内聚不泄漏、外部主题样式也无法穿透影响组件；
  * 弹窗（overlay/modal）渲染在 shadow DOM 内部，按钮等选择器直接用类名。
- * 设计对齐 float-profile-widget：白色卡片 + 白色细边框 + 柔和阴影 + 玻璃拟态弹窗。
+ * 视觉基调：白色卡片 + 白色细边框 + 柔和阴影 + 玻璃拟态弹窗。
  */
 import { css } from "lit";
 
@@ -21,7 +21,7 @@ export const styles = css`
     flex-direction: column;
     width: 340px;
     max-width: calc(100vw - 24px);
-    max-height: min(600px, calc(100vh - 48px));
+    max-height: min(530px, calc(100vh - 48px));
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC",
       "Microsoft YaHei", sans-serif;
     background: rgba(255, 255, 255, 1);
@@ -72,8 +72,8 @@ export const styles = css`
     cursor: grabbing;
   }
   .uh-asw-header-icon {
-    width: 22px;
-    height: 22px;
+    width: 18px;
+    height: 18px;
     flex: none;
     display: flex;
     align-items: center;
@@ -122,19 +122,26 @@ export const styles = css`
   .uh-asw-body {
     flex: 1;
     min-height: 0;
-    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
     padding: 0 12px 12px;
-    scrollbar-width: thin;
-    scrollbar-color: rgba(120, 130, 150, 0.4) transparent;
   }
-  .uh-asw-body::-webkit-scrollbar {
+  /* 列表滚动区：与页签（uh-asw-segmented）同级，页签常驻、仅列表滚动 */
+  .uh-asw-content {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: #8b8b8b transparent;
+  }
+  .uh-asw-content::-webkit-scrollbar {
     width: 6px;
   }
-  .uh-asw-body::-webkit-scrollbar-track {
+  .uh-asw-content::-webkit-scrollbar-track {
     background: transparent;
   }
-  .uh-asw-body::-webkit-scrollbar-thumb {
-    background: rgba(120, 130, 150, 0.4);
+  .uh-asw-content::-webkit-scrollbar-thumb {
+    background: #8b8b8b;
     border-radius: 3px;
   }
   .uh-asw-segmented {
@@ -187,7 +194,7 @@ export const styles = css`
   .uh-asw-item-icon {
     width: 40px;
     height: 40px;
-    border-radius: 10px;
+    border-radius: 7px;
     flex: none;
     overflow: hidden;
     display: flex;
@@ -199,7 +206,8 @@ export const styles = css`
     background: #1A1B1D;
   }
   .uh-asw-item-icon.app {
-    background: #37c2bc;
+    background: #c6f921;
+    color: #1A1B1D;
   }
   .uh-asw-item-icon img {
     display: block;
@@ -225,8 +233,12 @@ export const styles = css`
     font-weight: 400;
     padding: 1px 6px;
     border-radius: 4px;
-    background: #e6f1fb;
-    color: #185fa5;
+    background: #c6f91f;
+    color: #1f2a05;
+  }
+  /* 详情弹窗标题后置的类型标签间距（列表内标签位于名称前，间距由 item-name 的 gap 提供） */
+  .uh-asw-modal-title .uh-asw-tag {
+    margin-left: 6px;
   }
   .uh-asw-item-desc {
     font-size: 11px;
@@ -307,26 +319,30 @@ export const styles = css`
 
   /* ===== 最小化小球（独立 fixed 元素，无条件可拖） ===== */
   .uh-asw-mini-dot {
-    display: block;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     box-sizing: border-box;
-    width: 50px;
-    height: 50px;
+    width: 40px;
+    height: 40px;
     padding: 0;
     border: 2px solid rgba(255, 255, 255, 1);
     border-radius: 50%;
     overflow: hidden;
     position: fixed;
-    z-index: 2147482999; /* 浮在最上层，避免被页面元素遮挡无法点击 */
+    z-index: 2147482999; /* 兜底层级，实际以内联 z-index（后台 zIndex 配置）为准 */
     cursor: pointer;
-    background: rgba(255, 255, 255, 0.95);
+    background: rgba(255, 255, 255, 0.9);
+    -webkit-backdrop-filter: blur(2px);
+    backdrop-filter: blur(2px);
     box-shadow: 0 0 16px rgba(0, 0, 0, 0.25);
     font-family: inherit;
   }
   .uh-asw-mini-dot img {
     display: block;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
+    width: 60%;
+    height: 60%;
+    object-fit: contain;
   }
   /* 小球默认态复用面板的 9 向锚点（不依赖 JS 测量，规避主题初始化期间 body 隐藏） */
   .uh-asw-mini-dot.uh-asw-pos-top-left { top: 8px; left: 8px; }
@@ -371,8 +387,7 @@ export const styles = css`
   }
   .uh-asw-modal {
     box-sizing: border-box;
-    width: 100%;
-    max-width: 420px;
+    width: 400px;
     max-height: 80vh;
     display: flex;
     flex-direction: column;
@@ -421,7 +436,7 @@ export const styles = css`
     padding: 14px;
     overflow-y: auto;
     scrollbar-width: thin;
-    scrollbar-color: rgba(120, 130, 150, 0.4) transparent;
+    scrollbar-color: #8b8b8b transparent;
   }
 
   /* ===== 条目详情弹窗 ===== */
@@ -446,8 +461,10 @@ export const styles = css`
     margin-top: 2px;
   }
   .uh-asw-qr-card {
-    width: 200px;
-    height: 200px;
+    width: 360px;
+    height: 360px;
+    max-width: calc(100vw - 48px);
+    max-height: calc(100vw - 48px);
     margin: 0 auto;
     border: 1px solid rgba(0, 0, 0, 0.08);
     border-radius: 10px;
@@ -516,7 +533,7 @@ export const styles = css`
   }
   .uh-asw-field input[type="text"]:focus,
   .uh-asw-field textarea:focus {
-    border-color: #37c2bc;
+    border-color: #c6f921;
   }
   .uh-asw-field textarea {
     box-sizing: border-box;
@@ -573,7 +590,7 @@ export const styles = css`
     background: #ffffff;
   }
   .uh-asw-shot-input:focus {
-    border-color: #37c2bc;
+    border-color: #c6f921;
   }
   .uh-asw-shot-remove {
     flex-shrink: 0;
@@ -614,7 +631,7 @@ export const styles = css`
     max-height: 40vh;
     overflow-y: auto;
     scrollbar-width: thin;
-    scrollbar-color: rgba(120, 130, 150, 0.4) transparent;
+    scrollbar-color: #8b8b8b transparent;
   }
   .uh-asw-apply-footer {
     flex-shrink: 0;
@@ -666,7 +683,7 @@ export const styles = css`
     font-family: inherit;
   }
   .uh-asw-copy-input:focus {
-    border-color: #37c2bc;
+    border-color: #c6f921;
   }
   .uh-asw-copy-textarea {
     height: auto;

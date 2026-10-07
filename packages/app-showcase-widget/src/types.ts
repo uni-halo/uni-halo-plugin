@@ -4,6 +4,8 @@
 
 /** 面板配置（ThemeWidgetHeadProcessor 内联注入 window.__UNI_HALO_APP_SHOWCASE_WIDGET__） */
 export interface AppShowcaseWidgetConfig {
+  /** 插件版本号（注入时取自 PluginWrapper，控制台标识日志用） */
+  version: string;
   enabled: boolean;
   entryIcon: string;
   pageScope: "all" | "only" | "except";
@@ -11,6 +13,8 @@ export interface AppShowcaseWidgetConfig {
   position: string;
   offsetX: number;
   offsetY: number;
+  /** 面板与小球的层叠层级（详情/申请弹窗始终置顶，不受此项影响） */
+  zIndex: number;
   panelWidth: number;
   defaultState: "default" | "minimized";
   dragEnabled: boolean;

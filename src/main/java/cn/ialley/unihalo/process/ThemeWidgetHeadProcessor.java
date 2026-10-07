@@ -44,15 +44,11 @@ public class ThemeWidgetHeadProcessor implements TemplateHeadProcessor {
     private record WidgetSpec(String configKey, String globalKey, String jsPath) {
     }
 
-    private static final WidgetSpec FLOAT_PROFILE_WIDGET =
-        new WidgetSpec("floatProfileWidget", "__UNI_HALO_FLOAT_PROFILE_WIDGET__",
-            "widgets/float-profile-widget/float-profile-widget.js");
-
     private static final WidgetSpec APP_SHOWCASE_WIDGET =
         new WidgetSpec("appShowcaseWidget", "__UNI_HALO_APP_SHOWCASE_WIDGET__",
             "widgets/app-showcase-widget/app-showcase-widget.js");
 
-    private static final WidgetSpec[] WIDGETS = {FLOAT_PROFILE_WIDGET, APP_SHOWCASE_WIDGET};
+    private static final WidgetSpec[] WIDGETS = {APP_SHOWCASE_WIDGET};
 
     private final ReactiveSettingFetcher settingFetcher;
     private final PluginWrapper pluginWrapper;
@@ -87,11 +83,6 @@ public class ThemeWidgetHeadProcessor implements TemplateHeadProcessor {
                 if (!node.path("enabled").asBoolean(false)) {
                     return Mono.empty();
                 }
-                // 悬浮名片卡片需已配置太阳码图片，否则视为未配置不注入
-                if (spec == FLOAT_PROFILE_WIDGET
-                        && node.path("imageUrl").asString("").isBlank()) {
-                    return Mono.empty();
-                }
                 // 应用展示面板需已配置入口图标，否则视为未配置不注入
                 if (spec == APP_SHOWCASE_WIDGET
                         && node.path("entryIcon").asString("").isBlank()) {
@@ -119,32 +110,6 @@ public class ThemeWidgetHeadProcessor implements TemplateHeadProcessor {
         if (spec == APP_SHOWCASE_WIDGET) {
             return applyAppShowcaseDefaults(config, node);
         }
-        return applyFloatProfileDefaults(config, node);
-    }
-
-    /**
-     * 悬浮名片卡片的前端配置映射：提取展示文本、图片与布局字段，
-     * 缺失时回退内置默认值。
-     */
-    private ObjectNode applyFloatProfileDefaults(ObjectNode config, JsonNode node) {
-        config.put("pageScope", node.path("pageScope").asString("all"));
-        config.put("pagePatterns", node.path("pagePatterns").asString(""));
-        config.put("position", node.path("position").asString("bottom-right"));
-        config.put("offsetX", node.path("offsetX").asInt(0));
-        config.put("offsetY", node.path("offsetY").asInt(0));
-        config.put("name", node.path("name").asString("小程序"));
-        config.put("nameSize", node.path("nameSize").asInt(14));
-        config.put("nameColor", node.path("nameColor").asString("#333333"));
-        config.put("description", node.path("description").asString(""));
-        config.put("descSize", node.path("descSize").asInt(12));
-        config.put("descColor", node.path("descColor").asString("#999999"));
-        config.put("imageUrl", node.path("imageUrl").asString(""));
-        config.put("cardWidth", node.path("cardWidth").asInt(100));
-        config.put("dragEnabled", node.path("dragEnabled").asBoolean(true));
-        config.put("defaultState", node.path("defaultState").asString("default"));
-        config.put("closeEnabled", node.path("closeEnabled").asBoolean(true));
-        config.put("rememberClosed", node.path("rememberClosed").asBoolean(true));
-        config.put("miniProgramApply", node.path("miniProgramApply").asBoolean(false));
         return config;
     }
 
@@ -153,12 +118,14 @@ public class ThemeWidgetHeadProcessor implements TemplateHeadProcessor {
      * 条目数据整体透传由前端按来源数组打类型标。
      */
     private ObjectNode applyAppShowcaseDefaults(ObjectNode config, JsonNode node) {
+        config.put("version", pluginWrapper.getDescriptor().getVersion());
         config.put("entryIcon", node.path("entryIcon").asString(""));
         config.put("pageScope", node.path("pageScope").asString("all"));
         config.put("pagePatterns", node.path("pagePatterns").asString(""));
         config.put("position", node.path("position").asString("bottom-right"));
         config.put("offsetX", node.path("offsetX").asInt(0));
         config.put("offsetY", node.path("offsetY").asInt(0));
+        config.put("zIndex", node.path("zIndex").asInt(9999));
         config.put("panelWidth", node.path("panelWidth").asInt(340));
         config.put("defaultState", node.path("defaultState").asString("minimized"));
         config.put("dragEnabled", node.path("dragEnabled").asBoolean(true));

@@ -258,6 +258,7 @@ export class AppShowcaseWidgetElement extends LitElement {
     }
     // 锚点 class 由模板 class 表达式管理（classList.add 会在重渲染时被 Lit 覆盖抹除）
     panel.style.width = (Number(this.config.panelWidth) || 340) + "px";
+    panel.style.zIndex = String(this.config.zIndex || 9999);
     panel.style.transform = this.anchorTransform(this.config.position || "bottom-right");
   }
 
@@ -782,9 +783,11 @@ export class AppShowcaseWidgetElement extends LitElement {
   override render() {
     const c = this.config;
     const entryIcon = normalizeImageUrl(c.entryIcon);
-    // 小球定位：有像素位置（手动最小化/拖拽记忆）用像素；否则与面板同款锚点 CSS 定位
+    // 小球定位：有像素位置（手动最小化/拖拽记忆）用像素；否则与面板同款锚点 CSS 定位；
+    // 层级与面板同源（内联 z-index 覆盖 CSS 默认值）
+    const zIndexStyle = "z-index:" + (Number(c.zIndex) || 9999) + ";";
     const dotCls = this.dotStyle ? "uh-asw-mini-dot" : `uh-asw-mini-dot uh-asw-pos-${c.position || "bottom-right"}`;
-    const dotStyleVal = this.dotStyle || this.anchorTransform(c.position || "bottom-right");
+    const dotStyleVal = (this.dotStyle || this.anchorTransform(c.position || "bottom-right")) + zIndexStyle;
     return html`
       ${this.applyOpen ? this.renderApplyModal() : ""}
       ${this.linksOpen ? this.renderLinksModal() : ""}
@@ -829,7 +832,9 @@ export class AppShowcaseWidgetElement extends LitElement {
               @click=${() => (this.tab = "app")}
             >App</button>
           </div>
-          ${this.renderEntries()}
+          <div class="uh-asw-content">
+            ${this.renderEntries()}
+          </div>
         </div>
         ${c.applyEntryEnabled
           ? html`
@@ -891,8 +896,8 @@ export class AppShowcaseWidgetElement extends LitElement {
       <div class="uh-asw-item" @click=${() => this.openDetail(entry)}>
         <div class="uh-asw-item-icon ${entry.type}">${entry.icon ? html`<img src=${entry.icon} alt="" />` : initial}</div>
         <div class="uh-asw-item-info">
-          <div class="uh-asw-item-name">${entry.displayName}<span class="uh-asw-tag">${entry.typeLabel}</span></div>
-          ${entry.description ? html`<div class="uh-asw-item-desc">${entry.description}</div>` : ""}
+          <div class="uh-asw-item-name"><span class="uh-asw-tag">${entry.typeLabel}</span>${entry.displayName}</div>
+          <div class="uh-asw-item-desc">${entry.description || "该应用暂无描述"}</div>
         </div>
         ${thumb ? html`<div class="uh-asw-item-thumb"><img src=${thumb} alt="" /></div>` : ""}
       </div>
@@ -908,7 +913,7 @@ export class AppShowcaseWidgetElement extends LitElement {
       <div class="uh-asw-overlay" @click=${this.onOverlayClick}>
         <div class="uh-asw-modal">
           <div class="uh-asw-modal-header">
-            <div class="uh-asw-modal-title">${isMini ? "小程序详情" : "应用详情"}</div>
+            <div class="uh-asw-modal-title">${isMini ? "小程序详情" : "应用详情"}<span class="uh-asw-tag">${entry.typeLabel}</span></div>
             <button type="button" class="uh-asw-modal-close" aria-label="关闭" @click=${this.closeDetail}>&times;</button>
           </div>
           <div class="uh-asw-modal-body">
