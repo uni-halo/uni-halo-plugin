@@ -5,7 +5,7 @@ import org.springframework.stereotype.Component;
 import run.halo.app.extension.ExtensionClient;
 
 /**
- * 小程序链接分组（MiniProgramLinkGroup）的删除收尾：等待删除过渡期后移除 finalizer，交由框架完成物理删除；不影响组内链接。
+ * 小程序友链分组（MiniProgramLinkGroup）的删除收尾：等待删除过渡期后移除 finalizer，交由框架完成物理删除；不影响组内链接。
  *
  * @author 小莫唐尼
  */

@@ -176,7 +176,7 @@ public class AuditDataServiceImpl implements AuditDataService {
 
     /**
      * 全量拉取某类型候选（按创建时间倒序），供内存关键字过滤 + 手动分页。
-     * 数据量级：文章/分组/瞬间/链接分组，审核模式为低频操作，全量可接受。
+     * 数据量级：文章/分组/瞬间/友链分组，审核模式为低频操作，全量可接受。
      * 候选读路径：排除删除中对象。
      */
     private Flux<Extension> listAllRef(CandidateType type) {
@@ -201,7 +201,7 @@ public class AuditDataServiceImpl implements AuditDataService {
     /**
      * 候选/已选条目快照映射：name 必填，其余字段按类型选择性填充
      * （文章=title/cover/subTitle(发布时间)/extra(分类)；分类=title/subTitle(slug)；
-     * 图库分组=title/extra(照片数)；瞬间=title(内容摘要)/cover(首图)；链接分组=title）。
+     * 图库分组=title/extra(照片数)；瞬间=title(内容摘要)/cover(首图)；友链分组=title）。
      */
     @SuppressWarnings("unchecked")
     private AuditDataConfig.AuditDataRef toRef(CandidateType type, Extension extension) {

@@ -6,20 +6,19 @@ metadata:
     halo.run/role-template: "true"
     rbac.authorization.halo.run/aggregate-to-admin: "true"
   annotations:
-    rbac.authorization.halo.run/module: "[UH] 链接管理"
-    rbac.authorization.halo.run/display-name: "链接查看"
+    rbac.authorization.halo.run/module: "[UH] 友链管理"
+    rbac.authorization.halo.run/display-name: "友链查看"
     rbac.authorization.halo.run/ui-permissions: |
       ["plugin:uni-halo:link:view"]
 rules:
-  - apiGroups: [ "console.api.unihalo.ialley.cn" ]
+  - apiGroups: ["console.api.unihalo.ialley.cn"]
     resources:
       - "mini-program-links"
       - "mini-program-link-submissions"
       - "mini-program-link-groups"
-    verbs: [ "get", "list" ]
+    verbs: ["get", "list"]
 
 ---
-
 apiVersion: v1alpha1
 kind: "Role"
 metadata:
@@ -30,16 +29,16 @@ metadata:
   annotations:
     rbac.authorization.halo.run/dependencies: |
       [ "uni-halo-role-template-view-link" ]
-    rbac.authorization.halo.run/module: "[UH] 链接管理"
-    rbac.authorization.halo.run/display-name: "链接管理"
+    rbac.authorization.halo.run/module: "[UH] 友链管理"
+    rbac.authorization.halo.run/display-name: "友链管理"
     rbac.authorization.halo.run/ui-permissions: |
       ["plugin:uni-halo:link:manage"]
 rules:
-  - apiGroups: [ "console.api.unihalo.ialley.cn" ]
+  - apiGroups: ["console.api.unihalo.ialley.cn"]
     resources:
       - "mini-program-links"
       - "mini-program-link-submissions"
       - "mini-program-link-submissions/approve"
       - "mini-program-link-submissions/reject"
       - "mini-program-link-groups"
-    verbs: [ "create", "patch", "update", "delete", "deletecollection" ]
+    verbs: ["create", "patch", "update", "delete", "deletecollection"]

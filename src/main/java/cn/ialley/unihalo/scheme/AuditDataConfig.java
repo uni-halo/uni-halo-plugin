@@ -58,7 +58,7 @@ public class AuditDataConfig extends AbstractExtension {
         private List<AuditDataRef> moments;
 
         /**
-         * 选中的链接分组 LinkGroup 引用列表
+         * 选中的友链分组 LinkGroup 引用列表
          */
         private List<AuditDataRef> linkGroups;
 
@@ -77,7 +77,7 @@ public class AuditDataConfig extends AbstractExtension {
     /**
      * 被选中引用的快照（name 为扩展 metadata.name，必填且唯一；其余字段按类型
      * 选择性填充：文章=title/cover/subTitle(发布时间)/extra(分类)，分类=title/subTitle(slug)，
-     * 图库分组=title/extra(照片数)，瞬间=title(摘要)/cover(首图)，链接分组=title）。
+     * 图库分组=title/extra(照片数)，瞬间=title(摘要)/cover(首图)，友链分组=title）。
      */
     @Data
     public static class AuditDataRef {

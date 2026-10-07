@@ -234,12 +234,12 @@ export default definePlugin({
         component: () => import('@/views/link-manage/LinkManageLayout.vue'),
         redirect: baseRoutePath('/links/list'),
         meta: {
-          title: '链接管理',
+          title: '友链管理',
           searchable: false,
           hideFooter: false,
           permissions: ['plugin:uni-halo:link:view'],
           menu: {
-            name: '链接管理',
+            name: '友链管理',
             group: GROUP_NAME,
             icon: markRaw(RiLink),
             priority: 4,
@@ -251,12 +251,12 @@ export default definePlugin({
             name: 'LinkList',
             component: () => import('@/views/link-manage/LinkListView.vue'),
             meta: {
-              title: '链接列表',
+              title: '友链列表',
               searchable: true,
               hideFooter: false,
               permissions: ['plugin:uni-halo:link:view'],
               menu: {
-                name: '链接列表',
+                name: '友链列表',
                 icon: markRaw(RiLink),
                 priority: 0,
               },
@@ -267,12 +267,12 @@ export default definePlugin({
             name: 'LinkSubmissions',
             component: () => import('@/views/link-manage/SubmissionListView.vue'),
             meta: {
-              title: '申请审核',
+              title: '友链审核',
               searchable: true,
               hideFooter: false,
               permissions: ['plugin:uni-halo:link:view'],
               menu: {
-                name: '申请审核',
+                name: '友链审核',
                 icon: markRaw(RiFileList3Line),
                 priority: 1,
               },

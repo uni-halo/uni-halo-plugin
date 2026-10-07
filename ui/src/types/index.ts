@@ -506,7 +506,7 @@ export interface AuditDataConfigSpec {
   galleryGroups?: AuditDataRef[];
   /** 选中的瞬间 Moment 引用列表 */
   moments?: AuditDataRef[];
-  /** 选中的链接分组 LinkGroup 引用列表 */
+  /** 选中的友链分组 LinkGroup 引用列表 */
   linkGroups?: AuditDataRef[];
   /** 备注（如「微信审核用模拟数据」） */
   description?: string;

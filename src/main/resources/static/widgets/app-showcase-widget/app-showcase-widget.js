@@ -25,7 +25,7 @@ Minimum version required to store current data is: `+c+`.
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC",
       "Microsoft YaHei", sans-serif;
     background: rgba(255, 255, 255, 1);
-    border: 2px solid rgba(255, 255, 255, 0.65);
+    border: 1px solid rgba(255, 255, 255, 0.65);
     border-radius: 14px;
     box-shadow: 0 16px 60px rgba(0, 0, 0, 0.1);
     user-select: none;

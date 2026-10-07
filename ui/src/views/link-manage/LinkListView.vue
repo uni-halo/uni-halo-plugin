@@ -280,7 +280,7 @@ const handleDeleteGroup = (group: MiniProgramLinkGroup) => {
       if (activeGroup.value === group.metadata.name) {
         activeGroup.value = undefined;
       }
-      // 分组删除后刷新分组列表与编辑弹窗选项（链接列表不受影响）
+      // 分组删除后刷新分组列表与编辑弹窗选项（友链列表不受影响）
       queryClient.invalidateQueries({ queryKey: ["uni-halo:mini-program-link-groups-options"] });
     },
   });
@@ -312,7 +312,7 @@ const onModalClose = () => {
   <LinkGroupEditingModal v-if="groupEditingModalVisible" :item="editingGroup" @close="groupEditingModalVisible = false"
     @saved="handleGroupSaved" />
 
-  <VPageHeader title="UniHalo-链接管理">
+  <VPageHeader title="UniHalo-友链管理">
     <template #actions>
       <VSpace>
         <VButton @click="refetch">
@@ -331,7 +331,7 @@ const onModalClose = () => {
     </template>
   </VPageHeader>
 
-  <!-- 左侧分组栏（内联管理）+ 右侧链接列表（参考应用管理-版本管理布局） -->
+  <!-- 左侧分组栏（内联管理）+ 右侧友链列表（参考应用管理-版本管理布局） -->
   <div class=":uno: m-0 flex flex-col gap-4 md:m-4 lg:flex-row">
     <div class=":uno: w-full flex-shrink-0 lg:w-64">
       <VCard :body-class="[':uno: !p-0']">

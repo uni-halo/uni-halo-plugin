@@ -34,8 +34,8 @@ const feedUrlsText = computed({
   <template v-if="subTab === 'basic'">
     <div class=":uno: flex items-center justify-between gap-4 border-b border-gray-100 pb-3">
       <div>
-        <div class=":uno: text-sm text-gray-700">开放小程序申请</div>
-        <div class=":uno: mt-0.5 text-xs text-gray-400">开启后 UniHalo 端可提交小程序链接申请，后台「链接管理-申请审核」进行审核</div>
+        <div class=":uno: text-sm text-gray-700">开放友链申请</div>
+        <div class=":uno: mt-0.5 text-xs text-gray-400">开启后 UniHalo 端可提交友链申请，后台「友链管理-友链审核」进行审核</div>
       </div>
       <VSwitch v-model="formState.spec.linkInfo.submissionEnabled" />
     </div>

@@ -6,7 +6,7 @@ import LinkGroupEditingModal from "@/components/link-manage/LinkGroupEditingModa
 import { miniProgramLinkGroupsApi } from "@/api";
 import type { MiniProgramLinkGroup } from "@/types";
 
-const props = withDefaults(
+withDefaults(
   defineProps<{
     /** 当前选中分组 name（空字符串=未分组） */
     modelValue?: string;
@@ -45,7 +45,7 @@ const groupOptions = computed(() => {
   return options;
 });
 
-// 新建分组弹窗（与链接列表共用 LinkGroupEditingModal）
+// 新建分组弹窗（与友链列表共用 LinkGroupEditingModal）
 const createVisible = ref(false);
 
 /** 新建分组保存成功：刷新选项并自动选中新分组 */
@@ -58,15 +58,8 @@ const handleGroupSaved = (group: MiniProgramLinkGroup) => {
 
 <template>
   <div>
-    <FormKit
-      :model-value="modelValue"
-      name="groupName"
-      label="分组"
-      type="select"
-      :options="groupOptions"
-      :help="help"
-      @update:model-value="emit('update:modelValue', $event as string)"
-    />
+    <FormKit :model-value="modelValue" name="groupName" label="分组" type="select" :options="groupOptions" :help="help"
+      @update:model-value="emit('update:modelValue', $event as string)" />
     <div class=":uno: mb-4 flex -mt-2">
       <VButton size="sm" type="secondary" @click="createVisible = true">
         <template #icon>
@@ -75,10 +68,6 @@ const handleGroupSaved = (group: MiniProgramLinkGroup) => {
         新建分组
       </VButton>
     </div>
-    <LinkGroupEditingModal
-      v-if="createVisible"
-      @close="createVisible = false"
-      @saved="handleGroupSaved"
-    />
+    <LinkGroupEditingModal v-if="createVisible" @close="createVisible = false" @saved="handleGroupSaved" />
   </div>
 </template>
