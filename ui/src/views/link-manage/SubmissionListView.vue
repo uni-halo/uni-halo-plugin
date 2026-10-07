@@ -221,7 +221,7 @@ const formatTime = (value?: string | null) => {
   <AuditConfirmModal v-if="auditConfirmVisible" :action="auditAction" :names="auditNames"
     @close="auditConfirmVisible = false" @done="onAuditConfirmDone" />
 
-  <VPageHeader title="UniHalo-申请审核">
+  <VPageHeader title="UniHalo-友链审核">
     <template #actions>
       <VSpace>
         <VButton v-if="false" v-permission="['plugin:uni-halo:link:manage']" type="secondary" @click="formModal = true">

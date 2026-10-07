@@ -94,7 +94,7 @@ const consoleFeatures = [
   {
     icon: RiLinksLine,
     title: '友链管理',
-    description: '友情链接维护、申请审核、友链分组管理',
+    description: '友链维护、友链审核、友链分组管理',
     color: '#10B981',
   },
   {
