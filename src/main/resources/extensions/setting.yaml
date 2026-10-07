@@ -314,7 +314,7 @@ spec:
             - $formkit: switch
               name: enabled
               id: appShowcaseEnabled
-              label: 在主题显示应用展示面板
+              label: 是否显示
               value: false
               help: 开启后向主题页面注入应用展示悬浮面板（展开面板 / 最小化小球两种形态）。
             - $formkit: iconify
@@ -400,7 +400,7 @@ spec:
               name: defaultState
               id: appShowcaseDefaultState
               label: 默认状态
-              value: minimized
+              value: default
               options:
                 - label: 面板
                   value: default
@@ -432,11 +432,11 @@ spec:
               help: 开启后面板底部显示「我要申请」「友链信息」两个按钮，点击分别弹出小程序申请表单与友链信息展示。
             - $formkit: array
               name: miniProgramItems
-              label: 小程序条目
+              label: 小程序列表
               value: []
               min: 0
               addButton: true
-              addLabel: 添加小程序
+              addLabel: 添加
               itemLabels:
                 - type: image
                   label: $value.icon
@@ -484,11 +484,11 @@ spec:
                   help: 越大越靠前，分区内生效。
             - $formkit: array
               name: appItems
-              label: App 条目
+              label: App 列表
               value: []
               min: 0
               addButton: true
-              addLabel: 添加 App
+              addLabel: 添加
               itemLabels:
                 - type: image
                   label: $value.icon
@@ -521,6 +521,61 @@ spec:
                   label: 跳转 / 下载链接
                   validation: required|url
                   value: ""
+                - $formkit: textarea
+                  name: description
+                  label: 描述
+                  value: ""
+                - $formkit: number
+                  name: priority
+                  label: 排序
+                  value: 0
+                  help: 越大越靠前，分区内生效。
+            - $formkit: array
+              name: otherItems
+              label: 其他列表
+              value: []
+              min: 0
+              addButton: true
+              addLabel: 添加
+              help: 比如桌面端、网页、插件等任意类型。
+              itemLabels:
+                - type: image
+                  label: $value.icon
+                - type: text
+                  label: $value.displayName
+                - type: text
+                  label: $value.typeName
+              children:
+                - $formkit: text
+                  name: displayName
+                  label: 名称
+                  validation: required
+                  value: ""
+                - $formkit: text
+                  name: typeName
+                  label: 类型名称
+                  validation: required
+                  value: ""
+                  help: 自定义类型，如 桌面端 / 网页 / 插件；前台标签直接展示所填文字。
+                - $formkit: text
+                  name: group
+                  label: 分组
+                  value: ""
+                  help: 同名分组聚合展示，留空归入「未分组」。
+                - $formkit: attachment
+                  name: icon
+                  label: 应用图标
+                  value: ""
+                - $formkit: attachment
+                  name: codeImage
+                  label: 二维码
+                  value: ""
+                  help: 选填；留空且填写了链接时前台按链接自动生成二维码。
+                - $formkit: text
+                  name: link
+                  label: 跳转 / 下载链接
+                  value: ""
+                  help: 选填；留空时详情弹窗仅展示名称与描述，不显示二维码。
                 - $formkit: textarea
                   name: description
                   label: 描述

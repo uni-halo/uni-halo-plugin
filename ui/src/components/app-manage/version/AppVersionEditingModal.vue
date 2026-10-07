@@ -114,9 +114,9 @@ watch(
   }
 );
 
-// 下载地址的 label/help 按下载方式切换（三种形态均必填：
-// direct 为主要地址；store 为商店全部跳转失败后的默认地址；
-// external 为旧版客户端兜底地址——旧版不识别 download_type，拿 url 直接下载）
+// 下载地址的 label/help/校验按下载方式切换：
+// direct 为主要地址；store 为商店全部跳转失败后的默认地址，二者必填；
+// external 仅作旧版客户端兜底（旧版不识别 download_type，拿 url 直接下载），选填
 const urlLabel = computed(() => {
   if (formState.value.spec.downloadType === "direct") {
     return "下载地址";
@@ -129,7 +129,7 @@ const urlHelp = computed(() => {
     return "全部商店跳转失败后使用此地址下载，仅支持上传 .apk 格式文件，或直接输入下载地址";
   }
   if (formState.value.spec.downloadType === "external") {
-    return "旧版客户端将通过此地址直接下载，仅支持上传 .apk 格式文件，或直接输入下载地址";
+    return "旧版客户端将通过此地址直接下载，建议填写；新版客户端使用外部链接升级，不依赖此地址。仅支持上传 .apk 格式文件，或直接输入下载地址";
   }
   return formState.value.spec.type === "wgt"
     ? "仅支持上传 .wgt 格式文件，或直接输入下载地址"
@@ -162,6 +162,11 @@ const latestVersionCode = ref<number>();
 // 不能用扩展名（.apk/.wgt），否则附件库中对应格式文件无法显示。
 // 整包不能包含 application/octet-stream：wgt 文件在附件库中的 mediaType 就是
 // application/octet-stream，会导致整包时 apk 与 wgt 同时被匹配。
+// external 形态下下载地址仅作旧版客户端兜底，不做必填校验
+const urlValidation = computed(() => {
+  return formState.value.spec.downloadType === "external" ? "" : "required";
+});
+
 const urlAccepts = computed(() => {
   return formState.value.spec.type === "wgt"
     ? ["application/octet-stream", "application/zip"]
@@ -443,7 +448,7 @@ const handleSave = async () => {
         name="url"
         :label="urlLabel"
         type="attachment"
-        validation="required"
+        :validation="urlValidation"
         :validation-messages="{ required: `${urlLabel}不能为空` }"
         :accepts="urlAccepts"
         :help="urlHelp"

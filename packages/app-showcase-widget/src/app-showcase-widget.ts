@@ -34,6 +34,7 @@ import type {
   CaptchaResponse,
   MiniInfo,
   MiniProgramItem,
+  OtherItem,
   ShowcaseEntry,
 } from "./types";
 import type { WidgetPersistedState } from "./config";
@@ -133,7 +134,7 @@ export class AppShowcaseWidgetElement extends LitElement {
     blogger: { state: true },
   };
 
-  declare tab: "all" | "miniprogram" | "app";
+  declare tab: "all" | "miniprogram" | "app" | "other";
   declare minimized: boolean;
   declare panelStyle: string;
   declare dotStyle: string;
@@ -524,7 +525,22 @@ export class AppShowcaseWidgetElement extends LitElement {
         description: item.description?.trim() || "",
         priority: Number(item.priority) || 0,
       }));
-    return [...minis, ...apps].sort((a, b) => b.priority - a.priority);
+    const others: ShowcaseEntry[] = (c.otherItems || [])
+      .filter((item: OtherItem) => item.displayName?.trim())
+      .map((item: OtherItem) => ({
+        type: "other" as const,
+        typeLabel: item.typeName?.trim() || "其他",
+        displayName: item.displayName?.trim() || "",
+        group: item.group?.trim() || "",
+        icon: normalizeImageUrl(item.icon),
+        codeImage: normalizeImageUrl(item.codeImage),
+        appId: "",
+        path: "",
+        link: item.link?.trim() || "",
+        description: item.description?.trim() || "",
+        priority: Number(item.priority) || 0,
+      }));
+    return [...minis, ...apps, ...others].sort((a, b) => b.priority - a.priority);
   }
 
   private get visibleEntries(): ShowcaseEntry[] {
@@ -538,8 +554,8 @@ export class AppShowcaseWidgetElement extends LitElement {
   private async openDetail(entry: ShowcaseEntry): Promise<void> {
     this.detail = entry;
     this.detailQr = "";
-    if (entry.type === "app" && !entry.codeImage && entry.link) {
-      // App 无码图时按链接生成二维码（带缓存）
+    if ((entry.type === "app" || entry.type === "other") && !entry.codeImage && entry.link) {
+      // App / 其他 无码图时按链接生成二维码（带缓存）
       const cached = qrCache.get(entry.link);
       if (cached) {
         this.detailQr = cached;
@@ -804,14 +820,14 @@ export class AppShowcaseWidgetElement extends LitElement {
           @pointercancel=${this.onHeaderPointerEnd}
         >
           ${entryIcon
-            ? html`<span class="uh-asw-header-icon"><img src=${entryIcon} alt="" /></span>`
-            : ""}
+        ? html`<span class="uh-asw-header-icon"><img src=${entryIcon} alt="" /></span>`
+        : ""}
           <span class="uh-asw-title">应用展示</span>
           <span class="uh-asw-topbar">
             <button type="button" class="uh-asw-topbar-btn" aria-label="最小化" @click=${this.onMinimizeClick}>&minus;</button>
             ${c.closeEnabled !== false
-              ? html`<button type="button" class="uh-asw-topbar-btn" aria-label="关闭悬浮面板" @click=${this.onCloseClick}>&times;</button>`
-              : ""}
+        ? html`<button type="button" class="uh-asw-topbar-btn" aria-label="关闭悬浮面板" @click=${this.onCloseClick}>&times;</button>`
+        : ""}
           </span>
         </div>
         <div class="uh-asw-body">
@@ -830,20 +846,25 @@ export class AppShowcaseWidgetElement extends LitElement {
               type="button"
               class="uh-asw-seg-item ${this.tab === "app" ? "uh-asw-seg-active" : ""}"
               @click=${() => (this.tab = "app")}
-            >App</button>
+            >APP</button>
+            <button
+              type="button"
+              class="uh-asw-seg-item ${this.tab === "other" ? "uh-asw-seg-active" : ""}"
+              @click=${() => (this.tab = "other")}
+            >其他</button>
           </div>
           <div class="uh-asw-content">
             ${this.renderEntries()}
           </div>
         </div>
         ${c.applyEntryEnabled
-          ? html`
+        ? html`
               <div class="uh-asw-actions">
                 <button type="button" class="uh-asw-btn" @click=${this.openApply}>我要申请</button>
                 <button type="button" class="uh-asw-btn" @click=${this.openLinks}>友链信息</button>
                 <div class="uh-asw-hint">小程序申请和友链信息</div>
               </div>`
-          : ""}
+        : ""}
       </div>
       ${this.minimized
         ? html`
@@ -891,7 +912,7 @@ export class AppShowcaseWidgetElement extends LitElement {
 
   private renderEntry(entry: ShowcaseEntry) {
     const initial = entry.displayName.slice(0, 1);
-    const thumb = entry.codeImage || (entry.type === "app" && entry.link ? qrCache.get(entry.link) : "");
+    const thumb = entry.codeImage || ((entry.type === "app" || entry.type === "other") && entry.link ? qrCache.get(entry.link) : "");
     return html`
       <div class="uh-asw-item" @click=${() => this.openDetail(entry)}>
         <div class="uh-asw-item-icon ${entry.type}">${entry.icon ? html`<img src=${entry.icon} alt="" />` : initial}</div>
@@ -904,7 +925,7 @@ export class AppShowcaseWidgetElement extends LitElement {
     `;
   }
 
-  /** 条目详情弹窗：小程序展示太阳码，App 展示码图或按链接生成的二维码 */
+  /** 条目详情弹窗：小程序展示太阳码，App / 其他展示码图或按链接生成的二维码；无链接的其他条目仅作展示 */
   private renderDetailModal(entry: ShowcaseEntry) {
     const isMini = entry.type === "miniprogram";
     const qrSrc = isMini ? entry.codeImage : entry.codeImage || this.detailQr;
@@ -925,17 +946,19 @@ export class AppShowcaseWidgetElement extends LitElement {
               </div>
             </div>
             ${qrSrc
-              ? html`<div class="uh-asw-qr-card"><img src=${qrSrc} alt=${isMini ? "小程序太阳码" : "二维码"} /></div>`
-              : html`<div class="uh-asw-qr-card"></div>`}
+        ? html`<div class="uh-asw-qr-card"><img src=${qrSrc} alt=${isMini ? "小程序太阳码" : "二维码"} /></div>`
+        : entry.link
+          ? html`<div class="uh-asw-qr-card"></div>`
+          : ""}
             <div class="uh-asw-qr-tip">
               ${isMini
-                ? "微信扫码打开小程序"
-                : entry.link
-                  ? "手机扫码直接打开链接"
-                  : "未配置链接，无法生成二维码"}
+        ? "微信扫码打开小程序"
+        : entry.link
+          ? "手机扫码直接打开链接"
+          : "该条目未配置链接，仅作展示"}
             </div>
             ${!isMini && entry.link
-              ? html`
+        ? html`
                   <div class="uh-asw-link-row">
                     <input class="uh-asw-copy-input" type="text" readonly value=${entry.link} @click=${(e: Event) => (e.target as HTMLInputElement).select()} />
                     <button type="button" class="uh-asw-btn" @click=${(e: Event) => this.copyText(entry.link, e.target as HTMLButtonElement)}>复制</button>
@@ -944,7 +967,7 @@ export class AppShowcaseWidgetElement extends LitElement {
                     <button type="button" class="uh-asw-btn uh-asw-btn-primary" @click=${() => window.open(entry.link, "_blank", "noopener")}>立即打开</button>
                     <button type="button" class="uh-asw-btn" @click=${this.closeDetail}>关闭</button>
                   </div>`
-              : html`
+        : html`
                   <div class="uh-asw-detail-actions">
                     <button type="button" class="uh-asw-btn" @click=${this.closeDetail}>关闭</button>
                   </div>`}
@@ -1038,7 +1061,7 @@ export class AppShowcaseWidgetElement extends LitElement {
       <div class="uh-asw-field">
         <span>预览截图(可选)</span>
         ${this.screenshotRows.map(
-          (url, index) => html`
+      (url, index) => html`
             <div class="uh-asw-shot-row">
               <input
                 class="uh-asw-shot-input"
@@ -1047,7 +1070,7 @@ export class AppShowcaseWidgetElement extends LitElement {
                 placeholder="https://…/image.png"
                 value=${url}
                 @input=${(e: Event) =>
-                  this.updateScreenshotRow(index, (e.target as HTMLInputElement).value)}
+          this.updateScreenshotRow(index, (e.target as HTMLInputElement).value)}
               />
               <button
                 type="button"
@@ -1056,7 +1079,7 @@ export class AppShowcaseWidgetElement extends LitElement {
                 @click=${() => this.removeScreenshotRow(index)}
               >&times;</button>
             </div>`,
-        )}
+    )}
         <button type="button" class="uh-asw-btn uh-asw-shot-add" @click=${this.addScreenshotRow}>
           + 添加一张预览图
         </button>
@@ -1114,12 +1137,12 @@ export class AppShowcaseWidgetElement extends LitElement {
           </div>
           <div class="uh-asw-modal-body">
             ${this.linksLoading
-              ? html`<div class="uh-asw-loading">加载中…</div>`
-              : this.linksError
-                ? html`<div class="uh-asw-loading">加载失败，请稍后重试</div>`
-                : !hasContent
-                  ? html`<div class="uh-asw-loading">暂无友链信息</div>`
-                  : html`
+        ? html`<div class="uh-asw-loading">加载中…</div>`
+        : this.linksError
+          ? html`<div class="uh-asw-loading">加载失败，请稍后重试</div>`
+          : !hasContent
+            ? html`<div class="uh-asw-loading">暂无友链信息</div>`
+            : html`
                       <div class="uh-asw-info-card">
                         <div class="uh-asw-info-card-title">小程序信息</div>
                         ${miniRows.map((row) => this.renderCopyRow(row.label, row.value, row))}
@@ -1132,7 +1155,7 @@ export class AppShowcaseWidgetElement extends LitElement {
                         type="button"
                         class="uh-asw-btn uh-asw-copy-all"
                         @click=${(e: Event) =>
-                          this.copyText(this.collectLinkText(), e.target as HTMLButtonElement)}
+                this.copyText(this.collectLinkText(), e.target as HTMLButtonElement)}
                       >复制全部</button>
                     `}
           </div>
@@ -1169,13 +1192,13 @@ export class AppShowcaseWidgetElement extends LitElement {
         <span class="uh-asw-copy-label">${label}</span>
         ${input}
         ${copyable
-          ? html`
+        ? html`
               <button
                 type="button"
                 class="uh-asw-btn uh-asw-copy-btn"
                 @click=${(e: Event) => this.copyText(value, e.target as HTMLButtonElement)}
               >复制</button>`
-          : ""}
+        : ""}
       </div>`;
   }
 

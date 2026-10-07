@@ -134,6 +134,7 @@ public class ThemeWidgetHeadProcessor implements TemplateHeadProcessor {
         config.put("applyEntryEnabled", node.path("applyEntryEnabled").asBoolean(false));
         config.set("miniProgramItems", asArrayOrEmpty(node.path("miniProgramItems")));
         config.set("appItems", asArrayOrEmpty(node.path("appItems")));
+        config.set("otherItems", asArrayOrEmpty(node.path("otherItems")));
         return config;
     }
 

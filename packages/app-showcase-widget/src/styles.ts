@@ -72,8 +72,8 @@ export const styles = css`
     cursor: grabbing;
   }
   .uh-asw-header-icon {
-    width: 18px;
-    height: 18px;
+    width: 16px;
+    height: 16px;
     flex: none;
     display: flex;
     align-items: center;
@@ -207,6 +207,10 @@ export const styles = css`
   }
   .uh-asw-item-icon.app {
     background: #c6f921;
+    color: #1A1B1D;
+  }
+  .uh-asw-item-icon.other {
+    background: #92cf57;
     color: #1A1B1D;
   }
   .uh-asw-item-icon img {

@@ -23,6 +23,7 @@ export interface AppShowcaseWidgetConfig {
   applyEntryEnabled: boolean;
   miniProgramItems: MiniProgramItem[];
   appItems: AppItem[];
+  otherItems: OtherItem[];
 }
 
 /** 小程序条目（setting.yaml miniProgramItems 数组元素） */
@@ -48,9 +49,22 @@ export interface AppItem {
   priority?: number;
 }
 
-/** 面板列表统一条目（两数组合并后按来源打类型标） */
+/** 其他条目（setting.yaml otherItems 数组元素）：typeName 为自定义类型，链接选填 */
+export interface OtherItem {
+  displayName?: string;
+  group?: string;
+  icon?: string;
+  /** 自定义类型名称（如 桌面端程序 / 网页 / 插件），留空回退「其他」 */
+  typeName?: string;
+  codeImage?: string;
+  link?: string;
+  description?: string;
+  priority?: number;
+}
+
+/** 面板列表统一条目（三个数组合并后按来源打类型标） */
 export interface ShowcaseEntry {
-  type: "miniprogram" | "app";
+  type: "miniprogram" | "app" | "other";
   typeLabel: string;
   displayName: string;
   group: string;
