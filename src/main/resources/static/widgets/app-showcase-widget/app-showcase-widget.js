@@ -875,7 +875,6 @@ Minimum version required to store current data is: `+c+`.
           @pointerup=${this.onHeaderPointerEnd}
           @pointercancel=${this.onHeaderPointerEnd}
         >
-          ${t?I`<span class="uh-asw-header-icon"><img src=${t} alt="" /></span>`:``}
           <span class="uh-asw-title">应用展示</span>
           <span class="uh-asw-topbar">
             <button type="button" class="uh-asw-topbar-btn" aria-label="最小化" @click=${this.onMinimizeClick}>&minus;</button>
