@@ -114,7 +114,7 @@ public class ThemeWidgetHeadProcessor implements TemplateHeadProcessor {
     }
 
     /**
-     * 应用展示面板的前端配置映射：注入面板布局与两种条目数组，
+     * 应用展示面板的前端配置映射：注入面板布局与三种条目数组，
      * 条目数据整体透传由前端按来源数组打类型标。
      */
     private ObjectNode applyAppShowcaseDefaults(ObjectNode config, JsonNode node) {
@@ -131,6 +131,7 @@ public class ThemeWidgetHeadProcessor implements TemplateHeadProcessor {
         config.put("dragEnabled", node.path("dragEnabled").asBoolean(true));
         config.put("closeEnabled", node.path("closeEnabled").asBoolean(true));
         config.put("rememberClosed", node.path("rememberClosed").asBoolean(false));
+        config.put("themeMode", node.path("themeMode").asString("auto"));
         config.put("applyEntryEnabled", node.path("applyEntryEnabled").asBoolean(false));
         config.set("miniProgramItems", asArrayOrEmpty(node.path("miniProgramItems")));
         config.set("appItems", asArrayOrEmpty(node.path("appItems")));

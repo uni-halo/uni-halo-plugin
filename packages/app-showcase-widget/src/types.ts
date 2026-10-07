@@ -17,6 +17,8 @@ export interface AppShowcaseWidgetConfig {
   zIndex: number;
   panelWidth: number;
   defaultState: "default" | "minimized";
+  /** 主题模式：auto=跟随站点深色标记，light/dark=强制固定 */
+  themeMode: "auto" | "light" | "dark";
   dragEnabled: boolean;
   closeEnabled: boolean;
   rememberClosed: boolean;

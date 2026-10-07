@@ -8,7 +8,7 @@
  *
  * 数据源：
  *  - 条目数据：window.__UNI_HALO_APP_SHOWCASE_WIDGET__ 注入的
- *    miniProgramItems / appItems 数组（setting.yaml 管理），按来源数组
+ *    miniProgramItems / appItems / otherItems 数组（setting.yaml 管理），按来源数组
  *    打类型标（小程序 / App）。
  *  - 申请提交：POST .../mini-program-links/submissions（验证码 query 参数，403 自动刷新）
  *  - 友链信息：GET .../getConfigs → featureConfig.linkInfo.miniInfo + featureConfig.profile.blogger
@@ -22,6 +22,7 @@ import {
   LINK_SUBMIT_URL,
   STATE_KEY,
   STORAGE_KEY,
+  detectHostDarkTheme,
   loadWidgetState,
   saveWidgetState,
 } from "./config";
@@ -156,6 +157,8 @@ export class AppShowcaseWidgetElement extends LitElement {
   private panelDrag: DragState | null = null;
   private miniDotDrag: MiniDotDrag | null = null;
   private miniDotDragged = false;
+  /** auto 主题模式下监听站点深色标记变化的观察器 */
+  private themeObserver: MutationObserver | null = null;
 
   constructor() {
     super();
@@ -185,6 +188,44 @@ export class AppShowcaseWidgetElement extends LitElement {
     // 页面范围不匹配或访客已关闭 → 零残留移除
     if (!matchPage() || this.isClosed()) {
       this.remove();
+      return;
+    }
+    this.applyThemeMode();
+  }
+
+  disconnectedCallback(): void {
+    super.disconnectedCallback();
+    this.themeObserver?.disconnect();
+    this.themeObserver = null;
+  }
+
+  /** 主题模式：跟随主题（检测宿主深色标记并监听变化）/ 亮色 / 暗黑 */
+  private applyThemeMode(): void {
+    const mode = this.config.themeMode || "auto";
+    this.themeObserver?.disconnect();
+    this.themeObserver = null;
+    const setDark = (dark: boolean): void => {
+      this.classList.toggle("uh-asw-dark", dark);
+    };
+    if (mode === "dark") {
+      setDark(true);
+      return;
+    }
+    if (mode === "light") {
+      setDark(false);
+      return;
+    }
+    // auto：按宿主深色标记求值，并监听标记变化实时跟随主题切换
+    const evaluate = (): void => setDark(detectHostDarkTheme());
+    evaluate();
+    this.themeObserver = new MutationObserver(evaluate);
+    const options: MutationObserverInit = {
+      attributes: true,
+      attributeFilter: ["class", "data-theme", "data-color-scheme"],
+    };
+    this.themeObserver.observe(document.documentElement, options);
+    if (document.body) {
+      this.themeObserver.observe(document.body, options);
     }
   }
 
@@ -544,6 +585,10 @@ export class AppShowcaseWidgetElement extends LitElement {
   }
 
   private get visibleEntries(): ShowcaseEntry[] {
+    // 当前页签分类无数据时回退全部（页签显隐由 render 按各分类数据量动态控制）
+    if (this.tab !== "all" && !this.entries.some((entry) => entry.type === this.tab)) {
+      return this.entries;
+    }
     if (this.tab === "all") {
       return this.entries;
     }
@@ -804,6 +849,13 @@ export class AppShowcaseWidgetElement extends LitElement {
     const zIndexStyle = "z-index:" + (Number(c.zIndex) || 9999) + ";";
     const dotCls = this.dotStyle ? "uh-asw-mini-dot" : `uh-asw-mini-dot uh-asw-pos-${c.position || "bottom-right"}`;
     const dotStyleVal = (this.dotStyle || this.anchorTransform(c.position || "bottom-right")) + zIndexStyle;
+    // 页签显隐跟随数据：分类无条目则隐藏对应页签，当前页签分类被隐藏时高亮回退「全部」
+    const counts = {
+      miniprogram: this.entries.filter((entry) => entry.type === "miniprogram").length,
+      app: this.entries.filter((entry) => entry.type === "app").length,
+      other: this.entries.filter((entry) => entry.type === "other").length,
+    };
+    const activeTab = this.tab !== "all" && !counts[this.tab] ? "all" : this.tab;
     return html`
       ${this.applyOpen ? this.renderApplyModal() : ""}
       ${this.linksOpen ? this.renderLinksModal() : ""}
@@ -831,28 +883,37 @@ export class AppShowcaseWidgetElement extends LitElement {
           </span>
         </div>
         <div class="uh-asw-body">
-          <div class="uh-asw-segmented">
-            <button
-              type="button"
-              class="uh-asw-seg-item ${this.tab === "all" ? "uh-asw-seg-active" : ""}"
-              @click=${() => (this.tab = "all")}
-            >全部</button>
-            <button
-              type="button"
-              class="uh-asw-seg-item ${this.tab === "miniprogram" ? "uh-asw-seg-active" : ""}"
-              @click=${() => (this.tab = "miniprogram")}
-            >小程序</button>
-            <button
-              type="button"
-              class="uh-asw-seg-item ${this.tab === "app" ? "uh-asw-seg-active" : ""}"
-              @click=${() => (this.tab = "app")}
-            >APP</button>
-            <button
-              type="button"
-              class="uh-asw-seg-item ${this.tab === "other" ? "uh-asw-seg-active" : ""}"
-              @click=${() => (this.tab = "other")}
-            >其他</button>
-          </div>
+          ${this.entries.length
+          ? html`
+              <div class="uh-asw-segmented">
+                <button
+                  type="button"
+                  class="uh-asw-seg-item ${activeTab === "all" ? "uh-asw-seg-active" : ""}"
+                  @click=${() => (this.tab = "all")}
+                >全部</button>
+                ${counts.miniprogram
+              ? html`<button
+                    type="button"
+                    class="uh-asw-seg-item ${activeTab === "miniprogram" ? "uh-asw-seg-active" : ""}"
+                    @click=${() => (this.tab = "miniprogram")}
+                  >小程序</button>`
+              : ""}
+                ${counts.app
+              ? html`<button
+                    type="button"
+                    class="uh-asw-seg-item ${activeTab === "app" ? "uh-asw-seg-active" : ""}"
+                    @click=${() => (this.tab = "app")}
+                  >APP</button>`
+              : ""}
+                ${counts.other
+              ? html`<button
+                    type="button"
+                    class="uh-asw-seg-item ${activeTab === "other" ? "uh-asw-seg-active" : ""}"
+                    @click=${() => (this.tab = "other")}
+                  >其他</button>`
+              : ""}
+              </div>`
+          : ""}
           <div class="uh-asw-content">
             ${this.renderEntries()}
           </div>
@@ -917,7 +978,7 @@ export class AppShowcaseWidgetElement extends LitElement {
       <div class="uh-asw-item" @click=${() => this.openDetail(entry)}>
         <div class="uh-asw-item-icon ${entry.type}">${entry.icon ? html`<img src=${entry.icon} alt="" />` : initial}</div>
         <div class="uh-asw-item-info">
-          <div class="uh-asw-item-name"><span class="uh-asw-tag">${entry.typeLabel}</span>${entry.displayName}</div>
+          <div class="uh-asw-item-name">${entry.displayName}<span class="uh-asw-tag">${entry.typeLabel}</span></div>
           <div class="uh-asw-item-desc">${entry.description || "该应用暂无描述"}</div>
         </div>
         ${thumb ? html`<div class="uh-asw-item-thumb"><img src=${thumb} alt="" /></div>` : ""}

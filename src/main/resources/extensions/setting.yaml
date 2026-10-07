@@ -424,6 +424,20 @@ spec:
               label: 记住关闭状态
               value: false
               help: 开启后访客点击关闭，本次会话（当前标签页）内不再显示，下次打开浏览器仍会默认显示；关闭则每次刷新都重新显示。
+            - $formkit: select
+              name: themeMode
+              id: appShowcaseThemeMode
+              label: 主题模式
+              value: auto
+              options:
+                - label: 跟随主题
+                  value: auto
+                - label: 亮色模式
+                  value: light
+                - label: 暗黑模式
+                  value: dark
+              validation: required
+              help: 跟随主题时自动检测站点深色标记（html/body 上的 data-theme="dark"、data-color-scheme="dark"、.color-scheme-dark、.dark）并实时跟随切换；亮/暗模式强制固定。
             - $formkit: switch
               name: applyEntryEnabled
               id: appShowcaseApplyEntry

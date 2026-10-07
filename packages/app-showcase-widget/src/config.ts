@@ -61,6 +61,20 @@ export function saveWidgetState(state: WidgetPersistedState): void {
   }
 }
 
+/** 读取宿主站点是否处于深色模式（识别 html/body 上 4 种常见深色标记） */
+export function detectHostDarkTheme(): boolean {
+  const targets = [document.documentElement, document.body];
+  return targets.some((el) => {
+    if (!el) {
+      return false;
+    }
+    return el.getAttribute("data-theme") === "dark"
+      || el.getAttribute("data-color-scheme") === "dark"
+      || el.classList.contains("color-scheme-dark")
+      || el.classList.contains("dark");
+  });
+}
+
 // 公开接口（api.unihalo.ialley.cn 分组，匿名可访问）
 // 端点统一注册在组根路径（无 plugins/<插件名> 前缀段），对齐 Halo 角色模板规范
 export const API_BASE = "/apis/api.unihalo.ialley.cn/v1alpha1";

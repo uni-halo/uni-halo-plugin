@@ -3,7 +3,8 @@
  *
  * 组件使用 shadow DOM，样式完全内聚不泄漏、外部主题样式也无法穿透影响组件；
  * 弹窗（overlay/modal）渲染在 shadow DOM 内部，按钮等选择器直接用类名。
- * 视觉基调：白色卡片 + 白色细边框 + 柔和阴影 + 玻璃拟态弹窗。
+ * 视觉基调：白色卡片 + 白色细边框 + 柔和阴影 + 玻璃拟态弹窗；
+ * 暗黑模式通过宿主 :host(.uh-asw-dark) 全量覆盖（主题模式 themeMode 配置见 setting.yaml）。
  */
 import { css } from "lit";
 
@@ -237,8 +238,8 @@ export const styles = css`
     font-weight: 400;
     padding: 1px 6px;
     border-radius: 4px;
-    background: #c6f91f;
-    color: #1f2a05;
+    background: #f1f3f5;
+    color: #555555;
   }
   /* 详情弹窗标题后置的类型标签间距（列表内标签位于名称前，间距由 item-name 的 gap 提供） */
   .uh-asw-modal-title .uh-asw-tag {
@@ -269,10 +270,12 @@ export const styles = css`
     object-fit: contain;
   }
   .uh-asw-empty {
-    padding: 20px 0;
+    padding: 40px 0;
     text-align: center;
     font-size: 13px;
     color: #999999;
+    background: rgba(0, 0, 0, 0.04);
+    border-radius: 10px;
   }
 
   /* ===== 底部操作区（申请入口开关控制显隐） ===== */
@@ -321,7 +324,7 @@ export const styles = css`
     background: #1a1b1de3;
   }
 
-  /* ===== 最小化小球（独立 fixed 元素，无条件可拖） ===== */
+  /* ===== 最小化小球（独立 fixed 元素，无条件可拖；图标色由后台 entryIcon 配置固化，不参与暗黑适配） ===== */
   .uh-asw-mini-dot {
     display: flex;
     align-items: center;
@@ -711,5 +714,150 @@ export const styles = css`
     text-align: center;
     font-size: 13px;
     color: #999999;
+  }
+
+  /* ===== 暗黑模式（:host(.uh-asw-dark)，主题模式见后台 themeMode 配置） ===== */
+  :host(.uh-asw-dark) {
+    color-scheme: dark;
+  }
+  /* 面板 */
+  :host(.uh-asw-dark) .uh-asw {
+    background: #1e1f22;
+    border-color: rgba(255, 255, 255, 0.09);
+    box-shadow: 0 16px 60px rgba(0, 0, 0, 0.5);
+  }
+  :host(.uh-asw-dark) .uh-asw-title,
+  :host(.uh-asw-dark) .uh-asw-modal-title {
+    color: #f1f3f5;
+  }
+  :host(.uh-asw-dark) .uh-asw-topbar-btn,
+  :host(.uh-asw-dark) .uh-asw-modal-close {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.12);
+    color: #9a9a9a;
+  }
+  :host(.uh-asw-dark) .uh-asw-topbar-btn:hover,
+  :host(.uh-asw-dark) .uh-asw-modal-close:hover {
+    color: #f1f3f5;
+  }
+  :host(.uh-asw-dark) .uh-asw-segmented,
+  :host(.uh-asw-dark) .uh-asw-segmented-modal {
+    background: rgba(255, 255, 255, 0.07);
+  }
+  :host(.uh-asw-dark) .uh-asw-seg-item {
+    color: #9a9a9a;
+  }
+  :host(.uh-asw-dark) .uh-asw-seg-active {
+    background: #f1f3f5;
+    color: #1A1B1D;
+  }
+  :host(.uh-asw-dark) .uh-asw-group-name,
+  :host(.uh-asw-dark) .uh-asw-item-desc,
+  :host(.uh-asw-dark) .uh-asw-detail-desc,
+  :host(.uh-asw-dark) .uh-asw-qr-tip,
+  :host(.uh-asw-dark) .uh-asw-hint {
+    color: rgba(255, 255, 255, 0.45);
+  }
+  :host(.uh-asw-dark) .uh-asw-item {
+    background: rgba(255, 255, 255, 0.05);
+  }
+  :host(.uh-asw-dark) .uh-asw-item:hover {
+    background: rgba(255, 255, 255, 0.09);
+  }
+  :host(.uh-asw-dark) .uh-asw-item-name {
+    color: #f1f3f5;
+  }
+  :host(.uh-asw-dark) .uh-asw-tag {
+    background: rgba(255, 255, 255, 0.09);
+    color: #b9b9b9;
+  }
+  :host(.uh-asw-dark) .uh-asw-item-icon.miniprogram {
+    background: #3a3b3e;
+  }
+  :host(.uh-asw-dark) .uh-asw-item-thumb {
+    border-color: rgba(255, 255, 255, 0.12);
+  }
+  :host(.uh-asw-dark) .uh-asw-empty,
+  :host(.uh-asw-dark) .uh-asw-loading {
+    color: #9a9a9a;
+  }
+  :host(.uh-asw-dark) .uh-asw-empty {
+    background: rgba(0, 0, 0, 0.25);
+  }
+  :host(.uh-asw-dark) .uh-asw-actions,
+  :host(.uh-asw-dark) .uh-asw-apply-footer {
+    border-top-color: rgba(255, 255, 255, 0.08);
+  }
+  /* 按钮：主按钮改主题色底深字 */
+  :host(.uh-asw-dark) .uh-asw-btn {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.08);
+    color: #e5e7eb;
+    box-shadow: none;
+  }
+  :host(.uh-asw-dark) .uh-asw-btn:hover {
+    background: rgba(255, 255, 255, 0.14);
+  }
+  :host(.uh-asw-dark) .uh-asw-btn-primary {
+    background: #c6f921;
+    border-color: transparent;
+    color: #1A1B1D;
+  }
+  :host(.uh-asw-dark) .uh-asw-btn-primary:hover {
+    background: #d3fa4d;
+  }
+  /* 弹窗（二维码卡保持白底保证扫码对比度） */
+  :host(.uh-asw-dark) .uh-asw-overlay {
+    background: rgba(0, 0, 0, 0.6);
+  }
+  :host(.uh-asw-dark) .uh-asw-modal {
+    background: rgba(30, 31, 34, 0.98);
+    border-color: rgba(255, 255, 255, 0.09);
+  }
+  :host(.uh-asw-dark) .uh-asw-modal-header {
+    border-bottom-color: rgba(255, 255, 255, 0.08);
+  }
+  :host(.uh-asw-dark) .uh-asw-detail-name {
+    color: #f1f3f5;
+  }
+  :host(.uh-asw-dark) .uh-asw-qr-card {
+    border-color: rgba(255, 255, 255, 0.12);
+  }
+  /* 表单输入框 */
+  :host(.uh-asw-dark) .uh-asw-field {
+    color: #9a9a9a;
+  }
+  :host(.uh-asw-dark) .uh-asw-field input[type="text"],
+  :host(.uh-asw-dark) .uh-asw-field textarea,
+  :host(.uh-asw-dark) .uh-asw-shot-input {
+    background: rgba(255, 255, 255, 0.06);
+    border-color: rgba(255, 255, 255, 0.14);
+    color: #e5e7eb;
+  }
+  :host(.uh-asw-dark) .uh-asw-captcha-img {
+    border-color: rgba(255, 255, 255, 0.12);
+  }
+  :host(.uh-asw-dark) .uh-asw-shot-remove {
+    background: rgba(255, 255, 255, 0.08);
+    color: #9a9a9a;
+  }
+  :host(.uh-asw-dark) .uh-asw-shot-remove:hover {
+    background: rgba(255, 255, 255, 0.14);
+    color: #f1f3f5;
+  }
+  /* 友链信息 */
+  :host(.uh-asw-dark) .uh-asw-info-card {
+    background: rgba(255, 255, 255, 0.05);
+  }
+  :host(.uh-asw-dark) .uh-asw-info-card-title {
+    color: #f1f3f5;
+  }
+  :host(.uh-asw-dark) .uh-asw-copy-label {
+    color: #e5e7eb;
+  }
+  :host(.uh-asw-dark) .uh-asw-copy-input {
+    background: rgba(255, 255, 255, 0.06);
+    border-color: rgba(255, 255, 255, 0.12);
+    color: #e5e7eb;
   }
 `;
