@@ -1,0 +1,266 @@
+<script setup lang="ts">
+import {
+  IconRefreshLine,
+  VButton,
+  VCard,
+  VEmpty,
+  VEntity,
+  VEntityContainer,
+  VEntityField,
+  VLoading,
+  VPageHeader,
+  VPagination,
+  VSpace,
+  VStatusDot,
+  VDropdownItem,
+} from "@halo-dev/components";
+import { useQuery } from "@tanstack/vue-query";
+import { useDeletionFlow } from "@/composables/useDeletionFlow";
+import { deletingRefetchInterval } from "@/utils/query";
+import { computed, ref, watch } from "vue";
+import DrawReviewModal from "@/components/draw-manage/DrawReviewModal.vue";
+import ImagePreviewModal from "@/components/common/ImagePreviewModal.vue";
+import FilterDropdown from "@/components/common/FilterDropdown.vue";
+import FilterCleanButton from "@/components/common/FilterCleanButton.vue";
+import { drawsApi } from "@/api";
+import { DRAW_STATUS_LABELS, DRAW_STATUS_OPTIONS } from "@/types";
+import type { Draw } from "@/types";
+
+const { confirmDelete } = useDeletionFlow(["uni-halo:draws"]);
+
+const page = ref(1);
+const size = ref(20);
+const keyword = ref("");
+const status = ref<string>();
+const total = ref(0);
+
+const reviewAction = ref<"approve" | "reject">("approve");
+const reviewTarget = ref<Draw>();
+const reviewVisible = ref(false);
+
+const previewVisible = ref(false);
+const previewUrl = ref("");
+
+const { data: draws, isLoading, isFetching, refetch } = useQuery({
+  queryKey: ["uni-halo:draws", page, size, status, keyword],
+  queryFn: async () => {
+    const result = await drawsApi.list({
+      page: page.value,
+      size: size.value,
+      status: status.value,
+      keyword: keyword.value || undefined,
+    });
+    total.value = result.total;
+    return result;
+  },
+  // 删除中对象存在时每 1s 自动重取，直到对象消失（删除语义统一）
+  refetchInterval: (data) => deletingRefetchInterval(data),
+});
+
+watch(
+  () => [keyword.value, status.value],
+  () => {
+    page.value = 1;
+  }
+);
+
+const hasFilters = computed(() => !!status.value);
+
+const handleClearFilters = () => {
+  status.value = undefined;
+};
+
+const handleOpenReview = (action: "approve" | "reject", draw: Draw) => {
+  reviewAction.value = action;
+  reviewTarget.value = draw;
+  reviewVisible.value = true;
+};
+
+const handleDelete = (draw: Draw) => {
+  confirmDelete({
+    title: "确定要删除这幅绘画吗？",
+    description: "仅删除绘画记录，图片附件保留，该操作不可恢复。",
+    names: [draw.metadata.name],
+    doDelete: (name) => drawsApi.delete(name),
+  });
+};
+
+const statusColorClass = computed(() => (draw: Draw) => {
+  switch (draw.spec.status) {
+    case "APPROVED":
+      return "text-green-600";
+    case "REJECTED":
+      return "text-red-500";
+    default:
+      return "text-amber-500";
+  }
+});
+
+const formatTime = (value?: string | null) => {
+  if (!value) {
+    return "";
+  }
+  const date = new Date(value);
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(
+    date.getHours()
+  )}:${pad(date.getMinutes())}`;
+};
+</script>
+
+<template>
+  <DrawReviewModal
+    v-if="reviewVisible && reviewTarget"
+    :action="reviewAction"
+    :name="reviewTarget.metadata.name"
+    :title="reviewTarget.spec.title"
+    @close="reviewVisible = false"
+    @done="refetch"
+  />
+
+  <VPageHeader title="UniHalo-绘画作品">
+    <template #actions>
+      <VSpace>
+        <VButton @click="refetch">
+          <template #icon>
+            <IconRefreshLine class="w-4 h-4" :class="{ 'animate-spin text-gray-900': isFetching }" />
+          </template>
+          刷新
+        </VButton>
+      </VSpace>
+    </template>
+  </VPageHeader>
+
+  <div class=":uno: m-0 flex flex-col gap-4 md:m-4">
+    <VCard :body-class="[':uno: !p-0']">
+      <template #header>
+        <div class=":uno: block w-full bg-gray-50 px-4 py-3">
+          <div class=":uno: relative flex flex-col flex-wrap items-start gap-4 sm:flex-row sm:items-center">
+            <div class=":uno: flex w-full flex-1 items-center sm:w-auto">
+              <SearchInput v-model="keyword" placeholder="标题/作者（回车搜索）" />
+            </div>
+            <VSpace spacing="lg" class=":uno: flex-wrap">
+              <FilterCleanButton v-if="hasFilters" @click="handleClearFilters" />
+              <FilterDropdown v-model="status" label="状态" :items="DRAW_STATUS_OPTIONS" />
+            </VSpace>
+          </div>
+        </div>
+      </template>
+
+      <VLoading v-if="isLoading" />
+
+      <Transition v-else-if="!draws?.items.length" appear name="fade">
+        <VEmpty message="暂无绘画作品，可引导用户在 App 端绘画并发布" title="还没有绘画作品" />
+      </Transition>
+
+      <Transition v-else appear name="fade">
+        <VEntityContainer>
+          <VEntity v-for="draw in draws?.items" :key="draw.metadata.name">
+            <template #start>
+              <VEntityField v-if="draw.spec.cover" width="42px">
+                <template #description>
+                  <img
+                    :src="draw.spec.cover"
+                    :alt="draw.spec.title || '画作封面'"
+                    loading="lazy"
+                    class=":uno: h-10 w-10 cursor-pointer rounded object-cover hover:opacity-80"
+                    @click="() => { previewUrl = draw.spec.cover || ''; previewVisible = true; }"
+                  />
+                </template>
+              </VEntityField>
+              <VEntityField width="16rem">
+                <template #title>
+                  <span class=":uno: font-semibold text-gray-900">
+                    {{ draw.spec.title || draw.metadata.name }}
+                  </span>
+                </template>
+                <template #description>
+                  <span class=":uno: text-xs text-gray-500">
+                    {{ draw.spec.description || "暂无简介" }}
+                  </span>
+                </template>
+              </VEntityField>
+            </template>
+            <template #end>
+              <VEntityField v-if="draw.metadata.deletionTimestamp">
+                <template #description>
+                  <VStatusDot v-tooltip="'删除中'" state="warning" text="删除中" />
+                </template>
+              </VEntityField>
+              <VEntityField>
+                <template #description>
+                  <span class=":uno: truncate text-xs text-gray-600" style="max-width: 10rem">
+                    {{ draw.spec.ownerDisplayName || draw.spec.owner }}
+                  </span>
+                </template>
+              </VEntityField>
+              <VEntityField>
+                <template #description>
+                  <span class=":uno: text-xs font-medium" :class="statusColorClass(draw)">
+                    {{ DRAW_STATUS_LABELS[draw.spec.status || "PENDING"] }}
+                  </span>
+                </template>
+              </VEntityField>
+              <VEntityField>
+                <template #description>
+                  <div class=":uno: flex flex-col gap-0.5 text-xs text-gray-500">
+                    <span>
+                      提交时间：{{ formatTime(draw.metadata.creationTimestamp) }}
+                    </span>
+                    <span v-if="draw.spec.reviewedAt">
+                      审核时间：{{ formatTime(draw.spec.reviewedAt) }}
+                    </span>
+                  </div>
+                </template>
+              </VEntityField>
+              <VEntityField v-if="(draw.spec.status || 'PENDING') === 'PENDING'">
+                <template #description>
+                  <VSpace spacing="sm">
+                    <VButton size="sm" type="primary" @click="handleOpenReview('approve', draw)">
+                      通过
+                    </VButton>
+                    <VButton size="sm" type="danger" plain @click="handleOpenReview('reject', draw)">
+                      拒绝
+                    </VButton>
+                  </VSpace>
+                </template>
+              </VEntityField>
+              <VEntityField v-else-if="draw.spec.status === 'REJECTED' && draw.spec.reason">
+                <template #description>
+                  <span class=":uno: truncate text-xs text-gray-400" style="max-width: 12rem">
+                    拒绝原因：{{ draw.spec.reason }}
+                  </span>
+                </template>
+              </VEntityField>
+            </template>
+            <template #dropdownItems>
+              <VDropdownItem @click="handleOpenReview('approve', draw)">
+                通过
+              </VDropdownItem>
+              <VDropdownItem @click="handleOpenReview('reject', draw)">
+                拒绝
+              </VDropdownItem>
+              <VDropdownItem type="danger" @click="handleDelete(draw)">
+                删除
+              </VDropdownItem>
+            </template>
+          </VEntity>
+        </VEntityContainer>
+      </Transition>
+
+      <template #footer>
+        <VPagination
+          v-model:page="page"
+          v-model:size="size"
+          page-label="页"
+          size-label="条 / 页"
+          :total-label="`共 ${total} 项数据`"
+          :total="total"
+          :size-options="[20, 30, 50, 100]"
+        />
+      </template>
+    </VCard>
+  </div>
+
+  <ImagePreviewModal v-model:visible="previewVisible" :images="previewUrl ? [previewUrl] : []" title="画作预览" />
+</template>
