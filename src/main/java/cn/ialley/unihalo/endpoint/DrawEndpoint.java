@@ -41,7 +41,13 @@ public class DrawEndpoint implements CustomEndpoint {
                 .GET(Constants.DRAW_API_BASE_PATH + "/{name}", this::getDraw)
                 .POST(Constants.DRAW_API_BASE_PATH + "/{name}/approve", this::approveDraw)
                 .POST(Constants.DRAW_API_BASE_PATH + "/{name}/reject", this::rejectDraw)
+                .DELETE(Constants.DRAW_API_BASE_PATH + "/{name}", this::deleteDraw)
                 .build();
+    }
+
+    private Mono<ServerResponse> deleteDraw(ServerRequest request) {
+        return drawService.deleteManage(request.pathVariable("name"))
+                .then(ServerResponse.ok().bodyValue(Map.of("success", true)));
     }
 
     private Mono<ServerResponse> listDraws(ServerRequest request) {
