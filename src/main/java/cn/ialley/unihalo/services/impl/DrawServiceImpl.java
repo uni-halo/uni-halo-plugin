@@ -10,7 +10,6 @@ import cn.ialley.unihalo.exception.NotFoundException;
 import cn.ialley.unihalo.scheme.Draw;
 import cn.ialley.unihalo.services.DrawService;
 import cn.ialley.unihalo.services.FeatureConfigService;
-import cn.ialley.unihalo.utils.NotificationHelper;
 import cn.ialley.unihalo.vo.DrawVo;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Sort;
@@ -51,7 +50,6 @@ public class DrawServiceImpl implements DrawService {
 
     private final ReactiveExtensionClient client;
     private final FeatureConfigService featureConfigService;
-    private final NotificationHelper notificationHelper;
 
     @Override
     public Mono<ListResult<DrawVo>> listPublic(int page, int size) {
@@ -98,6 +96,8 @@ public class DrawServiceImpl implements DrawService {
             var spec = validate(input);
             spec.setOwnerName(author.getMetadata().getName());
             spec.setStatus(enabled ? STATUS_PENDING : STATUS_APPROVED);
+            // 显隐由 setMineHidden/setHidden 维护，发布时忽略客户端传值
+            spec.setHidden(null);
             spec.setReason(null);
             spec.setReviewedBy(null);
             spec.setReviewedAt(null);
@@ -190,12 +190,8 @@ public class DrawServiceImpl implements DrawService {
                     spec.setReason(reason);
                     spec.setReviewedBy(reviewer);
                     spec.setReviewedAt(Instant.now().toString());
-                    return client.update(draw)
-                            .flatMap(updated -> notificationHelper
-                                    .emitDrawReviewResult(spec.getOwnerName(),
-                                            spec.getTitle(), status, reason)
-                                    .thenReturn(updated))
-                            .flatMap(this::toVo);
+                    // 审核结果不发通知：结果直接展示在「我的绘画」列表（spec.reason/reviewedAt）
+                    return client.update(draw).flatMap(this::toVo);
                 });
     }
 
