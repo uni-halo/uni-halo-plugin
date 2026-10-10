@@ -177,10 +177,14 @@ public class UniHaloPlugin extends BasePlugin {
         });
 
         schemeManager.register(Draw.class, indexSpecs -> {
-            indexSpecs.add(IndexSpecs.<Draw, String>single("spec.owner", String.class)
-                    .indexFunc(draw -> draw.getSpec() == null ? null : draw.getSpec().getOwner()));
+            indexSpecs.add(IndexSpecs.<Draw, String>single("spec.ownerName", String.class)
+                    .indexFunc(draw -> draw.getSpec() == null ? null : draw.getSpec().getOwnerName()));
             indexSpecs.add(IndexSpecs.<Draw, String>single("spec.status", String.class)
                     .indexFunc(draw -> draw.getSpec() == null ? null : draw.getSpec().getStatus()));
+            // hidden 恒写入 true/false（null 视为 false），公开查询用 notEqual 过滤
+            indexSpecs.add(IndexSpecs.<Draw, String>single("spec.hidden", String.class)
+                    .indexFunc(draw -> draw.getSpec() != null
+                            && Boolean.TRUE.equals(draw.getSpec().getHidden()) ? "true" : "false"));
         });
 
         log.info("【UniHalo】插件启动成功！");

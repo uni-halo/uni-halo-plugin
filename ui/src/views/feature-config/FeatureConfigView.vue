@@ -58,6 +58,7 @@ const SUB_TABS: Record<BigGroup, Array<{ id: string; label: string }>> = {
     { id: "moment", label: "瞬间页" },
     { id: "postDetail", label: "笔记详情页" },
     { id: "blogger", label: "博主页" },
+    { id: "draw", label: "绘画" },
     { id: "disclaimer", label: "免责声明页" },
     { id: "userAgreement", label: "用户协议页" },
     { id: "privacyPolicy", label: "隐私政策页" },
@@ -159,6 +160,7 @@ function defaultSpec(): FeatureConfigSpec {
         register: "注册",
         userAgreement: "用户协议",
         privacyPolicy: "隐私政策",
+        drawReview: "绘画审核",
       },
       home: {
         useQuickNavigation: true,
@@ -187,6 +189,8 @@ function defaultSpec(): FeatureConfigSpec {
       // 用户协议页/隐私政策页（独立两对象；内容留空 = app 端注册页回退静态提示文案）
       userAgreement: { content: "" },
       privacyPolicy: { content: "" },
+      // 绘画配置（页面设置-绘画 tab；发布审核默认开启，与旧 drawConfig 默认一致）
+      draw: { auditEnabled: true },
       postDetail: {
         showComment: true,
         copyrightEnabled: true,

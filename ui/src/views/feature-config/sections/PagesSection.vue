@@ -74,6 +74,8 @@ const PAGE_TITLE_GROUPS: Array<{ key: string; label: string; desc: string; items
       { key: 'portfolioDetail', label: '项目详情页' },
       { key: 'douban', label: '豆瓣页' },
       { key: 'footprint', label: '足迹地图页' },
+      { key: 'drawList', label: '绘画作品页' },
+      { key: 'drawCanvas', label: '画布创作页' },
       { key: 'momentDetail', label: '瞬间详情页' },
       { key: 'bannerDetail', label: '轮播详情页' },
     ],
@@ -87,6 +89,8 @@ const PAGE_TITLE_GROUPS: Array<{ key: string; label: string; desc: string; items
       { key: 'aboutProject', label: '关于项目页' },
       { key: 'disclaimer', label: '免责声明页' },
       { key: 'dataVisual', label: '数据看板页' },
+      { key: 'drawManage', label: '我的绘画页' },
+      { key: 'drawReview', label: '绘画审核页' },
       { key: 'userProfile', label: '个人主页' },
       { key: 'login', label: '登录页' },
       { key: 'register', label: '注册页' },
@@ -121,6 +125,10 @@ const pageTitleBindings = {
   portfolioDetail: () => formState.value.spec.pages.titles?.portfolioDetail,
   douban: () => formState.value.spec.pages.titles?.douban,
   footprint: () => formState.value.spec.pages.titles?.footprint,
+  drawList: () => formState.value.spec.pages.titles?.drawList,
+  drawCanvas: () => formState.value.spec.pages.titles?.drawCanvas,
+  drawManage: () => formState.value.spec.pages.titles?.drawManage,
+  drawReview: () => formState.value.spec.pages.titles?.drawReview,
   momentDetail: () => formState.value.spec.pages.titles?.momentDetail,
   bannerDetail: () => formState.value.spec.pages.titles?.bannerDetail,
   userProfile: () => formState.value.spec.pages.titles?.userProfile,
@@ -145,7 +153,7 @@ const TITLE_NAMING_VERSIONS: Array<{ key: string; label: string; values: Record<
       tags: '标签', tagArticles: '标签笔记', search: '搜索', favorites: '我的收藏',
       friendLinks: '友情链接', notice: '公告中心', noticeDetail: '公告详情',
       votes: '投票中心', voteDetail: '投票详情', contact: '联系博主', setting: '偏好设置',
-      portfolio: '项目集', portfolioDetail: '项目详情', douban: '豆瓣', footprint: '足迹地图',
+      portfolio: '项目集', portfolioDetail: '项目详情', douban: '豆瓣', footprint: '足迹地图', drawList: '绘画作品', drawCanvas: '画一幅', drawManage: '我的绘画', drawReview: '绘画审核',
       momentDetail: '瞬间详情', bannerDetail: '内容详情', userProfile: '个人主页',
       aboutProject: '关于项目', disclaimer: '免责声明', dataVisual: '数据看板',
       login: '登录', register: '注册', userAgreement: '用户协议', privacyPolicy: '隐私政策',
@@ -160,7 +168,7 @@ const TITLE_NAMING_VERSIONS: Array<{ key: string; label: string; values: Record<
       tags: '文印标记', tagArticles: '印记札记', search: '寻文觅迹', favorites: '撷珍藏录',
       friendLinks: '友邻书驿', notice: '公启通告', noticeDetail: '通告细阅',
       votes: '众议征询', voteDetail: '众议细览', contact: '尺素传书', setting: '雅趣自调',
-      portfolio: '匠作陈列', portfolioDetail: '匠作细览', douban: '书影札记', footprint: '游踪印雪',
+      portfolio: '匠作陈列', portfolioDetail: '匠作细览', douban: '书影札记', footprint: '游踪印雪', drawList: '丹青画廊', drawCanvas: '泼墨挥毫', drawManage: '画匣私藏', drawReview: '画评核阅',
       momentDetail: '流光细品', bannerDetail: '藏卷细读', userProfile: '访客芳鉴',
       aboutProject: '缘起叙记', disclaimer: '规约叙言', dataVisual: '观数览势',
       login: '入阁登览', register: '入籍结缘', userAgreement: '共守约章', privacyPolicy: '私籍守章',
@@ -175,7 +183,7 @@ const TITLE_NAMING_VERSIONS: Array<{ key: string; label: string; values: Record<
       tags: '笺上留痕', tagArticles: '随痕阅文', search: '搜览寻踪', favorites: '心藏好物',
       friendLinks: '远友相望', notice: '布告通知', noticeDetail: '阅览告示',
       votes: '民意共商', voteDetail: '共商详情', contact: '寄言留言', setting: '个性定制',
-      portfolio: '作品一览', portfolioDetail: '作品详览', douban: '书影记录', footprint: '行迹所至',
+      portfolio: '作品一览', portfolioDetail: '作品详览', douban: '书影记录', footprint: '行迹所至', drawList: '画作一览', drawCanvas: '随笔一画', drawManage: '我的画作', drawReview: '画作审阅',
       momentDetail: '时光详览', bannerDetail: '内容详览', userProfile: '个人小页',
       aboutProject: '本站小叙', disclaimer: '权责申明', dataVisual: '数览概观',
       login: '登入本站', register: '新客登记', userAgreement: '用者之约', privacyPolicy: '私权规约',
@@ -190,7 +198,7 @@ const TITLE_NAMING_VERSIONS: Array<{ key: string; label: string; values: Record<
       tags: '叶脉题字', tagArticles: '叶上观书', search: '探径寻书', favorites: '拾珍入匣',
       friendLinks: '遥灯相映', notice: '庭前传讯', noticeDetail: '讯笺细读',
       votes: '衡议听言', voteDetail: '衡论细读', contact: '飞雁传笺', setting: '四时调序',
-      portfolio: '山房陈物', portfolioDetail: '陈物细观', douban: '书影偶记', footprint: '屐痕处处',
+      portfolio: '山房陈物', portfolioDetail: '陈物细观', douban: '书影偶记', footprint: '屐痕处处', drawList: '田园涂鸦', drawCanvas: '山野拾笔', drawManage: '自家画册', drawReview: '山舍品画',
       momentDetail: '风露细看', bannerDetail: '笺上细读', userProfile: '客至小坐',
       aboutProject: '种源溯源', disclaimer: '约言明戒', dataVisual: '星野观览',
       login: '推门入舍', register: '筑舍安家', userAgreement: '同心之契', privacyPolicy: '清规护隐',
@@ -205,7 +213,7 @@ const TITLE_NAMING_VERSIONS: Array<{ key: string; label: string; values: Record<
       tags: '内容标签', tagArticles: '标签随笔', search: '全站检索', favorites: '个人收藏',
       friendLinks: '友链站点', notice: '公告中心', noticeDetail: '公告详情',
       votes: '投票专区', voteDetail: '投票详情', contact: '联络博主', setting: '偏好设置',
-      portfolio: '项目展示', portfolioDetail: '项目详情', douban: '书影音记录', footprint: '足迹地图',
+      portfolio: '项目展示', portfolioDetail: '项目详情', douban: '书影音记录', footprint: '足迹地图', drawList: '绘画作品', drawCanvas: '创作画板', drawManage: '我的绘画', drawReview: '绘画审核',
       momentDetail: '动态详情', bannerDetail: '内容详情', userProfile: '个人主页',
       aboutProject: '项目简介', disclaimer: '免责声明', dataVisual: '数据总览',
       login: '账号登录', register: '账号注册', userAgreement: '用户规约', privacyPolicy: '隐私规约',
@@ -220,7 +228,7 @@ const TITLE_NAMING_VERSIONS: Array<{ key: string; label: string; values: Record<
       tags: '印记标识', tagArticles: '印记寻文', search: '觅迹寻章', favorites: '所爱存藏',
       friendLinks: '四方同好', notice: '讯息通告', noticeDetail: '讯息详读',
       votes: '众言表决', voteDetail: '表决详阅', contact: '寄语相询', setting: '私趣自定',
-      portfolio: '作品陈列', portfolioDetail: '作品细读', douban: '书影拾遗', footprint: '行止留痕',
+      portfolio: '作品陈列', portfolioDetail: '作品细读', douban: '书影拾遗', footprint: '行止留痕', drawList: '笔迹存览', drawCanvas: '落笔成画', drawManage: '己作存览',
       momentDetail: '瞬念细读', bannerDetail: '篇章详读', userProfile: '访客之页',
       aboutProject: '初心述记', disclaimer: '条例申明', dataVisual: '万象数观',
       login: '凭籍登入', register: '开户结缘', userAgreement: '缔约守则', privacyPolicy: '私权明叙',
@@ -884,6 +892,22 @@ function restoreMineDefaults(group: "common" | "other") {
   </template>
 
   <!-- 免责声明页 -->
+  <!-- 绘画 -->
+  <template v-if="subTab === 'draw'">
+    <p class=":uno: mb-3 text-xs text-gray-400">
+      绘画发布流程配置：控制 App 端用户在画布创作页发布绘画后的审核流程。审核操作在左侧菜单「绘画作品」中进行。
+    </p>
+    <div class=":uno: flex items-center justify-between gap-4 border-b border-gray-100 pb-3">
+      <div>
+        <div class=":uno: text-sm text-gray-700">发布绘画需要审核</div>
+        <div class=":uno: mt-0.5 text-xs text-gray-400">
+          开启后，App 端发布的绘画需管理员在「绘画作品」中审核通过后才公开展示；关闭后发布的绘画直接公开展示（不影响历史待审核数据）。
+        </div>
+      </div>
+      <VSwitch v-model="formState.spec.pages.draw!.auditEnabled" />
+    </div>
+  </template>
+
   <template v-if="subTab === 'disclaimer'">
     <p class=":uno: mb-3 text-xs text-gray-400">
       UniHalo端「免责声明」页面展示的内容。

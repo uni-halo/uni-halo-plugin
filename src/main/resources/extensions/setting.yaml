@@ -721,12 +721,4 @@ spec:
               value: 30
               validation: required
               help: 登录令牌的有效天数，过期只由令牌自身的 exp 声明保证，到期后需重新登录。
-    - group: drawConfig
-      label: 绘画作品
-      formSchema:
-        - $formkit: checkbox
-          name: auditEnabled
-          id: auditEnabled
-          label: 发布绘画需要审核
-          value: true
-          help: 开启后，App 端发布的绘画需管理员在「绘画作品」中审核通过后才公开展示；关闭后发布的绘画直接公开展示（不影响历史待审核数据）。
+

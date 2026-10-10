@@ -46,7 +46,29 @@ public class DrawUcEndpoint implements CustomEndpoint {
                 .GET(Constants.DRAW_API_BASE_PATH + "/{name}", this::getMyDraw)
                 .POST(Constants.DRAW_API_BASE_PATH, this::createMyDraw)
                 .DELETE(Constants.DRAW_API_BASE_PATH + "/{name}", this::deleteMyDraw)
+                .PUT(Constants.DRAW_API_BASE_PATH + "/{name}/hidden", this::setMyHidden)
                 .build();
+    }
+
+    /**
+     * 切换我的绘画显隐请求体：hidden=true 隐藏（公开列表/详情不展示），false 恢复展示
+     */
+    public record HiddenRequest(Boolean hidden) {
+    }
+
+    private Mono<ServerResponse> setMyHidden(ServerRequest request) {
+        return currentUsername(request)
+                .flatMap(username -> request.bodyToMono(HiddenRequest.class)
+                        .map(HiddenRequest::hidden)
+                        .defaultIfEmpty(Boolean.FALSE)
+                        .onErrorReturn(Boolean.FALSE)
+                        .flatMap(hidden -> drawService.setMineHidden(request.pathVariable("name"),
+                                username, Boolean.TRUE.equals(hidden))))
+                .flatMap(draw -> ServerResponse.ok().bodyValue(draw))
+                .onErrorResume(IllegalArgumentException.class,
+                        e -> ServerResponse.badRequest()
+                                .bodyValue(Map.of("message",
+                                        e.getMessage() == null ? "请求不合法" : e.getMessage())));
     }
 
     private Mono<ServerResponse> listMyDraws(ServerRequest request) {
@@ -73,7 +95,8 @@ public class DrawUcEndpoint implements CustomEndpoint {
                 .flatMap(draw -> ServerResponse.ok().bodyValue(draw))
                 .onErrorResume(IllegalArgumentException.class,
                         e -> ServerResponse.badRequest()
-                                .bodyValue(Map.of("message", e.getMessage())));
+                                .bodyValue(Map.of("message",
+                                        e.getMessage() == null ? "请求不合法" : e.getMessage())));
     }
 
     private Mono<ServerResponse> deleteMyDraw(ServerRequest request) {

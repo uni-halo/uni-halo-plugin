@@ -211,7 +211,6 @@ export const styles = css`
     color: #1A1B1D;
   }
   .uh-asw-item-icon.other {
-    background: #92cf57;
     color: #1A1B1D;
   }
   .uh-asw-item-icon img {
@@ -672,7 +671,7 @@ export const styles = css`
     flex-shrink: 0;
     font-size: 12px;
     color: #000000;
-    min-width: 64px;
+    min-width: 74px;
     text-align: right;
   }
   .uh-asw-copy-input {
