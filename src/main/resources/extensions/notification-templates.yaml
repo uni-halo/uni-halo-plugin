@@ -112,3 +112,29 @@ spec:
         <li>解绑后将无法使用微信一键登录，请改用账号密码登录，或重新绑定微信。</li>
         <li>如非本人操作，请立即联系站长处理并修改密码。</li>
       </ol>
+---
+apiVersion: notification.halo.run/v1alpha1
+kind: NotificationTemplate
+metadata:
+  name: uni-halo-draw-review-result-template
+spec:
+  reasonSelector:
+    reasonType: uni-halo-draw-review-result
+    language: default
+  template:
+    title: "绘画审核结果"
+    rawBody: |-
+      你的绘画「[(${title})]」已于 [(${reviewedAt})] 完成审核。
+      <th:block th:if="${status == 'APPROVED'}">
+      审核结果：已通过，画作已在站点公开展示。
+      </th:block><th:block th:if="${status == 'REJECTED'}">
+      审核结果：未通过，画作不会公开展示。
+      <th:block th:if="${reason != null}">拒绝原因：[(${reason})]
+      </th:block>你可以删除后重新创作提交。
+      </th:block>
+    htmlBody: |-
+      <p>你的绘画「[(${title})]」已于 [(${reviewedAt})] 完成审核。</p>
+      <p th:if="${status == 'APPROVED'}">审核结果：<strong>已通过</strong>，画作已在站点公开展示。</p>
+      <p th:if="${status == 'REJECTED'}">审核结果：<strong>未通过</strong>，画作不会公开展示。</p>
+      <p th:if="${status == 'REJECTED' and reason != null}">拒绝原因：[(${reason})]</p>
+      <p th:if="${status == 'REJECTED'}">你可以删除后重新创作提交。</p>

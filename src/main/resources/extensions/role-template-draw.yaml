@@ -1,0 +1,77 @@
+apiVersion: v1alpha1
+kind: "Role"
+metadata:
+  name: uni-halo-role-template-view-draws
+  labels:
+    halo.run/role-template: "true"
+    rbac.authorization.halo.run/aggregate-to-admin: "true"
+  annotations:
+    rbac.authorization.halo.run/module: "[UH] 绘画作品"
+    rbac.authorization.halo.run/display-name: "绘画作品查看"
+    rbac.authorization.halo.run/ui-permissions: |
+      ["plugin:uni-halo:draws:view"]
+rules:
+  - apiGroups: [ "console.api.unihalo.ialley.cn" ]
+    resources:
+      - "draws"
+    verbs: [ "get", "list" ]
+
+---
+
+apiVersion: v1alpha1
+kind: "Role"
+metadata:
+  name: uni-halo-role-template-manage-draws
+  labels:
+    halo.run/role-template: "true"
+    rbac.authorization.halo.run/aggregate-to-admin: "true"
+  annotations:
+    rbac.authorization.halo.run/dependencies: |
+      [ "uni-halo-role-template-view-draws" ]
+    rbac.authorization.halo.run/module: "[UH] 绘画作品"
+    rbac.authorization.halo.run/display-name: "绘画作品管理"
+    rbac.authorization.halo.run/ui-permissions: |
+      ["plugin:uni-halo:draws:manage"]
+rules:
+  - apiGroups: [ "console.api.unihalo.ialley.cn" ]
+    resources:
+      - "draws"
+    verbs: [ "create", "patch", "update", "delete", "deletecollection" ]
+
+---
+
+apiVersion: v1alpha1
+kind: "Role"
+metadata:
+  name: uni-halo-role-template-uc-draw-use
+  labels:
+    halo.run/role-template: "true"
+  annotations:
+    rbac.authorization.halo.run/module: "[UH] 绘画作品"
+    rbac.authorization.halo.run/display-name: "允许使用画布（发布/删除自己的绘画）"
+    rbac.authorization.halo.run/ui-permissions: |
+      ["uc:plugin:uni-halo:draw:use"]
+rules:
+  - apiGroups: [ "uc.api.unihalo.ialley.cn" ]
+    resources:
+      - "draws"
+    verbs: [ "get", "list", "create", "delete" ]
+
+---
+
+apiVersion: v1alpha1
+kind: "Role"
+metadata:
+  name: uni-halo-role-template-draw-anonymous
+  labels:
+    halo.run/role-template: "true"
+    halo.run/hidden: "true"
+    rbac.authorization.halo.run/aggregate-to-anonymous: "true"
+  annotations:
+    rbac.authorization.halo.run/module: "[UH] 绘画作品"
+    rbac.authorization.halo.run/display-name: "绘画作品匿名查看"
+rules:
+  - apiGroups: [ "api.unihalo.ialley.cn" ]
+    resources:
+      - "draws"
+    verbs: [ "get", "list" ]

@@ -176,6 +176,11 @@ public class Constants {
         "mini-program-link-groups";
 
     /**
+     * 绘画作品（public/uc/console 三组端点共用路径段，组不同即隔离）
+     */
+    public static final String DRAW_API_BASE_PATH = "draws";
+
+    /**
      * 审核模式单例名称（metadata.name 固定值）
      */
     public static final String AUDIT_DATA_CONFIG_SINGLETON_NAME = "audit-data-config";
