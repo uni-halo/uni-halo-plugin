@@ -375,7 +375,7 @@ export const ucWechatBindingApi = {
 const DRAWS_BASE = `${PLUGIN_BASE}/draws`;
 
 export const drawsApi = {
-  list: (query: { page?: number; size?: number; status?: string; keyword?: string } = {}) =>
+  list: (query: { page?: number; size?: number; status?: string; keyword?: string; sort?: string } = {}) =>
     http.get<PageResult<Draw>>(DRAWS_BASE, query),
   get: (name: string) => http.get<Draw>(`${DRAWS_BASE}/${name}`),
   /** 审核通过（note 选填，展示给作者的审核说明） */
@@ -384,5 +384,8 @@ export const drawsApi = {
   /** 审核拒绝（reason 必填，展示给作者） */
   reject: (name: string, reason: string) =>
     http.post<Draw>(`${DRAWS_BASE}/${name}/reject`, { reason }),
+  /** 切换显隐（hidden=true 隐藏，公开列表/详情不展示） */
+  setHidden: (name: string, hidden: boolean) =>
+    http.put<Draw>(`${DRAWS_BASE}/${name}/hidden`, { hidden }),
   delete: (name: string) => http.delete<{ success: boolean }>(`${DRAWS_BASE}/${name}`),
 };

@@ -11,8 +11,8 @@ import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
 import org.springframework.web.server.ResponseStatusException;
 import cn.ialley.unihalo.constants.Constants;
-import cn.ialley.unihalo.scheme.Draw;
 import cn.ialley.unihalo.services.DrawService;
+import cn.ialley.unihalo.vo.DrawVo;
 import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Mono;
 import run.halo.app.core.extension.endpoint.CustomEndpoint;
@@ -42,7 +42,28 @@ public class DrawEndpoint implements CustomEndpoint {
                 .POST(Constants.DRAW_API_BASE_PATH + "/{name}/approve", this::approveDraw)
                 .POST(Constants.DRAW_API_BASE_PATH + "/{name}/reject", this::rejectDraw)
                 .DELETE(Constants.DRAW_API_BASE_PATH + "/{name}", this::deleteDraw)
+                .PUT(Constants.DRAW_API_BASE_PATH + "/{name}/hidden", this::setHidden)
                 .build();
+    }
+
+    /**
+     * 切换显隐请求体：hidden=true 隐藏（公开列表/详情不展示），false 恢复展示
+     */
+    public record HiddenRequest(Boolean hidden) {
+    }
+
+    private Mono<ServerResponse> setHidden(ServerRequest request) {
+        return request.bodyToMono(HiddenRequest.class)
+                .map(HiddenRequest::hidden)
+                .defaultIfEmpty(Boolean.FALSE)
+                .onErrorReturn(Boolean.FALSE)
+                .flatMap(hidden -> drawService.setHidden(request.pathVariable("name"),
+                        Boolean.TRUE.equals(hidden)))
+                .flatMap(draw -> ServerResponse.ok().bodyValue(draw))
+                .onErrorResume(IllegalArgumentException.class,
+                        e -> ServerResponse.badRequest()
+                                .bodyValue(Map.of("message",
+                                        e.getMessage() == null ? "请求不合法" : e.getMessage())));
     }
 
     private Mono<ServerResponse> deleteDraw(ServerRequest request) {
@@ -53,7 +74,8 @@ public class DrawEndpoint implements CustomEndpoint {
     private Mono<ServerResponse> listDraws(ServerRequest request) {
         String status = request.queryParam("status").orElse("").trim();
         String keyword = request.queryParam("keyword").orElse("").trim();
-        return drawService.list(blankToNull(status), blankToNull(keyword),
+        String sort = request.queryParam("sort").orElse("").trim();
+        return drawService.list(blankToNull(status), blankToNull(keyword), blankToNull(sort),
                         queryPage(request), querySize(request))
                 .flatMap(result -> ServerResponse.ok().bodyValue(result));
     }
@@ -72,7 +94,8 @@ public class DrawEndpoint implements CustomEndpoint {
     }
 
     /**
-     * 审核动作公共流程：取当前用户为审核人（匿名一律 401），空请求体视为无备注/原因
+     * 审核动作公共流程：取当前用户为审核人（匿名一律 401），空请求体/解析失败均视为无备注/原因。
+     * 注意 valueOf 可能返回 null（备注/原因选填），故用 flatMap 承接而非 map（map 禁止 null 返回值）。
      */
     private Mono<ServerResponse> review(ServerRequest request,
             java.util.function.Function<ReviewRequest, String> valueOf,
@@ -80,13 +103,14 @@ public class DrawEndpoint implements CustomEndpoint {
         return currentUsername(request)
                 .flatMap(reviewer -> request.bodyToMono(ReviewRequest.class)
                         .defaultIfEmpty(new ReviewRequest(null, null))
-                        .map(valueOf)
-                        .flatMap(value -> action.apply(request.pathVariable("name"),
-                                reviewer, value)))
+                        .onErrorResume(e -> Mono.just(new ReviewRequest(null, null)))
+                        .flatMap(body -> action.apply(request.pathVariable("name"),
+                                reviewer, blankToNull(valueOf.apply(body)))))
                 .flatMap(draw -> ServerResponse.ok().bodyValue(draw))
                 .onErrorResume(IllegalArgumentException.class,
                         e -> ServerResponse.badRequest()
-                                .bodyValue(Map.of("message", e.getMessage())));
+                                .bodyValue(Map.of("message",
+                                        e.getMessage() == null ? "请求不合法" : e.getMessage())));
     }
 
     /**
@@ -111,7 +135,7 @@ public class DrawEndpoint implements CustomEndpoint {
      */
     @FunctionalInterface
     private interface TriReviewAction {
-        Mono<Draw> apply(String name, String reviewer, String value);
+        Mono<DrawVo> apply(String name, String reviewer, String value);
     }
 
     private static String blankToNull(String value) {

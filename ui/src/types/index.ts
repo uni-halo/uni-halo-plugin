@@ -702,6 +702,12 @@ export interface FeatureConfigPageTitles {
   douban?: string;
   /** 足迹地图页 */
   footprint?: string;
+  /** 绘画作品列表页 */
+  drawList?: string;
+  /** 画布创作页 */
+  drawCanvas?: string;
+  /** 我的绘画管理页 */
+  drawManage?: string;
   /** 瞬间详情页 */
   momentDetail?: string;
   /** 轮播详情页 */
@@ -718,6 +724,8 @@ export interface FeatureConfigPageTitles {
   userAgreement?: string;
   /** 隐私政策页 */
   privacyPolicy?: string;
+  /** 绘画审核页 */
+  drawReview?: string;
 }
 
 export interface FeatureConfigPages {
@@ -778,6 +786,11 @@ export interface FeatureConfigPages {
     copyrightAuthor?: string;
     copyrightDesc?: string;
     copyrightViolation?: string;
+  };
+  /** 绘画配置（页面设置-绘画 tab；服务端发布流程消费，不下发客户端） */
+  draw?: {
+    /** 发布绘画需要审核（缺省 true） */
+    auditEnabled?: boolean;
   };
 }
 
@@ -1010,10 +1023,12 @@ export interface PublicMaintenance {
 
 // ===== 绘画作品 =====
 
-/** 绘画作品（App 端用户发布，管理员审核） */
+/** 绘画作品（App 端用户发布，管理员审核；owner 由服务端实时解析 User） */
 export interface Draw {
   metadata: Metadata;
   spec: DrawSpec;
+  /** 作者信息（读取时实时解析，昵称/头像始终最新） */
+  owner: DrawOwner;
 }
 
 export interface DrawSpec {
@@ -1025,18 +1040,28 @@ export interface DrawSpec {
   cover: string;
   /** 关联附件名（清理留档） */
   attachmentName?: string;
-  /** 作者用户名 */
-  owner: string;
-  /** 作者昵称快照 */
-  ownerDisplayName?: string;
+  /** 作者用户名（唯一标识，owner 隔离依据） */
+  ownerName: string;
   /** 审核状态 */
   status?: "PENDING" | "APPROVED" | "REJECTED";
+  /** 是否隐藏（隐藏后公开列表/详情不展示） */
+  hidden?: boolean;
   /** 审核说明（拒绝时为原因） */
   reason?: string;
   /** 审核人用户名 */
   reviewedBy?: string;
   /** 审核时间（RFC3339） */
   reviewedAt?: string;
+}
+
+/** 作者信息快照（用户名 + 昵称 + 头像） */
+export interface DrawOwner {
+  /** 作者用户名 */
+  username: string;
+  /** 作者昵称 */
+  displayName?: string;
+  /** 作者头像链接 */
+  avatar?: string;
 }
 
 export const DRAW_STATUS_LABELS: Record<string, string> = {

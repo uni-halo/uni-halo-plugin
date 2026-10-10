@@ -17,6 +17,7 @@ import cn.ialley.unihalo.scheme.FeatureConfig.Blogger;
 import cn.ialley.unihalo.scheme.FeatureConfig.BloggerPage;
 import cn.ialley.unihalo.scheme.FeatureConfig.Copyright;
 import cn.ialley.unihalo.scheme.FeatureConfig.DisclaimerPage;
+import cn.ialley.unihalo.scheme.FeatureConfig.DrawPage;
 import cn.ialley.unihalo.scheme.FeatureConfig.HomePage;
 import cn.ialley.unihalo.scheme.FeatureConfig.LinkInfo;
 import cn.ialley.unihalo.scheme.FeatureConfig.Love;
@@ -78,7 +79,33 @@ public class FeatureConfigServiceImpl implements FeatureConfigService {
         return fetchRaw()
                 // 恋爱模块入口密码一律脱敏（哈希不回显；passwordEnabled 由哈希派生）
                 .map(this::maskLovePasswords)
-                .flatMap(this::applySystemCommentEnable);
+                .flatMap(this::applySystemCommentEnable)
+                .flatMap(this::applyLegacyDrawAudit);
+    }
+
+    /**
+     * 绘画发布审核开关存量导入：单例中 pages.draw 缺失时（本次功能上线前的存量数据），
+     * 从旧插件设置 drawConfig.auditEnabled 读取一次注入（不落库）；
+     * 站长在「功能设置-页面设置-绘画」保存后即持久化到新位置。
+     */
+    private Mono<FeatureConfig> applyLegacyDrawAudit(FeatureConfig config) {
+        if (config.getSpec() == null || config.getSpec().getPages() == null
+                || config.getSpec().getPages().getDraw() != null) {
+            return Mono.just(config);
+        }
+        return settingFetcher.getSettingValue("drawConfig")
+                .map(node -> node == null ? null : node.get("auditEnabled"))
+                .defaultIfEmpty(objectMapper.nullNode())
+                .onErrorReturn(objectMapper.nullNode())
+                .map(valueNode -> {
+                    // 旧值缺失按缺省 true 处理（与旧 formSchema 默认一致）
+                    boolean legacy = valueNode != null && valueNode.isBoolean()
+                            ? valueNode.asBoolean(true) : true;
+                    DrawPage draw = new DrawPage();
+                    draw.setAuditEnabled(legacy);
+                    config.getSpec().getPages().setDraw(draw);
+                    return config;
+                });
     }
 
     /**
@@ -437,6 +464,11 @@ public class FeatureConfigServiceImpl implements FeatureConfigService {
         PrivacyPolicyPage privacyPolicy = new PrivacyPolicyPage();
         privacyPolicy.setContent("");
         pages.setPrivacyPolicy(privacyPolicy);
+
+        // 绘画配置：发布审核默认开启（与旧 drawConfig.formSchema 默认一致）
+        DrawPage draw = new DrawPage();
+        draw.setAuditEnabled(true);
+        pages.setDraw(draw);
         return pages;
     }
 

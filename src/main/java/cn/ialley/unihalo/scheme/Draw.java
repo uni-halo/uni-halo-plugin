@@ -45,14 +45,16 @@ public class Draw extends AbstractExtension {
         private String attachmentName;
 
         /**
-         * 作者用户名（服务端强制覆盖，客户端传值无效）
+         * 作者用户名（唯一标识，服务端强制覆盖，客户端传值无效；
+         * owner 隔离与索引依据，昵称/头像由响应层实时解析）
          */
-        private String owner;
+        private String ownerName;
 
         /**
-         * 作者昵称快照（列表展示用，避免逐条查 User）
+         * 是否隐藏（管理端/作者可切换；隐藏后不在公开列表与详情中展示，
+         * 不影响审核状态与作者本人查看）
          */
-        private String ownerDisplayName;
+        private Boolean hidden;
 
         /**
          * 审核状态：PENDING（待审核）/ APPROVED（已通过）/ REJECTED（已拒绝）
@@ -73,5 +75,27 @@ public class Draw extends AbstractExtension {
          * 审核时间（RFC3339）
          */
         private String reviewedAt;
+    }
+
+    /**
+     * 作者信息（响应层实时解析 User 组装，非存储字段；语义同官方评论 OwnerInfo）。
+     */
+    @Data
+    public static class DrawOwner {
+
+        /**
+         * 作者用户名
+         */
+        private String username;
+
+        /**
+         * 作者昵称（用户不存在时回退用户名）
+         */
+        private String displayName;
+
+        /**
+         * 作者头像链接
+         */
+        private String avatar;
     }
 }

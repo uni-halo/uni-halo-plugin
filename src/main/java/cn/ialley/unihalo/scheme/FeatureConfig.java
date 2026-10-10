@@ -161,6 +161,16 @@ public class FeatureConfig extends AbstractExtension {
         /** 隐私政策页（页面设置-隐私政策 tab 维护，
          * 随 {@code featureConfig.pages.privacyPolicy} 下发，app 端注册页/协议页渲染） */
         private PrivacyPolicyPage privacyPolicy;
+        /** 绘画配置（功能设置-页面设置-绘画 tab 维护，服务端发布流程消费） */
+        private DrawPage draw;
+    }
+
+    /** 绘画配置。发布审核开关（auditEnabled）由 DrawServiceImpl 发布流程读取。 */
+    @Data
+    public static class DrawPage {
+        /** 发布绘画需要审核（缺省 true）：开启后 App 端发布进入待审核，
+         * 管理员审核通过后公开展示；关闭则发布即公开 */
+        private Boolean auditEnabled;
     }
 
     /** 用户协议页。内容为富文本 HTML（RichTextEditorField 编辑），留空 = 站点未配置。 */
@@ -231,6 +241,10 @@ public class FeatureConfig extends AbstractExtension {
         private String footprint;
         /** 绘画作品列表页 */
         private String drawList;
+        /** 画布创作页 */
+        private String drawCanvas;
+        /** 我的绘画管理页 */
+        private String drawManage;
         /** 瞬间详情页 */
         private String momentDetail;
         /** 轮播详情页 */
@@ -255,6 +269,8 @@ public class FeatureConfig extends AbstractExtension {
         private String userAgreement;
         /** 隐私政策页 */
         private String privacyPolicy;
+        /** 绘画审核页 */
+        private String drawReview;
     }
 
     /** 首页（快捷导航逐项可配置，轮播渲染参数由 app 端默认开启） */

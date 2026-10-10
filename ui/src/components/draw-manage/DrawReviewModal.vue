@@ -8,10 +8,10 @@ import { drawsApi } from "@/api";
 const props = defineProps<{
   /** approve=通过 / reject=拒绝 */
   action: "approve" | "reject";
-  /** 目标绘画 name */
-  name: string;
-  /** 画作标题（弹窗描述展示） */
-  title: string;
+  /** 目标绘画 name 列表（单条或批量） */
+  names: string[];
+  /** 画作标题（单条时弹窗描述展示） */
+  title?: string;
 }>();
 
 const emit = defineEmits<{
@@ -24,7 +24,15 @@ const reason = ref("");
 const saving = ref(false);
 
 const isReject = computed(() => props.action === "reject");
+const isBatch = computed(() => props.names.length > 1);
 const modalTitle = computed(() => (isReject.value ? "拒绝绘画" : "通过绘画"));
+
+const description = computed(() => {
+  const target = isBatch.value ? `选中的 ${props.names.length} 幅绘画` : `画作「${props.title || props.names[0]}」`;
+  return isReject.value
+    ? `确定拒绝${target}吗？拒绝后不会公开展示，需填写拒绝原因。`
+    : `确定通过${target}吗？通过后将在站点公开展示，备注选填。`;
+});
 
 const handleSubmit = () => {
   submitForm("draw-review-form");
@@ -33,11 +41,13 @@ const handleSubmit = () => {
 const handleConfirm = async () => {
   try {
     saving.value = true;
-    if (isReject.value) {
-      await drawsApi.reject(props.name, reason.value.trim());
-    } else {
-      await drawsApi.approve(props.name, reason.value.trim() || undefined);
-    }
+    await Promise.all(
+      props.names.map((name) =>
+        isReject.value
+          ? drawsApi.reject(name, reason.value.trim())
+          : drawsApi.approve(name, reason.value.trim() || undefined)
+      )
+    );
     Toast.success(isReject.value ? "已拒绝" : "已通过");
     modal.value?.close();
     emit("done");
@@ -59,8 +69,7 @@ const handleConfirm = async () => {
       @submit="handleConfirm"
     >
       <div class=":uno: mb-4 text-sm text-gray-600">
-        画作「{{ title }}」
-        {{ isReject ? "拒绝后不会公开展示，需填写拒绝原因。" : "通过后将在站点公开展示，备注选填。" }}
+        {{ description }}
       </div>
       <FormKit
         v-model="reason"

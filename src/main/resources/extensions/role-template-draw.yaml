@@ -36,6 +36,8 @@ rules:
   - apiGroups: [ "console.api.unihalo.ialley.cn" ]
     resources:
       - "draws"
+      - "draws/approve"
+      - "draws/reject"
     verbs: [ "create", "patch", "update", "delete", "deletecollection" ]
 
 ---

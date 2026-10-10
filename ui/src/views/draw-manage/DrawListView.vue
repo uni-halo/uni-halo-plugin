@@ -14,17 +14,29 @@ import {
   VStatusDot,
   VDropdownItem,
 } from "@halo-dev/components";
+import { Toast } from "@halo-dev/components";
 import { useQuery } from "@tanstack/vue-query";
 import { useDeletionFlow } from "@/composables/useDeletionFlow";
 import { deletingRefetchInterval } from "@/utils/query";
 import { computed, ref, watch } from "vue";
+import RiEyeLine from "~icons/ri/eye-line";
+import RiEyeOffLine from "~icons/ri/eye-off-line";
 import DrawReviewModal from "@/components/draw-manage/DrawReviewModal.vue";
 import ImagePreviewModal from "@/components/common/ImagePreviewModal.vue";
 import FilterDropdown from "@/components/common/FilterDropdown.vue";
 import FilterCleanButton from "@/components/common/FilterCleanButton.vue";
+import SortDropdowns from "@/components/common/SortDropdowns.vue";
 import { drawsApi } from "@/api";
 import { DRAW_STATUS_LABELS, DRAW_STATUS_OPTIONS } from "@/types";
 import type { Draw } from "@/types";
+import type { SortField } from "@/components/common/SortDropdowns.vue";
+
+/** 排序维度（每个维度独立下拉，互斥单值；选项 value 对应后端 sort 参数）
+ * 「默认」= 待审核优先 + 提交时间倒序（后端默认排序） */
+const SORT_FIELDS: SortField[] = [
+  { key: "createdAt", label: "提交时间" },
+  { key: "reviewedAt", label: "审核时间" },
+];
 
 const { confirmDelete } = useDeletionFlow(["uni-halo:draws"]);
 
@@ -32,22 +44,29 @@ const page = ref(1);
 const size = ref(20);
 const keyword = ref("");
 const status = ref<string>();
+const sortBy = ref<string>();
 const total = ref(0);
 
+// 行内/批量审核弹窗
 const reviewAction = ref<"approve" | "reject">("approve");
-const reviewTarget = ref<Draw>();
+const reviewNames = ref<string[]>([]);
+const reviewTitle = ref<string>();
 const reviewVisible = ref(false);
 
 const previewVisible = ref(false);
 const previewUrl = ref("");
 
+const checkAll = ref(false);
+const selectedNames = ref<string[]>([]);
+
 const { data: draws, isLoading, isFetching, refetch } = useQuery({
-  queryKey: ["uni-halo:draws", page, size, status, keyword],
+  queryKey: ["uni-halo:draws", page, size, status, sortBy, keyword],
   queryFn: async () => {
     const result = await drawsApi.list({
       page: page.value,
       size: size.value,
       status: status.value,
+      sort: sortBy.value,
       keyword: keyword.value || undefined,
     });
     total.value = result.total;
@@ -58,21 +77,68 @@ const { data: draws, isLoading, isFetching, refetch } = useQuery({
 });
 
 watch(
-  () => [keyword.value, status.value],
+  () => [keyword.value, status.value, sortBy.value],
   () => {
     page.value = 1;
   }
 );
 
-const hasFilters = computed(() => !!status.value);
+/** 筛选/排序是否有激活条件（决定是否显示「清除」按钮） */
+const hasFilters = computed(() => !!status.value || !!sortBy.value);
 
+/** 清除操作：重置状态筛选与排序（keyword 搜索框独立保留） */
 const handleClearFilters = () => {
   status.value = undefined;
+  sortBy.value = undefined;
 };
 
+watch(
+  () => selectedNames.value,
+  (newValue) => {
+    checkAll.value = newValue.length === (draws.value?.items.length || 0);
+  }
+);
+
+const handleCheckAllChange = (e: Event) => {
+  const { checked } = e.target as HTMLInputElement;
+  if (checked) {
+    selectedNames.value = draws.value?.items.map((draw) => draw.metadata.name) || [];
+  } else {
+    selectedNames.value = [];
+  }
+};
+
+const checkSelection = (draw: Draw) => selectedNames.value.includes(draw.metadata.name);
+
+/** 行内快速审核：打开确认弹窗（单条） */
 const handleOpenReview = (action: "approve" | "reject", draw: Draw) => {
   reviewAction.value = action;
-  reviewTarget.value = draw;
+  reviewNames.value = [draw.metadata.name];
+  reviewTitle.value = draw.spec.title;
+  reviewVisible.value = true;
+};
+
+/** 切换显隐（仅已通过的画作；隐藏后公开列表/详情不展示） */
+const handleToggleHidden = async (draw: Draw) => {
+  const target = !draw.spec.hidden;
+  try {
+    await drawsApi.setHidden(draw.metadata.name, target);
+    Toast.success(target ? "已隐藏" : "已公开展示");
+    refetch();
+  } catch (e) {
+    Toast.error("操作失败，请重试");
+    console.error("切换绘画显隐失败", e);
+  }
+};
+
+/** 批量审核：打开确认弹窗（选中项） */
+const handleBatchReview = (action: "approve" | "reject") => {
+  if (!selectedNames.value.length) {
+    return;
+  }
+  reviewAction.value = action;
+  reviewNames.value = [...selectedNames.value];
+  reviewTitle.value = undefined;
   reviewVisible.value = true;
 };
 
@@ -83,6 +149,25 @@ const handleDelete = (draw: Draw) => {
     names: [draw.metadata.name],
     doDelete: (name) => drawsApi.delete(name),
   });
+};
+
+const handleDeleteInBatch = () => {
+  const names = [...selectedNames.value];
+  confirmDelete({
+    title: "确定要删除选中的绘画吗？",
+    description: "仅删除绘画记录，图片附件保留，该操作不可恢复。",
+    names,
+    doDelete: (name) => drawsApi.delete(name),
+    onSuccess: () => {
+      selectedNames.value = [];
+    },
+  });
+};
+
+const onReviewDone = () => {
+  reviewVisible.value = false;
+  selectedNames.value = [];
+  refetch();
 };
 
 const statusColorClass = computed(() => (draw: Draw) => {
@@ -110,12 +195,12 @@ const formatTime = (value?: string | null) => {
 
 <template>
   <DrawReviewModal
-    v-if="reviewVisible && reviewTarget"
+    v-if="reviewVisible"
     :action="reviewAction"
-    :name="reviewTarget.metadata.name"
-    :title="reviewTarget.spec.title"
+    :names="reviewNames"
+    :title="reviewTitle"
     @close="reviewVisible = false"
-    @done="refetch"
+    @done="onReviewDone"
   />
 
   <VPageHeader title="UniHalo-绘画作品">
@@ -136,12 +221,29 @@ const formatTime = (value?: string | null) => {
       <template #header>
         <div class=":uno: block w-full bg-gray-50 px-4 py-3">
           <div class=":uno: relative flex flex-col flex-wrap items-start gap-4 sm:flex-row sm:items-center">
+            <div class=":uno: hidden items-center sm:flex">
+              <input v-model="checkAll" type="checkbox" @change="handleCheckAllChange" />
+            </div>
             <div class=":uno: flex w-full flex-1 items-center sm:w-auto">
-              <SearchInput v-model="keyword" placeholder="标题/作者（回车搜索）" />
+              <template v-if="!selectedNames.length">
+                <SearchInput v-model="keyword" placeholder="标题/用户名（回车搜索）" />
+              </template>
+              <VSpace v-else spacing="sm">
+                <VButton size="sm" type="primary" @click="handleBatchReview('approve')">
+                  通过
+                </VButton>
+                <VButton size="sm" type="danger" @click="handleBatchReview('reject')">
+                  拒绝
+                </VButton>
+                <VButton size="sm" type="danger" plain @click="handleDeleteInBatch">
+                  删除
+                </VButton>
+              </VSpace>
             </div>
             <VSpace spacing="lg" class=":uno: flex-wrap">
               <FilterCleanButton v-if="hasFilters" @click="handleClearFilters" />
               <FilterDropdown v-model="status" label="状态" :items="DRAW_STATUS_OPTIONS" />
+              <SortDropdowns v-model="sortBy" :fields="SORT_FIELDS" />
             </VSpace>
           </div>
         </div>
@@ -155,7 +257,10 @@ const formatTime = (value?: string | null) => {
 
       <Transition v-else appear name="fade">
         <VEntityContainer>
-          <VEntity v-for="draw in draws?.items" :key="draw.metadata.name">
+          <VEntity v-for="draw in draws?.items" :key="draw.metadata.name" :is-selected="checkSelection(draw)">
+            <template #checkbox>
+              <input v-model="selectedNames" :value="draw.metadata.name" name="draw-checkbox" type="checkbox" />
+            </template>
             <template #start>
               <VEntityField v-if="draw.spec.cover" width="42px">
                 <template #description>
@@ -189,9 +294,18 @@ const formatTime = (value?: string | null) => {
               </VEntityField>
               <VEntityField>
                 <template #description>
-                  <span class=":uno: truncate text-xs text-gray-600" style="max-width: 10rem">
-                    {{ draw.spec.ownerDisplayName || draw.spec.owner }}
-                  </span>
+                  <div class=":uno: flex items-center gap-1.5">
+                    <img
+                      v-if="draw.owner?.avatar"
+                      :src="draw.owner.avatar"
+                      :alt="draw.owner.displayName || '作者头像'"
+                      class=":uno: h-5 w-5 flex-shrink-0 rounded-full object-cover"
+                    />
+                    <span v-else class=":uno: h-5 w-5 flex-shrink-0 rounded-full bg-gray-100" />
+                    <span class=":uno: truncate text-xs text-gray-600" style="max-width: 8rem">
+                      {{ draw.owner?.displayName || draw.owner?.username || "未知作者" }}
+                    </span>
+                  </div>
                 </template>
               </VEntityField>
               <VEntityField>
@@ -199,6 +313,19 @@ const formatTime = (value?: string | null) => {
                   <span class=":uno: text-xs font-medium" :class="statusColorClass(draw)">
                     {{ DRAW_STATUS_LABELS[draw.spec.status || "PENDING"] }}
                   </span>
+                </template>
+              </VEntityField>
+              <VEntityField v-if="draw.spec.status === 'APPROVED'">
+                <template #description>
+                  <button
+                    v-tooltip="draw.spec.hidden ? '恢复公开展示' : '隐藏（公开列表/详情不展示）'"
+                    type="button"
+                    class=":uno: flex cursor-pointer items-center border-none bg-transparent p-0"
+                    @click="handleToggleHidden(draw)"
+                  >
+                    <RiEyeOffLine v-if="draw.spec.hidden" class=":uno: h-4 w-4 text-orange-400" />
+                    <RiEyeLine v-else class=":uno: h-4 w-4 text-gray-400" />
+                  </button>
                 </template>
               </VEntityField>
               <VEntityField>
@@ -239,6 +366,9 @@ const formatTime = (value?: string | null) => {
               </VDropdownItem>
               <VDropdownItem @click="handleOpenReview('reject', draw)">
                 拒绝
+              </VDropdownItem>
+              <VDropdownItem v-if="draw.spec.status === 'APPROVED'" @click="handleToggleHidden(draw)">
+                {{ draw.spec.hidden ? "恢复公开展示" : "隐藏" }}
               </VDropdownItem>
               <VDropdownItem type="danger" @click="handleDelete(draw)">
                 删除
