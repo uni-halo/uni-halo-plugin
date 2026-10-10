@@ -228,7 +228,7 @@ const TITLE_NAMING_VERSIONS: Array<{ key: string; label: string; values: Record<
       tags: '印记标识', tagArticles: '印记寻文', search: '觅迹寻章', favorites: '所爱存藏',
       friendLinks: '四方同好', notice: '讯息通告', noticeDetail: '讯息详读',
       votes: '众言表决', voteDetail: '表决详阅', contact: '寄语相询', setting: '私趣自定',
-      portfolio: '作品陈列', portfolioDetail: '作品细读', douban: '书影拾遗', footprint: '行止留痕', drawList: '笔迹存览', drawCanvas: '落笔成画', drawManage: '己作存览',
+      portfolio: '作品陈列', portfolioDetail: '作品细读', douban: '书影拾遗', footprint: '行止留痕', drawList: '笔迹存览', drawCanvas: '落笔成画', drawManage: '己作存览', drawReview: '己作甄别',
       momentDetail: '瞬念细读', bannerDetail: '篇章详读', userProfile: '访客之页',
       aboutProject: '初心述记', disclaimer: '条例申明', dataVisual: '万象数观',
       login: '凭籍登入', register: '开户结缘', userAgreement: '缔约守则', privacyPolicy: '私权明叙',

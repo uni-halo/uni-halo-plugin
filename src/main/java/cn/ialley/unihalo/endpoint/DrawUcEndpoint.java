@@ -59,11 +59,14 @@ public class DrawUcEndpoint implements CustomEndpoint {
     private Mono<ServerResponse> setMyHidden(ServerRequest request) {
         return currentUsername(request)
                 .flatMap(username -> request.bodyToMono(HiddenRequest.class)
-                        .map(HiddenRequest::hidden)
-                        .defaultIfEmpty(Boolean.FALSE)
-                        .onErrorReturn(Boolean.FALSE)
-                        .flatMap(hidden -> drawService.setMineHidden(request.pathVariable("name"),
-                                username, Boolean.TRUE.equals(hidden))))
+                        .switchIfEmpty(Mono.just(new HiddenRequest(Boolean.FALSE)))
+                        // map 禁止 null 返回值（hidden 字段可为 null），须用 flatMap 承接；
+                        // 请求体解析失败按 400 处理，避免静默降级为「恢复公开」
+                        .flatMap(body -> drawService.setMineHidden(request.pathVariable("name"),
+                                username, Boolean.TRUE.equals(body.hidden())))
+                        .onErrorResume(e -> !(e instanceof ResponseStatusException),
+                                e -> Mono.error(new ResponseStatusException(
+                                        HttpStatus.BAD_REQUEST, "请求体不合法"))))
                 .flatMap(draw -> ServerResponse.ok().bodyValue(draw))
                 .onErrorResume(IllegalArgumentException.class,
                         e -> ServerResponse.badRequest()

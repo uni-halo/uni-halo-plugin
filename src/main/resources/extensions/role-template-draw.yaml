@@ -38,6 +38,7 @@ rules:
       - "draws"
       - "draws/approve"
       - "draws/reject"
+      - "draws/hidden"
     verbs: [ "create", "patch", "update", "delete", "deletecollection" ]
 
 ---
@@ -57,7 +58,8 @@ rules:
   - apiGroups: [ "uc.api.unihalo.ialley.cn" ]
     resources:
       - "draws"
-    verbs: [ "get", "list", "create", "delete" ]
+      - "draws/hidden"
+    verbs: [ "get", "list", "create", "delete", "update" ]
 
 ---
 

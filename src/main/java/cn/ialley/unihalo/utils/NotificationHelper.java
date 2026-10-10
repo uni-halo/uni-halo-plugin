@@ -41,8 +41,6 @@ public class NotificationHelper {
     public static final String REASON_WECHAT_BOUND = "uni-halo-wechat-bound";
     /** 事件类型：解除微信绑定。 */
     public static final String REASON_WECHAT_UNBOUND = "uni-halo-wechat-unbound";
-    /** 事件类型：绘画审核结果（ReasonType 由 extensions/notification-reason-types.yaml 声明，名称须与 YAML 一致）。 */
-    public static final String REASON_DRAW_REVIEW_RESULT = "uni-halo-draw-review-result";
 
     /** 绑定方式：小程序内一键绑定。 */
     public static final String BIND_WAY_APP = "微信小程序一键绑定";
@@ -112,26 +110,6 @@ public class NotificationHelper {
         attributes.put("operator", operator);
         return subscribeOnce(username, REASON_WECHAT_UNBOUND)
                 .then(emit(username, REASON_WECHAT_UNBOUND, attributes));
-    }
-
-    /**
-     * 绘画审核结果通知：attributes 含 username(作者)/title/status/reason/reviewedAt。
-     *
-     * <p>attributes.username 必须为作者本人：订阅表达式按 props.username 过滤，
-     * 否则作者收不到通知。reason 为空时模板不出现原因行。
-     */
-    public Mono<Void> emitDrawReviewResult(String author, String title, String status,
-            String reason) {
-        var attributes = new HashMap<String, Object>();
-        attributes.put("username", author);
-        attributes.put("title", title);
-        attributes.put("status", status);
-        if (reason != null && !reason.isBlank()) {
-            attributes.put("reason", reason);
-        }
-        attributes.put("reviewedAt", now());
-        return subscribeOnce(author, REASON_DRAW_REVIEW_RESULT)
-                .then(emit(author, REASON_DRAW_REVIEW_RESULT, attributes));
     }
 
     /** 为用户订阅指定事件类型（expression 过滤仅接收本人事件）。 */
