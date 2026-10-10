@@ -29,6 +29,7 @@ import type {
   WechatBinding,
   BindTicketIssued,
   BindTicketStatus,
+  Draw,
 } from "@/types";
 
 const CONSOLE_API_GROUP = "console.api.unihalo.ialley.cn/v1alpha1";
@@ -367,4 +368,21 @@ export const ucWechatBindingApi = {
     http.post<{ success: boolean }>(
       `${AUTH_BASE}/bind/wechat/qr/tickets/${ticket}/reject`,
     ),
+};
+
+// ===== 绘画作品（审核人仅限管理员）=====
+
+const DRAWS_BASE = `${PLUGIN_BASE}/draws`;
+
+export const drawsApi = {
+  list: (query: { page?: number; size?: number; status?: string; keyword?: string } = {}) =>
+    http.get<PageResult<Draw>>(DRAWS_BASE, query),
+  get: (name: string) => http.get<Draw>(`${DRAWS_BASE}/${name}`),
+  /** 审核通过（note 选填，展示给作者的审核说明） */
+  approve: (name: string, note?: string) =>
+    http.post<Draw>(`${DRAWS_BASE}/${name}/approve`, { note }),
+  /** 审核拒绝（reason 必填，展示给作者） */
+  reject: (name: string, reason: string) =>
+    http.post<Draw>(`${DRAWS_BASE}/${name}/reject`, { reason }),
+  delete: (name: string) => http.delete<{ success: boolean }>(`${DRAWS_BASE}/${name}`),
 };

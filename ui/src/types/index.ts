@@ -1007,3 +1007,48 @@ export interface PublicMaintenance {
   startTime?: string;
   endTime?: string;
 }
+
+// ===== 绘画作品 =====
+
+/** 绘画作品（App 端用户发布，管理员审核） */
+export interface Draw {
+  metadata: Metadata;
+  spec: DrawSpec;
+}
+
+export interface DrawSpec {
+  /** 画作标题 */
+  title: string;
+  /** 画作简介（选填） */
+  description?: string;
+  /** 画作图片永久链接 */
+  cover: string;
+  /** 关联附件名（清理留档） */
+  attachmentName?: string;
+  /** 作者用户名 */
+  owner: string;
+  /** 作者昵称快照 */
+  ownerDisplayName?: string;
+  /** 审核状态 */
+  status?: "PENDING" | "APPROVED" | "REJECTED";
+  /** 审核说明（拒绝时为原因） */
+  reason?: string;
+  /** 审核人用户名 */
+  reviewedBy?: string;
+  /** 审核时间（RFC3339） */
+  reviewedAt?: string;
+}
+
+export const DRAW_STATUS_LABELS: Record<string, string> = {
+  PENDING: "待审核",
+  APPROVED: "已通过",
+  REJECTED: "已拒绝",
+};
+
+/** 绘画审核状态选项（统一供下拉/筛选使用；「全部」无 value=清除筛选） */
+export const DRAW_STATUS_OPTIONS: { label: string; value?: string }[] = [
+  { label: "全部" },
+  { label: "待审核", value: "PENDING" },
+  { label: "已通过", value: "APPROVED" },
+  { label: "已拒绝", value: "REJECTED" },
+];

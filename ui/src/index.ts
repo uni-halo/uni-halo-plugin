@@ -10,6 +10,7 @@ import RiLink from '~icons/ri/link'
 import RiFileList3Line from '~icons/ri/file-list-3-line'
 import RiShieldCheckLine from '~icons/ri/shield-check-line'
 import RiSlideshowLine from '~icons/ri/slideshow-line'
+import RiPaletteLine from '~icons/ri/palette-line'
 import RiSettings3Line from '~icons/ri/settings-3-line'
 import WechatBindingTab from '@/components/WechatBindingTab.vue'
 import UcWechatBindingTab from '@/components/UcWechatBindingTab.vue'
@@ -317,6 +318,26 @@ export default definePlugin({
             group: GROUP_NAME,
             icon: markRaw(RiSlideshowLine),
             priority: 6,
+          },
+        },
+      },
+    },
+    {
+      parentName: 'Root',
+      route: {
+        path: baseRoutePath('/draws'),
+        name: 'DrawList',
+        component: () => import('@/views/draw-manage/DrawListView.vue'),
+        meta: {
+          title: '绘画作品',
+          searchable: true,
+          hideFooter: false,
+          permissions: ['plugin:uni-halo:draws:view'],
+          menu: {
+            name: '绘画作品',
+            group: GROUP_NAME,
+            icon: markRaw(RiPaletteLine),
+            priority: 7,
           },
         },
       },
