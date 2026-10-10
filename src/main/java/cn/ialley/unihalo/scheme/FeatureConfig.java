@@ -229,6 +229,8 @@ public class FeatureConfig extends AbstractExtension {
         private String douban;
         /** 足迹地图页 */
         private String footprint;
+        /** 绘画作品列表页 */
+        private String drawList;
         /** 瞬间详情页 */
         private String momentDetail;
         /** 轮播详情页 */

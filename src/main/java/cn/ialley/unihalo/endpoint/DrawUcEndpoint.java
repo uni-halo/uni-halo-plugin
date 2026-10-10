@@ -50,8 +50,9 @@ public class DrawUcEndpoint implements CustomEndpoint {
     }
 
     private Mono<ServerResponse> listMyDraws(ServerRequest request) {
+        String status = request.queryParam("status").orElse("").trim();
         return currentUsername(request)
-                .flatMap(username -> drawService.listMine(username,
+                .flatMap(username -> drawService.listMine(username, blankToNull(status),
                         queryPage(request), querySize(request)))
                 .flatMap(result -> ServerResponse.ok().bodyValue(result));
     }
@@ -97,6 +98,10 @@ public class DrawUcEndpoint implements CustomEndpoint {
         return client.fetch(User.class, username)
                 .switchIfEmpty(Mono.error(new ResponseStatusException(
                         HttpStatus.UNAUTHORIZED, "用户不存在")));
+    }
+
+    private static String blankToNull(String value) {
+        return value == null || value.isBlank() ? null : value;
     }
 
     private static int queryPage(ServerRequest request) {

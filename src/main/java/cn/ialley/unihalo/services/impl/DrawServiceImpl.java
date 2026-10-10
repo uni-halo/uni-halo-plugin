@@ -67,11 +67,14 @@ public class DrawServiceImpl implements DrawService {
     }
 
     @Override
-    public Mono<ListResult<Draw>> listMine(String username, int page, int size) {
-        return listByPage(ListOptions.builder()
+    public Mono<ListResult<Draw>> listMine(String username, String status, int page, int size) {
+        var builder = ListOptions.builder()
                 .andQuery(equal("spec.owner", username))
-                .andQuery(isNull("metadata.deletionTimestamp"))
-                .build(), page, size);
+                .andQuery(isNull("metadata.deletionTimestamp"));
+        if (notBlank(status)) {
+            builder.andQuery(equal("spec.status", status));
+        }
+        return listByPage(builder.build(), page, size);
     }
 
     @Override
@@ -124,6 +127,14 @@ public class DrawServiceImpl implements DrawService {
     public Mono<Draw> getManage(String name) {
         return client.fetch(Draw.class, name)
                 .switchIfEmpty(Mono.error(new NotFoundException("绘画不存在")));
+    }
+
+    @Override
+    public Mono<Void> deleteManage(String name) {
+        return client.fetch(Draw.class, name)
+                .switchIfEmpty(Mono.error(new NotFoundException("绘画不存在")))
+                .flatMap(draw -> client.delete(draw))
+                .then();
     }
 
     @Override
@@ -232,8 +243,11 @@ public class DrawServiceImpl implements DrawService {
             return true;
         }
         var spec = draw.getSpec();
-        return spec != null && contains(spec.getTitle(), keyword)
-                || spec != null && contains(spec.getOwnerDisplayName(), keyword);
+        if (spec == null) {
+            return false;
+        }
+        return contains(spec.getTitle(), keyword)
+                || contains(spec.getOwnerDisplayName(), keyword);
     }
 
     /** 待审核优先（PENDING 在前），其余按创建时间倒序 */

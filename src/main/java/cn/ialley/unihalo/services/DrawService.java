@@ -23,9 +23,9 @@ public interface DrawService {
     Mono<Draw> getPublic(String name);
 
     /**
-     * 我的绘画列表（强制 owner=当前用户，含全部审核状态）
+     * 我的绘画列表（强制 owner=当前用户，含全部审核状态；status 非空时按状态筛选）
      */
-    Mono<ListResult<Draw>> listMine(String username, int page, int size);
+    Mono<ListResult<Draw>> listMine(String username, String status, int page, int size);
 
     /**
      * 我的绘画详情（非本人返回 404，不泄露存在性）
@@ -51,6 +51,11 @@ public interface DrawService {
      * 控制台详情（全状态可见）
      */
     Mono<Draw> getManage(String name);
+
+    /**
+     * 控制台删除（仅删记录保留附件）
+     */
+    Mono<Void> deleteManage(String name);
 
     /**
      * 审核通过（审核结果通知作者）

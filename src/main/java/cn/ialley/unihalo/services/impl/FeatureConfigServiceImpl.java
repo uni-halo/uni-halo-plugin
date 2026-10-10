@@ -441,8 +441,8 @@ public class FeatureConfigServiceImpl implements FeatureConfigService {
     }
 
     /**
-     * 我的页面-常用功能默认 11 项：足迹/联系博主/通知公告/我的收藏/恋爱日记/友情链接/
-     * 笔记归档/投票中心/数据看板/项目展示/豆瓣展示，顺序即展示顺序。
+     * 我的页面-常用功能默认 12 项：足迹/联系博主/通知公告/我的收藏/恋爱日记/友情链接/
+     * 笔记归档/投票中心/数据看板/项目展示/豆瓣展示/绘画作品，顺序即展示顺序。
      */
     private static List<QuickNavigationItem> defaultMineCommonFeatures() {
         List<QuickNavigationItem> items = new ArrayList<>();
@@ -468,6 +468,8 @@ public class FeatureConfigServiceImpl implements FeatureConfigService {
                 "list-view", "cangao", "uhemoji-icon", "-shocked", "/pages-blog/portfolio/portfolio"));
         items.add(navItem("douban", "豆瓣展示", "博主的书影音记录", "#43B024", "#43B02424",
                 "douban-line", "jumao", "uhemoji-icon", "-joy", "/pages-blog/douban/douban"));
+        items.add(navItem("draw-list", "绘画作品", "大家的绘画作品", "#8B5CF6", "#8B5CF624",
+                "palette-line", "lanmao", "uhemoji-icon", "-smile-", "/pages-blog/draw-list/draw-list"));
         return items;
     }
 
