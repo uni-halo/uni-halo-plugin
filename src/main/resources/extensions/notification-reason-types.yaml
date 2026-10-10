@@ -81,3 +81,32 @@ spec:
       type: string
       description: "操作方（本人操作 / 站点管理员）"
       optional: false
+---
+apiVersion: notification.halo.run/v1alpha1
+kind: ReasonType
+metadata:
+  name: uni-halo-draw-review-result
+spec:
+  displayName: "[UH] 绘画审核结果"
+  description: "App 端发布的绘画经管理员审核后的结果通知，通过或拒绝（含原因）"
+  properties:
+    - name: username
+      type: string
+      description: "作者用户名（订阅表达式依赖该字段）"
+      optional: false
+    - name: title
+      type: string
+      description: "画作标题"
+      optional: false
+    - name: status
+      type: string
+      description: "审核结果（APPROVED / REJECTED）"
+      optional: false
+    - name: reason
+      type: string
+      description: "审核说明（拒绝时为原因）"
+      optional: true
+    - name: reviewedAt
+      type: string
+      description: "审核时间"
+      optional: false

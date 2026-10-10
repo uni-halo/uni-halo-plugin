@@ -4,6 +4,7 @@ import cn.ialley.unihalo.scheme.AppInfo;
 import cn.ialley.unihalo.scheme.AppVersion;
 import cn.ialley.unihalo.scheme.AuditDataConfig;
 import cn.ialley.unihalo.scheme.Banner;
+import cn.ialley.unihalo.scheme.Draw;
 import cn.ialley.unihalo.scheme.FeatureConfig;
 import cn.ialley.unihalo.scheme.LoveAlbum;
 import cn.ialley.unihalo.scheme.LoveDailyItem;
@@ -175,6 +176,13 @@ public class UniHaloPlugin extends BasePlugin {
                             : submission.getSpec().getReviewedAt()));
         });
 
+        schemeManager.register(Draw.class, indexSpecs -> {
+            indexSpecs.add(IndexSpecs.<Draw, String>single("spec.owner", String.class)
+                    .indexFunc(draw -> draw.getSpec() == null ? null : draw.getSpec().getOwner()));
+            indexSpecs.add(IndexSpecs.<Draw, String>single("spec.status", String.class)
+                    .indexFunc(draw -> draw.getSpec() == null ? null : draw.getSpec().getStatus()));
+        });
+
         log.info("【UniHalo】插件启动成功！");
     }
 
@@ -197,6 +205,7 @@ public class UniHaloPlugin extends BasePlugin {
         unregisterQuietly(MiniProgramLink.class);
         unregisterQuietly(MiniProgramLinkGroup.class);
         unregisterQuietly(MiniProgramLinkSubmission.class);
+        unregisterQuietly(Draw.class);
 
         log.info("【UniHalo】插件停止！");
     }
