@@ -1116,7 +1116,7 @@ export const DRAW_STATUS_OPTIONS: { label: string; value?: string }[] = [
 /** 绘画类型标签（谜底非空 = 竞猜作品） */
 export const DRAW_TYPE_LABELS: Record<string, string> = {
   normal: "普通作品",
-  puzzleGuessing: "🎨 竞猜中",
+  puzzleGuessing: "画谜中",
   puzzleRevealed: "🎨 已揭晓",
 };
 
@@ -1124,7 +1124,7 @@ export const DRAW_TYPE_LABELS: Record<string, string> = {
 export const DRAW_TYPE_OPTIONS: { label: string; value?: string }[] = [
   { label: "全部" },
   { label: "普通作品", value: "normal" },
-  { label: "竞猜作品", value: "puzzle" },
+  { label: "画谜作品", value: "puzzle" },
 ];
 
 /** 绘画显隐选项（显隐筛选） */
