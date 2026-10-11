@@ -56,6 +56,7 @@ const PAGE_TITLE_GROUPS = [
       { key: 'portfolioDetail', label: '项目详情页' },
       { key: 'douban', label: '豆瓣页' },
       { key: 'footprint', label: '足迹地图页' },
+      { key: 'equipment', label: '装备页' },
       { key: 'drawList', label: '绘画作品页' },
       { key: 'drawCanvas', label: '画布创作页' },
       { key: 'momentDetail', label: '瞬间详情页' },
@@ -93,7 +94,7 @@ const TITLE_NAMING_VERSIONS: PageTitleNamingVersion[] = [
       tags: '标签', tagArticles: '标签笔记', loveDiary: '恋爱日记', search: '搜索', favorites: '我的收藏',
       friendLinks: '友情链接', notice: '公告中心', noticeDetail: '公告详情',
       votes: '投票中心', voteDetail: '投票详情', contact: '联系博主', setting: '偏好设置',
-      portfolio: '项目集', portfolioDetail: '项目详情', douban: '豆瓣', footprint: '足迹地图',
+      portfolio: '项目集', portfolioDetail: '项目详情', douban: '豆瓣', footprint: '足迹地图', equipment: '装备',
       drawList: '绘画作品', drawCanvas: '画一幅', drawManage: '我的绘画', drawReview: '绘画审核',
       momentDetail: '瞬间详情', bannerDetail: '内容详情', userProfile: '个人主页',
       aboutProject: '关于项目', disclaimer: '免责声明', dataVisual: '数据看板',
@@ -109,7 +110,7 @@ const TITLE_NAMING_VERSIONS: PageTitleNamingVersion[] = [
       tags: '文印标记', tagArticles: '印记札记', loveDiary: '情笺日记', search: '寻文觅迹', favorites: '撷珍藏录',
       friendLinks: '友邻书驿', notice: '公启通告', noticeDetail: '通告细阅',
       votes: '众议征询', voteDetail: '众议细览', contact: '尺素传书', setting: '雅趣自调',
-      portfolio: '匠作陈列', portfolioDetail: '匠作细览', douban: '书影札记', footprint: '游踪印雪',
+      portfolio: '匠作陈列', portfolioDetail: '匠作细览', douban: '书影札记', footprint: '游踪印雪', equipment: '行囊藏珍',
       drawList: '丹青画廊', drawCanvas: '泼墨挥毫', drawManage: '画匣私藏', drawReview: '画评核阅',
       momentDetail: '流光细品', bannerDetail: '藏卷细读', userProfile: '访客芳鉴',
       aboutProject: '缘起叙记', disclaimer: '规约叙言', dataVisual: '观数览势',
@@ -125,7 +126,7 @@ const TITLE_NAMING_VERSIONS: PageTitleNamingVersion[] = [
       tags: '笺上留痕', tagArticles: '随痕阅文', loveDiary: '恋爱手记', search: '搜览寻踪', favorites: '心藏好物',
       friendLinks: '远友相望', notice: '布告通知', noticeDetail: '阅览告示',
       votes: '民意共商', voteDetail: '共商详情', contact: '寄言留言', setting: '个性定制',
-      portfolio: '作品一览', portfolioDetail: '作品详览', douban: '书影记录', footprint: '行迹所至',
+      portfolio: '作品一览', portfolioDetail: '作品详览', douban: '书影记录', footprint: '行迹所至', equipment: '装备一览',
       drawList: '画作一览', drawCanvas: '随笔一画', drawManage: '我的画作', drawReview: '画作审阅',
       momentDetail: '时光详览', bannerDetail: '内容详览', userProfile: '个人小页',
       aboutProject: '本站小叙', disclaimer: '权责申明', dataVisual: '数览概观',
@@ -141,7 +142,7 @@ const TITLE_NAMING_VERSIONS: PageTitleNamingVersion[] = [
       tags: '叶脉题字', tagArticles: '叶上观书', loveDiary: '花开有信', search: '探径寻书', favorites: '拾珍入匣',
       friendLinks: '遥灯相映', notice: '庭前传讯', noticeDetail: '讯笺细读',
       votes: '衡议听言', voteDetail: '衡论细读', contact: '飞雁传笺', setting: '四时调序',
-      portfolio: '山房陈物', portfolioDetail: '陈物细观', douban: '书影偶记', footprint: '屐痕处处',
+      portfolio: '山房陈物', portfolioDetail: '陈物细观', douban: '书影偶记', footprint: '屐痕处处', equipment: '行囊藏器',
       drawList: '田园涂鸦', drawCanvas: '山野拾笔', drawManage: '自家画册', drawReview: '山舍品画',
       momentDetail: '风露细看', bannerDetail: '笺上细读', userProfile: '客至小坐',
       aboutProject: '种源溯源', disclaimer: '约言明戒', dataVisual: '星野观览',
@@ -157,7 +158,7 @@ const TITLE_NAMING_VERSIONS: PageTitleNamingVersion[] = [
       tags: '内容标签', tagArticles: '标签随笔', loveDiary: '恋爱日记', search: '全站检索', favorites: '个人收藏',
       friendLinks: '友链站点', notice: '公告中心', noticeDetail: '公告详情',
       votes: '投票专区', voteDetail: '投票详情', contact: '联络博主', setting: '偏好设置',
-      portfolio: '项目展示', portfolioDetail: '项目详情', douban: '书影音记录', footprint: '足迹地图',
+      portfolio: '项目展示', portfolioDetail: '项目详情', douban: '书影音记录', footprint: '足迹地图', equipment: '装备展示',
       drawList: '绘画作品', drawCanvas: '创作画板', drawManage: '我的绘画', drawReview: '绘画审核',
       momentDetail: '动态详情', bannerDetail: '内容详情', userProfile: '个人主页',
       aboutProject: '项目简介', disclaimer: '免责声明', dataVisual: '数据总览',
@@ -173,7 +174,7 @@ const TITLE_NAMING_VERSIONS: PageTitleNamingVersion[] = [
       tags: '印记标识', tagArticles: '印记寻文', loveDiary: '相恋备忘', search: '觅迹寻章', favorites: '所爱存藏',
       friendLinks: '四方同好', notice: '讯息通告', noticeDetail: '讯息详读',
       votes: '众言表决', voteDetail: '表决详阅', contact: '寄语相询', setting: '私趣自定',
-      portfolio: '作品陈列', portfolioDetail: '作品细读', douban: '书影拾遗', footprint: '行止留痕',
+      portfolio: '作品陈列', portfolioDetail: '作品细读', douban: '书影拾遗', footprint: '行止留痕', equipment: '行囊之物',
       drawList: '笔迹存览', drawCanvas: '落笔成画', drawManage: '己作存览', drawReview: '己作甄别',
       momentDetail: '瞬念细读', bannerDetail: '篇章详读', userProfile: '访客之页',
       aboutProject: '初心述记', disclaimer: '条例申明', dataVisual: '万象数观',
@@ -206,8 +207,7 @@ function onApplyVersion(groupKey: string) {
   <div class=":uno: space-y-3">
     <!-- 搜索 -->
     <div class=":uno: max-w-xs">
-      <FormKit v-model="keyword" name="page_title_search" placeholder="搜索页面名…" type="text"
-        outer-class=":uno: !mb-0" />
+      <FormKit v-model="keyword" name="page_title_search" placeholder="搜索页面名…" type="text" outer-class=":uno: !mb-0" />
     </div>
 
     <PageTitleGroup v-for="group in PAGE_TITLE_GROUPS" :key="group.key" :group="group" :titles="titles"

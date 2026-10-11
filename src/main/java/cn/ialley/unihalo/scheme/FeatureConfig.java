@@ -239,6 +239,8 @@ public class FeatureConfig extends AbstractExtension {
         private String douban;
         /** 足迹地图页 */
         private String footprint;
+        /** 装备页 */
+        private String equipment;
         /** 绘画作品列表页 */
         private String drawList;
         /** 恋爱日记页（标题由全局标题表 pages.titles.loveDiary 承担） */

@@ -716,6 +716,8 @@ export interface FeatureConfigPageTitles {
   douban?: string;
   /** 足迹地图页 */
   footprint?: string;
+  /** 装备页 */
+  equipment?: string;
   /** 绘画作品列表页 */
   drawList?: string;
   /** 恋爱日记页 */
