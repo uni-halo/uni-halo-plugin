@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import {VButton, VStatusDot, VSwitch} from "@halo-dev/components";
+import {VButton, VStatusDot} from "@halo-dev/components";
 import { computed, inject, onUnmounted, ref } from "vue";
-import RichTextEditorField from "@/components/common/RichTextEditorField.vue";
+import RichTextImportEditor from "../blocks/RichTextImportEditor.vue";
 import { FeatureConfigFormKey } from "../form-context";
 
 /**
@@ -174,12 +174,9 @@ const endMaintenanceNow = async () => {
     </div>
 
     <!-- 开启维护开关（时间窗口紧随其后） -->
-    <div class=":uno: mt-4 flex items-center justify-between gap-4 border-b border-gray-100 pb-3">
-      <div>
-        <div class=":uno: text-sm text-gray-700">开启维护</div>
-        <div class=":uno: mt-0.5 text-xs text-gray-400">开启后小程序端将展示维护页；不填开始时间 = 开启即立即进入维护</div>
-      </div>
-      <VSwitch v-model="formState.spec.maintenance.enabled" />
+    <div class=":uno: mt-4">
+      <FormKit v-model="formState.spec.maintenance.enabled" name="maintenance_enabled" label="开启维护"
+        type="checkbox" help="开启后小程序端将展示维护页；不填开始时间 = 开启即立即进入维护" />
     </div>
 
     <!-- 维护时间窗口（开始时间 / 预计恢复时间） -->
@@ -210,10 +207,11 @@ const endMaintenanceNow = async () => {
       <FormKit v-model="formState.spec.maintenance.notice" name="maintenance_notice" label="维护说明" type="textarea" help="展示在维护页标题下方；留空则展示默认提示文案" />
     </div>
 
-    <!-- 维护详情（小程序端弹窗展示，富文本） -->
+    <!-- 维护详情（小程序端弹窗展示，富文本；支持从文章导入 / 上传 Markdown） -->
     <div class=":uno: mt-4">
       <div class=":uno: mb-2 text-sm text-gray-700">维护详情</div>
-      <RichTextEditorField v-model="formState.spec.maintenance.description" placeholder="维护详情，支持图文混排……小程序端「维护详情」弹窗展示，留空则不展示详情入口" />
+      <RichTextImportEditor v-model="formState.spec.maintenance.description" name="maintenance_description"
+        placeholder="维护详情，支持图文混排……小程序端「维护详情」弹窗展示，留空则不展示详情入口" />
     </div>
   </template>
 </template>

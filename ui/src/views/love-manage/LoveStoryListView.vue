@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import LoveSettingsButton from "@/components/feature-config/LoveSettingsButton.vue";
 import {
   IconAddCircle,
   IconRefreshLine,
@@ -16,14 +17,17 @@ import {
   VDropdownItem,
 } from "@halo-dev/components";
 import { useQuery } from "@tanstack/vue-query";
+import { Toast } from "@halo-dev/components";
 import { useDeletionFlow } from "@/composables/useDeletionFlow";
 import { deletingRefetchInterval } from "@/utils/query";
 import { computed, ref, watch } from "vue";
+import { VueDraggable } from "vue-draggable-plus";
 import LoveStoryEditingModal from "@/components/love-manage/story/LoveStoryEditingModal.vue";
 import FilterDropdown from "@/components/common/FilterDropdown.vue";
 import ImagePreviewModal from "@/components/common/ImagePreviewModal.vue";
 import { loveStoryApi } from "@/api";
 import RiMapPinLine from "~icons/ri/map-pin-line";
+import RiDragMove2Line from "~icons/ri/drag-move-2-line";
 import {
   LOVE_STORY_SORT_OPTIONS,
   LOVE_STORY_VIEW_MODES,
@@ -39,8 +43,8 @@ const keyword = ref("");
 const total = ref(0);
 /** 展示方式：列表 / 时间轴 */
 const viewMode = ref<LoveStoryViewMode>("list");
-/** 日期排序：date_desc 最新在前 / date_asc 最早在前 */
-const sortValue = ref("date_desc");
+/** 排序：manual 手动（拖拽，priority 降序）/ date_desc 最新在前 / date_asc 最早在前 */
+const sortValue = ref("manual");
 
 const editingModal = ref(false);
 const selectedStory = ref<LoveStory>();
@@ -96,9 +100,13 @@ const checkSelection = (story: LoveStory) => {
   return selectedStoryNames.value.includes(story.metadata.name);
 };
 
-// 按日期排序（列表与时间轴共用；无日期排最后）
+// 排序：手动模式按后端 priority 顺序原样展示（拖拽结果即时可见）；
+// 日期模式客户端按日期排序（无日期排最后）
 const sortedStories = computed(() => {
   const list = [...(stories.value?.items || [])];
+  if (sortValue.value === "manual") {
+    return list;
+  }
   const dir = sortValue.value === "date_asc" ? 1 : -1;
   list.sort((a, b) => {
     const da = a.spec.date || "";
@@ -116,6 +124,29 @@ const sortedStories = computed(() => {
   });
   return list;
 });
+
+/** 拖拽排序用可变列表（VueDraggable v-model 需要可写数组；随查询结果同步） */
+const draggableStories = ref<LoveStory[]>([]);
+watch(
+  () => stories.value,
+  (val) => {
+    draggableStories.value = val ? [...val.items] : [];
+  },
+  { immediate: true }
+);
+
+/** 拖拽排序保存：按新顺序写 priority（后端 priority 降序即展示顺序） */
+const handleDragEnd = async () => {
+  const names = draggableStories.value.map((story) => story.metadata.name);
+  try {
+    await loveStoryApi.sortOrder(names);
+    Toast.success("排序已保存");
+    await refetch();
+  } catch (error) {
+    Toast.error((error as Error).message);
+    await refetch();
+  }
+};
 
 const handleOpenEditingModal = (story?: LoveStory) => {
   selectedStory.value = story;
@@ -155,6 +186,7 @@ const onModalClose = () => {
   <VPageHeader title="UniHalo-恋爱故事">
     <template #actions>
       <VSpace>
+        <LoveSettingsButton default-segment="stories" />
         <VButton @click="refetch">
           <template #icon>
             <IconRefreshLine class="w-4 h-4" :class="{ 'animate-spin text-gray-900': isFetching }" />
@@ -224,7 +256,57 @@ const onModalClose = () => {
           </VEmpty>
         </Transition>
         <Transition v-else appear name="fade">
-          <VEntityContainer>
+          <!-- 手动排序模式可拖拽（target 指向 VEntityContainer，逐项拖拽） -->
+          <VueDraggable v-if="sortValue === 'manual' && !keyword && page === 1" v-model="draggableStories" handle=".story-drag-handle"
+            target=".story-drag-container tbody" @end="handleDragEnd">
+            <VEntityContainer class="story-drag-container">
+              <VEntity v-for="story in draggableStories" :key="story.metadata.name" :is-selected="checkSelection(story)">
+                <template #checkbox>
+                  <input v-model="selectedStoryNames" :value="story.metadata.name" name="love-story-checkbox"
+                    type="checkbox" />
+                </template>
+                <template #start>
+                  <VEntityField width="2rem">
+                    <template #description>
+                      <span class=":uno: story-drag-handle cursor-move text-gray-300 hover:text-gray-500"
+                        title="拖拽排序">
+                        <RiDragMove2Line class=":uno: h-4 w-4" />
+                      </span>
+                    </template>
+                  </VEntityField>
+                  <VEntityField :title="story.spec.title || story.metadata.name" width="15rem">
+                    <template #description>
+                      <span v-if="story.spec.date" class=":uno: text-xs text-gray-500">
+                        {{ story.spec.date }}
+                      </span>
+                      <span v-if="story.spec.location"
+                        class=":uno: ml-2 flex items-center gap-0.5 text-xs text-gray-500">
+                        <RiMapPinLine class=":uno: h-3 w-3 shrink-0" />
+                        {{ story.spec.location }}
+                      </span>
+                    </template>
+                  </VEntityField>
+                </template>
+                <template #end>
+                  <VEntityField v-if="story.metadata.deletionTimestamp">
+                    <template #description>
+                      <VStatusDot v-tooltip="'删除中'" state="warning" text="删除中" />
+                    </template>
+                  </VEntityField>
+                  <VEntityField v-if="story.spec.images?.length" :description="`${story.spec.images.length} 张图片`" />
+                </template>
+                <template #dropdownItems>
+                  <VDropdownItem @click="handleOpenEditingModal(story)">
+                    编辑
+                  </VDropdownItem>
+                  <VDropdownItem type="danger" @click="handleDelete(story)">
+                    删除
+                  </VDropdownItem>
+                </template>
+              </VEntity>
+            </VEntityContainer>
+          </VueDraggable>
+          <VEntityContainer v-else>
             <VEntity v-for="story in sortedStories" :key="story.metadata.name" :is-selected="checkSelection(story)">
               <template #checkbox>
                 <input v-model="selectedStoryNames" :value="story.metadata.name" name="love-story-checkbox"
@@ -248,13 +330,6 @@ const onModalClose = () => {
                 <VEntityField v-if="story.metadata.deletionTimestamp">
                   <template #description>
                     <VStatusDot v-tooltip="'删除中'" state="warning" text="删除中" />
-                  </template>
-                </VEntityField>
-                <VEntityField>
-                  <template #description>
-                    <span class=":uno: truncate text-xs text-gray-500">
-                      {{ story.spec.content || "暂无内容" }}
-                    </span>
                   </template>
                 </VEntityField>
                 <VEntityField v-if="story.spec.images?.length" :description="`${story.spec.images.length} 张图片`" />

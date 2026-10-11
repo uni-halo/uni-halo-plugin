@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { VButton, VEmpty, VModal, VSpace } from "@halo-dev/components";
+import { VButton, VEmpty, VModal } from "@halo-dev/components";
 import { computed, onMounted, ref } from "vue";
 import { FEATURE_ENTRY_REGISTRY, type FeatureEntry } from "@/constant/feature-entries";
 import type { FeatureConfigQuickNavigationItem } from "@/types";
@@ -89,10 +89,6 @@ const handleConfirm = () => {
 <template>
   <VModal title="选择要隐藏的功能入口" :width="560" @close="emit('update:visible', false)">
     <div class=":uno: flex flex-col gap-3">
-      <div class=":uno: text-xs text-gray-400">
-        选中的功能入口在审核模式开启期间不显示（首页快捷导航 / 我的页面），关闭审核模式后自动还原
-      </div>
-
       <FormKit
         v-model="keyword"
         type="text"
@@ -134,12 +130,12 @@ const handleConfirm = () => {
     </div>
 
     <template #footer>
-      <VSpace>
-        <VButton @click="emit('update:visible', false)">取消</VButton>
+      <div class=":uno: flex items-center gap-3">
         <VButton type="secondary" @click="handleConfirm">
           确定（{{ localSelected.length }}）
         </VButton>
-      </VSpace>
+        <VButton @click="emit('update:visible', false)">取消</VButton>
+      </div>
     </template>
   </VModal>
 </template>

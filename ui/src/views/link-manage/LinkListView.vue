@@ -20,6 +20,8 @@ import {
 import RiEditLine from "~icons/ri/edit-line";
 import RiDeleteBinLine from "~icons/ri/delete-bin-line";
 import RiFolderLine from "~icons/ri/folder-line";
+import RiSettings3Line from "~icons/ri/settings-3-line";
+import LinkSettingsModal from "@/components/feature-config/LinkSettingsModal.vue";
 import { useQuery, useQueryClient } from "@tanstack/vue-query";
 import { useDeletionFlow } from "@/composables/useDeletionFlow";
 import { deletingRefetchIntervalForList } from "@/utils/query";
@@ -70,6 +72,7 @@ const editingModal = ref(false);
 const selectedLink = ref<MiniProgramLink>();
 const groupEditingModalVisible = ref(false);
 const editingGroup = ref<MiniProgramLinkGroup>();
+const settingsVisible = ref(false);
 
 // 太阳码预览
 const previewVisible = ref(false);
@@ -306,6 +309,8 @@ const onModalClose = () => {
 </script>
 
 <template>
+  <!-- 单根包裹：避免多根 fragment + body Teleport 弹窗触发 insertBefore 挂载错误 -->
+  <div>
   <LinkEditingModal v-if="editingModal" :item="selectedLink" @close="onModalClose" />
 
   <!-- 分组编辑弹窗（新建/编辑共用，与编辑链接弹窗平级挂载） -->
@@ -320,6 +325,12 @@ const onModalClose = () => {
             <IconRefreshLine class="w-4 h-4" :class="{ 'animate-spin text-gray-900': isFetching }" />
           </template>
           刷新
+        </VButton>
+        <VButton @click="settingsVisible = true">
+          <template #icon>
+            <RiSettings3Line class="w-4 h-4" />
+          </template>
+          设置
         </VButton>
         <VButton v-permission="['plugin:uni-halo:link:manage']" type="secondary" @click="handleOpenEditingModal()">
           <template #icon>
@@ -520,4 +531,8 @@ const onModalClose = () => {
   </div>
 
   <ImagePreviewModal v-model:visible="previewVisible" :images="previewUrl ? [previewUrl] : []" title="太阳码预览" />
+
+  <!-- 友链设置弹窗（提交申请/邮件通知/申请弹窗内容） -->
+  <LinkSettingsModal v-if="settingsVisible" @close="settingsVisible = false" />
+  </div>
 </template>

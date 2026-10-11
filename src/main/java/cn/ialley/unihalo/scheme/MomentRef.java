@@ -27,6 +27,8 @@ public class MomentRef extends AbstractExtension {
     @Data
     public static class MomentRefSpec {
         private MomentContentRef content;
+        /** 访问可见性（plugin-moments Moment.spec.visible）：PUBLIC 公开 / PRIVATE 私密 */
+        private String visible;
     }
 
     @Data

@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import { IconAddCircle, Toast, VButton, VModal, VSpace } from "@halo-dev/components";
+import { Dialog, IconAddCircle, Toast, VButton, VModal, VSpace } from "@halo-dev/components";
 import { submitForm } from "@formkit/core";
 import { useQuery, useQueryClient } from "@tanstack/vue-query";
 import { cloneDeep } from "lodash-es";
 import { computed, ref, watch } from "vue";
 import SubmitButton from "@/components/button/SubmitButton.vue";
 import RichTextEditorField from "@/components/common/RichTextEditorField.vue";
+import MarkdownImportButton from "@/components/common/MarkdownImportButton.vue";
 import NoticeTypeEditingModal from "@/components/notice-manage/NoticeTypeEditingModal.vue";
 import { noticeApi, noticeTypeApi } from "@/api";
 import { NOTICE_STATUS_OPTIONS, type Notice, type NoticeType } from "@/types";
@@ -113,6 +114,29 @@ const handleSave = async () => {
     saving.value = false;
   }
 };
+
+/** 正文 Markdown 导入（内容非空时覆盖需二次确认） */
+function handleContentMarkdownImported(html: string, fileName: string) {
+  const apply = () => {
+    formState.value.spec.content = html;
+    Toast.success(`已导入「${fileName}」`);
+  };
+  if (!formState.value.spec.content) {
+    apply();
+    return;
+  }
+  Dialog.warning({
+    title: "覆盖当前内容",
+    description: "导入将覆盖当前已编辑的正文，确定继续吗？",
+    confirmText: "确定",
+    cancelText: "取消",
+    onConfirm: apply,
+  });
+}
+
+function handleContentMarkdownError(message: string) {
+  Toast.error(`Markdown 解析失败：${message}`);
+}
 </script>
 
 <template>
@@ -146,6 +170,8 @@ const handleSave = async () => {
             name="cover"
             label="封面图"
             type="attachment"
+            width="100%"
+            aspect-ratio="3/2"
           />
           <FormKit
             v-model="formState.spec.link"
@@ -203,7 +229,11 @@ const handleSave = async () => {
             help="留空时自动从正文提取"
             placeholder="简要描述公告内容（可选）"
           />
-          <div class=":uno: text-sm font-medium text-gray-700">正文</div>
+          <div class=":uno: flex items-center gap-3">
+            <div class=":uno: text-sm font-medium text-gray-700">正文</div>
+            <MarkdownImportButton @imported="handleContentMarkdownImported" @error="handleContentMarkdownError" />
+            <span class=":uno: text-xs text-gray-400">导入将覆盖当前内容</span>
+          </div>
           <!-- 富文本占满剩余空间，高度最小 400px -->
           <div class=":uno: min-h-[400px] flex-1">
             <RichTextEditorField v-model="formState.spec.content" />
@@ -213,7 +243,7 @@ const handleSave = async () => {
     </FormKit>
 
     <template #footer>
-      <VSpace>
+      <div class=":uno: flex items-center gap-3">
         <SubmitButton
           :loading="saving"
           :disabled="saving"
@@ -222,7 +252,7 @@ const handleSave = async () => {
           @submit="handleSubmit"
         />
         <VButton @click="modal?.close()">关闭</VButton>
-      </VSpace>
+      </div>
     </template>
   </VModal>
   <!-- 新增公告类型弹窗：不嵌套在主弹窗内（避免 VModal 嵌套触发 Vue insertBefore

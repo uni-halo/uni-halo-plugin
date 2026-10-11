@@ -4,7 +4,9 @@ import { computed, inject } from "vue";
 import { VueDraggable } from "vue-draggable-plus";
 import RiDragMove2Line from "~icons/ri/drag-move-2-line";
 import RiDeleteBinLine from "~icons/ri/delete-bin-6-line";
+import { Dialog, Toast } from "@halo-dev/components";
 import RichTextEditorField from "@/components/common/RichTextEditorField.vue";
+import MarkdownImportButton from "@/components/common/MarkdownImportButton.vue";
 import type { FeatureConfigSocialItem } from "@/types";
 import { FeatureConfigFormKey } from "../form-context";
 
@@ -65,6 +67,29 @@ function onSocialBgColor(item: FeatureConfigSocialItem, value: unknown) {
     item.bgColor = value;
   }
 }
+
+/** 介绍 Markdown 导入（内容非空时覆盖需二次确认） */
+function handleIntroMarkdownImported(html: string, fileName: string) {
+  const apply = () => {
+    formState.value.spec.profile.blogger.intro = html;
+    Toast.success(`已导入「${fileName}」`);
+  };
+  if (!formState.value.spec.profile.blogger.intro) {
+    apply();
+    return;
+  }
+  Dialog.warning({
+    title: "覆盖当前内容",
+    description: "导入将覆盖当前已编辑的介绍内容，确定继续吗？",
+    confirmText: "确定",
+    cancelText: "取消",
+    onConfirm: apply,
+  });
+}
+
+function handleIntroMarkdownError(message: string) {
+  Toast.error(`Markdown 解析失败：${message}`);
+}
 </script>
 
 <template>
@@ -86,9 +111,13 @@ function onSocialBgColor(item: FeatureConfigSocialItem, value: unknown) {
       :accepts="['image/*']" />
     <FormKit v-model="formState.spec.profile.blogger.description" name="blogger_description" label="简介"
       type="textarea" />
-    <!-- 介绍（富文本 HTML，app 端联系博主页 mp-html 渲染） -->
+    <!-- 介绍（富文本 HTML，app 端联系博主页 mp-html 渲染；支持 Markdown 上传解析） -->
     <div class=":uno: mt-4">
-      <div class=":uno: mb-2 text-sm text-gray-700">介绍</div>
+      <div class=":uno: mb-2 flex items-center gap-3">
+        <span class=":uno: text-sm text-gray-700">介绍</span>
+        <MarkdownImportButton @imported="handleIntroMarkdownImported" @error="handleIntroMarkdownError" />
+        <span class=":uno: text-xs text-gray-400">导入内容将覆盖当前富文本</span>
+      </div>
       <RichTextEditorField v-model="formState.spec.profile.blogger.intro"
         placeholder="博主介绍，支持图文混排……app 端「联系博主」页面展示，留空不展示" />
     </div>

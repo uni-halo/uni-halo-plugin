@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import LoveSettingsButton from "@/components/feature-config/LoveSettingsButton.vue";
 import {
   IconAddCircle,
   IconRefreshLine,
@@ -16,14 +17,17 @@ import {
   VDropdownItem,
 } from "@halo-dev/components";
 import { useQuery } from "@tanstack/vue-query";
+import { Toast } from "@halo-dev/components";
 import { useDeletionFlow } from "@/composables/useDeletionFlow";
 import { deletingRefetchInterval } from "@/utils/query";
 import { computed, ref, watch } from "vue";
+import { VueDraggable } from "vue-draggable-plus";
 import LoveDailyItemEditingModal from "@/components/love-manage/daily/LoveDailyItemEditingModal.vue";
 import FilterDropdown from "@/components/common/FilterDropdown.vue";
 import ImagePreviewModal from "@/components/common/ImagePreviewModal.vue";
 import { loveDailyApi } from "@/api";
 import RiChat3Line from "~icons/ri/chat-3-line";
+import RiDragMove2Line from "~icons/ri/drag-move-2-line";
 import {
   LOVE_DAILY_TIME_SORT_OPTIONS,
   LOVE_DAILY_VIEW_MODES,
@@ -43,8 +47,8 @@ const filterStatus = ref<string | undefined>(undefined);
 const total = ref(0);
 /** 展示方式：列表 / 时间轴 */
 const viewMode = ref<LoveDailyViewMode>("list");
-/** 列表模式排序：最新创建 / 最早创建 */
-const listSortValue = ref("created_desc");
+/** 列表模式排序：manual 手动（拖拽，priority 降序）/ 最新创建 / 最早创建 */
+const listSortValue = ref("manual");
 /** 时间轴模式排序：按计划时间 / 完成时间 */
 const timelineSortValue = ref("plan_desc");
 
@@ -91,10 +95,14 @@ const timelineTime = (item: LoveDailyItem) => {
   return spec.planDate || item.metadata.creationTimestamp || "";
 };
 
-// 列表模式按创建时间排序，时间轴模式按时间轴锚点排序（无时间排最后）
+// 列表模式：手动排序按后端 priority 顺序原样展示（拖拽结果即时可见），
+// 其余按创建时间排序；时间轴模式按时间轴锚点排序（无时间排最后）
 const sortedItems = computed(() => {
   const list = [...(items.value?.items || [])];
   if (viewMode.value === "list") {
+    if (listSortValue.value === "manual") {
+      return list;
+    }
     const dir = listSortValue.value === "created_asc" ? 1 : -1;
     list.sort((a, b) => {
       const ta = a.metadata.creationTimestamp || "";
@@ -172,6 +180,29 @@ const onModalClose = () => {
   refetch();
 };
 
+/** 拖拽排序用可变列表（VueDraggable v-model 需要可写数组；随查询结果同步） */
+const draggableItems = ref<LoveDailyItem[]>([]);
+watch(
+  () => items.value,
+  (val) => {
+    draggableItems.value = val ? [...val.items] : [];
+  },
+  { immediate: true }
+);
+
+/** 拖拽排序保存：按新顺序写 priority（后端 priority 降序即展示顺序） */
+const handleDragEnd = async () => {
+  const names = draggableItems.value.map((item) => item.metadata.name);
+  try {
+    await loveDailyApi.sortOrder(names);
+    Toast.success("排序已保存");
+    await refetch();
+  } catch (error) {
+    Toast.error((error as Error).message);
+    await refetch();
+  }
+};
+
 const statusDotState = (status?: string) => {
   if (status === "complete") {
     return "success" as const;
@@ -200,6 +231,7 @@ const timelineDotClass = (status?: string) => {
   <VPageHeader title="UniHalo-恋爱清单">
     <template #actions>
       <VSpace>
+        <LoveSettingsButton default-segment="daily" />
         <VButton @click="refetch">
           <template #icon>
             <IconRefreshLine class="w-4 h-4" :class="{ 'animate-spin text-gray-900': isFetching }" />
@@ -272,7 +304,60 @@ const timelineDotClass = (status?: string) => {
           </VEmpty>
         </Transition>
         <Transition v-else appear name="fade">
-          <VEntityContainer>
+          <!-- 手动排序模式可拖拽（target 指向 VEntityContainer，逐项拖拽） -->
+          <VueDraggable v-if="listSortValue === 'manual' && !keyword && !filterStatus && page === 1" v-model="draggableItems" handle=".daily-drag-handle"
+            target=".daily-drag-container tbody" @end="handleDragEnd">
+            <VEntityContainer class="daily-drag-container">
+              <VEntity v-for="item in draggableItems" :key="item.metadata.name" :is-selected="checkSelection(item)">
+                <template #checkbox>
+                  <input v-model="selectedItemNames" :value="item.metadata.name" name="love-daily-checkbox"
+                    type="checkbox" />
+                </template>
+                <template #start>
+                  <VEntityField width="2rem">
+                    <template #description>
+                      <span class=":uno: daily-drag-handle cursor-move text-gray-300 hover:text-gray-500"
+                        title="拖拽排序">
+                        <RiDragMove2Line class=":uno: h-4 w-4" />
+                      </span>
+                    </template>
+                  </VEntityField>
+                  <VEntityField :title="item.spec.title || item.metadata.name" width="15rem">
+                    <template #description>
+                      <span v-if="item.spec.content" class=":uno: truncate text-xs text-gray-500">
+                        {{ item.spec.content }}
+                      </span>
+                    </template>
+                  </VEntityField>
+                </template>
+                <template #end>
+                  <VEntityField v-if="item.metadata.deletionTimestamp">
+                    <template #description>
+                      <VStatusDot v-tooltip="'删除中'" state="warning" text="删除中" />
+                    </template>
+                  </VEntityField>
+                  <VEntityField>
+                    <template #description>
+                      <VStatusDot :state="statusDotState(item.spec.status)"
+                        :text="LOVE_STATUS_LABELS[item.spec.status || 'wait'] || item.spec.status" />
+                    </template>
+                  </VEntityField>
+                  <VEntityField v-if="item.spec.planDate" :description="`计划 ${item.spec.planDate}`" />
+                  <VEntityField v-if="item.spec.completeDate" :description="`完成于 ${item.spec.completeDate}`" />
+                  <VEntityField v-if="item.spec.images?.length" :description="`${item.spec.images.length} 张图片`" />
+                </template>
+                <template #dropdownItems>
+                  <VDropdownItem @click="handleOpenEditingModal(item)">
+                    编辑
+                  </VDropdownItem>
+                  <VDropdownItem type="danger" @click="handleDelete(item)">
+                    删除
+                  </VDropdownItem>
+                </template>
+              </VEntity>
+            </VEntityContainer>
+          </VueDraggable>
+          <VEntityContainer v-else>
             <VEntity v-for="item in sortedItems" :key="item.metadata.name" :is-selected="checkSelection(item)">
               <template #checkbox>
                 <input v-model="selectedItemNames" :value="item.metadata.name" name="love-daily-checkbox"
@@ -322,15 +407,16 @@ const timelineDotClass = (status?: string) => {
           <VEmpty message="写下第一件想一起做的事吧" title="清单还是空的" />
         </div>
         <div v-else class=":uno: relative">
+          <!-- 时间轴样式与恋爱故事一致：细线 + 粉色圆点 + 白色卡片 -->
           <div class=":uno: absolute bottom-2 left-0 top-2 w-0.5 bg-[#f8385640]" />
           <div class=":uno: space-y-6 pl-8">
             <div v-for="item in sortedItems" :key="item.metadata.name" class=":uno: relative">
               <div class=":uno: absolute -left-9 top-1.5 h-3 w-3 rounded-full ring-4"
                 :class="timelineDotClass(item.spec.status)" />
-              <VCard :body-class="[':uno: !p-4 !bg-[#fff5f7]']">
+              <VCard :body-class="[':uno: !p-4']">
                 <div class=":uno: flex items-center justify-between gap-2">
                   <div class=":uno: flex min-w-0 items-center gap-2">
-                    <span class=":uno: truncate text-sm font-semibold text-[#f83856]">
+                    <span class=":uno: truncate text-sm font-semibold text-gray-800">
                       {{ item.spec.title || item.metadata.name }}
                     </span>
                     <VStatusDot v-if="item.metadata.deletionTimestamp" v-tooltip="'删除中'" state="warning" text="删除中" />
@@ -346,11 +432,11 @@ const timelineDotClass = (status?: string) => {
                     </VButton>
                   </VSpace>
                 </div>
-                <div class=":uno: mt-1 flex items-center gap-3 text-xs text-[#f8385699]">
+                <div class=":uno: mt-1 flex items-center gap-3 text-xs text-gray-400">
                   <span v-if="item.spec.planDate">计划 {{ item.spec.planDate }}</span>
                   <span v-if="item.spec.completeDate">完成于 {{ item.spec.completeDate }}</span>
                 </div>
-                <div v-if="item.spec.content" class=":uno: mt-2 text-sm leading-relaxed text-[#5c4a4e]">
+                <div v-if="item.spec.content" class=":uno: mt-2 text-sm leading-relaxed text-gray-600">
                   {{ item.spec.content }}
                 </div>
                 <div v-if="item.spec.completeRemark"

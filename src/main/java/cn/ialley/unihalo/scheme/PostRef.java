@@ -23,6 +23,8 @@ public class PostRef extends AbstractExtension {
 
     private PostRefSpec spec;
 
+    private PostRefStatus status;
+
     @Data
     public static class PostRefSpec {
         private String title;
@@ -30,11 +32,19 @@ public class PostRef extends AbstractExtension {
         private String summary;
         private String publishTime;
         private Boolean publish;
+        /** 访问可见性（Halo Post.spec.visible）：PUBLIC 公开 / PRIVATE 私密 */
+        private String visible;
         private List<String> categories;
 
         /**
          * 文章作者（Post.spec.owner，用户名；快照作者信息时据此查 User）
          */
         private String owner;
+    }
+
+    @Data
+    public static class PostRefStatus {
+        /** 发布阶段（Halo Post.status.phase）：PUBLISHED 已发布 / DRAFT 草稿等 */
+        private String phase;
     }
 }

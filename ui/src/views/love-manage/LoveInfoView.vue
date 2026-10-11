@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import LoveSettingsButton from "@/components/feature-config/LoveSettingsButton.vue";
 import { Toast, VCard, VPageHeader, VSpace } from "@halo-dev/components";
 import { useQuery, useQueryClient } from "@tanstack/vue-query";
 import { cloneDeep } from "lodash-es";
@@ -58,6 +59,7 @@ const handleSave = async () => {
   <VPageHeader title="UniHalo-恋爱信息">
     <template #actions>
       <VSpace>
+        <LoveSettingsButton default-segment="diary" />
         <SubmitButton type="secondary" :loading="isLoading" text="保存修改" @submit="handleSave" />
       </VSpace>
     </template>

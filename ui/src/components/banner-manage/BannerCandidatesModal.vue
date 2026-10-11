@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { VButton, VEmpty, VLoading, VModal, VPagination, VSpace } from "@halo-dev/components";
+import { VButton, VEmpty, VLoading, VModal, VPagination } from "@halo-dev/components";
 import { useQuery } from "@tanstack/vue-query";
 import { onMounted, ref } from "vue";
 import RiImageLine from "~icons/ri/image-line";
@@ -8,13 +8,16 @@ import type { BannerCandidate } from "@/types";
 
 const props = withDefaults(
   defineProps<{
-    /** 多选模式（新建-从文章批量添加）；false 为单选（更换文章） */
+    /** 多选模式（新建-从文章批量添加）；false 为单选（更换文章/内容导入） */
     multiSelect?: boolean;
     selected?: BannerCandidate[];
+    /** 底部提示文案（缺省为轮播快照语义） */
+    tip?: string;
   }>(),
   {
     multiSelect: true,
     selected: () => [],
+    tip: "选择后将保存文章当前快照（标题/封面/日期/作者），文章后续修改不影响轮播图展示",
   }
 );
 
@@ -141,17 +144,17 @@ const formatTime = (value?: string) => {
 
       <!-- 快照语义提示 -->
       <div class=":uno: rounded-md bg-blue-50 px-3 py-2 text-xs text-blue-600">
-        选择后将保存文章当前快照（标题/封面/日期/作者），文章后续修改不影响轮播图展示
+        {{ tip }}
       </div>
     </div>
 
     <template #footer>
-      <VSpace>
-        <VButton type="secondary" @click="handleClose">取消</VButton>
-        <VButton type="primary" :disabled="!localSelected.length" @click="handleConfirm">
+      <div class=":uno: flex items-center gap-3">
+        <VButton type="secondary" :disabled="!localSelected.length" @click="handleConfirm">
           确认选择（{{ localSelected.length }}）
         </VButton>
-      </VSpace>
+        <VButton @click="handleClose">取消</VButton>
+      </div>
     </template>
   </VModal>
 </template>

@@ -37,4 +37,5 @@ rules:
     resources:
       - "banners"
       - "banners/sync"
+      - "banners/hidden"
     verbs: [ "create", "patch", "update", "delete", "deletecollection" ]

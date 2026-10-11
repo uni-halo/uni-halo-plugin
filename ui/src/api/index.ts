@@ -30,6 +30,7 @@ import type {
   BindTicketIssued,
   BindTicketStatus,
   Draw,
+  FeatureConfigPatch,
 } from "@/types";
 
 const CONSOLE_API_GROUP = "console.api.unihalo.ialley.cn/v1alpha1";
@@ -59,7 +60,9 @@ export const appVersionsApi = {
 
 export const featureConfigApi = {
   get: () => http.get<FeatureConfig>(`${PLUGIN_BASE}/feature-config`),
-  save: (data: FeatureConfig) => http.put<FeatureConfig>(`${PLUGIN_BASE}/feature-config`, data),
+  /** 整表保存（功能设置页）或部分保存（模块 ⚙ 弹窗，spec 仅携带目标分区） */
+  save: (data: FeatureConfig | FeatureConfigPatch) =>
+    http.put<FeatureConfig>(`${PLUGIN_BASE}/feature-config`, data),
 };
 
 export interface LoveAlbumWriteRequest {
@@ -82,6 +85,9 @@ export const loveAlbumsApi = {
     http.delete<{ success: boolean }>(`${PLUGIN_BASE}/love-albums/${name}`),
   addPhoto: (name: string, photo: LoveAlbumPhoto) =>
     http.post<LoveAlbum>(`${PLUGIN_BASE}/love-albums/${name}/photos`, photo),
+  /** 批量追加照片 */
+  addPhotos: (name: string, photos: LoveAlbumPhoto[]) =>
+    http.post<LoveAlbum>(`${PLUGIN_BASE}/love-albums/${name}/photos/batch`, { photos }),
   updatePhotos: (name: string, photos: LoveAlbumPhoto[]) =>
     http.put<LoveAlbum>(`${PLUGIN_BASE}/love-albums/${name}/photos`, { photos }),
   deletePhoto: (name: string, photoName: string) =>
@@ -97,6 +103,9 @@ export const loveDailyApi = {
     http.put<LoveDailyItem>(`${PLUGIN_BASE}/love-daily-items/${name}`, data),
   delete: (name: string) =>
     http.delete<{ success: boolean }>(`${PLUGIN_BASE}/love-daily-items/${name}`),
+  /// 拖拽排序保存：names 为按新顺序排列的 name 列表
+  sortOrder: (names: string[]) =>
+    http.put<{ success: boolean }>(`${PLUGIN_BASE}/love-daily-items/order`, names),
 };
 
 export const loveStoryApi = {
@@ -107,6 +116,9 @@ export const loveStoryApi = {
     http.put<LoveStory>(`${PLUGIN_BASE}/love-stories/${name}`, data),
   delete: (name: string) =>
     http.delete<{ success: boolean }>(`${PLUGIN_BASE}/love-stories/${name}`),
+  /// 拖拽排序保存：names 为按新顺序排列的 name 列表
+  sortOrder: (names: string[]) =>
+    http.put<{ success: boolean }>(`${PLUGIN_BASE}/love-stories/order`, names),
 };
 
 // ===== 恋爱信息（LoveInfo 单例）=====
@@ -308,6 +320,9 @@ export const bannerApi = {
   /** 同步文章快照（仅文章来源）：重新拉取 Post/User 覆盖快照字段 */
   sync: (name: string) =>
     http.post<Banner>(`${PLUGIN_BASE}/banners/${name}/sync`),
+  /** 切换显隐（hidden=true 隐藏，公开列表/详情不展示） */
+  setHidden: (name: string, hidden: boolean) =>
+    http.put<Banner>(`${PLUGIN_BASE}/banners/${name}/hidden`, { hidden }),
   /** 拖拽排序保存：names 为按新顺序排列的轮播图 name 列表 */
   sortOrder: (names: string[]) =>
     http.put<{ success: boolean }>(`${PLUGIN_BASE}/banners/order`, names),

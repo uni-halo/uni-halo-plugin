@@ -147,6 +147,31 @@ public class LoveAlbumServiceImpl implements LoveAlbumService {
     }
 
     @Override
+    public Mono<LoveAlbum> addPhotos(String name, List<LoveAlbum.AlbumPhoto> photos) {
+        return client.fetch(LoveAlbum.class, name)
+                .flatMap(album -> {
+                    if (photos == null || photos.isEmpty()) {
+                        return Mono.error(new IllegalArgumentException("至少需要一张照片"));
+                    }
+                    for (LoveAlbum.AlbumPhoto photo : photos) {
+                        if (photo == null || isBlank(photo.getUrl())) {
+                            return Mono.error(new IllegalArgumentException("图片地址不能为空"));
+                        }
+                        if (isBlank(photo.getName())) {
+                            photo.setName(UUID.randomUUID().toString().replace("-", ""));
+                        }
+                    }
+                    var spec = album.getSpec();
+                    if (spec.getPhotos() == null) {
+                        spec.setPhotos(new ArrayList<>());
+                    }
+                    spec.getPhotos().addAll(photos);
+                    return client.update(album);
+                })
+                .map(this::maskPassword);
+    }
+
+    @Override
     public Mono<LoveAlbum> deletePhoto(String name, String photoName) {
         return client.fetch(LoveAlbum.class, name)
                 .flatMap(album -> {

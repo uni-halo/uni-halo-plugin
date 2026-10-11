@@ -35,4 +35,10 @@ public interface LoveDailyItemService {
     Mono<LoveDailyItem> update(LoveDailyItem item);
 
     Mono<Void> delete(String name);
+
+    /**
+     * 批量手动排序：names 为按新顺序排列的 name 列表，
+     * 依次写 spec.priority 降序（第一位最大）。
+     */
+    Mono<Void> sort(java.util.List<String> names);
 }

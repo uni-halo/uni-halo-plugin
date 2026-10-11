@@ -329,12 +329,12 @@ export default definePlugin({
         name: 'DrawList',
         component: () => import('@/views/draw-manage/DrawListView.vue'),
         meta: {
-          title: '绘画作品',
+          title: '绘画管理',
           searchable: true,
           hideFooter: false,
           permissions: ['plugin:uni-halo:draws:view'],
           menu: {
-            name: '绘画作品',
+            name: '绘画管理',
             group: GROUP_NAME,
             icon: markRaw(RiPaletteLine),
             priority: 7,

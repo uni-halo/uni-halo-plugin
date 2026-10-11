@@ -161,7 +161,7 @@ public class FeatureConfig extends AbstractExtension {
         /** 隐私政策页（页面设置-隐私政策 tab 维护，
          * 随 {@code featureConfig.pages.privacyPolicy} 下发，app 端注册页/协议页渲染） */
         private PrivacyPolicyPage privacyPolicy;
-        /** 绘画配置（功能设置-页面设置-绘画 tab 维护，服务端发布流程消费） */
+        /** 绘画配置（发布审核开关入口在「绘画作品管理-设置」弹窗） */
         private DrawPage draw;
     }
 
@@ -191,7 +191,7 @@ public class FeatureConfig extends AbstractExtension {
     @Data
     public static class PageTitles {
         // ===== tabbar 页 =====
-        /** 首页（已废弃：首页为自定义头部无 navbar 标题，字段保留兼容旧配置反序列化） */
+        /** 首页 */
         private String home;
         /** 图库页 */
         private String gallery;
@@ -241,6 +241,8 @@ public class FeatureConfig extends AbstractExtension {
         private String footprint;
         /** 绘画作品列表页 */
         private String drawList;
+        /** 恋爱日记页（标题由全局标题表 pages.titles.loveDiary 承担） */
+        private String loveDiary;
         /** 画布创作页 */
         private String drawCanvas;
         /** 我的绘画管理页 */
@@ -362,11 +364,9 @@ public class FeatureConfig extends AbstractExtension {
         private Integer postCount;
     }
 
-    /** 恋爱日记页（页面标题 + 恋爱页背景图，随 featureConfig.love.diaryPage 下发） */
+    /** 恋爱日记页（恋爱页背景图，随 featureConfig.love.diaryPage 下发；标题由全局标题表 pages.titles.loveDiary 承担） */
     @Data
     public static class LoveDiaryPage {
-        /** 页面标题 */
-        private String pageTitle;
         /** 恋爱页背景图（客户端内置回退） */
         private String bgImageUrl;
     }
@@ -437,8 +437,7 @@ public class FeatureConfig extends AbstractExtension {
         private ModuleSwitch lovePhoto;
         /** 恋爱清单模块入口（数据在「恋爱管理-恋爱清单」维护） */
         private ModuleSwitch loveDaily;
-        /** 恋爱日记页面设置（页面标题 + 恋爱页背景图，配置在功能设置-恋爱设置-页面设置
-         * tab；随 {@code featureConfig.love.diaryPage} 下发） */
+        /** 恋爱日记页面设置（恋爱页背景图，在「恋爱管理-设置」维护） */
         private LoveDiaryPage diaryPage;
     }
 
@@ -495,6 +494,10 @@ public class FeatureConfig extends AbstractExtension {
     public static class LinkInfo {
         /** 是否开放公开提交申请（默认 true，关闭后公开提交接口返回「暂未开放提交申请」） */
         private Boolean submissionEnabled;
+        /** 审核结果邮件通知（复用 Halo 系统设置的邮件通知器 SMTP 配置） */
+        private Boolean sendEmail;
+        /** 邮件署名（审核邮件标题与正文中的站点名称，默认 uni-halo） */
+        private String sendEmailSiteName;
         /** 小程序信息（小程序名称/太阳码/跳转地址/描述/申请说明） */
         private MiniInfo miniInfo;
         /** 站点信息（本站站点名片，含站点名/简介/头像等字段） */

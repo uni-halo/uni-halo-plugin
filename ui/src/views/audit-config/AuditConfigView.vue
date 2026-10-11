@@ -347,7 +347,7 @@ const handleSave = async () => {
       <div class=":uno: mt-3 border-t border-gray-100 pt-3">
         <div class=":uno: text-sm text-gray-700">隐藏功能入口</div>
         <div class=":uno: mt-1.5 text-xs text-gray-400">
-          选中的功能入口在审核模式开启期间不显示（首页快捷导航 / 我的页面）。
+          选中的功能入口在审核模式开启期间不显示（首页快捷导航 / 博主页），关闭审核模式后按原来配置显示。
         </div>
         <div class=":uno: mt-2 flex items-center gap-2">
           <VButton size="sm" @click="hiddenNavModal = true">

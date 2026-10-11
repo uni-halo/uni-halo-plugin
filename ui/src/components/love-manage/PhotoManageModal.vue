@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import {Toast, VButton, VModal, VSpace} from "@halo-dev/components";
+import {Toast, VButton, VEmpty, VModal, VSpace} from "@halo-dev/components";
 import RiArrowUpLine from "~icons/ri/arrow-up-line";
 import RiArrowDownLine from "~icons/ri/arrow-down-line";
 import RiRefreshLine from "~icons/ri/refresh-line";
@@ -7,6 +7,7 @@ import RiMapPinLine from "~icons/ri/map-pin-line";
 import {useQueryClient} from "@tanstack/vue-query";
 import {computed, reactive, ref, watch} from "vue";
 import ImagePreviewModal from "@/components/common/ImagePreviewModal.vue";
+import PhotoAddButton from "./PhotoAddButton.vue";
 import {loveAlbumsApi} from "@/api";
 import type {LoveAlbum, LoveAlbumPhoto} from "@/types";
 import {useWindowSize} from "@vueuse/core";
@@ -288,6 +289,7 @@ const handleRefresh = async () => {
             照片列表（{{ photos.length }}）
           </div>
           <VSpace>
+            <PhotoAddButton :album="props.album" @imported="refreshList()" />
             <VButton
               size="sm"
               type="secondary"
@@ -370,19 +372,18 @@ const handleRefresh = async () => {
               </div>
             </div>
           </div>
-          <div v-else class=":uno: py-10 text-center text-sm text-gray-400">
-            还没有照片，先在左侧选择图片添加吧
-          </div>
+          <VEmpty v-else title="还没有照片" message="点击「新增」从附件库选择、手动添加或批量添加外链" />
         </div>
       </div>
     </div>
 
     <template #footer>
-      <VSpace>
+      <div class=":uno: flex items-center gap-3">
         <VButton @click="modal?.close()">关闭</VButton>
-      </VSpace>
+      </div>
     </template>
   </VModal>
+
 
   <ImagePreviewModal
     v-model:visible="previewVisible"

@@ -46,6 +46,7 @@ public class LoveAlbumEndpoint implements CustomEndpoint {
                 .PUT(Constants.LOVE_ALBUM_API_BASE_PATH + "/{name}", this::updateAlbum)
                 .DELETE(Constants.LOVE_ALBUM_API_BASE_PATH + "/{name}", this::deleteAlbum)
                 .POST(Constants.LOVE_ALBUM_API_BASE_PATH + "/{name}/photos", this::addPhoto)
+                .POST(Constants.LOVE_ALBUM_API_BASE_PATH + "/{name}/photos/batch", this::addPhotos)
                 .PUT(Constants.LOVE_ALBUM_API_BASE_PATH + "/{name}/photos", this::updatePhotos)
                 .DELETE(Constants.LOVE_ALBUM_API_BASE_PATH + "/{name}/photos/{photoName}",
                         this::deletePhoto)
@@ -96,6 +97,15 @@ public class LoveAlbumEndpoint implements CustomEndpoint {
         String name = request.pathVariable("name");
         return request.bodyToMono(LoveAlbum.AlbumPhoto.class)
                 .flatMap(photo -> loveAlbumService.addPhoto(name, photo))
+                .flatMap(album -> ServerResponse.ok().bodyValue(album))
+                .onErrorResume(IllegalArgumentException.class,
+                        e -> ServerResponse.badRequest().bodyValue(Map.of("message", e.getMessage())));
+    }
+
+    private Mono<ServerResponse> addPhotos(ServerRequest request) {
+        String name = request.pathVariable("name");
+        return request.bodyToMono(PhotoListRequest.class)
+                .flatMap(body -> loveAlbumService.addPhotos(name, body.getPhotos()))
                 .flatMap(album -> ServerResponse.ok().bodyValue(album))
                 .onErrorResume(IllegalArgumentException.class,
                         e -> ServerResponse.badRequest().bodyValue(Map.of("message", e.getMessage())));

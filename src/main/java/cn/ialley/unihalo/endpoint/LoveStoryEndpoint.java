@@ -38,9 +38,21 @@ public class LoveStoryEndpoint implements CustomEndpoint {
         return RouterFunctions.route()
                 .GET(Constants.LOVE_STORY_API_BASE_PATH, this::listStories)
                 .POST(Constants.LOVE_STORY_API_BASE_PATH, this::createStory)
+                .PUT(Constants.LOVE_STORY_API_BASE_PATH + "/order", this::sortStories)
                 .PUT(Constants.LOVE_STORY_API_BASE_PATH + "/{name}", this::updateStory)
                 .DELETE(Constants.LOVE_STORY_API_BASE_PATH + "/{name}", this::deleteStory)
                 .build();
+    }
+
+    /** 批量手动排序：names 为按新顺序排列的 name 列表 */
+    private Mono<ServerResponse> sortStories(ServerRequest request) {
+        return request.bodyToMono(new org.springframework.core.ParameterizedTypeReference<
+                java.util.List<String>>() {
+                })
+                .flatMap(loveStoryService::sort)
+                .then(ServerResponse.ok().bodyValue(Map.of("success", true)))
+                .onErrorResume(IllegalArgumentException.class,
+                        e -> ServerResponse.badRequest().bodyValue(Map.of("message", e.getMessage())));
     }
 
     private Mono<ServerResponse> listStories(ServerRequest request) {

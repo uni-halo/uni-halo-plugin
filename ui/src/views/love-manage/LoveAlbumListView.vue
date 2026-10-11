@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import LoveSettingsButton from "@/components/feature-config/LoveSettingsButton.vue";
 import {
   IconAddCircle,
   IconRefreshLine,
@@ -145,6 +146,7 @@ const onModalClose = () => {
   <VPageHeader title="UniHalo-恋爱相册">
     <template #actions>
       <VSpace>
+        <LoveSettingsButton default-segment="albums" />
         <VButton @click="refetch">
           <template #icon>
             <IconRefreshLine class="w-4 h-4" :class="{ 'animate-spin text-gray-900': isFetching }" />
@@ -199,7 +201,7 @@ const onModalClose = () => {
           </template>
         </VEmpty>
       </div>
-      <div v-else class=":uno: grid grid-cols-1 gap-4 p-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div v-else class=":uno: grid grid-cols-2 gap-3 p-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
         <VCard v-for="album in sortedAlbums" :key="album.metadata.name" :body-class="[':uno: !p-0']"
           class=":uno: overflow-hidden"
           :class="checkSelection(album) ? ':uno: border-pink-400 ring-2 ring-pink-200' : ''">
@@ -218,7 +220,7 @@ const onModalClose = () => {
               已加密
             </span>
           </div>
-          <div class=":uno: p-4">
+          <div class=":uno: p-3">
             <div class=":uno: flex items-center gap-2">
               <div class=":uno: truncate text-sm font-semibold text-gray-800">
                 {{ album.spec.displayName || "未命名相册" }}
@@ -228,10 +230,10 @@ const onModalClose = () => {
             <div class=":uno: mt-1 line-clamp-1 text-xs text-gray-500">
               {{ album.spec.description || "暂无描述" }}
             </div>
-            <div class=":uno: mt-1 text-xs text-gray-400">
+            <div class=":uno: mt-0.5 text-xs text-gray-400">
               {{ album.status?.photoCount ?? 0 }} 张照片
             </div>
-            <VSpace class=":uno: mt-3 flex-wrap">
+            <VSpace class=":uno: mt-2 flex-wrap" spacing="sm">
               <VButton size="sm" type="secondary" @click="handleOpenPhotoModal(album)">
                 照片
               </VButton>

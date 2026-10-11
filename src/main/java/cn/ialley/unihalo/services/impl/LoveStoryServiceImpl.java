@@ -9,6 +9,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import cn.ialley.unihalo.scheme.LoveStory;
 import cn.ialley.unihalo.services.LoveStoryService;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import run.halo.app.extension.ListOptions;
 import run.halo.app.extension.ListResult;
@@ -81,6 +82,24 @@ public class LoveStoryServiceImpl implements LoveStoryService {
     public Mono<Void> delete(String name) {
         return client.fetch(LoveStory.class, name)
                 .flatMap(client::delete)
+                .then();
+    }
+
+    @Override
+    public Mono<Void> sort(List<String> names) {
+        if (names == null || names.isEmpty()) {
+            return Mono.empty();
+        }
+        return Flux.fromIterable(names)
+                .index()
+                .flatMap(tuple -> client.fetch(LoveStory.class, tuple.getT2())
+                        .flatMap(story -> {
+                            if (story.getSpec() == null) {
+                                story.setSpec(new LoveStory.LoveStorySpec());
+                            }
+                            story.getSpec().setPriority((int) (names.size() - tuple.getT1()));
+                            return client.update(story);
+                        }))
                 .then();
     }
 

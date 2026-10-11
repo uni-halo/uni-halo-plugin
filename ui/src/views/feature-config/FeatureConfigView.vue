@@ -15,27 +15,25 @@ import {
 import type { FeatureConfig, FeatureConfigSpec } from "@/types";
 import { FeatureConfigFormKey } from "./form-context";
 import ProfileSection from "./sections/ProfileSection.vue";
-import PreferencesSection from "./sections/PreferencesSection.vue";
-import PagesSection from "./sections/PagesSection.vue";
-import AssetsSection from "./sections/AssetsSection.vue";
-import LoveSection from "./sections/LoveSection.vue";
-import LinkInfoSection from "./sections/LinkInfoSection.vue";
+import AppearanceSection from "./sections/AppearanceSection.vue";
+import PageTitlesSection from "./sections/PageTitlesSection.vue";
+import LegalSection from "./sections/LegalSection.vue";
 import MaintenanceSection from "./sections/MaintenanceSection.vue";
 
 const queryClient = useQueryClient();
 
-type BigGroup = "profile" | "preferences" | "pages" | "assets" | "love" | "linkInfo" | "maintenance";
+type BigGroup = "profile" | "appearance" | "titles" | "legal" | "maintenance";
 
+/** 大分区（一级统一 4 字）；desc 为左列表说明 */
 const GROUP_ITEMS: Array<{ id: BigGroup; label: string; desc: string }> = [
-  { id: "profile", label: "应用设置", desc: "应用信息 / 博主 / 社交" },
-  { id: "preferences", label: "偏好设置", desc: "首页/列表/归档布局与卡片样式" },
-  { id: "pages", label: "页面设置", desc: "各页面标题 / 首页 / 图库 / 关于页 / 笔记详情" },
-  { id: "assets", label: "资源设置", desc: "加载占位" },
-  { id: "love", label: "恋爱设置", desc: "恋爱页图片与模块入口" },
-  { id: "linkInfo", label: "友链设置", desc: "站点信息 / 小程序信息" },
-  { id: "maintenance", label: "维护设置", desc: "维护页文案 / 排期与开关" },
+  { id: "profile", label: "应用资料", desc: "应用信息 / 博主 / 社交 / 页脚版权" },
+  { id: "appearance", label: "外观布局", desc: "通用外观 / 页面布局 / 博主页面" },
+  { id: "titles", label: "页面标题", desc: "全站页面标题统一维护" },
+  { id: "legal", label: "法律页面", desc: "用户协议 / 隐私政策 / 免责声明" },
+  { id: "maintenance", label: "维护模式", desc: "维护页文案 / 排期与开关" },
 ];
 
+/** 二级子 tab（系列内等长）；空数组 = 无二级（整卡单表） */
 const SUB_TABS: Record<BigGroup, Array<{ id: string; label: string }>> = {
   profile: [
     { id: "appInfo", label: "应用信息" },
@@ -43,38 +41,22 @@ const SUB_TABS: Record<BigGroup, Array<{ id: string; label: string }>> = {
     { id: "social", label: "社交信息" },
     { id: "copyright", label: "页脚版权" },
   ],
-  preferences: [
-    { id: "general", label: "通用功能" },
+  appearance: [
+    { id: "general", label: "通用外观" },
+    { id: "bloggerPage", label: "博主页" },
     { id: "home", label: "首页" },
     { id: "articles", label: "笔记页" },
     { id: "archives", label: "归档页" },
-    { id: "categoryArticles", label: "分类笔记页" },
-    { id: "tagArticles", label: "标签笔记页" },
-    { id: "friendLinks", label: "友情链接页" },
+    { id: "categoryArticles", label: "分类页" },
+    { id: "tagArticles", label: "标签页" },
+    { id: "friendLinks", label: "友链页" },
+    { id: "content", label: "内容页（瞬间、笔记）" },
   ],
-  pages: [
-    { id: "pageTitles", label: "页面标题" },
-    { id: "home", label: "首页" },
-    { id: "moment", label: "瞬间页" },
-    { id: "postDetail", label: "笔记详情页" },
-    { id: "blogger", label: "博主页" },
-    { id: "draw", label: "绘画" },
-    { id: "disclaimer", label: "免责声明页" },
-    { id: "userAgreement", label: "用户协议页" },
-    { id: "privacyPolicy", label: "隐私政策页" },
-  ],
-  assets: [
-    { id: "loading", label: "加载占位" },
-  ],
-  love: [
-    { id: "page", label: "页面设置" },
-    { id: "pageEntry", label: "页面入口" },
-    { id: "modules", label: "模块入口" },
-  ],
-  linkInfo: [
-    { id: "basic", label: "基本设置" },
-    { id: "site", label: "站点信息" },
-    { id: "info", label: "小程序信息" },
+  titles: [],
+  legal: [
+    { id: "userAgreement", label: "用户协议" },
+    { id: "privacyPolicy", label: "隐私政策" },
+    { id: "disclaimer", label: "免责声明" },
   ],
   maintenance: [
     { id: "time", label: "维护时间" },
@@ -82,14 +64,20 @@ const SUB_TABS: Record<BigGroup, Array<{ id: string; label: string }>> = {
   ],
 };
 
+/** 各大分区默认子 tab（titles 无二级，固定 titles） */
+const DEFAULT_SUB_TABS: Record<BigGroup, string> = {
+  profile: "appInfo",
+  appearance: "general",
+  titles: "titles",
+  legal: "userAgreement",
+  maintenance: "time",
+};
+
 const bigGroup = ref<BigGroup>("profile");
-const subTab = ref<string>("appInfo");
+const subTab = ref<string>(DEFAULT_SUB_TABS.profile);
 
 watch(bigGroup, (group) => {
-  const first = SUB_TABS[group][0];
-  if (first) {
-    subTab.value = first.id;
-  }
+  subTab.value = DEFAULT_SUB_TABS[group];
 });
 
 const subTabItems = computed(() => SUB_TABS[bigGroup.value]);
@@ -113,6 +101,8 @@ function defaultSpec(): FeatureConfigSpec {
     profile: {
       appInfo: { name: "uni-halo", logo: "/plugins/uni-halo/assets/static/logo.png" },
       blogger: { nickname: "uni-halo", avatar: "", email: "", description: "", website: "", intro: "" },
+      // 页脚版权（显示于关于页页脚，与后端 profile.copyrightConfig 默认一致）
+      copyrightConfig: { enabled: true, content: "「 2022 uni-halo 丨 开源项目@小莫唐尼 」" },
       // 社交信息（动态列表：qq/wechat/email/github 四项默认；图标由 app 端按颜色/背景色色块渲染）
       social: {
         items: [
@@ -124,7 +114,7 @@ function defaultSpec(): FeatureConfigSpec {
       },
     },
     pages: {
-      // 全站页面标题（页面设置-页面标题 tab 统一维护；留空时客户端回退内置标题）
+      // 全站页面标题（外观-页面标题单表统一维护；留空时客户端回退内置标题）
       titles: {
         home: "首页",
         gallery: "图库",
@@ -137,6 +127,7 @@ function defaultSpec(): FeatureConfigSpec {
         categoryArticles: "分类笔记",
         tags: "标签",
         tagArticles: "标签笔记",
+        loveDiary: "恋爱日记",
         search: "搜索",
         favorites: "我的收藏",
         friendLinks: "友情链接",
@@ -160,6 +151,9 @@ function defaultSpec(): FeatureConfigSpec {
         register: "注册",
         userAgreement: "用户协议",
         privacyPolicy: "隐私政策",
+        drawList: "绘画作品",
+        drawCanvas: "画一幅",
+        drawManage: "我的绘画",
         drawReview: "绘画审核",
       },
       home: {
@@ -174,10 +168,8 @@ function defaultSpec(): FeatureConfigSpec {
         bgImageUrl: "/plugins/uni-halo/assets/static/uni_halo_profile_bg.jpeg",
         waveImageUrl: "/plugins/uni-halo/assets/static/uni_halo_about_wave.gif",
         commonFeaturesMode: "grid",
-        copyrightConfig: { enabled: true, content: "「 2022 uni-halo 丨 开源项目@小莫唐尼 」" },
       },
-      // 我的页面功能入口：默认填充注册表条目
-      // （常用 10 项 / 其他 5 项，与后端 FeatureConfigServiceImpl 默认一致）
+      // 博主页功能入口（mine 对标博主页）：默认填充注册表条目（与后端默认一致）
       mine: {
         commonFeatures: featureEntriesByKeys(DEFAULT_MY_PAGE_COMMON_KEYS).map(toQuickNavigationItem),
         otherFeatures: featureEntriesByKeys(DEFAULT_MY_PAGE_OTHER_KEYS).map(toQuickNavigationItem),
@@ -189,7 +181,7 @@ function defaultSpec(): FeatureConfigSpec {
       // 用户协议页/隐私政策页（独立两对象；内容留空 = app 端注册页回退静态提示文案）
       userAgreement: { content: "" },
       privacyPolicy: { content: "" },
-      // 绘画配置（页面设置-绘画 tab；发布审核默认开启，与旧 drawConfig 默认一致）
+      // 绘画配置（审核开关入口在「绘画作品管理-设置」弹窗）
       draw: { auditEnabled: true },
       postDetail: {
         showComment: true,
@@ -244,13 +236,14 @@ function defaultSpec(): FeatureConfigSpec {
         path: "/pages-blog/love/list", priority: 3,
         passwordEnabled: false, password: "", passwordRemoved: false,
       },
-      // 恋爱日记页面设置（页面标题 + 恋爱页背景图，默认留空客户端内置回退）
-      diaryPage: { pageTitle: "", bgImageUrl: "" },
+      // 恋爱页背景图（默认留空客户端内置回退）
+      diaryPage: { bgImageUrl: "" },
     },
     linkInfo: {
-      // 友链设置默认：基本设置开放公开提交申请；miniInfo/siteInfo 留空
-      // （站长配置后经 getConfigs 直接下发 pluginConfig.linkInfo）
+      // 友链设置默认：开放公开提交申请；审核邮件通知默认关闭，署名 uni-halo
       submissionEnabled: true,
+      sendEmail: false,
+      sendEmailSiteName: "uni-halo",
       miniInfo: {
         displayName: "",
         miniProgramCode: "",
@@ -376,21 +369,21 @@ provide(FeatureConfigFormKey, { formState, save: handleSave });
       </VCard>
     </aside>
 
-    <!-- 右侧：VTabbar 子切换 + 分区组件（各分区独立组件） -->
+    <!-- 右侧：VTabbar 子切换 + 分区组件（titles 无二级，整卡单表） -->
     <div class=":uno: min-w-0 flex-1">
       <VCard :loading="isLoading">
-        <template #header>
-          <div class=":uno: p-2 pb-0">
+        <template v-if="subTabItems.length" #header>
+          <!-- min-w-0 + w-full：card-header 是 flex+overflow-hidden，flex 子项默认
+               min-width:auto 会被撑开导致 VTabbar 内部滚动失效 -->
+          <div class=":uno: w-full min-w-0 p-2 pb-0">
             <VTabbar v-model:active-id="subTab" :items="subTabItems" />
           </div>
         </template>
 
         <ProfileSection v-if="bigGroup === 'profile'" :sub-tab="subTab" />
-        <PreferencesSection v-if="bigGroup === 'preferences'" :sub-tab="subTab" />
-        <PagesSection v-if="bigGroup === 'pages'" :sub-tab="subTab" />
-        <AssetsSection v-if="bigGroup === 'assets'" :sub-tab="subTab" />
-        <LoveSection v-if="bigGroup === 'love'" :sub-tab="subTab" />
-        <LinkInfoSection v-if="bigGroup === 'linkInfo'" :sub-tab="subTab" />
+        <AppearanceSection v-if="bigGroup === 'appearance'" :sub-tab="subTab" />
+        <PageTitlesSection v-if="bigGroup === 'titles'" sub-tab="titles" />
+        <LegalSection v-if="bigGroup === 'legal'" :sub-tab="subTab" />
         <MaintenanceSection v-if="bigGroup === 'maintenance'" :sub-tab="subTab" />
       </VCard>
     </div>

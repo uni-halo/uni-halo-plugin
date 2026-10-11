@@ -28,6 +28,8 @@ import { deletingRefetchInterval } from "@/utils/query";
 import RiDragMove2Line from "~icons/ri/drag-move-2-line";
 import RiImageLine from "~icons/ri/image-line";
 import RiRefreshLine from "~icons/ri/refresh-line";
+import RiEyeLine from "~icons/ri/eye-line";
+import RiEyeOffLine from "~icons/ri/eye-off-line";
 import { bannerApi } from "@/api";
 import {
   BANNER_SOURCE_LABELS,
@@ -169,11 +171,23 @@ const handleCandidateConfirm = async (selected: BannerCandidate[]) => {
   }
 };
 
-// ===== 编辑 / 删除 / 同步（单条） =====
+// ===== 编辑 / 删除 / 同步 / 显隐（单条） =====
 
 const handleEdit = (banner: Banner) => {
   selectedBanner.value = banner;
   editingModal.value = true;
+};
+
+/** 切换显隐（隐藏后公开列表/详情不展示） */
+const handleToggleHidden = async (banner: Banner) => {
+  const target = !banner.spec.hidden;
+  try {
+    await bannerApi.setHidden(banner.metadata.name, target);
+    Toast.success(target ? "已隐藏" : "已公开展示");
+    await refetch();
+  } catch (error) {
+    Toast.error((error as Error).message);
+  }
 };
 
 const handleSync = async (banner: Banner) => {
@@ -371,9 +385,12 @@ const sourceBadgeClass = (source?: string) =>
       </Transition>
 
       <Transition v-else appear name="fade">
-        <!-- 非手动排序模式手柄不渲染，handle 无匹配时列表不可拖 -->
-        <VueDraggable v-model="bannerList" handle=".banner-drag-handle" @end="handleDragEnd">
-          <VEntityContainer>
+        <!-- 非手动排序模式手柄不渲染，handle 无匹配时列表不可拖；
+             target 指向 VEntityContainer（sortable 的直接子元素须为各个 VEntity，
+             否则整个容器会被当成一个可拖项） -->
+        <VueDraggable v-model="bannerList" :disabled="!!keyword || !!source || page > 1" handle=".banner-drag-handle" target=".banner-drag-container tbody"
+          @end="handleDragEnd">
+          <VEntityContainer class="banner-drag-container">
             <VEntity v-for="banner in bannerList" :key="banner.metadata.name">
               <template #checkbox>
                 <input v-model="selectedBannerNames" :value="banner.metadata.name" name="banner-checkbox"
@@ -438,6 +455,19 @@ const sourceBadgeClass = (source?: string) =>
                     </span>
                   </template>
                 </VEntityField>
+                <VEntityField>
+                  <template #description>
+                    <button
+                      v-tooltip="banner.spec.hidden ? '恢复公开展示' : '隐藏（公开列表/详情不展示）'"
+                      type="button"
+                      class=":uno: flex cursor-pointer items-center border-none bg-transparent p-0"
+                      @click="handleToggleHidden(banner)"
+                    >
+                      <RiEyeOffLine v-if="banner.spec.hidden" class=":uno: h-4 w-4 text-orange-400" />
+                      <RiEyeLine v-else class=":uno: h-4 w-4 text-gray-400" />
+                    </button>
+                  </template>
+                </VEntityField>
               </template>
               <template #dropdownItems>
                 <template v-if="banner.spec.source === 'post'">
@@ -450,6 +480,9 @@ const sourceBadgeClass = (source?: string) =>
                 </template>
                 <VDropdownItem v-else @click="handleEdit(banner)">
                   编辑
+                </VDropdownItem>
+                <VDropdownItem @click="handleToggleHidden(banner)">
+                  {{ banner.spec.hidden ? "恢复公开展示" : "隐藏" }}
                 </VDropdownItem>
                 <VDropdownItem type="danger" @click="handleDelete(banner)">
                   删除
