@@ -95,9 +95,9 @@ const handleSave = async () => {
       </div>
       <div class=":uno: flex items-center justify-between gap-4 border-b border-gray-100 py-3">
         <div>
-          <div class=":uno: text-sm text-gray-700">开启猜画玩法</div>
+          <div class=":uno: text-sm text-gray-700">开启画谜玩法</div>
           <div class=":uno: mt-0.5 text-xs text-gray-400">
-            开启后，App 端发布绘画时可设置谜底供其他用户竞猜，并开放猜画积分排行榜；关闭后隐藏竞猜入口（历史竞猜数据保留）。
+            开启后，App 端发布绘画时可设置谜底供其他用户猜一猜，并开放画谜排行榜；关闭后隐藏画谜入口（历史数据保留）。
           </div>
         </div>
         <VSwitch v-model="guessEnabled" />
@@ -115,7 +115,7 @@ const handleSave = async () => {
           v-model="guessMinRevealWindowHours"
           type="number"
           name="guessMinRevealWindowHours"
-          label="最小竞猜窗口（小时）"
+            label="最短画谜窗口（小时）"
           help="审核通过时，自动揭晓时间早于「通过时间 + 窗口」则顺延"
           :min="0"
           :max="72"
