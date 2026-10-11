@@ -15,9 +15,14 @@ import run.halo.app.extension.ListResult;
 public interface DrawService {
 
     /**
-     * 公开列表（仅已通过且未隐藏，创建时间倒序）
+     * 公开列表（仅已通过且未隐藏，创建时间倒序；响应脱敏不含谜底）
      */
     Mono<ListResult<DrawVo>> listPublic(int page, int size);
+
+    /**
+     * 公开列表（带分类：all=全部 / normal=普通作品 / puzzle=竞猜作品）
+     */
+    Mono<ListResult<DrawVo>> listPublic(int page, int size, String type);
 
     /**
      * 公开详情（仅已通过且未隐藏，未通过/待审核/已隐藏一律 404）
@@ -50,10 +55,12 @@ public interface DrawService {
     Mono<DrawVo> setMineHidden(String name, String username, boolean hidden);
 
     /**
-     * 控制台列表（全状态，可按 status/keyword 筛选；sort=createdAt/reviewedAt 指定排序，
-     * 缺省待审核优先 + 提交时间倒序）
+     * 控制台列表（全状态，可按 status/keyword 筛选；sort=createdAt/reviewedAt/revealedAt 指定排序，
+     * 缺省待审核优先 + 提交时间倒序；type=normal/puzzle 按普通/竞猜筛选，
+     * hidden=true/false 按显隐筛选）
      */
-    Mono<ListResult<DrawVo>> list(String status, String keyword, String sort, int page, int size);
+    Mono<ListResult<DrawVo>> list(String status, String keyword, String sort, String type,
+            String hidden, int page, int size);
 
     /**
      * 控制台详情（全状态可见）

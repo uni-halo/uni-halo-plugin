@@ -390,8 +390,17 @@ export const ucWechatBindingApi = {
 const DRAWS_BASE = `${PLUGIN_BASE}/draws`;
 
 export const drawsApi = {
-  list: (query: { page?: number; size?: number; status?: string; keyword?: string; sort?: string } = {}) =>
-    http.get<PageResult<Draw>>(DRAWS_BASE, query),
+  list: (query: {
+    page?: number;
+    size?: number;
+    status?: string;
+    keyword?: string;
+    sort?: string;
+    /** 类型筛选：normal=普通作品 / puzzle=竞猜作品 */
+    type?: string;
+    /** 显隐筛选：true=已隐藏 / false=公开展示 */
+    hidden?: string;
+  } = {}) => http.get<PageResult<Draw>>(DRAWS_BASE, query),
   get: (name: string) => http.get<Draw>(`${DRAWS_BASE}/${name}`),
   /** 审核通过（note 选填，展示给作者的审核说明） */
   approve: (name: string, note?: string) =>

@@ -5,6 +5,7 @@ import cn.ialley.unihalo.scheme.AppVersion;
 import cn.ialley.unihalo.scheme.AuditDataConfig;
 import cn.ialley.unihalo.scheme.Banner;
 import cn.ialley.unihalo.scheme.Draw;
+import cn.ialley.unihalo.scheme.DrawGuess;
 import cn.ialley.unihalo.scheme.FeatureConfig;
 import cn.ialley.unihalo.scheme.LoveAlbum;
 import cn.ialley.unihalo.scheme.LoveDailyItem;
@@ -185,6 +186,22 @@ public class UniHaloPlugin extends BasePlugin {
             indexSpecs.add(IndexSpecs.<Draw, String>single("spec.hidden", String.class)
                     .indexFunc(draw -> draw.getSpec() != null
                             && Boolean.TRUE.equals(draw.getSpec().getHidden()) ? "true" : "false"));
+            // 是否竞猜作品（谜底非空），公开列表分类过滤用
+            indexSpecs.add(IndexSpecs.<Draw, String>single("spec.hasPuzzle", String.class)
+                    .indexFunc(draw -> draw.getSpec() != null
+                            && draw.getSpec().getPuzzleAnswer() != null
+                            && !draw.getSpec().getPuzzleAnswer().isBlank() ? "true" : "false"));
+        });
+
+        schemeManager.register(DrawGuess.class, indexSpecs -> {
+            indexSpecs.add(IndexSpecs.<DrawGuess, String>single("spec.drawName", String.class)
+                    .indexFunc(guess -> guess.getSpec() == null ? null : guess.getSpec().getDrawName()));
+            indexSpecs.add(IndexSpecs.<DrawGuess, String>single("spec.username", String.class)
+                    .indexFunc(guess -> guess.getSpec() == null ? null : guess.getSpec().getUsername()));
+            indexSpecs.add(IndexSpecs.<DrawGuess, Boolean>single("spec.correct", Boolean.class)
+                    .indexFunc(guess -> guess.getSpec() == null ? null : guess.getSpec().getCorrect()));
+            indexSpecs.add(IndexSpecs.<DrawGuess, String>single("spec.solvedAt", String.class)
+                    .indexFunc(guess -> guess.getSpec() == null ? null : guess.getSpec().getSolvedAt()));
         });
 
         log.info("【UniHalo】插件启动成功！");
@@ -207,6 +224,7 @@ public class UniHaloPlugin extends BasePlugin {
         unregisterQuietly(MiniProgramLinkGroup.class);
         unregisterQuietly(MiniProgramLinkSubmission.class);
         unregisterQuietly(Draw.class);
+        unregisterQuietly(DrawGuess.class);
 
         log.info("【UniHalo】插件停止！");
     }

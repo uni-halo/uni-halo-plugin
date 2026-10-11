@@ -29,7 +29,13 @@ import FilterDropdown from "@/components/common/FilterDropdown.vue";
 import FilterCleanButton from "@/components/common/FilterCleanButton.vue";
 import SortDropdowns from "@/components/common/SortDropdowns.vue";
 import { drawsApi } from "@/api";
-import { DRAW_STATUS_LABELS, DRAW_STATUS_OPTIONS } from "@/types";
+import {
+  DRAW_STATUS_LABELS,
+  DRAW_STATUS_OPTIONS,
+  DRAW_TYPE_LABELS,
+  DRAW_TYPE_OPTIONS,
+  DRAW_HIDDEN_OPTIONS,
+} from "@/types";
 import type { Draw } from "@/types";
 import type { SortField } from "@/components/common/SortDropdowns.vue";
 
@@ -38,6 +44,7 @@ import type { SortField } from "@/components/common/SortDropdowns.vue";
 const SORT_FIELDS: SortField[] = [
   { key: "createdAt", label: "提交时间" },
   { key: "reviewedAt", label: "审核时间" },
+  { key: "revealedAt", label: "揭晓时间" },
 ];
 
 const { confirmDelete } = useDeletionFlow(["uni-halo:draws"]);
@@ -46,6 +53,8 @@ const page = ref(1);
 const size = ref(20);
 const keyword = ref("");
 const status = ref<string>();
+const type = ref<string>();
+const hidden = ref<string>();
 const sortBy = ref<string>();
 const total = ref(0);
 
@@ -65,12 +74,14 @@ const checkAll = ref(false);
 const selectedNames = ref<string[]>([]);
 
 const { data: draws, isLoading, isFetching, refetch } = useQuery({
-  queryKey: ["uni-halo:draws", page, size, status, sortBy, keyword],
+  queryKey: ["uni-halo:draws", page, size, status, type, hidden, sortBy, keyword],
   queryFn: async () => {
     const result = await drawsApi.list({
       page: page.value,
       size: size.value,
       status: status.value,
+      type: type.value,
+      hidden: hidden.value,
       sort: sortBy.value,
       keyword: keyword.value || undefined,
     });
@@ -82,20 +93,43 @@ const { data: draws, isLoading, isFetching, refetch } = useQuery({
 });
 
 watch(
-  () => [keyword.value, status.value, sortBy.value],
+  () => [keyword.value, status.value, type.value, hidden.value, sortBy.value],
   () => {
     page.value = 1;
   }
 );
 
 /** 筛选/排序是否有激活条件（决定是否显示「清除」按钮） */
-const hasFilters = computed(() => !!status.value || !!sortBy.value);
+const hasFilters = computed(
+  () => !!status.value || !!type.value || !!hidden.value || !!sortBy.value
+);
 
-/** 清除操作：重置状态筛选与排序（keyword 搜索框独立保留） */
+/** 清除操作：重置状态/类型/显隐筛选与排序（keyword 搜索框独立保留） */
 const handleClearFilters = () => {
   status.value = undefined;
+  type.value = undefined;
+  hidden.value = undefined;
   sortBy.value = undefined;
 };
+
+/** 行内类型标签：普通作品 / 竞猜中 / 已揭晓 */
+const typeLabel = computed(() => (draw: Draw) => {
+  if (!draw.spec.puzzleStatus) {
+    return DRAW_TYPE_LABELS.normal;
+  }
+  return draw.spec.puzzleStatus === "REVEALED"
+    ? DRAW_TYPE_LABELS.puzzleRevealed
+    : DRAW_TYPE_LABELS.puzzleGuessing;
+});
+
+const typeClass = computed(() => (draw: Draw) => {
+  if (!draw.spec.puzzleStatus) {
+    return "text-gray-400";
+  }
+  return draw.spec.puzzleStatus === "REVEALED"
+    ? "text-violet-500"
+    : "text-violet-400";
+});
 
 watch(
   () => selectedNames.value,
@@ -259,6 +293,8 @@ const formatTime = (value?: string | null) => {
             <VSpace spacing="lg" class=":uno: flex-wrap">
               <FilterCleanButton v-if="hasFilters" @click="handleClearFilters" />
               <FilterDropdown v-model="status" label="状态" :items="DRAW_STATUS_OPTIONS" />
+              <FilterDropdown v-model="type" label="类型" :items="DRAW_TYPE_OPTIONS" />
+              <FilterDropdown v-model="hidden" label="显隐" :items="DRAW_HIDDEN_OPTIONS" />
               <SortDropdowns v-model="sortBy" :fields="SORT_FIELDS" />
             </VSpace>
           </div>
@@ -322,6 +358,13 @@ const formatTime = (value?: string | null) => {
                       {{ draw.owner?.displayName || draw.owner?.username || "未知作者" }}
                     </span>
                   </div>
+                </template>
+              </VEntityField>
+              <VEntityField>
+                <template #description>
+                  <span class=":uno: text-xs font-medium" :class="typeClass(draw)">
+                    {{ typeLabel(draw) }}
+                  </span>
                 </template>
               </VEntityField>
               <VEntityField>

@@ -11,6 +11,7 @@ import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
 import org.springframework.web.server.ResponseStatusException;
 import cn.ialley.unihalo.constants.Constants;
+import cn.ialley.unihalo.services.DrawGuessService;
 import cn.ialley.unihalo.services.DrawService;
 import cn.ialley.unihalo.vo.DrawVo;
 import lombok.RequiredArgsConstructor;
@@ -28,6 +29,7 @@ import run.halo.app.extension.GroupVersion;
 public class DrawEndpoint implements CustomEndpoint {
 
     private final DrawService drawService;
+    private final DrawGuessService drawGuessService;
 
     @Override
     public GroupVersion groupVersion() {
@@ -39,8 +41,10 @@ public class DrawEndpoint implements CustomEndpoint {
         return RouterFunctions.route()
                 .GET(Constants.DRAW_API_BASE_PATH, this::listDraws)
                 .GET(Constants.DRAW_API_BASE_PATH + "/{name}", this::getDraw)
+                .GET(Constants.DRAW_API_BASE_PATH + "/{name}/puzzle", this::getPuzzle)
                 .POST(Constants.DRAW_API_BASE_PATH + "/{name}/approve", this::approveDraw)
                 .POST(Constants.DRAW_API_BASE_PATH + "/{name}/reject", this::rejectDraw)
+                .POST(Constants.DRAW_API_BASE_PATH + "/{name}/reveal", this::revealPuzzle)
                 .DELETE(Constants.DRAW_API_BASE_PATH + "/{name}", this::deleteDraw)
                 .PUT(Constants.DRAW_API_BASE_PATH + "/{name}/hidden", this::setHidden)
                 .build();
@@ -78,7 +82,10 @@ public class DrawEndpoint implements CustomEndpoint {
         String status = request.queryParam("status").orElse("").trim();
         String keyword = request.queryParam("keyword").orElse("").trim();
         String sort = request.queryParam("sort").orElse("").trim();
+        String type = request.queryParam("type").orElse("").trim();
+        String hidden = request.queryParam("hidden").orElse("").trim();
         return drawService.list(blankToNull(status), blankToNull(keyword), blankToNull(sort),
+                        blankToNull(type), blankToNull(hidden),
                         queryPage(request), querySize(request))
                 .flatMap(result -> ServerResponse.ok().bodyValue(result));
     }
@@ -86,6 +93,32 @@ public class DrawEndpoint implements CustomEndpoint {
     private Mono<ServerResponse> getDraw(ServerRequest request) {
         return drawService.getManage(request.pathVariable("name"))
                 .flatMap(draw -> ServerResponse.ok().bodyValue(draw));
+    }
+
+    /**
+     * 竞猜管理信息（谜底原文 + 竞猜记录，审核员核对谜底合规性）
+     */
+    private Mono<ServerResponse> getPuzzle(ServerRequest request) {
+        return drawGuessService.managePuzzle(request.pathVariable("name"))
+                .flatMap(info -> ServerResponse.ok().bodyValue(info))
+                .onErrorResume(IllegalArgumentException.class,
+                        e -> ServerResponse.badRequest()
+                                .bodyValue(Map.of("message",
+                                        e.getMessage() == null ? "请求不合法" : e.getMessage())));
+    }
+
+    /**
+     * 强制揭晓（管理端，处理争议画作，幂等）
+     */
+    private Mono<ServerResponse> revealPuzzle(ServerRequest request) {
+        return currentUsername(request)
+                .flatMap(reviewer -> drawGuessService.revealByManager(
+                        request.pathVariable("name"), reviewer))
+                .then(ServerResponse.ok().bodyValue(Map.of("success", true)))
+                .onErrorResume(IllegalArgumentException.class,
+                        e -> ServerResponse.badRequest()
+                                .bodyValue(Map.of("message",
+                                        e.getMessage() == null ? "请求不合法" : e.getMessage())));
     }
 
     private Mono<ServerResponse> approveDraw(ServerRequest request) {

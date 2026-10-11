@@ -809,6 +809,14 @@ export interface FeatureConfigPages {
   draw?: {
     /** 发布绘画需要审核（缺省 true） */
     auditEnabled?: boolean;
+    /** 猜画玩法总开关（缺省 true） */
+    guessEnabled?: boolean;
+    /** 积分排行榜返回条数（缺省 20） */
+    guessRankTopN?: number;
+    /** 最小竞猜窗口小时数（缺省 1，审核顺延判定用） */
+    guessMinRevealWindowHours?: number;
+    /** 审核顺延时长小时数（缺省 24） */
+    guessRevealPostponeHours?: number;
   };
 }
 
@@ -1067,6 +1075,18 @@ export interface DrawSpec {
   reviewedBy?: string;
   /** 审核时间（RFC3339） */
   reviewedAt?: string;
+  /** 猜画谜底（仅出题人/管理端接口返回，公开接口恒为空） */
+  puzzleAnswer?: string;
+  /** 猜画提示语 */
+  puzzleHint?: string;
+  /** 自动揭晓时间（RFC3339，空 = 永不自动揭晓） */
+  autoRevealAt?: string;
+  /** 竞猜状态（无谜底时无意义） */
+  puzzleStatus?: "GUESSING" | "REVEALED";
+  /** 揭晓时间（RFC3339） */
+  revealedAt?: string;
+  /** 揭晓人（手动 = 出题人/管理员，自动 = system） */
+  revealedBy?: string;
 }
 
 /** 作者信息快照（用户名 + 昵称 + 头像） */
@@ -1091,4 +1111,25 @@ export const DRAW_STATUS_OPTIONS: { label: string; value?: string }[] = [
   { label: "待审核", value: "PENDING" },
   { label: "已通过", value: "APPROVED" },
   { label: "已拒绝", value: "REJECTED" },
+];
+
+/** 绘画类型标签（谜底非空 = 竞猜作品） */
+export const DRAW_TYPE_LABELS: Record<string, string> = {
+  normal: "普通作品",
+  puzzleGuessing: "🎨 竞猜中",
+  puzzleRevealed: "🎨 已揭晓",
+};
+
+/** 绘画类型选项（类型筛选） */
+export const DRAW_TYPE_OPTIONS: { label: string; value?: string }[] = [
+  { label: "全部" },
+  { label: "普通作品", value: "normal" },
+  { label: "竞猜作品", value: "puzzle" },
+];
+
+/** 绘画显隐选项（显隐筛选） */
+export const DRAW_HIDDEN_OPTIONS: { label: string; value?: string }[] = [
+  { label: "全部" },
+  { label: "公开展示", value: "false" },
+  { label: "已隐藏", value: "true" },
 ];

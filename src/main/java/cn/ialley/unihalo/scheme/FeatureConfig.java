@@ -165,12 +165,29 @@ public class FeatureConfig extends AbstractExtension {
         private DrawPage draw;
     }
 
-    /** 绘画配置。发布审核开关（auditEnabled）由 DrawServiceImpl 发布流程读取。 */
+    /** 绘画配置。发布审核开关（auditEnabled）由 DrawServiceImpl 发布流程读取；
+     * 猜画配置（guess*）由 DrawGuessService 读取。 */
     @Data
     public static class DrawPage {
         /** 发布绘画需要审核（缺省 true）：开启后 App 端发布进入待审核，
          * 管理员审核通过后公开展示；关闭则发布即公开 */
         private Boolean auditEnabled;
+
+        /** 猜画玩法总开关（缺省 true）：关闭后 App 端隐藏竞猜入口，作答接口拒绝 */
+        private Boolean guessEnabled;
+
+        /** 谜底长度上限（缺省 20） */
+        private Integer guessAnswerMaxLength;
+
+        /** 积分排行榜返回条数（缺省 20） */
+        private Integer guessRankTopN;
+
+        /** 最小竞猜窗口小时数（缺省 1）：审核通过时若自动揭晓时间已过或剩余不足该窗口，
+         * 顺延为「通过时间 + 顺延时长」，避免一通过就被揭晓 */
+        private Integer guessMinRevealWindowHours;
+
+        /** 审核顺延时长小时数（缺省 24）：配合最小竞猜窗口使用 */
+        private Integer guessRevealPostponeHours;
     }
 
     /** 用户协议页。内容为富文本 HTML（RichTextEditorField 编辑），留空 = 站点未配置。 */

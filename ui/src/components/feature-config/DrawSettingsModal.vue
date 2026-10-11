@@ -24,13 +24,24 @@ const { data: config, isLoading } = useQuery({
 /** 审核开关草稿（缺省 true，与旧 drawConfig 默认一致） */
 const auditEnabled = ref(true);
 
+/** 猜画配置草稿（缺省与后端默认一致） */
+const guessEnabled = ref(true);
+const guessRankTopN = ref(20);
+const guessMinRevealWindowHours = ref(1);
+const guessRevealPostponeHours = ref(24);
+
 watch(
   () => config.value,
   (value) => {
     if (!value) {
       return;
     }
-    auditEnabled.value = value.spec?.pages?.draw?.auditEnabled ?? true;
+    const draw = value.spec?.pages?.draw;
+    auditEnabled.value = draw?.auditEnabled ?? true;
+    guessEnabled.value = draw?.guessEnabled ?? true;
+    guessRankTopN.value = draw?.guessRankTopN ?? 20;
+    guessMinRevealWindowHours.value = draw?.guessMinRevealWindowHours ?? 1;
+    guessRevealPostponeHours.value = draw?.guessRevealPostponeHours ?? 24;
   },
   { immediate: true }
 );
@@ -42,7 +53,17 @@ const handleSave = async () => {
   try {
     await featureConfigApi.save(<FeatureConfigPatch>{
       metadata: { name: "feature-config" },
-      spec: { pages: { draw: { auditEnabled: auditEnabled.value } } },
+      spec: {
+        pages: {
+          draw: {
+            auditEnabled: auditEnabled.value,
+            guessEnabled: guessEnabled.value,
+            guessRankTopN: guessRankTopN.value,
+            guessMinRevealWindowHours: guessMinRevealWindowHours.value,
+            guessRevealPostponeHours: guessRevealPostponeHours.value,
+          },
+        },
+      },
     });
     Toast.success("保存成功");
     queryClient.invalidateQueries({ queryKey: ["uni-halo:feature-config"] });
@@ -56,7 +77,8 @@ const handleSave = async () => {
 </script>
 
 <template>
-  <VModal title="绘画设置" :layer-closable="true" mount-to-body @close="emit('close')">
+  <!-- 不用 mount-to-body：Teleport 挂载 + 表单动态渲染会触发 Vue insertBefore DOM 错误（同 DrawReviewModal） -->
+  <VModal title="绘画设置" :layer-closable="true" @close="emit('close')">
     <div v-if="isLoading" class=":uno: py-2"><VLoading /></div>
     <div v-else>
       <p class=":uno: mb-3 text-xs text-gray-400">
@@ -70,6 +92,43 @@ const handleSave = async () => {
           </div>
         </div>
         <VSwitch v-model="auditEnabled" />
+      </div>
+      <div class=":uno: flex items-center justify-between gap-4 border-b border-gray-100 py-3">
+        <div>
+          <div class=":uno: text-sm text-gray-700">开启猜画玩法</div>
+          <div class=":uno: mt-0.5 text-xs text-gray-400">
+            开启后，App 端发布绘画时可设置谜底供其他用户竞猜，并开放猜画积分排行榜；关闭后隐藏竞猜入口（历史竞猜数据保留）。
+          </div>
+        </div>
+        <VSwitch v-model="guessEnabled" />
+      </div>
+      <div v-if="guessEnabled" class=":uno: flex flex-col gap-3 py-3">
+        <FormKit
+          v-model="guessRankTopN"
+          type="number"
+          name="guessRankTopN"
+          label="排行榜条数"
+          :min="5"
+          :max="100"
+        />
+        <FormKit
+          v-model="guessMinRevealWindowHours"
+          type="number"
+          name="guessMinRevealWindowHours"
+          label="最小竞猜窗口（小时）"
+          help="审核通过时，自动揭晓时间早于「通过时间 + 窗口」则顺延"
+          :min="0"
+          :max="72"
+        />
+        <FormKit
+          v-model="guessRevealPostponeHours"
+          type="number"
+          name="guessRevealPostponeHours"
+          label="审核顺延时长（小时）"
+          help="触发顺延时，揭晓时间顺延为「审核通过时间 + 该时长」"
+          :min="1"
+          :max="168"
+        />
       </div>
     </div>
 
