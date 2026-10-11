@@ -43,7 +43,6 @@ import reactor.core.publisher.Mono;
 import run.halo.app.extension.ConfigMap;
 import run.halo.app.extension.Metadata;
 import run.halo.app.extension.ReactiveExtensionClient;
-import run.halo.app.plugin.ReactiveSettingFetcher;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.node.ObjectNode;
@@ -71,7 +70,6 @@ public class FeatureConfigServiceImpl implements FeatureConfigService {
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
     private final ReactiveExtensionClient client;
-    private final ReactiveSettingFetcher settingFetcher;
 
     @Override
     public Mono<FeatureConfig> get() {
@@ -450,7 +448,7 @@ public class FeatureConfigServiceImpl implements FeatureConfigService {
         privacyPolicy.setContent("");
         pages.setPrivacyPolicy(privacyPolicy);
 
-        // 绘画配置：发布审核默认开启（与旧 drawConfig.formSchema 默认一致）
+        // 绘画配置：发布审核默认开启
         DrawPage draw = new DrawPage();
         draw.setAuditEnabled(true);
         pages.setDraw(draw);
