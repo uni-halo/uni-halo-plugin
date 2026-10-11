@@ -12,6 +12,7 @@ import org.springframework.web.reactive.function.server.ServerResponse;
 import org.springframework.web.server.ResponseStatusException;
 import cn.ialley.unihalo.constants.Constants;
 import cn.ialley.unihalo.scheme.Draw;
+import cn.ialley.unihalo.services.DrawGuessService;
 import cn.ialley.unihalo.services.DrawService;
 import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Mono;
@@ -32,6 +33,7 @@ import run.halo.app.extension.ReactiveExtensionClient;
 public class DrawUcEndpoint implements CustomEndpoint {
 
     private final DrawService drawService;
+    private final DrawGuessService drawGuessService;
     private final ReactiveExtensionClient client;
 
     @Override
@@ -47,6 +49,8 @@ public class DrawUcEndpoint implements CustomEndpoint {
                 .POST(Constants.DRAW_API_BASE_PATH, this::createMyDraw)
                 .DELETE(Constants.DRAW_API_BASE_PATH + "/{name}", this::deleteMyDraw)
                 .PUT(Constants.DRAW_API_BASE_PATH + "/{name}/hidden", this::setMyHidden)
+                .GET(Constants.DRAW_API_BASE_PATH + "/{name}/puzzle", this::getMyPuzzle)
+                .POST(Constants.DRAW_API_BASE_PATH + "/{name}/reveal", this::revealMyPuzzle)
                 .build();
     }
 
@@ -107,6 +111,34 @@ public class DrawUcEndpoint implements CustomEndpoint {
                 .flatMap(username -> drawService.deleteMine(
                         request.pathVariable("name"), username))
                 .then(ServerResponse.ok().bodyValue(Map.of("success", true)));
+    }
+
+    /**
+     * 我的竞猜管理信息（谜底、竞猜记录，仅出题人可见）
+     */
+    private Mono<ServerResponse> getMyPuzzle(ServerRequest request) {
+        return currentUsername(request)
+                .flatMap(username -> drawGuessService.myPuzzle(
+                        request.pathVariable("name"), username))
+                .flatMap(info -> ServerResponse.ok().bodyValue(info))
+                .onErrorResume(IllegalArgumentException.class,
+                        e -> ServerResponse.badRequest()
+                                .bodyValue(Map.of("message",
+                                        e.getMessage() == null ? "请求不合法" : e.getMessage())));
+    }
+
+    /**
+     * 手动揭晓我的竞猜画作（仅出题人，幂等）
+     */
+    private Mono<ServerResponse> revealMyPuzzle(ServerRequest request) {
+        return currentUsername(request)
+                .flatMap(username -> drawGuessService.revealByOwner(
+                        request.pathVariable("name"), username))
+                .then(ServerResponse.ok().bodyValue(Map.of("success", true)))
+                .onErrorResume(IllegalArgumentException.class,
+                        e -> ServerResponse.badRequest()
+                                .bodyValue(Map.of("message",
+                                        e.getMessage() == null ? "请求不合法" : e.getMessage())));
     }
 
     /**

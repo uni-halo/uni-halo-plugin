@@ -40,6 +40,8 @@ rules:
       - "draws/approve"
       - "draws/reject"
       - "draws/hidden"
+      - "draws/puzzle"
+      - "draws/reveal"
     verbs: [ "create", "patch", "update", "delete", "deletecollection" ]
 
 ---
@@ -60,7 +62,35 @@ rules:
     resources:
       - "draws"
       - "draws/hidden"
+      - "draws/puzzle"
+      - "draws/reveal"
     verbs: [ "get", "list", "create", "delete", "update" ]
+
+---
+
+apiVersion: v1alpha1
+kind: "Role"
+metadata:
+  name: uni-halo-role-template-draw-guess
+  labels:
+    halo.run/role-template: "true"
+    halo.run/hidden: "true"
+    rbac.authorization.halo.run/aggregate-to-anonymous: "true"
+    rbac.authorization.halo.run/aggregate-to-authenticated: "true"
+  annotations:
+    rbac.authorization.halo.run/module: "[UH] 绘画作品"
+    rbac.authorization.halo.run/display-name: "猜画竞猜访问"
+rules:
+  # 榜单/竞猜信息匿名与登录用户均可读（POST /draws/{name}/guess-board 由该组 GET 覆盖）
+  - apiGroups: [ "api.unihalo.ialley.cn" ]
+    resources:
+      - "draws/guess-board"
+    verbs: [ "get", "list" ]
+  # 提交作答需登录：aggregate-to-authenticated 授予全体登录用户
+  - apiGroups: [ "api.unihalo.ialley.cn" ]
+    resources:
+      - "draws/guess"
+    verbs: [ "create" ]
 
 ---
 

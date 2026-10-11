@@ -8,6 +8,7 @@ import java.util.concurrent.ThreadLocalRandom;
 
 import cn.ialley.unihalo.exception.NotFoundException;
 import cn.ialley.unihalo.scheme.Draw;
+import cn.ialley.unihalo.services.DrawGuessService;
 import cn.ialley.unihalo.services.DrawService;
 import cn.ialley.unihalo.services.FeatureConfigService;
 import cn.ialley.unihalo.vo.DrawVo;
@@ -47,17 +48,38 @@ public class DrawServiceImpl implements DrawService {
 
     private static final int TITLE_MAX_LENGTH = 50;
     private static final int DESCRIPTION_MAX_LENGTH = 200;
+    private static final int PUZZLE_ANSWER_MAX_LENGTH = 20;
+    private static final int PUZZLE_HINT_MAX_LENGTH = 50;
+
+    /** 公开列表分类：全部 */
+    public static final String TYPE_ALL = "all";
+    /** 公开列表分类：普通作品（无谜底） */
+    public static final String TYPE_NORMAL = "normal";
+    /** 公开列表分类：竞猜作品 */
+    public static final String TYPE_PUZZLE = "puzzle";
 
     private final ReactiveExtensionClient client;
     private final FeatureConfigService featureConfigService;
+    private final DrawGuessService drawGuessService;
 
     @Override
     public Mono<ListResult<DrawVo>> listPublic(int page, int size) {
-        return listByPage(ListOptions.builder()
+        return listPublic(page, size, TYPE_ALL);
+    }
+
+    @Override
+    public Mono<ListResult<DrawVo>> listPublic(int page, int size, String type) {
+        var builder = ListOptions.builder()
                 .andQuery(equal("spec.status", STATUS_APPROVED))
                 .andQuery(notEqual("spec.hidden", "true"))
-                .andQuery(isNull("metadata.deletionTimestamp"))
-                .build(), page, size);
+                .andQuery(isNull("metadata.deletionTimestamp"));
+        if (TYPE_PUZZLE.equals(type)) {
+            builder.andQuery(equal("spec.hasPuzzle", "true"));
+        } else if (TYPE_NORMAL.equals(type)) {
+            builder.andQuery(equal("spec.hasPuzzle", "false"));
+        }
+        return listByPage(builder.build(), page, size)
+                .map(this::sanitize);
     }
 
     @Override
@@ -67,7 +89,10 @@ public class DrawServiceImpl implements DrawService {
                         && STATUS_APPROVED.equals(draw.getSpec().getStatus())
                         && !Boolean.TRUE.equals(draw.getSpec().getHidden()))
                 .switchIfEmpty(Mono.error(new NotFoundException("绘画不存在")))
-                .flatMap(this::toVo);
+                // 公开详情入口先做惰性揭晓检查（到自动揭晓时间的竞猜画翻转为已揭晓）
+                .flatMap(drawGuessService::revealIfDue)
+                .flatMap(this::toVo)
+                .map(this::sanitize);
     }
 
     @Override
@@ -101,6 +126,17 @@ public class DrawServiceImpl implements DrawService {
             spec.setReason(null);
             spec.setReviewedBy(null);
             spec.setReviewedAt(null);
+            // 竞猜状态服务端强制：发布即进入竞猜中（审核通过前不可被猜）
+            if (notBlank(spec.getPuzzleAnswer())) {
+                spec.setPuzzleStatus(Draw.PUZZLE_STATUS_GUESSING);
+            } else {
+                spec.setPuzzleAnswer(null);
+                spec.setPuzzleHint(null);
+                spec.setAutoRevealAt(null);
+                spec.setPuzzleStatus(null);
+            }
+            spec.setRevealedAt(null);
+            spec.setRevealedBy(null);
             input.setMetadata(buildMetadata());
             return client.create(input).flatMap(this::toVo);
         }));
@@ -119,11 +155,20 @@ public class DrawServiceImpl implements DrawService {
     }
 
     @Override
-    public Mono<ListResult<DrawVo>> list(String status, String keyword, String sort, int page, int size) {
+    public Mono<ListResult<DrawVo>> list(String status, String keyword, String sort, String type,
+            String hidden, int page, int size) {
         var builder = ListOptions.builder()
                 .andQuery(isNull("metadata.deletionTimestamp"));
         if (notBlank(status)) {
             builder.andQuery(equal("spec.status", status));
+        }
+        if (TYPE_PUZZLE.equals(type)) {
+            builder.andQuery(equal("spec.hasPuzzle", "true"));
+        } else if (TYPE_NORMAL.equals(type)) {
+            builder.andQuery(equal("spec.hasPuzzle", "false"));
+        }
+        if ("true".equals(hidden) || "false".equals(hidden)) {
+            builder.andQuery(equal("spec.hidden", hidden));
         }
         return client.listAll(Draw.class, builder.build(), Sort.unsorted())
                 .filter(draw -> matches(draw, keyword))
@@ -191,7 +236,13 @@ public class DrawServiceImpl implements DrawService {
                     spec.setReviewedBy(reviewer);
                     spec.setReviewedAt(Instant.now().toString());
                     // 审核结果不发通知：结果直接展示在「我的绘画」列表（spec.reason/reviewedAt）
-                    return client.update(draw).flatMap(this::toVo);
+                    if (!STATUS_APPROVED.equals(status)) {
+                        return client.update(draw).flatMap(this::toVo);
+                    }
+                    // 竞猜画通过时执行自动揭晓顺延（审核等待期过点 / 剩余不足最小竞猜窗口）
+                    return drawGuessService.postponeAutoRevealOnApprove(draw)
+                            .flatMap(client::update)
+                            .flatMap(this::toVo);
                 });
     }
 
@@ -300,7 +351,52 @@ public class DrawServiceImpl implements DrawService {
         spec.setDescription(trimToLength(spec.getDescription(), DESCRIPTION_MAX_LENGTH));
         spec.setCover(spec.getCover().trim());
         spec.setAttachmentName(trimToNull(spec.getAttachmentName()));
+        validatePuzzle(spec);
         return spec;
+    }
+
+    /**
+     * 竞猜字段校验：谜底必填（开启竞猜时）、长度限制、提示语长度限制、揭晓时间格式校验
+     */
+    private void validatePuzzle(Draw.DrawSpec spec) {
+        var answer = trimToNull(spec.getPuzzleAnswer());
+        if (answer == null) {
+            return;
+        }
+        if (answer.length() > PUZZLE_ANSWER_MAX_LENGTH) {
+            throw new IllegalArgumentException(
+                    "谜底不能超过 " + PUZZLE_ANSWER_MAX_LENGTH + " 字");
+        }
+        spec.setPuzzleAnswer(answer);
+        spec.setPuzzleHint(trimToLength(spec.getPuzzleHint(), PUZZLE_HINT_MAX_LENGTH));
+        var autoRevealAt = trimToNull(spec.getAutoRevealAt());
+        if (autoRevealAt != null) {
+            try {
+                Instant.parse(autoRevealAt);
+            } catch (Exception e) {
+                throw new IllegalArgumentException("自动揭晓时间格式不合法");
+            }
+            spec.setAutoRevealAt(autoRevealAt);
+        } else {
+            spec.setAutoRevealAt(null);
+        }
+    }
+
+    /**
+     * 公开响应脱敏：谜底任何情况下不出公开接口（仅出题人/管理端点返回原文）
+     */
+    private DrawVo sanitize(DrawVo vo) {
+        if (vo != null && vo.getSpec() != null) {
+            vo.getSpec().setPuzzleAnswer(null);
+        }
+        return vo;
+    }
+
+    private ListResult<DrawVo> sanitize(ListResult<DrawVo> result) {
+        if (result != null && result.getItems() != null) {
+            result.getItems().forEach(this::sanitize);
+        }
+        return result;
     }
 
     private static Metadata buildMetadata() {
@@ -343,6 +439,9 @@ public class DrawServiceImpl implements DrawService {
                     Comparator.nullsLast(Comparator.reverseOrder()));
             case "reviewedAt" -> Comparator.comparing(
                     (Draw draw) -> draw.getSpec() != null ? draw.getSpec().getReviewedAt() : null,
+                    Comparator.nullsLast(Comparator.reverseOrder()));
+            case "revealedAt" -> Comparator.comparing(
+                    (Draw draw) -> draw.getSpec() != null ? draw.getSpec().getRevealedAt() : null,
                     Comparator.nullsLast(Comparator.reverseOrder()));
             default -> pendingFirstDesc();
         };
