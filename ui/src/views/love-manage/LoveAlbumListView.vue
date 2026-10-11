@@ -201,11 +201,11 @@ const onModalClose = () => {
           </template>
         </VEmpty>
       </div>
-      <div v-else class=":uno: grid grid-cols-2 gap-3 p-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
+      <div v-else class=":uno: grid grid-cols-2 gap-3 p-4 sm:grid-cols-3 xl:grid-cols-5">
         <VCard v-for="album in sortedAlbums" :key="album.metadata.name" :body-class="[':uno: !p-0']"
           class=":uno: overflow-hidden"
-          :class="checkSelection(album) ? ':uno: border-pink-400 ring-2 ring-pink-200' : ''">
-          <div class=":uno: relative aspect-[16/9] w-full overflow-hidden bg-gray-100">
+          :class="checkSelection(album) ? ':uno: border-green-500 ring-2 ring-green-200' : ''">
+          <div class=":uno: relative aspect-[3/2] w-full overflow-hidden bg-gray-100">
             <input v-model="selectedAlbumNames" :value="album.metadata.name" name="love-album-checkbox" type="checkbox"
               class=":uno: absolute left-2 top-2 z-10 h-4 w-4 cursor-pointer rounded border-gray-300" />
             <img v-if="album.spec.cover" :src="album.spec.cover" alt="" loading="lazy"
