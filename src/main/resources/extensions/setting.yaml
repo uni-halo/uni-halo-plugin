@@ -4,31 +4,6 @@ metadata:
   name: uni-halo-plugin-settings
 spec:
   forms:
-    - group: featureConfig
-      label: 基本设置
-      formSchema:
-        - $formkit: group
-          name: linkConfig
-          label: 友情链接
-          children:
-            - $formkit: radio
-              name: sendEmail
-              id: sendEmail
-              label: 审核结果邮件通知
-              value: false
-              options:
-                - label: 开启
-                  value: true
-                - label: 关闭
-                  value: false
-              validation: required
-              help: 开启后，审核通过/拒绝时向申请人邮箱发送通知（复用 Halo 系统设置的邮件通知器 SMTP 配置，无需重复填写；申请未填邮箱则不发送）。
-            - $formkit: text
-              if: "$get(sendEmail).value === true"
-              name: siteName
-              label: 邮件署名
-              value: "uni-halo"
-              help: 审核邮件标题与正文中的站点名称。
     - group: safetyConfig
       label: 安全控制
       formSchema:
@@ -291,7 +266,7 @@ spec:
                   children:
                     - $el: div
                       attrs:
-                        style: 'font-size: 13px; font-weight: 600; color: #374151; margin-bottom: 6px;'
+                        style: "font-size: 13px; font-weight: 600; color: #374151; margin-bottom: 6px;"
                       children: 需补充到【智阅全能AI助手-角色设置-前台 Agent 角色/RAG问答角色】插件的提示词（复制下方文本到该插件设置的提示词配置中（可放到末尾），提升 App 端跳转稳定性）：
                     - $el: pre
                       attrs:
@@ -698,7 +673,7 @@ spec:
               name: wechatUsernameType
               id: wechatUsernameType
               label: 自动注册用户名类型
-              value: prefix_seq
+              value: uuid
               options:
                 - label: 使用前缀
                   value: prefix_seq
@@ -721,4 +696,3 @@ spec:
               value: 30
               validation: required
               help: 登录令牌的有效天数，过期只由令牌自身的 exp 声明保证，到期后需重新登录。
-

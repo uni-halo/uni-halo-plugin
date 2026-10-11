@@ -67,4 +67,9 @@ public interface BannerService {
      * 公开详情（含 content 富文本正文）；不存在时抛 NotFoundException。
      */
     Mono<BannerDetailVo> getPublicByName(String name);
+
+    /**
+     * 切换显隐（hidden=true 隐藏，公开列表/详情不展示；false 恢复展示）。
+     */
+    Mono<BannerDetailVo> setHidden(String name, boolean hidden);
 }

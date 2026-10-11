@@ -28,7 +28,8 @@ metadata:
     rbac.authorization.halo.run/aggregate-to-admin: "true"
   annotations:
     rbac.authorization.halo.run/dependencies: |
-      [ "uni-halo-role-template-view-link" ]
+      [ "uni-halo-role-template-view-link",
+        "uni-halo-role-template-view-feature-config" ]
     rbac.authorization.halo.run/module: "[UH] 友链管理"
     rbac.authorization.halo.run/display-name: "友链管理"
     rbac.authorization.halo.run/ui-permissions: |

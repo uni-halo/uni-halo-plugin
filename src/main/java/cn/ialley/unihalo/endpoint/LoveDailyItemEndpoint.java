@@ -38,9 +38,21 @@ public class LoveDailyItemEndpoint implements CustomEndpoint {
         return RouterFunctions.route()
                 .GET(Constants.LOVE_DAILY_API_BASE_PATH, this::listItems)
                 .POST(Constants.LOVE_DAILY_API_BASE_PATH, this::createItem)
+                .PUT(Constants.LOVE_DAILY_API_BASE_PATH + "/order", this::sortItems)
                 .PUT(Constants.LOVE_DAILY_API_BASE_PATH + "/{name}", this::updateItem)
                 .DELETE(Constants.LOVE_DAILY_API_BASE_PATH + "/{name}", this::deleteItem)
                 .build();
+    }
+
+    /** 批量手动排序：names 为按新顺序排列的 name 列表 */
+    private Mono<ServerResponse> sortItems(ServerRequest request) {
+        return request.bodyToMono(new org.springframework.core.ParameterizedTypeReference<
+                java.util.List<String>>() {
+                })
+                .flatMap(loveDailyItemService::sort)
+                .then(ServerResponse.ok().bodyValue(Map.of("success", true)))
+                .onErrorResume(IllegalArgumentException.class,
+                        e -> ServerResponse.badRequest().bodyValue(Map.of("message", e.getMessage())));
     }
 
     private Mono<ServerResponse> listItems(ServerRequest request) {

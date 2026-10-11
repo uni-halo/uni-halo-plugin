@@ -27,7 +27,8 @@ metadata:
     rbac.authorization.halo.run/aggregate-to-admin: "true"
   annotations:
     rbac.authorization.halo.run/dependencies: |
-      [ "uni-halo-role-template-view-draws" ]
+      [ "uni-halo-role-template-view-draws",
+        "uni-halo-role-template-view-feature-config" ]
     rbac.authorization.halo.run/module: "[UH] 绘画作品"
     rbac.authorization.halo.run/display-name: "绘画作品管理"
     rbac.authorization.halo.run/ui-permissions: |

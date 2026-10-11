@@ -46,7 +46,6 @@ import run.halo.app.extension.ReactiveExtensionClient;
 import run.halo.app.plugin.ReactiveSettingFetcher;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
-import tools.jackson.databind.node.JsonNodeFactory;
 import tools.jackson.databind.node.ObjectNode;
 
 /**
@@ -79,33 +78,7 @@ public class FeatureConfigServiceImpl implements FeatureConfigService {
         return fetchRaw()
                 // 恋爱模块入口密码一律脱敏（哈希不回显；passwordEnabled 由哈希派生）
                 .map(this::maskLovePasswords)
-                .flatMap(this::applySystemCommentEnable)
-                .flatMap(this::applyLegacyDrawAudit);
-    }
-
-    /**
-     * 绘画发布审核开关存量导入：单例中 pages.draw 缺失时（本次功能上线前的存量数据），
-     * 从旧插件设置 drawConfig.auditEnabled 读取一次注入（不落库）；
-     * 站长在「功能设置-页面设置-绘画」保存后即持久化到新位置。
-     */
-    private Mono<FeatureConfig> applyLegacyDrawAudit(FeatureConfig config) {
-        if (config.getSpec() == null || config.getSpec().getPages() == null
-                || config.getSpec().getPages().getDraw() != null) {
-            return Mono.just(config);
-        }
-        return settingFetcher.getSettingValue("drawConfig")
-                .map(node -> node == null ? null : node.get("auditEnabled"))
-                .defaultIfEmpty(objectMapper.nullNode())
-                .onErrorReturn(objectMapper.nullNode())
-                .map(valueNode -> {
-                    // 旧值缺失按缺省 true 处理（与旧 formSchema 默认一致）
-                    boolean legacy = valueNode != null && valueNode.isBoolean()
-                            ? valueNode.asBoolean(true) : true;
-                    DrawPage draw = new DrawPage();
-                    draw.setAuditEnabled(legacy);
-                    config.getSpec().getPages().setDraw(draw);
-                    return config;
-                });
+                .flatMap(this::applySystemCommentEnable);
     }
 
     /**
@@ -153,15 +126,21 @@ public class FeatureConfigServiceImpl implements FeatureConfigService {
     @Override
     public Mono<FeatureConfig> save(FeatureConfig config) {
         FeatureConfig body = config == null ? new FeatureConfig() : config;
-        // 写入前合并：默认值 → 请求体非空字段，防丢字段/防空写。
-        // 先取现有单例（可能不存在，回落纯默认结构）以保留恋爱模块入口密码哈希。
+        // 写入前合并：现有单例为基底（保留全部存量），叠加默认值补齐新增字段，
+        // 再覆盖请求体非空字段（null 视为未提供）——部分保存（模块 ⚙ 弹窗）因此
+        // 不会动未提交的分区；无单例时基底为纯默认结构。
         return fetchRaw()
                 .map(Optional::of)
                 .defaultIfEmpty(Optional.<FeatureConfig>empty())
                 .flatMap(existingOpt -> {
-                    ObjectNode merged = defaultSpecTree();
+                    FeatureConfig existing = existingOpt.orElse(null);
+                    ObjectNode base = existing != null && existing.getSpec() != null
+                            ? merge(defaultSpecTree(),
+                                    (ObjectNode) objectMapper.valueToTree(existing.getSpec()))
+                            : defaultSpecTree();
+                    ObjectNode merged = base;
                     if (body.getSpec() != null) {
-                        merged = merge(merged,
+                        merged = merge(base,
                                 (ObjectNode) objectMapper.valueToTree(body.getSpec()));
                     }
                     FeatureConfig target = new FeatureConfig();
@@ -171,7 +150,6 @@ public class FeatureConfigServiceImpl implements FeatureConfigService {
                             existingOpt.map(FeatureConfig::getSpec)
                                     .map(Spec::getLove).orElse(null));
                     validateMaintenance(target.getSpec().getMaintenance());
-                    FeatureConfig existing = existingOpt.orElse(null);
                     if (existing == null || existing.getMetadata() == null) {
                         Metadata metadata = new Metadata();
                         metadata.setName(Constants.FEATURE_CONFIG_SINGLETON_NAME);
@@ -298,6 +276,9 @@ public class FeatureConfigServiceImpl implements FeatureConfigService {
     private static LinkInfo buildDefaultLinkInfo() {
         LinkInfo linkInfo = new LinkInfo();
         linkInfo.setSubmissionEnabled(true);
+        // 审核邮件通知：默认关闭，署名默认 uni-halo
+        linkInfo.setSendEmail(false);
+        linkInfo.setSendEmailSiteName("uni-halo");
         linkInfo.setMiniInfo(new FeatureConfig.MiniInfo());
         linkInfo.setSiteInfo(new FeatureConfig.SiteInfo());
         return linkInfo;
@@ -414,10 +395,14 @@ public class FeatureConfigServiceImpl implements FeatureConfigService {
         titles.setRegister("注册");
         titles.setUserAgreement("用户协议");
         titles.setPrivacyPolicy("隐私政策");
+        titles.setLoveDiary("恋爱日记");
+        titles.setDrawCanvas("画一幅");
+        titles.setDrawManage("我的绘画");
         pages.setTitles(titles);
 
         HomePage home = new HomePage();
         home.setUseQuickNavigation(true);
+        home.setUseHitokoto(true);
         // 快捷导航默认 5 项（名称/图标/跳转等字段，
         // 控制台可逐项配置）
         home.setQuickNavigation(defaultQuickNavigation());

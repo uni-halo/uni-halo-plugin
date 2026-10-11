@@ -143,28 +143,48 @@ public class BannerServiceImpl implements BannerService {
 
     @Override
     public Mono<ListResult<BannerCandidateVo>> listCandidates(String keyword, int page, int size) {
-        // 候选读路径：排除删除中对象
+        // 候选读路径：仅已发布且公开的文章（排除删除中对象）
         return client.listAll(PostRef.class,
                         ListOptions.builder()
                                 .fieldQuery(isNull("metadata.deletionTimestamp"))
                                 .build(),
                         Sort.by(Sort.Direction.DESC, "metadata.creationTimestamp"))
-                .filter(post -> post.getSpec() != null
-                        && Boolean.TRUE.equals(post.getSpec().getPublish()))
+                .filter(BannerServiceImpl::isPublishedPost)
                 .map(this::toCandidate)
                 .filter(candidate -> matchesCandidateKeyword(candidate, keyword))
                 .collectList()
                 .map(list -> new ListResult<>(page, size, list.size(), slice(list, page, size)));
     }
 
+    /**
+     * 仅已发布且公开可见的文章：优先按 status.phase 判定（PUBLISHED），
+     * status 缺失时回退 spec.publish；PRIVATE 私密文章一律排除。
+     */
+    private static boolean isPublishedPost(PostRef post) {
+        var spec = post.getSpec();
+        if (spec == null) {
+            return false;
+        }
+        if ("PRIVATE".equals(spec.getVisible())) {
+            return false;
+        }
+        var status = post.getStatus();
+        if (status != null && !isBlank(status.getPhase())) {
+            return "PUBLISHED".equals(status.getPhase());
+        }
+        return Boolean.TRUE.equals(spec.getPublish());
+    }
+
     @Override
     public Mono<List<BannerListVo>> listPublic() {
-        // 公开读路径排除删除中对象
+        // 公开读路径排除删除中与已隐藏对象
         return client.listAll(Banner.class,
                         ListOptions.builder()
                                 .fieldQuery(isNull("metadata.deletionTimestamp"))
                                 .build(),
                         defaultSort())
+                .filter(banner -> banner.getSpec() == null
+                        || !Boolean.TRUE.equals(banner.getSpec().getHidden()))
                 .map(BannerListVo::from)
                 .collectList();
     }
@@ -172,10 +192,22 @@ public class BannerServiceImpl implements BannerService {
     @Override
     public Mono<BannerDetailVo> getPublicByName(String name) {
         return client.fetch(Banner.class, name)
-                // 公开详情将删除中对象视为不存在
+                // 公开详情将删除中与已隐藏对象视为不存在
                 .filter(banner -> banner.getMetadata() == null
                         || banner.getMetadata().getDeletionTimestamp() == null)
+                .filter(banner -> banner.getSpec() == null
+                        || !Boolean.TRUE.equals(banner.getSpec().getHidden()))
                 .switchIfEmpty(Mono.error(new NotFoundException("轮播图不存在")))
+                .map(BannerDetailVo::from);
+    }
+
+    @Override
+    public Mono<BannerDetailVo> setHidden(String name, boolean hidden) {
+        return client.fetch(Banner.class, name)
+                .flatMap(banner -> {
+                    banner.getSpec().setHidden(hidden);
+                    return client.update(banner);
+                })
                 .map(BannerDetailVo::from);
     }
 

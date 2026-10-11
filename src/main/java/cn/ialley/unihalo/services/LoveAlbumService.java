@@ -44,6 +44,11 @@ public interface LoveAlbumService {
     Mono<LoveAlbum> addPhoto(String name, LoveAlbum.AlbumPhoto photo);
 
     /**
+     * 批量追加照片（自动生成缺失的照片 name）。
+     */
+    Mono<LoveAlbum> addPhotos(String name, List<LoveAlbum.AlbumPhoto> photos);
+
+    /**
      * 整体替换照片列表（用于排序/批量修改）。
      */
     Mono<LoveAlbum> updatePhotos(String name, List<LoveAlbum.AlbumPhoto> photos);

@@ -21,7 +21,9 @@ import { deletingRefetchInterval } from "@/utils/query";
 import { computed, ref, watch } from "vue";
 import RiEyeLine from "~icons/ri/eye-line";
 import RiEyeOffLine from "~icons/ri/eye-off-line";
+import RiSettings3Line from "~icons/ri/settings-3-line";
 import DrawReviewModal from "@/components/draw-manage/DrawReviewModal.vue";
+import DrawSettingsModal from "@/components/feature-config/DrawSettingsModal.vue";
 import ImagePreviewModal from "@/components/common/ImagePreviewModal.vue";
 import FilterDropdown from "@/components/common/FilterDropdown.vue";
 import FilterCleanButton from "@/components/common/FilterCleanButton.vue";
@@ -55,6 +57,9 @@ const reviewVisible = ref(false);
 
 const previewVisible = ref(false);
 const previewUrl = ref("");
+
+// 模块设置弹窗（发布审核开关）
+const settingsVisible = ref(false);
 
 const checkAll = ref(false);
 const selectedNames = ref<string[]>([]);
@@ -194,6 +199,11 @@ const formatTime = (value?: string | null) => {
 </script>
 
 <template>
+  <!--
+    单根包裹：多根 fragment 中混挂 body Teleport 弹窗时，Vue 插入新节点
+    可能触发 "Failed to execute 'insertBefore'"，导致弹窗内容挂载中断
+  -->
+  <div>
   <DrawReviewModal
     v-if="reviewVisible"
     :action="reviewAction"
@@ -203,7 +213,7 @@ const formatTime = (value?: string | null) => {
     @done="onReviewDone"
   />
 
-  <VPageHeader title="UniHalo-绘画作品">
+  <VPageHeader title="UniHalo-绘画作品管理">
     <template #actions>
       <VSpace>
         <VButton @click="refetch">
@@ -211,6 +221,12 @@ const formatTime = (value?: string | null) => {
             <IconRefreshLine class="w-4 h-4" :class="{ 'animate-spin text-gray-900': isFetching }" />
           </template>
           刷新
+        </VButton>
+        <VButton @click="settingsVisible = true">
+          <template #icon>
+            <RiSettings3Line class="w-4 h-4" />
+          </template>
+          设置
         </VButton>
       </VSpace>
     </template>
@@ -393,4 +409,8 @@ const formatTime = (value?: string | null) => {
   </div>
 
   <ImagePreviewModal v-model:visible="previewVisible" :images="previewUrl ? [previewUrl] : []" title="画作预览" />
+
+  <!-- 绘画设置弹窗（发布审核开关） -->
+  <DrawSettingsModal v-if="settingsVisible" @close="settingsVisible = false" />
+  </div>
 </template>

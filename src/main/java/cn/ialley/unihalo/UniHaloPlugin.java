@@ -192,9 +192,6 @@ public class UniHaloPlugin extends BasePlugin {
 
     @Override
     public void stop() {
-        // 防御式清理：start() 中途失败时部分 scheme 可能尚未注册，
-        // schemeManager.get 未命中会抛 SchemeNotFoundException，
-        // 掩盖真正的启动错误（pf4j start 失败 → 调 stop 清理）。
         unregisterQuietly(AppInfo.class);
         unregisterQuietly(AppVersion.class);
         unregisterQuietly(AuditDataConfig.class);

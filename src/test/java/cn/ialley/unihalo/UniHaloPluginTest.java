@@ -1,6 +1,5 @@
 package cn.ialley.unihalo;
 
-import cn.ialley.unihalo.utils.PluginSecretProvider;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -9,6 +8,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import reactor.core.publisher.Mono;
 import run.halo.app.extension.SchemeManager;
 import run.halo.app.plugin.PluginContext;
+import cn.ialley.unihalo.utils.PluginSecretProvider;
 
 import static org.mockito.Mockito.when;
 

@@ -7,12 +7,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Component;
+import cn.ialley.unihalo.scheme.FeatureConfig;
 import cn.ialley.unihalo.scheme.MiniProgramLinkSubmission;
 import reactor.core.publisher.Mono;
 import run.halo.app.extension.ReactiveExtensionClient;
 import run.halo.app.extension.Secret;
-import cn.ialley.unihalo.utils.SettingGroupResolver;
-import run.halo.app.plugin.ReactiveSettingFetcher;
+import cn.ialley.unihalo.services.FeatureConfigService;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.node.JsonNodeFactory;
@@ -24,8 +24,8 @@ import tools.jackson.databind.node.ObjectNode;
  * 复用 Halo 内置邮件通知器的 SMTP 配置：读取 Secret
  * {@code notifier-setting-secret} 的 {@code default-email-notifier.json}
  * （sender.host/port/username/password/displayName/encryption），不重复提供
- * SMTP 配置页。发送开关由插件设置 {@code linkConfig.sendEmail} 控制；
- * 发送失败仅记日志，不阻塞审核流程。
+ * SMTP 配置页。发送开关与邮件署名读 {@code FeatureConfig.spec.linkInfo}
+ * （友链管理-设置）；发送失败仅记日志，不阻塞审核流程。
  *
  * @author 小莫唐尼
  */
@@ -36,22 +36,21 @@ public class EmailService {
     private static final String NOTIFIER_SECRET_NAME = "notifier-setting-secret";
     private static final String NOTIFIER_SECRET_KEY = "default-email-notifier.json";
     private static final String SENDER_KEY = "sender";
-    private static final String SETTING_GROUP_LINK_CONFIG = "linkConfig";
-    private static final String SETTING_KEY_SEND_EMAIL = "sendEmail";
 
     private static final String SITE_NAME_DEFAULT = "uni-halo";
 
     private final ReactiveExtensionClient client;
-    private final ReactiveSettingFetcher settingFetcher;
+    private final FeatureConfigService featureConfigService;
 
     /**
      * 插件 Spring 上下文未注册 Jackson 3 ObjectMapper bean，故内部自行创建。
      */
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    public EmailService(ReactiveExtensionClient client, ReactiveSettingFetcher settingFetcher) {
+    public EmailService(ReactiveExtensionClient client,
+            FeatureConfigService featureConfigService) {
         this.client = client;
-        this.settingFetcher = settingFetcher;
+        this.featureConfigService = featureConfigService;
     }
 
     /**
@@ -63,20 +62,20 @@ public class EmailService {
         if (spec == null || isBlank(spec.getEmail())) {
             return Mono.empty();
         }
-        return SettingGroupResolver.group(settingFetcher, "featureConfig",
-                SETTING_GROUP_LINK_CONFIG)
-                .defaultIfEmpty(JsonNodeFactory.instance.objectNode())
-                .flatMap(config -> {
-                    boolean sendEmail = config.path(SETTING_KEY_SEND_EMAIL).asBoolean(false);
-                    if (!sendEmail) {
+        return featureConfigService.get()
+                .map(config -> config.getSpec() == null ? null : config.getSpec().getLinkInfo())
+                .defaultIfEmpty(new FeatureConfig.LinkInfo())
+                .flatMap(linkInfo -> {
+                    if (linkInfo == null || !Boolean.TRUE.equals(linkInfo.getSendEmail())) {
                         return Mono.empty();
                     }
-                    String siteName = config.path("siteName").asString(SITE_NAME_DEFAULT);
+                    String siteName = isBlank(linkInfo.getSendEmailSiteName())
+                            ? SITE_NAME_DEFAULT : linkInfo.getSendEmailSiteName();
                     String subject = STATUS_APPROVED.equals(spec.getStatus())
                             ? "【" + siteName + "】友情链接审核通过通知"
                             : "【" + siteName + "】友情链接审核未通过通知";
-                String content = buildHtml(spec, siteName);
-                return sendEmail(spec.getEmail(), subject, content).then();
+                    String content = buildHtml(spec, siteName);
+                    return sendEmail(spec.getEmail(), subject, content).then();
                 });
     }
 

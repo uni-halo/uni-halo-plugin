@@ -27,7 +27,8 @@ metadata:
     rbac.authorization.halo.run/aggregate-to-admin: "true"
   annotations:
     rbac.authorization.halo.run/dependencies: |
-      [ "uni-halo-role-template-view-love-info" ]
+      [ "uni-halo-role-template-view-love-info",
+        "uni-halo-role-template-view-feature-config" ]
     rbac.authorization.halo.run/module: "[UH] 恋爱日记"
     rbac.authorization.halo.run/display-name: "恋爱信息管理"
     rbac.authorization.halo.run/ui-permissions: |
@@ -70,7 +71,8 @@ metadata:
     rbac.authorization.halo.run/aggregate-to-admin: "true"
   annotations:
     rbac.authorization.halo.run/dependencies: |
-      [ "uni-halo-role-template-view-love-albums" ]
+      [ "uni-halo-role-template-view-love-albums",
+        "uni-halo-role-template-view-feature-config" ]
     rbac.authorization.halo.run/module: "[UH] 恋爱日记"
     rbac.authorization.halo.run/display-name: "恋爱相册管理"
     rbac.authorization.halo.run/ui-permissions: |
@@ -113,7 +115,8 @@ metadata:
     rbac.authorization.halo.run/aggregate-to-admin: "true"
   annotations:
     rbac.authorization.halo.run/dependencies: |
-      [ "uni-halo-role-template-view-love-stories" ]
+      [ "uni-halo-role-template-view-love-stories",
+        "uni-halo-role-template-view-feature-config" ]
     rbac.authorization.halo.run/module: "[UH] 恋爱日记"
     rbac.authorization.halo.run/display-name: "恋爱故事管理"
     rbac.authorization.halo.run/ui-permissions: |
@@ -155,7 +158,8 @@ metadata:
     rbac.authorization.halo.run/aggregate-to-admin: "true"
   annotations:
     rbac.authorization.halo.run/dependencies: |
-      [ "uni-halo-role-template-view-love-daily" ]
+      [ "uni-halo-role-template-view-love-daily",
+        "uni-halo-role-template-view-feature-config" ]
     rbac.authorization.halo.run/module: "[UH] 恋爱日记"
     rbac.authorization.halo.run/display-name: "恋爱清单管理"
     rbac.authorization.halo.run/ui-permissions: |

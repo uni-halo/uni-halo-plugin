@@ -1,6 +1,7 @@
 package cn.ialley.unihalo.services;
 
 import cn.ialley.unihalo.scheme.LoveStory;
+import java.util.List;
 import reactor.core.publisher.Mono;
 import run.halo.app.extension.ListResult;
 
@@ -35,4 +36,10 @@ public interface LoveStoryService {
     Mono<LoveStory> update(LoveStory story);
 
     Mono<Void> delete(String name);
+
+    /**
+     * 批量手动排序：names 为按新顺序排列的 name 列表，
+     * 依次写 spec.priority 降序（第一位最大）。
+     */
+    Mono<Void> sort(List<String> names);
 }

@@ -51,9 +51,14 @@ public class BannerEndpoint implements CustomEndpoint {
                 .PUT(Constants.BANNER_API_BASE_PATH + "/order", this::sortBanners)
                 .GET(Constants.BANNER_API_BASE_PATH + "/candidates", this::listCandidates)
                 .POST(Constants.BANNER_API_BASE_PATH + "/{name}/sync", this::syncBanner)
+                .PUT(Constants.BANNER_API_BASE_PATH + "/{name}/hidden", this::setHidden)
                 .PUT(Constants.BANNER_API_BASE_PATH + "/{name}", this::updateBanner)
                 .DELETE(Constants.BANNER_API_BASE_PATH + "/{name}", this::deleteBanner)
                 .build();
+    }
+
+    /** 切换显隐请求体：hidden=true 隐藏（公开列表/详情不展示），false 恢复展示 */
+    public record HiddenRequest(Boolean hidden) {
     }
 
     private Mono<ServerResponse> listBanners(ServerRequest request) {
@@ -91,6 +96,16 @@ public class BannerEndpoint implements CustomEndpoint {
         String keyword = request.queryParam("keyword").orElse("").trim();
         return bannerService.listCandidates(keyword, page, size)
                 .flatMap(result -> ServerResponse.ok().bodyValue(result));
+    }
+
+    private Mono<ServerResponse> setHidden(ServerRequest request) {
+        return request.bodyToMono(HiddenRequest.class)
+                .switchIfEmpty(Mono.just(new HiddenRequest(Boolean.FALSE)))
+                .flatMap(body -> bannerService.setHidden(request.pathVariable("name"),
+                        Boolean.TRUE.equals(body.hidden())))
+                .flatMap(banner -> ServerResponse.ok().bodyValue(banner))
+                .onErrorResume(IllegalArgumentException.class,
+                        e -> ServerResponse.badRequest().bodyValue(Map.of("message", e.getMessage())));
     }
 
     private Mono<ServerResponse> updateBanner(ServerRequest request) {

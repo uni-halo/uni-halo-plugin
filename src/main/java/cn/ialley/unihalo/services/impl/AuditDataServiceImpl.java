@@ -162,6 +162,7 @@ public class AuditDataServiceImpl implements AuditDataService {
             return Mono.just(new AuditDataCandidateResult(List.of(), page, size, 0, true));
         }
         return listAllRef(type)
+                .filter(extension -> isCandidateSelectable(type, extension))
                 .map(extension -> toRef(type, extension))
                 .filter(ref -> matchesKeyword(ref, keyword))
                 .collectList()
@@ -172,6 +173,39 @@ public class AuditDataServiceImpl implements AuditDataService {
                     return new AuditDataCandidateResult(list.subList(from, to), page, size, total,
                             false);
                 });
+    }
+
+    /**
+     * 候选可选性：文章仅已发布（status.phase=PUBLISHED，缺失回退 spec.publish）
+     * 且公开（非 PRIVATE）；瞬间仅公开（非 PRIVATE）；其余类型不设限制。
+     */
+    private static boolean isCandidateSelectable(CandidateType type, Extension extension) {
+        return switch (type) {
+            case post -> {
+                if (extension instanceof PostRef post) {
+                    var spec = post.getSpec();
+                    if (spec == null || "PRIVATE".equals(spec.getVisible())) {
+                        yield false;
+                    }
+                    var status = post.getStatus();
+                    if (status != null && status.getPhase() != null
+                            && !status.getPhase().isBlank()) {
+                        yield "PUBLISHED".equals(status.getPhase());
+                    }
+                    yield Boolean.TRUE.equals(spec.getPublish());
+                }
+                yield true;
+            }
+            case moment -> {
+                if (extension instanceof MomentRef moment
+                        && moment.getSpec() != null
+                        && "PRIVATE".equals(moment.getSpec().getVisible())) {
+                    yield false;
+                }
+                yield true;
+            }
+            default -> true;
+        };
     }
 
     /**

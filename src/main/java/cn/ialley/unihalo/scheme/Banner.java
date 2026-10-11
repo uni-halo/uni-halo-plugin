@@ -40,6 +40,11 @@ public class Banner extends AbstractExtension {
         private String cover;
 
         /**
+         * 是否隐藏（true = 公开列表/详情不展示，仅管理端可见）
+         */
+        private Boolean hidden;
+
+        /**
          * 展示日期（ISO-8601；文章模式快照文章发布时间，自定义模式手填可选，留空不展示）
          */
         private String date;

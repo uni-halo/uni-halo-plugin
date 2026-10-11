@@ -97,6 +97,24 @@ public class LoveDailyItemServiceImpl implements LoveDailyItemService {
                 .then();
     }
 
+    @Override
+    public Mono<Void> sort(List<String> names) {
+        if (names == null || names.isEmpty()) {
+            return Mono.empty();
+        }
+        return Flux.fromIterable(names)
+                .index()
+                .flatMap(tuple -> client.fetch(LoveDailyItem.class, tuple.getT2())
+                        .flatMap(item -> {
+                            if (item.getSpec() == null) {
+                                item.setSpec(new LoveDailyItem.LoveDailyItemSpec());
+                            }
+                            item.getSpec().setPriority((int) (names.size() - tuple.getT1()));
+                            return client.update(item);
+                        }))
+                .then();
+    }
+
     /**
      * 校验：title 必填；status 合法（wait/doing/complete）；complete 时 completeDate 必填；
      * 非 complete 状态清空 completeDate。

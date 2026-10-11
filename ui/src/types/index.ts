@@ -161,12 +161,14 @@ export const LOVE_STORY_VIEW_MODES: { label: string; value: LoveStoryViewMode }[
 
 /** 恋爱故事日期排序选项 */
 export const LOVE_STORY_SORT_OPTIONS: { label: string; value: string }[] = [
+  { label: "手动排序", value: "manual" },
   { label: "按日期 · 最新在前", value: "date_desc" },
   { label: "按日期 · 最早在前", value: "date_asc" },
 ];
 
-/** 列表创建时间排序选项（恋爱相册/恋爱清单通用） */
+/** 列表创建时间排序选项（恋爱相册/恋爱清单通用；manual = 手动拖拽排序） */
 export const LOVE_LIST_SORT_OPTIONS: { label: string; value: string }[] = [
+  { label: "手动排序", value: "manual" },
   { label: "最新创建", value: "created_desc" },
   { label: "最早创建", value: "created_asc" },
 ];
@@ -288,6 +290,8 @@ export interface BannerSpec {
   title?: string;
   /** 封面图（必填；文章模式为快照的文章封面） */
   cover?: string;
+  /** 是否隐藏（true = 公开列表/详情不展示，仅管理端可见） */
+  hidden?: boolean;
   /** 展示日期（ISO；文章模式快照文章发布时间，自定义手填可选，留空不展示） */
   date?: string;
   /** 作者昵称（文章模式快照作者，User 缺失时回退 owner 用户名） */
@@ -565,6 +569,12 @@ export interface FeatureConfig {
   spec: FeatureConfigSpec;
 }
 
+/** 部分保存写请求（模块 ⚙ 弹窗仅写 spec 下一个分区；后端 merge 对缺省分区不改动） */
+export interface FeatureConfigPatch {
+  metadata?: { name?: string };
+  spec: Partial<FeatureConfigSpec>;
+}
+
 export interface FeatureConfigSpec {
   profile: FeatureConfigProfile;
   pages: FeatureConfigPages;
@@ -588,6 +598,10 @@ export interface FeatureConfigSpec {
 export interface FeatureConfigLinkInfo {
   /** 是否开放公开提交申请（默认 true，关闭后公开提交接口返回「暂未开放提交申请」） */
   submissionEnabled?: boolean;
+  /** 审核结果邮件通知（复用 Halo 系统设置的邮件通知器 SMTP 配置） */
+  sendEmail?: boolean;
+  /** 邮件署名（审核邮件标题/正文中的站点名称，默认 uni-halo） */
+  sendEmailSiteName?: string;
   /** 小程序信息（小程序名称/太阳码/跳转地址/描述/申请说明） */
   miniInfo?: FeatureConfigMiniInfo;
   /** 站点信息（本站站点名片，对齐 Halo 官方友链提交 API 字段） */
@@ -671,9 +685,9 @@ export interface FeatureConfigSocialItem {
   visible?: boolean;
 }
 
-/** 全站页面标题（页面设置-页面标题 tab 统一维护；app 端传入各页面 uh-navbar default-title，留空回退内置默认） */
+/** 全站页面标题（功能设置-页面标题单表统一维护；app 端传入各页面 uh-navbar default-title，留空回退内置默认） */
 export interface FeatureConfigPageTitles {
-  /** 首页（预留，首页为自定义头部暂未消费） */
+  /** 首页 */
   home?: string;
   gallery?: string;
   category?: string;
@@ -704,6 +718,8 @@ export interface FeatureConfigPageTitles {
   footprint?: string;
   /** 绘画作品列表页 */
   drawList?: string;
+  /** 恋爱日记页 */
+  loveDiary?: string;
   /** 画布创作页 */
   drawCanvas?: string;
   /** 我的绘画管理页 */
@@ -904,11 +920,8 @@ export interface FeatureConfigLove {
   lovePhoto?: FeatureConfigLoveModule;
   /** 恋爱清单模块入口（数据在「恋爱管理-恋爱清单」维护） */
   loveDaily?: FeatureConfigLoveModule;
-  /** 恋爱日记页面设置（配置于恋爱设置-页面设置 tab；app 端输出 shape 不变，
-   * 仍为 pageConfig.loveDiaryConfig） */
+  /** 恋爱日记页面设置（恋爱页背景图；标题在全局标题表 pages.titles.loveDiary） */
   diaryPage?: {
-    /** 页面标题（留空客户端回退内置标题） */
-    pageTitle?: string;
     /** 恋爱页背景图（留空客户端内置回退） */
     bgImageUrl?: string;
   };
