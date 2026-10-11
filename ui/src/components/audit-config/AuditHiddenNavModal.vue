@@ -80,6 +80,28 @@ const toggleItem = (entry: FeatureEntry) => {
   }
 };
 
+/** 全选当前筛选结果（跳过已选项与空 key） */
+const selectAllFiltered = () => {
+  filteredCandidates.value.forEach((entry) => {
+    const key = entry.key || "";
+    if (key && !localSelected.value.includes(key)) {
+      localSelected.value.push(key);
+    }
+  });
+};
+
+/** 清空全部已选 */
+const clearAll = () => {
+  localSelected.value = [];
+};
+
+/** 当前筛选结果是否已全部选中（用于互斥展示全选/清空状态提示） */
+const allFilteredSelected = computed(
+  () =>
+    filteredCandidates.value.length > 0 &&
+    filteredCandidates.value.every((entry) => isChecked(entry))
+);
+
 const handleConfirm = () => {
   emit("confirm", [...localSelected.value]);
   emit("update:visible", false);
@@ -95,6 +117,16 @@ const handleConfirm = () => {
         placeholder="输入关键字搜索功能入口…"
         outer-class=":uno: !pt-0 !pb-0"
       />
+
+      <div class=":uno: flex items-center gap-3">
+        <VButton size="sm" @click="selectAllFiltered">
+          {{ allFilteredSelected ? "已全选当前结果" : "全选当前结果" }}
+        </VButton>
+        <VButton size="sm" @click="clearAll">清空已选</VButton>
+        <span class=":uno: ml-auto text-xs text-gray-400">
+          共 {{ filteredCandidates.length }} 项，已选 {{ localSelected.length }} 项
+        </span>
+      </div>
 
       <div class=":uno: max-h-96 overflow-y-auto rounded-md border border-gray-100">
         <div v-for="entry in filteredCandidates" :key="entry.key"

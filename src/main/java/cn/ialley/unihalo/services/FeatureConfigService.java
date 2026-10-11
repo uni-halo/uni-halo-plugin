@@ -11,12 +11,12 @@ import reactor.core.publisher.Mono;
 public interface FeatureConfigService {
 
     /**
-     * 读取功能设置单例；不存在时返回默认结构（与存量配置合并）。
+     * 读取功能设置单例；不存在时返回默认结构。
      */
     Mono<FeatureConfig> get();
 
     /**
-     * 保存功能设置单例（不存在则创建；写入前与默认值/存量值做非空合并，防丢字段）。
+     * 保存功能设置单例（不存在则创建；写入前以存量值合并默认值、再覆盖请求体非空字段）。
      */
     Mono<FeatureConfig> save(FeatureConfig config);
 

@@ -265,7 +265,7 @@ public class DrawServiceImpl implements DrawService {
 
     /**
      * 发布是否需要审核（featureConfig.pages.draw.auditEnabled，缺省 true；
-     * 功能设置-页面设置-绘画 tab 维护，旧 drawConfig 存量值由 FeatureConfigService 注入）
+     * 功能设置-绘画管理弹窗维护）
      */
     private Mono<Boolean> auditEnabled() {
         return featureConfigService.get()

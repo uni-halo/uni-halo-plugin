@@ -145,10 +145,10 @@ const handleClose = () => {
 
     <template #footer>
       <VSpace>
-        <VButton type="secondary" @click="emit('update:visible', false)">取消</VButton>
-        <VButton type="primary" @click="handleConfirm">
+        <VButton type="secondary" @click="handleConfirm">
           确认选择（{{ localSelected.length }}）
         </VButton>
+        <VButton @click="emit('update:visible', false)">取消</VButton>
       </VSpace>
     </template>
   </VModal>
