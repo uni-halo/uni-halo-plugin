@@ -25,7 +25,7 @@ function navIcons(animalName: string, riName: string, emojiPrefix: string, emoji
  * 统一功能入口注册表
  */
 export const FEATURE_ENTRY_REGISTRY: FeatureEntry[] = [
-  // ===== 我的页面-常用功能（默认 12 项，顺序即展示顺序）=====
+  // ===== 我的页面-常用功能（默认 13 项，顺序即展示顺序）=====
   {key: "footprint", title: "足迹地图", subTitle: "博主去过的地方", color: "#65a30d", iconColor: "#65a30d", bgColor: "#B9E42424", iconPrefix: "uhanimal-icon", icon: "keji", icons: navIcons("keji", "footprint-line", "uhemoji-icon", "-happy-"), iconMode: "animal-font", path: "/pages-blog/footprint/footprint", visible: true, group: "common"},
   {key: "contact-blogger", title: "联系博主", subTitle: "博主常用联系方式", color: "#FF9800", iconColor: "#FF9800", bgColor: "#FF980024", iconPrefix: "uhanimal-icon", icon: "chaiquan", icons: navIcons("chaiquan", "mail-line", "uhemoji2-icon", "-wink"), iconMode: "animal-font", path: "/pages-blog/contact/contact", visible: true, group: "common"},
   {key: "notice", title: "通知公告", subTitle: "站点公告与通知", color: "#9C27B0", iconColor: "#9C27B0", bgColor: "#9C27B024", iconPrefix: "uhanimal-icon", icon: "hashiqi", icons: navIcons("hashiqi", "notification-2-line", "uhemoji-icon", "-sleeping"), iconMode: "animal-font", path: "/pages-blog/notice/notice", visible: true, group: "common"},
@@ -37,7 +37,8 @@ export const FEATURE_ENTRY_REGISTRY: FeatureEntry[] = [
   {key: "data-visual", title: "数据看板", subTitle: "站点数据可视化", color: "#663CC9", iconColor: "#663CC9", bgColor: "#663CC924", iconPrefix: "uhanimal-icon", icon: "xianluomao", icons: navIcons("xianluomao", "pie-chart-box-line", "uhemoji2-icon", "-surprised"), iconMode: "animal-font", path: "/pages-blog/data-visual/data-visual", visible: true, group: "common"},
   {key: "portfolio", title: "项目展示", subTitle: "博主的项目作品", color: "#3E87F7", iconColor: "#3E87F7", bgColor: "#3E87F724", iconPrefix: "uhanimal-icon", icon: "cangao", icons: navIcons("cangao", "list-view", "uhemoji-icon", "-shocked"), iconMode: "animal-font", path: "/pages-blog/portfolio/portfolio", visible: true, group: "common"},
   {key: "douban", title: "豆瓣展示", subTitle: "博主的书影音记录", color: "#43B024", iconColor: "#43B024", bgColor: "#43B02424", iconPrefix: "uhanimal-icon", icon: "jumao", icons: navIcons("jumao", "douban-line", "uhemoji-icon", "-joy"), iconMode: "animal-font", path: "/pages-blog/douban/douban", visible: true, group: "common"},
-  {key: "draw-list", title: "绘画作品", subTitle: "大家的绘画作品", color: "#8B5CF6", iconColor: "#8B5CF6", bgColor: "#8B5CF624", iconPrefix: "uhanimal-icon", icon: "lanmao", icons: navIcons("lanmao", "palette-line", "uhemoji-icon", "-smile-"), iconMode: "animal-font", path: "/pages-blog/draw-list/draw-list", visible: true, group: "common"},
+  {key: "draw-list", title: "绘画作品", subTitle: "大家的绘画作品", color: "#8B5CF6", iconColor: "#8B5CF6", bgColor: "#8B5CF624", iconPrefix: "uhanimal-icon", icon: "lanmao", icons: navIcons("lanmao", "draw-line", "uhemoji-icon", "-smile-"), iconMode: "animal-font", path: "/pages-blog/draw-list/draw-list", visible: true, group: "common"},
+  {key: "equipment", title: "装备展示", subTitle: "博主的装备清单", color: "#EF6C00", iconColor: "#EF6C00", bgColor: "#EF6C0024", iconPrefix: "uhanimal-icon", icon: "lachangquan", icons: navIcons("lachangquan", "device-line", "uhemoji-icon", "-cool"), iconMode: "animal-font", path: "/pages-blog/equipment/equipment", visible: true, group: "common"},
   // ===== 我的页面-其他功能（默认 5 项，顺序即展示顺序）=====
   {key: "setting", title: "偏好设置", subTitle: "首页布局、卡片样式等设置", color: "#7986CB", iconColor: "#7986CB", bgColor: "#7986CB24", iconPrefix: "uhanimal-icon", icon: "sanhuamao", icons: navIcons("sanhuamao", "settings-3-line", "uhemoji2-icon", "-tired"), iconMode: "animal-font", path: "/pages-blog/setting/setting", visible: true, group: "other"},
   {key: "aboutProject", title: "关于项目", subTitle: "小莫唐尼的开源项目", color: "#607D8B", iconColor: "#607D8B", bgColor: "#607D8B24", iconPrefix: "uhanimal-icon", icon: "fadou", icons: navIcons("fadou", "information-2-line", "uhemoji2-icon", "-happy-"), iconMode: "animal-font", path: "/pages-blog/about-project/about-project", visible: true, group: "other"},
@@ -51,9 +52,9 @@ export const FEATURE_ENTRY_REGISTRY: FeatureEntry[] = [
  */
 export const DEFAULT_QUICK_NAV_KEYS = ["love", "contact-blogger", "favorites", "friend-links", "aboutProject"];
 
-/** 我的页面-常用功能默认 12 项（足迹居首，与服务端默认一致） */
+/** 我的页面-常用功能默认 13 项（足迹居首，与服务端默认一致） */
 export const DEFAULT_MY_PAGE_COMMON_KEYS = [
-  "footprint", "contact-blogger", "notice", "favorites", "love", "friend-links", "archives", "vote", "data-visual", "portfolio", "douban", "draw-list",
+  "footprint", "contact-blogger", "notice", "favorites", "love", "friend-links", "archives", "vote", "data-visual", "portfolio", "douban", "draw-list", "equipment",
 ];
 
 /** 我的页面-其他功能默认 5 项（顺序即展示顺序，与服务端默认一致） */
