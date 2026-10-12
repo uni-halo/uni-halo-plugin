@@ -23,6 +23,7 @@ import cn.ialley.unihalo.services.AuthService;
 import cn.ialley.unihalo.utils.RegisterEmailCodeClient;
 import cn.ialley.unihalo.utils.RegisterEmailCodeRateLimiter;
 import cn.ialley.unihalo.utils.ResetEmailCodeRateLimiter;
+import cn.ialley.unihalo.utils.VerifyEmailCodeRateLimiter;
 import cn.ialley.unihalo.vo.RegisterForm;
 import reactor.core.publisher.Mono;
 import run.halo.app.core.extension.endpoint.CustomEndpoint;
@@ -106,6 +107,11 @@ public class AuthEndpoint implements CustomEndpoint {
                         this::sendResetEmailCode)
                 .POST(Constants.AUTH_API_BASE_PATH + "/-/reset-password",
                         this::resetPassword)
+                .POST(Constants.AUTH_API_BASE_PATH + "/-/email-verify-ticket",
+                        this::issueVerifyTicket)
+                .POST(Constants.AUTH_API_BASE_PATH + "/-/send-email-verification",
+                        this::sendEmailVerification)
+                .POST(Constants.AUTH_API_BASE_PATH + "/-/verify-email", this::verifyEmail)
                 .GET(Constants.AUTH_API_BASE_PATH + "/profile", this::profile)
                 .GET(Constants.AUTH_API_BASE_PATH + "/token-check", this::tokenCheck)
                 .GET(Constants.AUTH_API_BASE_PATH + "/my/wechat-binding", this::myWechatBinding)
@@ -406,6 +412,57 @@ public class AuthEndpoint implements CustomEndpoint {
     }
 
     /**
+     * 重新获取邮箱验证票据（匿名端点，凭用户名密码重认证）：
+     * 登录票据过期后的续期通道，免重签 PAT（单活令牌不互踢当前设备）；
+     * 认证与登录同源（锁定闸门 + 失败计数），仅未验证邮箱的启用账号可获取。
+     */
+    private Mono<ServerResponse> issueVerifyTicket(ServerRequest request) {
+        var clientIp = clientIpOf(request);
+        if (clientIp == null || clientIp.isBlank()) {
+            return Mono.error(BizErrorCode.BAD_REQUEST.toException("无法识别请求来源"));
+        }
+        return request.bodyToMono(VerifyTicketRequest.class)
+                .switchIfEmpty(Mono.error(
+                        BizErrorCode.BAD_REQUEST.toException("缺少请求体")))
+                .flatMap(body -> authService.issueVerifyTicket(
+                        body.username(), body.password(), clientIp))
+                .flatMap(result -> ServerResponse.ok().bodyValue(result))
+                .onErrorResume(AuthEndpoint::handleFailure);
+    }
+
+    /**
+     * 发送邮箱验证码（自建验证闭环，凭登录票据，非 PAT——不受 email-not-set 拦截）。
+     * 成功返回绑定目标邮箱的新票据，后续验码凭此票据。
+     */
+    private Mono<ServerResponse> sendEmailVerification(ServerRequest request) {
+        var clientIp = clientIpOf(request);
+        return request.bodyToMono(SendEmailVerificationRequest.class)
+                .switchIfEmpty(Mono.error(
+                        BizErrorCode.BAD_REQUEST.toException("缺少请求体")))
+                .flatMap(body -> authService.sendEmailVerification(
+                        body.ticket(), body.email(), clientIp))
+                .flatMap(result -> ServerResponse.ok().bodyValue(result))
+                .onErrorMap(VerifyEmailCodeRateLimiter.QuotaExceededException.class,
+                        e -> BizErrorCode.TOO_MANY_ATTEMPTS.toException())
+                .onErrorResume(AuthEndpoint::handleFailure);
+    }
+
+    /**
+     * 校验邮箱验证码并完成绑定（自建验证闭环）：成功后写 spec.email + emailVerified，
+     * 该用户的 PAT 即解除 email-not-set 拦截。
+     */
+    private Mono<ServerResponse> verifyEmail(ServerRequest request) {
+        return request.bodyToMono(VerifyEmailRequest.class)
+                .switchIfEmpty(Mono.error(
+                        BizErrorCode.BAD_REQUEST.toException("缺少请求体")))
+                .flatMap(body -> authService.verifyEmail(
+                        body.ticket(), body.email(), body.code()))
+                .flatMap(email -> ServerResponse.ok()
+                        .bodyValue(Map.of("email", email, "emailVerified", true)))
+                .onErrorResume(AuthEndpoint::handleFailure);
+    }
+
+    /**
      * 令牌探活（App 端启动 / 回前台时调用）：200 = 有效，401 = 已失效
      * （exp 过期 / 被新设备互踢 / 已吊销）。
      *
@@ -565,6 +622,24 @@ public class AuthEndpoint implements CustomEndpoint {
      */
     public record ResetPasswordRequest(String username, String ticket, String code,
             String newPassword) {
+    }
+
+    /**
+     * 发送邮箱验证码请求体：{@code ticket} 为登录响应下发的验证票据，
+     * {@code email} 为待验证邮箱（发码成功后票据换绑到该邮箱）。
+     */
+    public record SendEmailVerificationRequest(String ticket, String email) {
+    }
+
+    /** 重新获取验证票据请求体：密码认证与登录同源，成功返回新票据与有效期。 */
+    public record VerifyTicketRequest(String username, String password) {
+    }
+
+    /**
+     * 校验邮箱验证码请求体：{@code ticket} 为发码成功时换绑的票据（绑定邮箱），
+     * {@code email} 须与票据一致，{@code code} 为邮件中的 6 位验证码。
+     */
+    public record VerifyEmailRequest(String ticket, String email, String code) {
     }
 
     private record Identity(String username, String patName) {

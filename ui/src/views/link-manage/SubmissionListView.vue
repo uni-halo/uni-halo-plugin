@@ -180,7 +180,6 @@ const handleDeleteInBatch = () => {
 };
 
 const onAuditConfirmDone = () => {
-  auditConfirmVisible.value = false;
   selectedNames.value = [];
   refetch();
 };
@@ -211,15 +210,13 @@ const formatTime = (value?: string | null) => {
 </script>
 
 <template>
-  <SubmissionAuditModal v-if="auditModal && selectedSubmission" :item="selectedSubmission" @close="auditModal = false"
-    @done="refetch" />
-  <SubmissionDetailModal v-if="detailModal && selectedSubmission" :item="selectedSubmission"
-    @close="detailModal = false" />
+  <SubmissionAuditModal v-model:visible="auditModal" :item="selectedSubmission" @done="refetch" />
+  <SubmissionDetailModal v-model:visible="detailModal" :item="selectedSubmission" />
   <!-- 新增申请（测试用） -->
-  <SubmissionFormModal v-if="formModal" @close="formModal = false" @saved="refetch" />
+  <SubmissionFormModal v-model:visible="formModal" @saved="refetch" />
   <!-- 行内/批量审核确认弹窗 -->
-  <AuditConfirmModal v-if="auditConfirmVisible" :action="auditAction" :names="auditNames"
-    @close="auditConfirmVisible = false" @done="onAuditConfirmDone" />
+  <AuditConfirmModal v-model:visible="auditConfirmVisible" :action="auditAction" :names="auditNames"
+    @done="onAuditConfirmDone" />
 
   <VPageHeader title="UniHalo-友链审核">
     <template #actions>

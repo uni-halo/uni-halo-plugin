@@ -9,18 +9,18 @@ import type { AppInfo } from "@/types";
 
 const props = withDefaults(
   defineProps<{
+    visible?: boolean;
     appInfo?: AppInfo;
   }>(),
   {
+    visible: false,
     appInfo: undefined,
   }
 );
 
 const emit = defineEmits<{
-  (event: "close"): void;
+  (event: "update:visible", value: boolean): void;
 }>();
-
-const modal = ref<InstanceType<typeof VModal> | null>(null);
 
 const saving = ref(false);
 
@@ -28,7 +28,7 @@ const isUpdateMode = computed(() => !!props.appInfo);
 
 const modalTitle = computed(() => (isUpdateMode.value ? "编辑应用" : "新建应用"));
 
-const formState = ref<AppInfo>({
+const emptyForm = (): AppInfo => ({
   metadata: {
     name: "",
   },
@@ -45,18 +45,26 @@ const formState = ref<AppInfo>({
   },
 });
 
-watch(
-  () => props.appInfo,
-  (appInfo) => {
-    if (appInfo) {
-      formState.value = cloneDeep(appInfo);
-      if (!formState.value.spec.screenshot) {
-        formState.value.spec.screenshot = [];
-      }
+const formState = ref<AppInfo>(emptyForm());
+
+/** 打开弹窗时按传入条目回填草稿（新建时重置为空表单） */
+const syncDraft = () => {
+  if (props.appInfo) {
+    formState.value = cloneDeep(props.appInfo);
+    if (!formState.value.spec.screenshot) {
+      formState.value.spec.screenshot = [];
     }
-  },
-  {
-    immediate: true,
+  } else {
+    formState.value = emptyForm();
+  }
+};
+
+watch(
+  () => props.visible,
+  (visible) => {
+    if (visible) {
+      syncDraft();
+    }
   }
 );
 
@@ -72,7 +80,7 @@ const handleSave = async () => {
     } else {
       await appsApi.create(formState.value);
     }
-    modal.value?.close();
+    emit("update:visible", false);
     Toast.success("保存成功");
   } catch (error) {
     Toast.error((error as Error).message);
@@ -83,7 +91,13 @@ const handleSave = async () => {
 </script>
 
 <template>
-  <VModal ref="modal" :title="modalTitle" :width="640" @close="emit('close')">
+  <VModal
+    :visible="visible"
+    :title="modalTitle"
+    :width="640"
+    @update:visible="emit('update:visible', $event)"
+    @close="emit('update:visible', false)"
+  >
     <FormKit
       id="app-info-form"
       type="form"
@@ -180,7 +194,7 @@ const handleSave = async () => {
           text="提交"
           @submit="handleSubmit"
         />
-        <VButton @click="modal?.close()">关闭</VButton>
+        <VButton @click="emit('update:visible', false)">关闭</VButton>
       </VSpace>
     </template>
   </VModal>

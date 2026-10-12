@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Toast, VButton, VEmpty, VLoading, VModal, VPagination, VSpace } from "@halo-dev/components";
 import { useQuery } from "@tanstack/vue-query";
-import { computed, onMounted, ref, watch } from "vue";
+import { computed, ref, watch } from "vue";
 import RiImageLine from "~icons/ri/image-line";
 import { auditDataApi } from "@/api";
 import {
@@ -13,12 +13,14 @@ import {
 
 const props = withDefaults(
   defineProps<{
-    type: AuditCandidateType;
+    /** 候选数据分类（常驻挂载时可能为空，需先由调用方指定） */
+    type?: AuditCandidateType | null;
     selected?: AuditDataRef[];
     /** 最大可选数量（默认不限；首页分类栏固定 3 个时传 3） */
     max?: number;
+    visible?: boolean;
   }>(),
-  { selected: () => [], max: Infinity }
+  { selected: () => [], max: Infinity, visible: false }
 );
 
 const emit = defineEmits<{
@@ -31,30 +33,38 @@ const keyword = ref("");
 const page = ref(1);
 const localSelected = ref<AuditDataRef[]>([]);
 
-// 父组件 v-if 挂载，挂载即打开：重置搜索与已选回显
-onMounted(() => {
-  keyword.value = "";
-  page.value = 1;
-  localSelected.value = [...props.selected];
-});
-
 // 关键字变化（FormKit 输入）重置到第一页（查询由 queryKey 含 keyword 自动触发）
 watch(keyword, () => {
   page.value = 1;
 });
 
-const { data, isLoading } = useQuery({
-  queryKey: ["uni-halo:audit-candidates", props.type, keyword, page],
+const { data, isLoading, refetch } = useQuery({
+  queryKey: ["uni-halo:audit-candidates", () => props.type, keyword, page],
   queryFn: async () => {
-    return auditDataApi.candidates(props.type, {
+    return auditDataApi.candidates(props.type!, {
       keyword: keyword.value || undefined,
       page: page.value,
       size: PAGE_SIZE,
     });
   },
+  enabled: () => !!props.type,
 });
 
-const label = computed(() => AUDIT_CANDIDATE_TYPE_LABELS[props.type]);
+// 弹窗常驻（不卸载）：打开时重置搜索、回显已选并重取候选列表
+watch(
+  () => props.visible,
+  (visible) => {
+    if (!visible) {
+      return;
+    }
+    keyword.value = "";
+    page.value = 1;
+    localSelected.value = [...props.selected];
+    refetch();
+  }
+);
+
+const label = computed(() => (props.type ? AUDIT_CANDIDATE_TYPE_LABELS[props.type] : ""));
 
 const isChecked = (candidate: AuditDataRef) =>
   localSelected.value.some((item) => item.name === candidate.name);
@@ -83,8 +93,14 @@ const handleClose = () => {
 </script>
 
 <template>
-  <VModal :title="`选择${label}`" :width="720" @close="handleClose">
-    <div class=":uno: flex flex-col gap-3">
+  <VModal
+    :visible="visible"
+    :title="`选择${label}`"
+    :width="720"
+    @update:visible="emit('update:visible', $event)"
+    @close="handleClose"
+  >
+    <div v-if="type" class=":uno: flex flex-col gap-3">
       <div class=":uno: flex items-center gap-3">
         <SearchInput v-model="keyword" class=":uno: flex-1" :placeholder="`回车搜索${label}…`" />
         <span class=":uno: shrink-0 text-sm text-gray-500">

@@ -63,6 +63,11 @@ public class PuzzleInfoVo {
          * 猜中时刻（RFC3339，未猜中为空）
          */
         private String solvedAt;
+
+        /**
+         * 最近作答时间（RFC3339，取记录创建时间）
+         */
+        private String answeredAt;
     }
 
     public static Record recordOf(DrawGuess guess, String displayName, String avatar) {
@@ -74,6 +79,8 @@ public class PuzzleInfoVo {
         record.setAnswer(spec == null ? null : spec.getAnswer());
         record.setCorrect(spec != null && Boolean.TRUE.equals(spec.getCorrect()));
         record.setSolvedAt(spec == null ? null : spec.getSolvedAt());
+        record.setAnsweredAt(guess.getMetadata() == null || guess.getMetadata().getCreationTimestamp() == null
+                ? null : guess.getMetadata().getCreationTimestamp().toString());
         return record;
     }
 

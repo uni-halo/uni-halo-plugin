@@ -162,7 +162,7 @@ const handleCandidateConfirm = async (selected: BannerCandidate[]) => {
           metadata: { name: changeTargetName.value },
           spec,
         });
-        Toast.success("已更换文章并同步快照");
+        Toast.success("已更换文章，标题/封面已更新为最新内容");
       }
     }
     await refetch();
@@ -193,7 +193,7 @@ const handleToggleHidden = async (banner: Banner) => {
 const handleSync = async (banner: Banner) => {
   try {
     await bannerApi.sync(banner.metadata.name);
-    Toast.success("快照已同步");
+    Toast.success("文章信息已同步");
     await refetch();
   } catch (error) {
     Toast.error((error as Error).message);
@@ -254,7 +254,7 @@ const handleSyncInBatch = async () => {
   }
   try {
     await Promise.all(postNames.map((name) => bannerApi.sync(name)));
-    Toast.success(`已同步 ${postNames.length} 条快照`);
+    Toast.success(`已同步 ${postNames.length} 条轮播图的文章信息`);
     await refetch();
   } catch (error) {
     Toast.error((error as Error).message);
@@ -275,11 +275,13 @@ const handleDragEnd = async () => {
   }
 };
 
-const onModalClose = () => {
-  editingModal.value = false;
-  selectedBanner.value = undefined;
-  refetch();
-};
+// 轮播图编辑弹窗常驻（不卸载）：关闭时释放选中条目并刷新列表
+watch(editingModal, (visible) => {
+  if (!visible) {
+    selectedBanner.value = undefined;
+    refetch();
+  }
+});
 
 const formatTime = (value?: string | null) => {
   if (!value) {
@@ -298,11 +300,11 @@ const sourceBadgeClass = (source?: string) =>
 </script>
 
 <template>
-  <BannerEditingModal v-if="editingModal" :item="selectedBanner" @close="onModalClose" />
+  <BannerEditingModal v-model:visible="editingModal" :item="selectedBanner" />
 
   <!-- 文章候选弹窗：新建-从文章（多选）/ 更换文章（单选） -->
-  <BannerCandidatesModal v-if="candidatesVisible" :multi-select="candidatesMode === 'create'"
-    @update:visible="candidatesVisible = $event" @confirm="handleCandidateConfirm" />
+  <BannerCandidatesModal v-model:visible="candidatesVisible" :multi-select="candidatesMode === 'create'"
+    @confirm="handleCandidateConfirm" />
 
   <VPageHeader title="UniHalo-轮播管理">
     <template #actions>
@@ -346,7 +348,7 @@ const sourceBadgeClass = (source?: string) =>
                   <template #icon>
                     <RiRefreshLine class=":uno: h-4 w-4" />
                   </template>
-                  同步快照
+                  同步文章信息
                 </VButton>
                 <VButton size="sm" type="danger" @click="handleDeleteInBatch">
                   删除
@@ -472,7 +474,7 @@ const sourceBadgeClass = (source?: string) =>
               <template #dropdownItems>
                 <template v-if="banner.spec.source === 'post'">
                   <VDropdownItem @click="handleSync(banner)">
-                    同步快照
+                    同步文章信息
                   </VDropdownItem>
                   <VDropdownItem @click="handleChangePost(banner)">
                     更换文章

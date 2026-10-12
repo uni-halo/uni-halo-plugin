@@ -143,13 +143,14 @@ public class BannerServiceImpl implements BannerService {
 
     @Override
     public Mono<ListResult<BannerCandidateVo>> listCandidates(String keyword, int page, int size) {
-        // 候选读路径：仅已发布且公开的文章（排除删除中对象）
+        // 候选读路径：仅已发布且公开的文章（排除删除中与回收站对象）
         return client.listAll(PostRef.class,
                         ListOptions.builder()
                                 .fieldQuery(isNull("metadata.deletionTimestamp"))
                                 .build(),
                         Sort.by(Sort.Direction.DESC, "metadata.creationTimestamp"))
                 .filter(BannerServiceImpl::isPublishedPost)
+                .filter(post -> !isRecycledPost(post))
                 .map(this::toCandidate)
                 .filter(candidate -> matchesCandidateKeyword(candidate, keyword))
                 .collectList()
@@ -173,6 +174,14 @@ public class BannerServiceImpl implements BannerService {
             return "PUBLISHED".equals(status.getPhase());
         }
         return Boolean.TRUE.equals(spec.getPublish());
+    }
+
+    /**
+     * 文章软删除判定：回收站中的 Post（spec.deleted=true）不可选为轮播来源。
+     */
+    private static boolean isRecycledPost(PostRef post) {
+        return post.getSpec() != null
+                && Boolean.TRUE.equals(post.getSpec().getDeleted());
     }
 
     @Override
@@ -249,8 +258,9 @@ public class BannerServiceImpl implements BannerService {
      */
     private Mono<Void> snapshotFromPost(Banner.BannerSpec spec) {
         return client.fetch(PostRef.class, spec.getPostId())
+                .filter(post -> !isRecycledPost(post))
                 .switchIfEmpty(Mono.error(new IllegalArgumentException(
-                        "文章不存在：" + spec.getPostId())))
+                        "文章不存在或已删除：" + spec.getPostId())))
                 .flatMap(post -> {
                     var postSpec = post.getSpec();
                     if (postSpec != null) {

@@ -293,6 +293,6 @@ const removeCategory = (item: FeatureConfigCategoryItem) => {
   </template>
 
   <!-- 精选分类候选弹窗（固定 3 个） -->
-  <AuditCandidatesModal v-if="categoryModalVisible" type="category" :selected="categoryModalSelected" :max="3"
-    @update:visible="categoryModalVisible = false" @confirm="handleCategoryConfirm" />
+  <AuditCandidatesModal v-model:visible="categoryModalVisible" type="category" :selected="categoryModalSelected"
+    :max="3" @confirm="handleCategoryConfirm" />
 </template>

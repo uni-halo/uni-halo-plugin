@@ -131,17 +131,26 @@ const handleDeleteInBatch = () => {
   });
 };
 
-const onModalClose = () => {
-  editingModal.value = false;
-  photoModal.value = false;
-  selectedAlbum.value = undefined;
-  refetch();
-};
+// 相册编辑弹窗常驻（不卸载）：关闭时释放选中相册并刷新列表
+watch(editingModal, (visible) => {
+  if (!visible) {
+    selectedAlbum.value = undefined;
+    refetch();
+  }
+});
+
+// 照片管理弹窗常驻（不卸载）：关闭时释放选中相册并刷新列表
+watch(photoModal, (visible) => {
+  if (!visible) {
+    selectedAlbum.value = undefined;
+    refetch();
+  }
+});
 </script>
 
 <template>
-  <LoveAlbumEditingModal v-if="editingModal" :album="selectedAlbum" @close="onModalClose" />
-  <PhotoManageModal v-if="photoModal && selectedAlbum" :album="selectedAlbum" @close="onModalClose" />
+  <LoveAlbumEditingModal v-model:visible="editingModal" :album="selectedAlbum" />
+  <PhotoManageModal v-model:visible="photoModal" :album="selectedAlbum" />
 
   <VPageHeader title="UniHalo-恋爱相册">
     <template #actions>

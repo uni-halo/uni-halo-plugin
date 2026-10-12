@@ -2,20 +2,22 @@
 import { Toast, VButton, VModal, VSpace } from "@halo-dev/components";
 import { submitForm } from "@formkit/core";
 import { useQuery } from "@tanstack/vue-query";
-import { computed, ref } from "vue";
+import { computed, ref, watch } from "vue";
 import SubmitButton from "@/components/button/SubmitButton.vue";
 import { miniProgramLinkGroupsApi, miniProgramLinkSubmissionsApi } from "@/api";
 import type { MiniProgramLinkSubmission } from "@/types";
 
+const props = withDefaults(defineProps<{ visible?: boolean }>(), { visible: false });
+
 const emit = defineEmits<{
-  (event: "close"): void;
+  (event: "update:visible", value: boolean): void;
   (event: "saved"): void;
 }>();
 
-const modal = ref<InstanceType<typeof VModal> | null>(null);
 const saving = ref(false);
 
-const formState = ref<MiniProgramLinkSubmission>({
+/** 空表单：新建申请用 */
+const emptyForm = (): MiniProgramLinkSubmission => ({
   metadata: { name: "" },
   spec: {
     displayName: "",
@@ -32,6 +34,18 @@ const formState = ref<MiniProgramLinkSubmission>({
     email: "",
   },
 });
+
+const formState = ref<MiniProgramLinkSubmission>(emptyForm());
+
+// 弹窗常驻（不卸载）：打开时重置表单，避免保留上次未提交的内容
+watch(
+  () => props.visible,
+  (visible) => {
+    if (visible) {
+      formState.value = emptyForm();
+    }
+  }
+);
 
 // 分组选项（分组数量少，一次拉取足够）
 const { data: groupsData } = useQuery({
@@ -59,7 +73,7 @@ const handleSave = async () => {
   try {
     saving.value = true;
     await miniProgramLinkSubmissionsApi.create(formState.value);
-    modal.value?.close();
+    emit("update:visible", false);
     emit("saved");
     Toast.success("申请已提交，进入待审核");
   } catch (error) {
@@ -72,10 +86,11 @@ const handleSave = async () => {
 
 <template>
   <VModal
-    ref="modal"
+    :visible="visible"
     title="新增申请"
     :width="680"
-    @close="emit('close')"
+    @update:visible="emit('update:visible', $event)"
+    @close="emit('update:visible', false)"
   >
     <!-- 申请表单：仅设计字段（测试用，提交后进入待审核） -->
     <FormKit
@@ -202,7 +217,7 @@ const handleSave = async () => {
           text="提交"
           @submit="handleSubmit"
         />
-        <VButton @click="modal?.close()">关闭</VButton>
+        <VButton @click="emit('update:visible', false)">关闭</VButton>
       </VSpace>
     </template>
   </VModal>

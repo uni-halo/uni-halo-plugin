@@ -27,9 +27,12 @@ import cn.ialley.unihalo.services.WechatService;
 import cn.ialley.unihalo.utils.LoginAttemptGuard;
 import cn.ialley.unihalo.utils.LoginConfigResolver;
 import cn.ialley.unihalo.utils.EmailService;
+import cn.ialley.unihalo.utils.EmailVerifyTicketManager;
 import cn.ialley.unihalo.utils.NotificationHelper;
 import cn.ialley.unihalo.utils.ResetEmailCodeTicketManager;
 import cn.ialley.unihalo.utils.UserConnectionSupport;
+import cn.ialley.unihalo.utils.VerifyCodeStore;
+import cn.ialley.unihalo.utils.VerifyEmailCodeRateLimiter;
 import cn.ialley.unihalo.utils.WechatRegisterTicketManager;
 import cn.ialley.unihalo.vo.LoginConfig;
 import cn.ialley.unihalo.vo.LoginResult;
@@ -38,6 +41,7 @@ import cn.ialley.unihalo.vo.RegisterForm;
 import cn.ialley.unihalo.vo.TokenCheckVo;
 import cn.ialley.unihalo.vo.WechatBindingVo;
 import run.halo.app.extension.ConfigMap;
+import run.halo.app.extension.ListOptions;
 import run.halo.app.core.extension.User;
 import run.halo.app.core.extension.UserConnection;
 import run.halo.app.core.extension.Role;
@@ -46,6 +50,7 @@ import run.halo.app.core.user.service.SignUpData;
 import run.halo.app.core.user.service.UserService;
 import run.halo.app.extension.Metadata;
 import run.halo.app.extension.ReactiveExtensionClient;
+import org.springframework.data.domain.Sort;
 import run.halo.app.infra.SystemSetting;
 import run.halo.app.security.PersonalAccessToken;
 import tools.jackson.databind.ObjectMapper;
@@ -99,6 +104,9 @@ public class AuthServiceImpl implements AuthService {
     private final NotificationHelper notificationHelper;
     private final WechatRegisterTicketManager registerTicketManager;
     private final ResetEmailCodeTicketManager resetEmailCodeTicketManager;
+    private final EmailVerifyTicketManager emailVerifyTicketManager;
+    private final VerifyCodeStore verifyCodeStore;
+    private final VerifyEmailCodeRateLimiter verifyEmailCodeRateLimiter;
     private final EmailService emailService;
 
     /** 系统设置 JSON 解析（ConfigMap system → user 组，与 FeatureConfigServiceImpl 同源）。 */
@@ -519,6 +527,131 @@ public class AuthServiceImpl implements AuthService {
                     annotations.put(Constants.PASSWORD_SET_BY_USER_ANNOTATION, "true");
                     return client.update(user).then();
                 });
+    }
+
+    @Override
+    public Mono<SentEmailVerification> sendEmailVerification(String ticket, String email,
+            String clientIp) {
+        if (isBlank(ticket) || isBlank(email)) {
+            return Mono.error(BizErrorCode.BAD_REQUEST.toException("请求参数不完整"));
+        }
+        String trimmedEmail = email.trim();
+        // 登录票据签名不含邮箱（issue 时 emailToVerify 为 null），仅用于识别用户
+        String username = emailVerifyTicketManager.verify(ticket, null);
+        if (username == null) {
+            return Mono.error(BizErrorCode.BAD_REQUEST
+                    .toException("验证票据无效或已过期，请重新获取验证票据"));
+        }
+        if (!trimmedEmail.matches("^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$")) {
+            return Mono.error(BizErrorCode.BAD_REQUEST.toException("邮箱格式不正确"));
+        }
+        // 发码限流（安全控制 → 邮箱绑定验证码）：票据验出账号后按四桶占用配额
+        return verifyEmailCodeRateLimiter.check(clientIp, trimmedEmail.toLowerCase(), username)
+                .then(client.fetch(User.class, username)
+                        .switchIfEmpty(Mono.error(BizErrorCode.USER_NOT_FOUND.toException()))
+                        .flatMap(this::requireEnabledUser)
+                        .flatMap(user -> {
+                            var spec = user.getSpec();
+                            if (spec != null && Boolean.TRUE.equals(spec.isEmailVerified())) {
+                                return Mono.error(BizErrorCode.BAD_REQUEST
+                                        .toException("该账号邮箱已验证，无需重复验证"));
+                            }
+                            // 邮箱唯一性：官方端点在 signUp/改邮箱时校验，直写扩展必须自查，
+                            // 否则两个账号可绑定同一邮箱
+                            return assertEmailAvailable(trimmedEmail, username)
+                                    .then(verifyCodeStore.issue(username, trimmedEmail))
+                                    .flatMap(code -> emailService.sendVerifyCodeEmail(
+                                            trimmedEmail, null, code, VerifyCodeStore.CODE_TTL_MINUTES)
+                                            .flatMap(sent -> {
+                                                if (!Boolean.TRUE.equals(sent)) {
+                                                    return Mono.error(BizErrorCode.EMAIL_SEND_FAILED
+                                                            .toException("邮件发送失败，请确认站点已配置邮件服务"));
+                                                }
+                                                String boundTicket =
+                                                        emailVerifyTicketManager.issueBound(username, trimmedEmail);
+                                                return Mono.just(new SentEmailVerification(
+                                                        boundTicket, VerifyCodeStore.CODE_TTL_MINUTES));
+                                            }));
+                        }));
+    }
+
+    @Override
+    public Mono<String> verifyEmail(String ticket, String email, String code) {
+        if (isBlank(ticket) || isBlank(email) || isBlank(code)) {
+            return Mono.error(BizErrorCode.BAD_REQUEST.toException("请求参数不完整"));
+        }
+        String trimmedEmail = email.trim();
+        // 绑定邮箱票据：签名含邮箱，换邮箱验签即失败（防「为 A 邮箱签发、绑定到 B 邮箱」）
+        String username = emailVerifyTicketManager.verify(ticket, trimmedEmail);
+        if (username == null) {
+            return Mono.error(BizErrorCode.BAD_REQUEST
+                    .toException("验证票据无效或已过期，请重新获取验证码"));
+        }
+        return verifyCodeStore.verifyAndConsume(username, trimmedEmail, code)
+                .flatMap(matched -> {
+                    if (!Boolean.TRUE.equals(matched)) {
+                        return Mono.error(BizErrorCode.BAD_REQUEST
+                                .toException("验证码错误或已过期"));
+                    }
+                    return client.fetch(User.class, username)
+                            .switchIfEmpty(Mono.error(BizErrorCode.USER_NOT_FOUND.toException()))
+                            .flatMap(this::requireEnabledUser)
+                            .flatMap(user -> {
+                                // 复检验证状态：发码后经其他途径（官方链路/另一设备）完成验证时，
+                                // 旧票据+旧码不得再覆写绑定邮箱
+                                if (user.getSpec() != null
+                                        && Boolean.TRUE.equals(user.getSpec().isEmailVerified())) {
+                                    return Mono.error(BizErrorCode.BAD_REQUEST
+                                            .toException("该账号邮箱已验证，无需重复验证"));
+                                }
+                                return assertEmailAvailable(trimmedEmail, username)
+                                        .then(Mono.defer(() -> {
+                                            user.getSpec().setEmail(trimmedEmail);
+                                            user.getSpec().setEmailVerified(true);
+                                            return client.update(user);
+                                        }))
+                                        .thenReturn(trimmedEmail);
+                            });
+                });
+    }
+
+    @Override
+    public Mono<IssuedVerifyTicket> issueVerifyTicket(String username, String rawPassword,
+            String clientIp) {
+        if (isBlank(username) || isBlank(rawPassword)) {
+            return Mono.error(BizErrorCode.BAD_REQUEST.toException("请输入用户名和密码"));
+        }
+        // 密码认证与登录完全同源：锁定闸门 + 认证（含禁用/2FA 拦截）+ 失败计数
+        return requireNotLocked(username, clientIp)
+                .then(Mono.defer(() -> authenticate(username, rawPassword)
+                        .doOnSuccess(user -> attemptGuard.resetUsername(username))
+                        .doOnError(AuthException.class,
+                                e -> attemptGuard.recordFailure(username, clientIp))))
+                .flatMap(user -> {
+                    if (user.getSpec() != null
+                            && Boolean.TRUE.equals(user.getSpec().isEmailVerified())) {
+                        return Mono.error(BizErrorCode.BAD_REQUEST
+                                .toException("该账号邮箱已验证，无需重复验证"));
+                    }
+                    return Mono.just(new IssuedVerifyTicket(
+                            emailVerifyTicketManager.issue(username),
+                            EmailVerifyTicketManager.TTL_MINUTES));
+                });
+    }
+
+    /**
+     * 邮箱唯一性校验：任一<b>其他</b>用户已绑定该邮箱即拒绝。
+     * 全量内存过滤（用户量级小，与审核模式候选查询同策略）。
+     */
+    private Mono<Void> assertEmailAvailable(String email, String selfUsername) {
+        return client.listAll(User.class, new ListOptions(), Sort.unsorted())
+                .filter(other -> other.getMetadata() != null
+                        && !selfUsername.equals(other.getMetadata().getName()))
+                .map(other -> other.getSpec() == null ? null : other.getSpec().getEmail())
+                .filter(existing -> email.equalsIgnoreCase(existing))
+                .next()
+                .flatMap(existing -> Mono.<Void>error(BizErrorCode.EMAIL_ALREADY_TAKEN.toException()))
+                .switchIfEmpty(Mono.empty());
     }
 
     /**
@@ -1114,6 +1247,10 @@ public class AuthServiceImpl implements AuthService {
 
     private Mono<LoginResult> issueFor(User user, LoginConfig config) {
         String username = user.getMetadata().getName();
+        var spec = user.getSpec();
+        boolean emailVerified = spec != null && Boolean.TRUE.equals(spec.isEmailVerified());
+        // 未验证邮箱随响应签发验证票据：客户端凭票据走自建验证闭环
+        // （send-email-verification / verify-email），打破「PAT 被 email-not-set 拦死」
         return resolveRoles(username)
                 .flatMap(roles -> patIssuer.issue(username, roles,
                         Instant.now().plus(Duration.ofDays(config.tokenTtlDays()))))
@@ -1125,7 +1262,9 @@ public class AuthServiceImpl implements AuthService {
                                 token.patName(),
                                 loginUserOf(user),
                                 token.roles(),
-                                rules)));
+                                rules,
+                                emailVerified,
+                                emailVerified ? null : emailVerifyTicketManager.issue(username))));
     }
 
     /** 用户摘要（不含任何敏感字段）。token 与 profile 两个出口共用，避免字段漂移。 */

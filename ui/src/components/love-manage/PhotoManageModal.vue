@@ -12,15 +12,19 @@ import { loveAlbumsApi } from "@/api";
 import type { LoveAlbum, LoveAlbumPhoto } from "@/types";
 import { useWindowSize } from "@vueuse/core";
 
-const props = defineProps<{
-  album: LoveAlbum;
-}>();
+const props = withDefaults(
+  defineProps<{
+    /** 管理的相册（常驻挂载时可能为空，内部按空值渲染） */
+    album?: LoveAlbum;
+    visible?: boolean;
+  }>(),
+  { visible: false }
+);
 
 const emit = defineEmits<{
-  (event: "close"): void;
+  (event: "update:visible", value: boolean): void;
 }>();
 
-const modal = ref<InstanceType<typeof VModal> | null>(null);
 const busy = ref(false);
 /** 新选择的待添加图片 URL（单张模式，v-model 绑定字符串） */
 const pendingUrl = ref("");
@@ -47,14 +51,23 @@ const isEditMode = computed(() => selectedIndex.value >= 0);
 
 const queryClient = useQueryClient();
 
+const albumName = computed(() => props.album?.metadata.name || "");
+
+/** 载入相册照片副本并退出编辑选中态 */
+const syncPhotos = () => {
+  photos.value = (props.album?.spec.photos || []).map((photo) => ({ ...photo }));
+  selectedIndex.value = -1;
+};
+
+watch(() => props.album, () => syncPhotos(), { immediate: true });
+
+// 弹窗常驻（不卸载）：打开时重载照片副本，避免保留上次的本地编辑
 watch(
-  () => props.album,
-  (album) => {
-    photos.value = (album.spec.photos || []).map((photo) => ({ ...photo }));
-    selectedIndex.value = -1;
-  },
-  {
-    immediate: true,
+  () => props.visible,
+  (visible) => {
+    if (visible) {
+      syncPhotos();
+    }
   }
 );
 
@@ -109,7 +122,7 @@ const handleSave = async () => {
       if (pendingUrl.value && pendingUrl.value !== photo.url) {
         photo.url = pendingUrl.value;
       }
-      await loveAlbumsApi.updatePhotos(props.album.metadata.name, photos.value);
+      await loveAlbumsApi.updatePhotos(albumName.value, photos.value);
       selectedIndex.value = -1;
       pendingUrl.value = "";
       Toast.success("保存成功");
@@ -119,7 +132,7 @@ const handleSave = async () => {
         Toast.warning("请先选择图片");
         return;
       }
-      const updated = await loveAlbumsApi.addPhoto(props.album.metadata.name, {
+      const updated = await loveAlbumsApi.addPhoto(albumName.value, {
         url,
         title: form.title,
         location: form.location,
@@ -154,7 +167,7 @@ const handleDeletePhoto = async (photo: LoveAlbumPhoto) => {
     busy.value = true;
     const editingDeleted =
       selectedIndex.value >= 0 && photos.value[selectedIndex.value] === photo;
-    const updated = await loveAlbumsApi.deletePhoto(props.album.metadata.name, photo.name);
+    const updated = await loveAlbumsApi.deletePhoto(albumName.value, photo.name);
     // 用后端返回的最新相册同步本地照片列表
     if (updated?.spec.photos) {
       photos.value = updated.spec.photos.map((p) => ({ ...p }));
@@ -189,7 +202,7 @@ const movePhoto = (index: number, direction: -1 | 1) => {
 const handleSaveOrder = async () => {
   try {
     busy.value = true;
-    await loveAlbumsApi.updatePhotos(props.album.metadata.name, photos.value);
+    await loveAlbumsApi.updatePhotos(albumName.value, photos.value);
     Toast.success("排序已保存");
     refreshList();
   } catch (error) {
@@ -205,7 +218,7 @@ const refreshing = ref(false);
 const handleRefresh = async () => {
   try {
     refreshing.value = true;
-    const latest = await loveAlbumsApi.get(props.album.metadata.name);
+    const latest = await loveAlbumsApi.get(albumName.value);
     if (latest?.spec.photos) {
       photos.value = latest.spec.photos.map((photo) => ({ ...photo }));
     }
@@ -221,9 +234,15 @@ const handleRefresh = async () => {
 </script>
 
 <template>
-  <VModal ref="modal" :width="modalWidth" height="80vh" :title="`照片管理：${props.album.spec.displayName || '未命名相册'}`"
-    @close="emit('close')">
-    <div class=":uno: flex h-full w-full flex-col gap-4 md:flex-row">
+  <VModal
+    :visible="visible"
+    :width="modalWidth"
+    height="80vh"
+    :title="`照片管理：${album?.spec.displayName || '未命名相册'}`"
+    @update:visible="emit('update:visible', $event)"
+    @close="emit('update:visible', false)"
+  >
+    <div v-if="album" class=":uno: flex h-full w-full flex-col gap-4 md:flex-row">
       <!-- 左：新增/编辑表单区（内容超出时自身滚动），右侧以分割线区分 -->
       <div
         class=":uno: w-full shrink-0 flex flex-col gap-y-4  border-b border-gray-100 pb-4 md:w-76 md:border-b-0 md:border-r md:pb-0 md:pr-4">
@@ -264,7 +283,7 @@ const handleRefresh = async () => {
             照片列表（{{ photos.length }}）
           </div>
           <VSpace>
-            <PhotoAddButton :album="props.album" @imported="refreshList()" />
+            <PhotoAddButton :album="album" @imported="refreshList()" />
             <VButton size="sm" type="secondary" :loading="refreshing" :disabled="busy" @click="handleRefresh">
               <template #icon>
                 <RiRefreshLine />
@@ -329,7 +348,7 @@ const handleRefresh = async () => {
 
     <template #footer>
       <div class=":uno: flex items-center gap-3">
-        <VButton @click="modal?.close()">关闭</VButton>
+        <VButton @click="emit('update:visible', false)">关闭</VButton>
       </div>
     </template>
   </VModal>
@@ -337,5 +356,5 @@ const handleRefresh = async () => {
 
   <ImagePreviewModal v-model:visible="previewVisible"
     :images="photos.map((photo) => photo.url).filter((url): url is string => !!url)" :initial-index="previewIndex"
-    :title="`照片预览：${props.album.spec.displayName || '未命名相册'}`" />
+    :title="`照片预览：${album?.spec.displayName || '未命名相册'}`" />
 </template>

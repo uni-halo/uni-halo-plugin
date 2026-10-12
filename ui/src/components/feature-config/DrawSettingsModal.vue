@@ -90,7 +90,6 @@ const handleSave = async () => {
 </script>
 
 <template>
-  <!-- 不用 mount-to-body：Teleport 挂载叠加动态表单渲染会触发 Vue 的 DOM 插入错误 -->
   <VModal
     :visible="visible"
     title="绘画设置"
@@ -135,7 +134,7 @@ const handleSave = async () => {
           type="number"
           name="guessMinRevealWindowHours"
             label="最短画谜窗口（小时）"
-          help="审核通过时，自动揭晓时间早于「通过时间 + 窗口」则顺延"
+          help="画谜至少展示这么多小时才揭晓谜底；作者设置的揭晓时间早于该窗口时自动顺延"
           :min="0"
           :max="72"
         />
@@ -144,7 +143,7 @@ const handleSave = async () => {
           type="number"
           name="guessRevealPostponeHours"
           label="审核顺延时长（小时）"
-          help="触发顺延时，揭晓时间顺延为「审核通过时间 + 该时长」"
+          help="审核通过后，谜底再过这么多小时才揭晓"
           :min="1"
           :max="168"
         />

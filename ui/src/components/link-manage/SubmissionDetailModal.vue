@@ -1,31 +1,34 @@
 <script setup lang="ts">
 import { VModal, VButton } from "@halo-dev/components";
-import { ref } from "vue";
 import SubmissionDetailContent from "@/components/link-manage/SubmissionDetailContent.vue";
 import type { MiniProgramLinkSubmission } from "@/types";
 
-defineProps<{
-  item: MiniProgramLinkSubmission;
-}>();
+withDefaults(
+  defineProps<{
+    /** 申请详情（常驻挂载时可能为空，内部按空值渲染） */
+    item?: MiniProgramLinkSubmission;
+    visible?: boolean;
+  }>(),
+  { visible: false }
+);
 
 const emit = defineEmits<{
-  (event: "close"): void;
+  (event: "update:visible", value: boolean): void;
 }>();
-
-const modal = ref<InstanceType<typeof VModal> | null>(null);
 </script>
 
 <template>
   <VModal
-    ref="modal"
+    :visible="visible"
     title="申请详情"
     :width="640"
-    @close="emit('close')"
+    @update:visible="emit('update:visible', $event)"
+    @close="emit('update:visible', false)"
   >
-    <SubmissionDetailContent :item="item" />
+    <SubmissionDetailContent v-if="item" :item="item" />
 
     <template #footer>
-      <VButton @click="modal?.close()">关闭</VButton>
+      <VButton @click="emit('update:visible', false)">关闭</VButton>
     </template>
   </VModal>
 </template>

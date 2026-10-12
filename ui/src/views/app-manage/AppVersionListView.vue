@@ -154,17 +154,19 @@ const handleDelete = (version: AppVersion) => {
   });
 };
 
-const onEditingModalClose = () => {
-  selectedVersion.value = undefined;
-  publishAppid.value = "";
-  editingModal.value = false;
-  refetch();
-};
+// 版本编辑弹窗常驻（不卸载）：关闭时释放选中条目并刷新列表
+watch(editingModal, (visible) => {
+  if (!visible) {
+    selectedVersion.value = undefined;
+    publishAppid.value = "";
+    refetch();
+  }
+});
 </script>
 
 <template>
-  <AppVersionEditingModal v-if="editingModal" :app-version="selectedVersion" :initial-appid="publishAppid"
-    :apps="(apps?.items as AppInfo[]) || []" @close="onEditingModalClose" />
+  <AppVersionEditingModal v-model:visible="editingModal" :app-version="selectedVersion" :initial-appid="publishAppid"
+    :apps="(apps?.items as AppInfo[]) || []" />
   <VPageHeader title="UniHalo-版本管理">
     <template #actions>
       <VButton @click="refetch">

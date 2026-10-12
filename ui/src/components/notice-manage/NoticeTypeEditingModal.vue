@@ -10,26 +10,27 @@ import type { NoticeType } from "@/types";
 
 const props = withDefaults(
   defineProps<{
+    visible?: boolean;
     item?: NoticeType;
   }>(),
   {
+    visible: false,
     item: undefined,
   }
 );
 
 const emit = defineEmits<{
-  (event: "close"): void;
+  (event: "update:visible", value: boolean): void;
   /** 保存成功（供父组件刷新类型选项并自动选中） */
   (event: "saved", type: NoticeType): void;
 }>();
 
-const modal = ref<InstanceType<typeof VModal> | null>(null);
 const saving = ref(false);
 const colorPickerVisible = ref(false);
 
 const isUpdateMode = computed(() => !!props.item);
 
-const formState = ref<NoticeType>({
+const emptyForm = (): NoticeType => ({
   metadata: { name: "" },
   spec: {
     displayName: "",
@@ -38,18 +39,27 @@ const formState = ref<NoticeType>({
   },
 });
 
-watch(
-  () => props.item,
-  (item) => {
-    if (item) {
-      formState.value = cloneDeep(item);
-      if (!formState.value.spec.color) {
-        formState.value.spec.color = "#10B981";
-      }
+const formState = ref<NoticeType>(emptyForm());
+
+/** 打开弹窗时按传入条目回填草稿（新建时重置为空表单） */
+const syncDraft = () => {
+  if (props.item) {
+    formState.value = cloneDeep(props.item);
+    if (!formState.value.spec.color) {
+      formState.value.spec.color = "#10B981";
     }
-  },
-  {
-    immediate: true,
+  } else {
+    formState.value = emptyForm();
+  }
+  colorPickerVisible.value = false;
+};
+
+watch(
+  () => props.visible,
+  (visible) => {
+    if (visible) {
+      syncDraft();
+    }
   }
 );
 
@@ -107,7 +117,7 @@ const handleSave = async () => {
     } else {
       saved = await noticeTypeApi.create(formState.value);
     }
-    modal.value?.close();
+    emit("update:visible", false);
     emit("saved", saved);
     Toast.success("保存成功");
   } catch (error) {
@@ -120,10 +130,11 @@ const handleSave = async () => {
 
 <template>
   <VModal
-    ref="modal"
+    :visible="visible"
     :title="isUpdateMode ? '编辑公告类型' : '新建公告类型'"
     :width="480"
-    @close="emit('close')"
+    @update:visible="emit('update:visible', $event)"
+    @close="emit('update:visible', false)"
   >
     <FormKit
       id="notice-type-form"
@@ -146,7 +157,7 @@ const handleSave = async () => {
         name="color"
         label="标签颜色"
         type="text"
-        help="支持手动输入 hex，或点击「选择颜色」展开色板"
+        help="支持直接输入颜色代码（如 #10B981），或点击「选择颜色」从色板选取"
         placeholder="#10B981"
       />
       <!-- 颜色预览 + 操作按钮独立一行 -->
@@ -194,7 +205,7 @@ const handleSave = async () => {
           text="提交"
           @submit="handleSubmit"
         />
-        <VButton @click="modal?.close()">关闭</VButton>
+        <VButton @click="emit('update:visible', false)">关闭</VButton>
       </VSpace>
     </template>
   </VModal>

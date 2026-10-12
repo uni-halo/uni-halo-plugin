@@ -88,6 +88,13 @@ const SPEC_FIELD: Record<
 };
 
 const modalType = ref<AuditCandidateType | null>(null);
+const candidatesVisible = ref(false);
+
+/** 打开候选弹窗：记录目标分类并展开 */
+const openCandidates = (type: AuditCandidateType) => {
+  modalType.value = type;
+  candidatesVisible.value = true;
+};
 const saving = ref(false);
 
 /** 审核模式开关（AuditDataConfig.spec.enabled，随本页整体保存） */
@@ -261,7 +268,7 @@ const handleModalConfirm = (type: AuditCandidateType, selected: AuditDataRef[]) 
   selectedItems[type] = selected;
   // 本地同步有效集合，避免刚选中的条目被误标「已失效」；保存刷新后以服务端为准
   validNames[type] = new Set(selected.map((item) => item.name));
-  modalType.value = null;
+  candidatesVisible.value = false;
 };
 
 const handleSave = async () => {
@@ -284,8 +291,9 @@ const handleSave = async () => {
 </script>
 
 <template>
-  <AuditCandidatesModal v-if="modalType" :type="modalType" :selected="selectedItems[modalType]"
-    @update:visible="modalType = null" @confirm="(selected) => handleModalConfirm(modalType!, selected)" />
+  <AuditCandidatesModal v-model:visible="candidatesVisible" :type="modalType"
+    :selected="modalType ? selectedItems[modalType] : []"
+    @confirm="(selected) => modalType && handleModalConfirm(modalType, selected)" />
 
   <VPageHeader title="UniHalo-审核模式">
     <template #actions>
@@ -358,8 +366,8 @@ const handleSave = async () => {
     </VCard>
 
     <!-- 隐藏功能入口选择弹窗（确认后整体写入 spec.hiddenNavKeys；候选含自定义功能入口） -->
-    <AuditHiddenNavModal v-if="hiddenNavModal" :selected-keys="hiddenNavKeys" :custom-entries="customEntries"
-      @update:visible="hiddenNavModal = $event" @confirm="hiddenNavKeys = $event" />
+    <AuditHiddenNavModal v-model:visible="hiddenNavModal" :selected-keys="hiddenNavKeys" :custom-entries="customEntries"
+      @confirm="hiddenNavKeys = $event" />
 
     <!-- 左右布局：左侧数据分类列表 + 右侧当前分类内容 -->
     <div class=":uno: flex flex-col gap-4 lg:flex-row">
@@ -407,7 +415,7 @@ const handleSave = async () => {
                   ">
                   已选 {{ selectedItems[activeBlock.type].length }} 条
                 </span>
-                <VButton size="sm" type="secondary" @click="modalType = activeBlock.type">
+                <VButton size="sm" type="secondary" @click="openCandidates(activeBlock.type)">
                   选择数据
                 </VButton>
               </div>
@@ -450,8 +458,8 @@ const handleSave = async () => {
                     <span v-else class=":uno: block min-w-0 flex-1 truncate text-sm font-medium text-gray-700">
                       {{ item.title || item.name }}
                     </span>
-                    <span v-if="isInvalid(activeBlock.type, item)"
-                      class=":uno: shrink-0 rounded bg-red-50 px-1.5 py-0.5 text-xs text-red-500">
+                    <span v-if="isInvalid(activeBlock.type, item)" v-tooltip="'引用的原内容已被删除'"
+                      class=":uno: shrink-0 cursor-help rounded bg-red-50 px-1.5 py-0.5 text-xs text-red-500">
                       已失效
                     </span>
                   </div>

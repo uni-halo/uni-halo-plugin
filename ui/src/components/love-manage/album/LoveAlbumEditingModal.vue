@@ -10,17 +10,18 @@ import type { LoveAlbum } from "@/types";
 const props = withDefaults(
   defineProps<{
     album?: LoveAlbum;
+    visible?: boolean;
   }>(),
   {
     album: undefined,
+    visible: false,
   }
 );
 
 const emit = defineEmits<{
-  (event: "close"): void;
+  (event: "update:visible", value: boolean): void;
 }>();
 
-const modal = ref<InstanceType<typeof VModal> | null>(null);
 const saving = ref(false);
 
 const passwordInput = ref("");
@@ -35,18 +36,25 @@ const formState = ref<LoveAlbum>({
   spec: { displayName: "", description: "", cover: "", priority: 0, photos: [] },
 });
 
+/** 重置表单与密码输入：编辑模式回显相册，新建模式回到空表单 */
+const resetForm = () => {
+  formState.value = props.album
+    ? { ...cloneDeep(props.album), spec: { ...cloneDeep(props.album.spec), photos: props.album.spec.photos || [] } }
+    : { metadata: { name: "" }, spec: { displayName: "", description: "", cover: "", priority: 0, photos: [] } };
+  passwordInput.value = "";
+  passwordConfirm.value = "";
+  clearPassword.value = false;
+};
+
+watch(() => props.album, () => resetForm(), { immediate: true });
+
+// 弹窗常驻（不卸载）：打开时重置表单与密码输入，避免保留上次未保存的内容
 watch(
-  () => props.album,
-  (album) => {
-    if (album) {
-      formState.value = cloneDeep(album);
-      if (!formState.value.spec.photos) {
-        formState.value.spec.photos = [];
-      }
+  () => props.visible,
+  (visible) => {
+    if (visible) {
+      resetForm();
     }
-  },
-  {
-    immediate: true,
   }
 );
 
@@ -72,7 +80,7 @@ const handleSave = async () => {
     } else {
       await loveAlbumsApi.create(body);
     }
-    modal.value?.close();
+    emit("update:visible", false);
     Toast.success("保存成功");
   } catch (error) {
     Toast.error((error as Error).message);
@@ -83,7 +91,13 @@ const handleSave = async () => {
 </script>
 
 <template>
-  <VModal ref="modal" :title="isUpdateMode ? '编辑相册' : '新建相册'" :width="640" @close="emit('close')">
+  <VModal
+    :visible="visible"
+    :title="isUpdateMode ? '编辑相册' : '新建相册'"
+    :width="640"
+    @update:visible="emit('update:visible', $event)"
+    @close="emit('update:visible', false)"
+  >
     <FormKit
       id="love-album-form"
       type="form"
@@ -178,7 +192,7 @@ const handleSave = async () => {
           text="提交"
           @submit="handleSubmit"
         />
-        <VButton @click="modal?.close()">关闭</VButton>
+        <VButton @click="emit('update:visible', false)">关闭</VButton>
       </VSpace>
     </template>
   </VModal>

@@ -239,17 +239,12 @@ const formatTime = (value?: string | null) => {
 </script>
 
 <template>
-  <!--
-    单根包裹：多根 fragment 中混挂 body Teleport 弹窗时，Vue 插入新节点
-    可能触发 "Failed to execute 'insertBefore'"，导致弹窗内容挂载中断
-  -->
   <div>
   <DrawReviewModal
-    v-if="reviewVisible"
+    v-model:visible="reviewVisible"
     :action="reviewAction"
     :names="reviewNames"
     :title="reviewTitle"
-    @close="reviewVisible = false"
     @done="onReviewDone"
   />
 

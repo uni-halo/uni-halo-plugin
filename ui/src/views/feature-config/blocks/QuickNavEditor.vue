@@ -149,15 +149,15 @@ const handleEntryEditConfirm = (draft: FeatureConfigQuickNavigationItem) => {
     <VEmpty v-if="!items.length" title="暂无条目" message="点击「添加」选择功能" :class="':uno: py-6'" />
 
     <!-- 候选弹窗：统一清单（内置注册表 + 自定义条目），已配置置灰禁选 -->
-    <FeatureEntryCandidatesModal v-if="candidatesVisible"
+    <FeatureEntryCandidatesModal v-model:visible="candidatesVisible"
       :selected-keys="items.map((i) => i.key || '')" :custom-entries="customEntries || []"
-      @update:visible="candidatesVisible = false" @confirm="handleCandidatesConfirm"
+      @confirm="handleCandidatesConfirm"
       @create="(entry) => emit('create-custom', entry)"
       @update="(entry) => emit('update-custom', entry)"
       @delete="(entry) => emit('delete-custom', entry)" />
 
-    <!-- 全字段编辑弹窗 -->
-    <FeatureEntryEditModal v-if="editingEntry" :entry="editingEntry" @update:entry="editingEntry = $event"
+    <!-- 全字段编辑弹窗（常驻，显隐由 entry 是否为空派生） -->
+    <FeatureEntryEditModal :visible="!!editingEntry" :entry="editingEntry" @update:entry="editingEntry = $event"
       @confirm="handleEntryEditConfirm" />
   </div>
 </template>

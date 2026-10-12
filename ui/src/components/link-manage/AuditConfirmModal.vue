@@ -1,28 +1,44 @@
 <script setup lang="ts">
 import { Toast, VButton, VModal, VSpace } from "@halo-dev/components";
 import { submitForm } from "@formkit/core";
-import { computed, ref } from "vue";
+import { computed, ref, watch } from "vue";
 import SubmitButton from "@/components/button/SubmitButton.vue";
 import LinkGroupSelectField from "@/components/link-manage/LinkGroupSelectField.vue";
 import { miniProgramLinkSubmissionsApi } from "@/api";
 
-const props = defineProps<{
-  /** approve=通过 / reject=拒绝 */
-  action: "approve" | "reject";
-  /** 目标申请 name 列表（单条或批量） */
-  names: string[];
-}>();
+const props = withDefaults(
+  defineProps<{
+    visible?: boolean;
+    /** approve=通过 / reject=拒绝 */
+    action: "approve" | "reject";
+    /** 目标申请 name 列表（单条或批量） */
+    names: string[];
+  }>(),
+  {
+    visible: false,
+  }
+);
 
 const emit = defineEmits<{
-  (event: "close"): void;
+  (event: "update:visible", value: boolean): void;
   (event: "done"): void;
 }>();
 
-const modal = ref<InstanceType<typeof VModal> | null>(null);
 const reason = ref("");
 const saving = ref(false);
 /** 通过时归入的分组（空字符串=未分组） */
 const groupName = ref("");
+
+/** 打开弹窗时重置审核说明与归入分组 */
+watch(
+  () => props.visible,
+  (visible) => {
+    if (visible) {
+      reason.value = "";
+      groupName.value = "";
+    }
+  }
+);
 
 const isReject = computed(() => props.action === "reject");
 const isBatch = computed(() => props.names.length > 1);
@@ -57,7 +73,7 @@ const handleConfirm = async () => {
       )
     );
     Toast.success(isReject.value ? "已拒绝" : "已通过");
-    modal.value?.close();
+    emit("update:visible", false);
     emit("done");
   } catch (error) {
     Toast.error((error as Error).message);
@@ -69,10 +85,11 @@ const handleConfirm = async () => {
 
 <template>
   <VModal
-    ref="modal"
+    :visible="visible"
     :title="title"
     :width="480"
-    @close="emit('close')"
+    @update:visible="emit('update:visible', $event)"
+    @close="emit('update:visible', false)"
   >
     <FormKit
       id="audit-confirm-form"
@@ -111,7 +128,7 @@ const handleConfirm = async () => {
           :text="title"
           @submit="handleSubmit"
         />
-        <VButton @click="modal?.close()">取消</VButton>
+        <VButton @click="emit('update:visible', false)">取消</VButton>
       </VSpace>
     </template>
   </VModal>

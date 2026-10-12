@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { VButton, VEmpty, VModal } from "@halo-dev/components";
-import { computed, onMounted, ref } from "vue";
+import { computed, ref, watch } from "vue";
 import { FEATURE_ENTRY_REGISTRY, type FeatureEntry } from "@/constant/feature-entries";
 import type { FeatureConfigQuickNavigationItem } from "@/types";
 
@@ -19,8 +19,9 @@ const props = withDefaults(
     selectedKeys?: string[];
     /** 自定义功能入口候选库（spec.pages.customEntries） */
     customEntries?: FeatureConfigQuickNavigationItem[];
+    visible?: boolean;
   }>(),
-  { selectedKeys: () => [], customEntries: () => [] }
+  { selectedKeys: () => [], customEntries: () => [], visible: false }
 );
 
 const emit = defineEmits<{
@@ -31,11 +32,17 @@ const emit = defineEmits<{
 const localSelected = ref<string[]>([]);
 const keyword = ref("");
 
-// 父组件 v-if 挂载，挂载即打开：回显已选并重置搜索
-onMounted(() => {
-  localSelected.value = [...(props.selectedKeys || [])];
-  keyword.value = "";
-});
+// 弹窗常驻（不卸载）：打开时回显已选 key 并重置搜索
+watch(
+  () => props.visible,
+  (visible) => {
+    if (!visible) {
+      return;
+    }
+    localSelected.value = [...(props.selectedKeys || [])];
+    keyword.value = "";
+  }
+);
 
 /** 统一候选清单 = 内置注册表 + 自定义条目 + 已选孤儿 key（标记「已移除」） */
 const candidates = computed<FeatureEntry[]>(() => {
@@ -109,7 +116,13 @@ const handleConfirm = () => {
 </script>
 
 <template>
-  <VModal title="选择要隐藏的功能入口" :width="560" @close="emit('update:visible', false)">
+  <VModal
+    :visible="visible"
+    title="选择要隐藏的功能入口"
+    :width="560"
+    @update:visible="emit('update:visible', $event)"
+    @close="emit('update:visible', false)"
+  >
     <div class=":uno: flex flex-col gap-3">
       <FormKit
         v-model="keyword"

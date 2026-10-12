@@ -136,8 +136,9 @@ public class AuditDataServiceImpl implements AuditDataService {
     }
 
     /**
-     * 校验并剔除失效引用：逐个按 GVK 校验 name 存在性，仅保留存在的引用。
-     * 对应扩展插件未安装/已卸载时，按「引用失效」处理（返回空集合）。
+     * 校验并剔除失效引用：逐个按 GVK 校验 name 存在性，仅保留存在的引用；
+     * 回收站文章（软删除，spec.deleted=true）视为失效。对应扩展插件未安装/已卸载时，
+     * 按「引用失效」处理（返回空集合）。
      */
     private <E extends Extension> Mono<List<AuditDataConfig.AuditDataRef>> filterValid(
             List<AuditDataConfig.AuditDataRef> refs, Class<E> type) {
@@ -146,12 +147,20 @@ public class AuditDataServiceImpl implements AuditDataService {
         }
         return Flux.fromIterable(refs)
                 .concatMap(ref -> client.fetch(type, ref.getName())
-                        // 删除中对象视为失效引用
+                        // 删除中对象与回收站文章（软删除）均视为失效引用
                         .filter(found -> found.getMetadata() == null
                                 || found.getMetadata().getDeletionTimestamp() == null)
+                        .filter(found -> !isRecycledPost(found))
                         .map(found -> ref)
                         .onErrorResume(e -> Mono.empty()))
                 .collectList();
+    }
+
+    /** 文章软删除判定：回收站中的 Post（spec.deleted=true）视为失效引用。 */
+    private boolean isRecycledPost(Extension extension) {
+        return extension instanceof PostRef postRef
+                && postRef.getSpec() != null
+                && Boolean.TRUE.equals(postRef.getSpec().getDeleted());
     }
 
     @Override
@@ -211,7 +220,8 @@ public class AuditDataServiceImpl implements AuditDataService {
     /**
      * 全量拉取某类型候选（按创建时间倒序），供内存关键字过滤 + 手动分页。
      * 数据量级：文章/分组/瞬间/友链分组，审核模式为低频操作，全量可接受。
-     * 候选读路径：排除删除中对象。
+     * 候选读路径：排除删除中对象；文章删除先进回收站（软删除，spec.deleted=true
+     * 且 extension 本体仍在），须一并排除，否则回收站文章会进候选并可被挑选。
      */
     private Flux<Extension> listAllRef(CandidateType type) {
         return client.listAll(resolveRefClass(type),
@@ -219,6 +229,8 @@ public class AuditDataServiceImpl implements AuditDataService {
                                 .fieldQuery(isNull("metadata.deletionTimestamp"))
                                 .build(),
                         Sort.by(Sort.Direction.DESC, "metadata.creationTimestamp"))
+                // 回收站文章（软删除）仍存在于索引中，候选与已选回查一并排除
+                .filter(extension -> !isRecycledPost(extension))
                 .map(extension -> (Extension) extension);
     }
 

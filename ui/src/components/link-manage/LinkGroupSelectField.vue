@@ -68,6 +68,6 @@ const handleGroupSaved = (group: MiniProgramLinkGroup) => {
         新建分组
       </VButton>
     </div>
-    <LinkGroupEditingModal v-if="createVisible" @close="createVisible = false" @saved="handleGroupSaved" />
+    <LinkGroupEditingModal v-model:visible="createVisible" @saved="handleGroupSaved" />
   </div>
 </template>

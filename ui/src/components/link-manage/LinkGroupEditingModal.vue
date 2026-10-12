@@ -9,25 +9,26 @@ import type { MiniProgramLinkGroup } from "@/types";
 
 const props = withDefaults(
   defineProps<{
+    visible?: boolean;
     item?: MiniProgramLinkGroup;
   }>(),
   {
+    visible: false,
     item: undefined,
   }
 );
 
 const emit = defineEmits<{
-  (event: "close"): void;
+  (event: "update:visible", value: boolean): void;
   /** 保存成功（供父组件刷新分组并自动选中） */
   (event: "saved", group: MiniProgramLinkGroup): void;
 }>();
 
-const modal = ref<InstanceType<typeof VModal> | null>(null);
 const saving = ref(false);
 
 const isUpdateMode = computed(() => !!props.item);
 
-const formState = ref<MiniProgramLinkGroup>({
+const emptyForm = (): MiniProgramLinkGroup => ({
   metadata: { name: "" },
   spec: {
     displayName: "",
@@ -35,18 +36,26 @@ const formState = ref<MiniProgramLinkGroup>({
   },
 });
 
-watch(
-  () => props.item,
-  (item) => {
-    if (item) {
-      formState.value = cloneDeep(item);
-      if (formState.value.spec.priority === undefined) {
-        formState.value.spec.priority = 0;
-      }
+const formState = ref<MiniProgramLinkGroup>(emptyForm());
+
+/** 打开弹窗时按传入条目回填草稿（新建时重置为空表单） */
+const syncDraft = () => {
+  if (props.item) {
+    formState.value = cloneDeep(props.item);
+    if (formState.value.spec.priority === undefined) {
+      formState.value.spec.priority = 0;
     }
-  },
-  {
-    immediate: true,
+  } else {
+    formState.value = emptyForm();
+  }
+};
+
+watch(
+  () => props.visible,
+  (visible) => {
+    if (visible) {
+      syncDraft();
+    }
   }
 );
 
@@ -66,7 +75,7 @@ const handleSave = async () => {
     } else {
       saved = await miniProgramLinkGroupsApi.create(formState.value);
     }
-    modal.value?.close();
+    emit("update:visible", false);
     emit("saved", saved);
     Toast.success("保存成功");
   } catch (error) {
@@ -79,10 +88,11 @@ const handleSave = async () => {
 
 <template>
   <VModal
-    ref="modal"
+    :visible="visible"
     :title="isUpdateMode ? '编辑分组' : '新建分组'"
     :width="480"
-    @close="emit('close')"
+    @update:visible="emit('update:visible', $event)"
+    @close="emit('update:visible', false)"
   >
     <FormKit
       id="link-group-form"
@@ -118,7 +128,7 @@ const handleSave = async () => {
           text="提交"
           @submit="handleSubmit"
         />
-        <VButton @click="modal?.close()">关闭</VButton>
+        <VButton @click="emit('update:visible', false)">关闭</VButton>
       </VSpace>
     </template>
   </VModal>

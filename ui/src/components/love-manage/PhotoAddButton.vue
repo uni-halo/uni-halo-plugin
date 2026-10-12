@@ -115,8 +115,9 @@ const handleExternalSubmit = async () => {
   <AttachmentSelectorModal v-if="selectorVisible" :accepts="['image/*']" @select="handleAttachmentsSelect"
     @close="selectorVisible = false" />
 
-  <!-- 批量添加外链：每行一个链接 -->
-  <VModal v-if="externalVisible" title="批量添加外链" :width="600" :layer-closable="true" @close="externalVisible = false">
+  <!-- 批量添加外链：每行一个链接（弹窗常驻，不随显隐卸载） -->
+  <VModal :visible="externalVisible" title="批量添加外链" :width="600" :layer-closable="true"
+    @update:visible="externalVisible = $event" @close="externalVisible = false">
     <FormKit v-model="externalUrlText" name="external_photo_urls" label="链接列表" type="textarea" :rows="10"
       placeholder="每行一个图片链接地址" validation="required" />
     <template #footer>

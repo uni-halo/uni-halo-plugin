@@ -7,7 +7,7 @@ import ColorFieldRow from "../fields/ColorFieldRow.vue";
  * 展示开关 + 入口名称/副标题 + 三色配置 + 入口密码（BCrypt 语义由后端 save 处理）。
  * 只认 FeatureConfigLoveModule，不知道模块归属哪个页面。
  */
-const props = withDefaults(
+withDefaults(
   defineProps<{
     /** 模块名称（卡片标题） */
     label: string;
@@ -96,8 +96,8 @@ function cancelRemoval() {
         <span v-else class=":uno: ml-2 text-xs font-normal text-gray-400">未设置</span>
       </div>
       <FormKit v-if="!model.passwordRemoved" v-model="model.password" :name="`${namePrefix}_password`" label="新密码"
-        type="password" :help="model.passwordEnabled ? '留空表示保持原密码不变' : '设置后进入该模块前需先输入密码'"
-        placeholder="输入入口密码" @input="cancelRemovalOnTyping" />
+        type="password" :help="model.passwordEnabled ? '留空表示保持原密码不变' : '设置后进入该模块前需先输入密码'" placeholder="输入入口密码"
+        @input="cancelRemovalOnTyping" />
       <p v-else class=":uno: text-sm text-gray-500">保存后将清除该入口密码。</p>
       <VButton v-if="model.passwordEnabled && !model.passwordRemoved" size="sm" type="danger" plain class=":uno: mt-2"
         @click="clearPassword">

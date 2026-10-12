@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { VButton, VEmpty, VLoading, VModal, VPagination } from "@halo-dev/components";
 import { useQuery } from "@tanstack/vue-query";
-import { onMounted, ref } from "vue";
+import { ref, watch } from "vue";
 import RiImageLine from "~icons/ri/image-line";
 import { bannerApi } from "@/api";
 import type { BannerCandidate } from "@/types";
@@ -13,11 +13,13 @@ const props = withDefaults(
     selected?: BannerCandidate[];
     /** 底部提示文案（缺省为轮播快照语义） */
     tip?: string;
+    visible?: boolean;
   }>(),
   {
     multiSelect: true,
     selected: () => [],
     tip: "选择后将保存文章当前快照（标题/封面/日期/作者），文章后续修改不影响轮播图展示",
+    visible: false,
   }
 );
 
@@ -31,14 +33,7 @@ const keyword = ref("");
 const page = ref(1);
 const localSelected = ref<BannerCandidate[]>([]);
 
-// 父组件 v-if 挂载，挂载即打开：重置搜索与已选回显
-onMounted(() => {
-  keyword.value = "";
-  page.value = 1;
-  localSelected.value = [...props.selected];
-});
-
-const { data, isLoading } = useQuery({
+const { data, isLoading, refetch } = useQuery({
   queryKey: ["uni-halo:banner-candidates", keyword, page],
   queryFn: async () => {
     return bannerApi.candidates({
@@ -48,6 +43,20 @@ const { data, isLoading } = useQuery({
     });
   },
 });
+
+// 弹窗常驻（不卸载）：打开时重置搜索、回显已选并重取候选列表
+watch(
+  () => props.visible,
+  (visible) => {
+    if (!visible) {
+      return;
+    }
+    keyword.value = "";
+    page.value = 1;
+    localSelected.value = [...props.selected];
+    refetch();
+  }
+);
 
 const isChecked = (candidate: BannerCandidate) =>
   localSelected.value.some((item) => item.name === candidate.name);
@@ -86,7 +95,13 @@ const formatTime = (value?: string) => {
 </script>
 
 <template>
-  <VModal title="选择文章" :width="720" @close="handleClose">
+  <VModal
+    :visible="visible"
+    title="选择文章"
+    :width="720"
+    @update:visible="emit('update:visible', $event)"
+    @close="handleClose"
+  >
     <div class=":uno: flex flex-col gap-3">
       <!-- 搜索（Halo SearchInput 全局组件） + 已选计数 -->
       <div class=":uno: flex items-center gap-3">

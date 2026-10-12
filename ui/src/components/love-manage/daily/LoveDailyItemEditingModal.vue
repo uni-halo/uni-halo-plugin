@@ -10,17 +10,18 @@ import { LOVE_STATUS_OPTIONS, type LoveDailyItem } from "@/types";
 const props = withDefaults(
   defineProps<{
     item?: LoveDailyItem;
+    visible?: boolean;
   }>(),
   {
     item: undefined,
+    visible: false,
   }
 );
 
 const emit = defineEmits<{
-  (event: "close"): void;
+  (event: "update:visible", value: boolean): void;
 }>();
 
-const modal = ref<InstanceType<typeof VModal> | null>(null);
 const saving = ref(false);
 
 const isUpdateMode = computed(() => !!props.item);
@@ -39,18 +40,34 @@ const formState = ref<LoveDailyItem>({
   },
 });
 
+/** 重置表单：编辑模式回显清单项，新建模式回到空表单 */
+const resetForm = () => {
+  formState.value = props.item
+    ? { ...cloneDeep(props.item), spec: { ...cloneDeep(props.item.spec), images: props.item.spec.images || [] } }
+    : {
+        metadata: { name: "" },
+        spec: {
+          title: "",
+          content: "",
+          status: "wait",
+          planDate: "",
+          completeDate: "",
+          completeRemark: "",
+          images: [],
+          priority: 0,
+        },
+      };
+};
+
+watch(() => props.item, () => resetForm(), { immediate: true });
+
+// 弹窗常驻（不卸载）：打开时重置表单，避免保留上次未保存的内容
 watch(
-  () => props.item,
-  (item) => {
-    if (item) {
-      formState.value = cloneDeep(item);
-      if (!formState.value.spec.images) {
-        formState.value.spec.images = [];
-      }
+  () => props.visible,
+  (visible) => {
+    if (visible) {
+      resetForm();
     }
-  },
-  {
-    immediate: true,
   }
 );
 
@@ -80,7 +97,7 @@ const handleSave = async () => {
     } else {
       await loveDailyApi.create(formState.value);
     }
-    modal.value?.close();
+    emit("update:visible", false);
     Toast.success("保存成功");
   } catch (error) {
     Toast.error((error as Error).message);
@@ -91,7 +108,13 @@ const handleSave = async () => {
 </script>
 
 <template>
-  <VModal ref="modal" :title="isUpdateMode ? '编辑清单项' : '新建清单项'" :width="640" @close="emit('close')">
+  <VModal
+    :visible="visible"
+    :title="isUpdateMode ? '编辑清单项' : '新建清单项'"
+    :width="640"
+    @update:visible="emit('update:visible', $event)"
+    @close="emit('update:visible', false)"
+  >
     <FormKit
       id="love-daily-form"
       type="form"
@@ -178,7 +201,7 @@ const handleSave = async () => {
           text="提交"
           @submit="handleSubmit"
         />
-        <VButton @click="modal?.close()">关闭</VButton>
+        <VButton @click="emit('update:visible', false)">关闭</VButton>
       </VSpace>
     </template>
   </VModal>

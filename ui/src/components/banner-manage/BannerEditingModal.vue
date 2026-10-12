@@ -11,22 +11,25 @@ import type { Banner } from "@/types";
 
 const props = withDefaults(
   defineProps<{
+    visible?: boolean;
     item?: Banner;
   }>(),
-  { item: undefined }
+  {
+    visible: false,
+    item: undefined,
+  }
 );
 
 const emit = defineEmits<{
-  (event: "close"): void;
+  (event: "update:visible", value: boolean): void;
 }>();
 
-const modal = ref<InstanceType<typeof VModal> | null>(null);
 const saving = ref(false);
 
 const isUpdateMode = computed(() => !!props.item);
 
 // 纯自定义弹窗：作者信息由服务端默认取当前登录用户，不显示/编辑
-const formState = ref<Banner>({
+const emptyForm = (): Banner => ({
   metadata: { name: "" },
   spec: {
     title: "",
@@ -39,21 +42,29 @@ const formState = ref<Banner>({
   },
 });
 
-watch(
-  () => props.item,
-  (item) => {
-    if (item) {
-      formState.value = cloneDeep(item);
-      if (!formState.value.spec.content) {
-        formState.value.spec.content = "";
-      }
-      if (!formState.value.spec.cover) {
-        formState.value.spec.cover = "";
-      }
+const formState = ref<Banner>(emptyForm());
+
+/** 打开弹窗时按传入条目回填草稿（新建时重置为空表单） */
+const syncDraft = () => {
+  if (props.item) {
+    formState.value = cloneDeep(props.item);
+    if (!formState.value.spec.content) {
+      formState.value.spec.content = "";
     }
-  },
-  {
-    immediate: true,
+    if (!formState.value.spec.cover) {
+      formState.value.spec.cover = "";
+    }
+  } else {
+    formState.value = emptyForm();
+  }
+};
+
+watch(
+  () => props.visible,
+  (visible) => {
+    if (visible) {
+      syncDraft();
+    }
   }
 );
 
@@ -69,7 +80,7 @@ const handleSave = async () => {
     } else {
       await bannerApi.create(formState.value);
     }
-    modal.value?.close();
+    emit("update:visible", false);
     Toast.success("保存成功");
   } catch (error) {
     Toast.error((error as Error).message);
@@ -103,7 +114,8 @@ function handleContentMarkdownError(message: string) {
 </script>
 
 <template>
-  <VModal ref="modal" :title="isUpdateMode ? '编辑自定义轮播图' : '新建自定义轮播图'" :width="880" @close="emit('close')">
+  <VModal :visible="visible" :title="isUpdateMode ? '编辑自定义轮播图' : '新建自定义轮播图'" :width="880"
+    @update:visible="emit('update:visible', $event)" @close="emit('update:visible', false)">
     <FormKit id="banner-form" type="form" name="banner-form" :config="{ validationVisibility: 'submit' }"
       @submit="handleSave">
       <!-- 左右布局：左侧基础表单（封面图占满列宽），右侧富文本内容 -->
@@ -135,7 +147,7 @@ function handleContentMarkdownError(message: string) {
     <template #footer>
       <div class=":uno: flex items-center gap-3">
         <SubmitButton :loading="saving" :disabled="saving" type="secondary" text="提交" @submit="handleSubmit" />
-        <VButton @click="modal?.close()">关闭</VButton>
+        <VButton @click="emit('update:visible', false)">关闭</VButton>
       </div>
     </template>
   </VModal>

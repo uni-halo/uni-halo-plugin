@@ -174,11 +174,13 @@ const handleDeleteInBatch = () => {
   });
 };
 
-const onModalClose = () => {
-  editingModal.value = false;
-  selectedItem.value = undefined;
-  refetch();
-};
+// 清单项编辑弹窗常驻（不卸载）：关闭时释放选中条目并刷新列表
+watch(editingModal, (visible) => {
+  if (!visible) {
+    selectedItem.value = undefined;
+    refetch();
+  }
+});
 
 /** 拖拽排序用可变列表（VueDraggable v-model 需要可写数组；随查询结果同步） */
 const draggableItems = ref<LoveDailyItem[]>([]);
@@ -226,7 +228,7 @@ const timelineDotClass = (status?: string) => {
 </script>
 
 <template>
-  <LoveDailyItemEditingModal v-if="editingModal" :item="selectedItem" @close="onModalClose" />
+  <LoveDailyItemEditingModal v-model:visible="editingModal" :item="selectedItem" />
 
   <VPageHeader title="UniHalo-恋爱清单">
     <template #actions>

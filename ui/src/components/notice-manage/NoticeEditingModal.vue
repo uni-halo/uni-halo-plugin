@@ -14,17 +14,18 @@ import { NOTICE_STATUS_OPTIONS, type Notice, type NoticeType } from "@/types";
 const props = withDefaults(
   defineProps<{
     item?: Notice;
+    visible?: boolean;
   }>(),
   {
     item: undefined,
+    visible: false,
   }
 );
 
 const emit = defineEmits<{
-  (event: "close"): void;
+  (event: "update:visible", value: boolean): void;
 }>();
 
-const modal = ref<InstanceType<typeof VModal> | null>(null);
 const saving = ref(false);
 const typeModalVisible = ref(false);
 
@@ -46,21 +47,42 @@ const formState = ref<Notice>({
   },
 });
 
-watch(
-  () => props.item,
-  (item) => {
-    if (item) {
-      formState.value = cloneDeep(item);
-      if (!formState.value.spec.content) {
-        formState.value.spec.content = "";
-      }
-      if (!formState.value.spec.cover) {
-        formState.value.spec.cover = "";
-      }
+/** 重置表单：编辑模式回显条目，新建模式回到空表单 */
+const resetForm = () => {
+  if (props.item) {
+    formState.value = cloneDeep(props.item);
+    if (!formState.value.spec.content) {
+      formState.value.spec.content = "";
     }
-  },
-  {
-    immediate: true,
+    if (!formState.value.spec.cover) {
+      formState.value.spec.cover = "";
+    }
+    return;
+  }
+  formState.value = {
+    metadata: { name: "" },
+    spec: {
+      title: "",
+      content: "",
+      summary: "",
+      cover: "",
+      link: "",
+      typeName: "",
+      status: "draft",
+      priority: 0,
+    },
+  };
+};
+
+watch(() => props.item, () => resetForm(), { immediate: true });
+
+// 弹窗常驻（不卸载）：打开时重置表单，避免保留上次未保存的内容
+watch(
+  () => props.visible,
+  (visible) => {
+    if (visible) {
+      resetForm();
+    }
   }
 );
 
@@ -106,7 +128,7 @@ const handleSave = async () => {
     } else {
       await noticeApi.create(formState.value);
     }
-    modal.value?.close();
+    emit("update:visible", false);
     Toast.success("保存成功");
   } catch (error) {
     Toast.error((error as Error).message);
@@ -141,10 +163,11 @@ function handleContentMarkdownError(message: string) {
 
 <template>
   <VModal
-    ref="modal"
+    :visible="visible"
     :title="isUpdateMode ? '编辑公告' : '新建公告'"
     :width="1080"
-    @close="emit('close')"
+    @update:visible="emit('update:visible', $event)"
+    @close="emit('update:visible', false)"
   >
     <!-- 左右布局：左侧基础表单（固定宽），右侧摘要 + 富文本正文（自适应） -->
     <FormKit
@@ -251,16 +274,13 @@ function handleContentMarkdownError(message: string) {
           text="提交"
           @submit="handleSubmit"
         />
-        <VButton @click="modal?.close()">关闭</VButton>
+        <VButton @click="emit('update:visible', false)">关闭</VButton>
       </div>
     </template>
   </VModal>
-  <!-- 新增公告类型弹窗：不嵌套在主弹窗内（避免 VModal 嵌套触发 Vue insertBefore
-       错误），且放在主弹窗之后（两者 z-index 均为 2000，DOM 靠后者在上，避免被遮盖）；
-       保存成功后自动刷新选项并选中 -->
+  <!-- 新增公告类型弹窗：与主弹窗平级挂载（两者 z-index 均为 2000，DOM 靠后者在上） -->
   <NoticeTypeEditingModal
-    v-if="typeModalVisible"
-    @close="typeModalVisible = false"
+    v-model:visible="typeModalVisible"
     @saved="handleTypeSaved"
   />
 </template>

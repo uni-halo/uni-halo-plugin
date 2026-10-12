@@ -20,7 +20,9 @@ public record LoginResult(
         String patName,
         LoginUser user,
         Set<String> roles,
-        List<PermissionRule> permissions
+        List<PermissionRule> permissions,
+        Boolean emailVerified,
+        String verifyTicket
 ) {
 
     /**

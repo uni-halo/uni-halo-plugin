@@ -86,7 +86,7 @@ function handleMarkdownError(message: string) {
 
   <RichTextRow v-model="model" :placeholder="placeholder" />
 
-  <BannerCandidatesModal v-if="pickerVisible" :multi-select="false"
+  <BannerCandidatesModal v-model:visible="pickerVisible" :multi-select="false"
     tip="导入后将以文章当前已发布内容覆盖富文本，文章后续修改不会同步"
-    @update:visible="pickerVisible = false" @confirm="handlePostPicked" />
+    @confirm="handlePostPicked" />
 </template>

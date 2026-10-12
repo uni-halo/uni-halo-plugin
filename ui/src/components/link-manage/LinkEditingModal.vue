@@ -12,17 +12,18 @@ import type { MiniProgramLink, MiniProgramLinkGroup } from "@/types";
 const props = withDefaults(
   defineProps<{
     item?: MiniProgramLink;
+    visible?: boolean;
   }>(),
   {
     item: undefined,
+    visible: false,
   }
 );
 
 const emit = defineEmits<{
-  (event: "close"): void;
+  (event: "update:visible", value: boolean): void;
 }>();
 
-const modal = ref<InstanceType<typeof VModal> | null>(null);
 const saving = ref(false);
 const groupModalVisible = ref(false);
 
@@ -52,23 +53,50 @@ const formState = ref<MiniProgramLink>({
 /** 可见性下拉绑定（select 值为字符串，提交时转 boolean） */
 const visibleText = ref("true");
 
-watch(
-  () => props.item,
-  (item) => {
-    if (item) {
-      const cloned = cloneDeep(item);
-      if (!cloned.spec.screenshots) {
-        cloned.spec.screenshots = [];
-      }
-      if (cloned.spec.visible === undefined) {
-        cloned.spec.visible = true;
-      }
-      formState.value = cloned;
-      visibleText.value = cloned.spec.visible ? "true" : "false";
+/** 重置表单：编辑模式回显条目，新建模式回到空表单 */
+const resetForm = () => {
+  if (props.item) {
+    const cloned = cloneDeep(props.item);
+    if (!cloned.spec.screenshots) {
+      cloned.spec.screenshots = [];
     }
-  },
-  {
-    immediate: true,
+    if (cloned.spec.visible === undefined) {
+      cloned.spec.visible = true;
+    }
+    formState.value = cloned;
+    visibleText.value = cloned.spec.visible ? "true" : "false";
+    return;
+  }
+  formState.value = {
+    metadata: { name: "" },
+    spec: {
+      displayName: "",
+      miniProgramCode: "",
+      appId: "",
+      path: "",
+      link: "",
+      avatar: "",
+      authorName: "",
+      website: "",
+      groupName: "",
+      description: "",
+      screenshots: [],
+      visible: true,
+      priority: 0,
+    },
+  };
+  visibleText.value = "true";
+};
+
+watch(() => props.item, () => resetForm(), { immediate: true });
+
+// 弹窗常驻（不卸载）：打开时重置表单，避免保留上次未保存的内容
+watch(
+  () => props.visible,
+  (visible) => {
+    if (visible) {
+      resetForm();
+    }
   }
 );
 
@@ -117,7 +145,7 @@ const handleSave = async () => {
       await miniProgramLinksApi.create(formState.value);
     }
     queryClient.invalidateQueries({ queryKey: ["uni-halo:mini-program-links"] });
-    modal.value?.close();
+    emit("update:visible", false);
     Toast.success("保存成功");
   } catch (error) {
     Toast.error((error as Error).message);
@@ -129,10 +157,11 @@ const handleSave = async () => {
 
 <template>
   <VModal
-    ref="modal"
+    :visible="visible"
     :title="isUpdateMode ? '编辑链接' : '新建链接'"
     :width="760"
-    @close="emit('close')"
+    @update:visible="emit('update:visible', $event)"
+    @close="emit('update:visible', false)"
   >
     <FormKit
       id="link-form"
@@ -297,15 +326,13 @@ const handleSave = async () => {
           text="提交"
           @submit="handleSubmit"
         />
-        <VButton @click="modal?.close()">关闭</VButton>
+        <VButton @click="emit('update:visible', false)">关闭</VButton>
       </VSpace>
     </template>
   </VModal>
-  <!-- 新建分组弹窗：与主弹窗平级（不嵌套，避免 VModal 嵌套触发 Vue insertBefore
-       错误）；保存成功后刷新分组选项并自动选中 -->
+  <!-- 新建分组弹窗：与主弹窗平级挂载；保存成功后刷新分组选项并自动选中 -->
   <LinkGroupEditingModal
-    v-if="groupModalVisible"
-    @close="groupModalVisible = false"
+    v-model:visible="groupModalVisible"
     @saved="handleGroupSaved"
   />
 </template>

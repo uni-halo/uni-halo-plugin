@@ -219,4 +219,57 @@ public interface AuthService {
      * @param newPassword 新密码明文
      */
     Mono<Void> resetPassword(String username, String ticket, String code, String newPassword);
+
+    /**
+     * 发送邮箱验证码（自建验证闭环，匿名端点 + 票据认证）：校验验证票据（非 PAT，
+     * 不受 Halo email-not-set 拦截）→ 账号存在且未禁用、邮箱未验证 → 邮箱未被其他账号占用
+     * → 生成 6 位验证码存内存并经 Halo 邮件通道发往目标邮箱，成功后签发绑定该邮箱的
+     * 验证票据返回（后续验码凭此票据）。发码配额读自设置页
+     * 「安全控制 → 邮箱绑定验证码」（全站/单 IP/单邮箱/单账号四桶，0 表示不限制）。
+     *
+     * @param ticket   登录响应下发的验证票据
+     * @param email    目标邮箱
+     * @param clientIp 来源 IP（TCP 源地址），用于限流；未知时传 null
+     */
+    Mono<SentEmailVerification> sendEmailVerification(String ticket, String email, String clientIp);
+
+    /**
+     * 校验邮箱验证码并完成绑定（自建验证闭环，匿名端点 + 票据认证）：
+     * 校验绑定邮箱的验证票据 + 验证码（一次性、封顶）后，
+     * 服务端内部直写 User 扩展（{@code spec.email} + {@code spec.emailVerified=true}），
+     * 全程不经过 HTTP 层的 PAT 校验；此后该用户的 PAT 自动解除 email-not-set 拦截。
+     *
+     * @param ticket 发码成功时换取的绑定邮箱票据
+     * @param email  发码时填写的邮箱（须与票据绑定一致）
+     * @param code   邮件中的 6 位验证码
+     * @return 已验证的邮箱
+     */
+    Mono<String> verifyEmail(String ticket, String email, String code);
+
+    /**
+     * 发码成功结果：绑定目标邮箱的验证票据 + 验证码有效期（分钟）。
+     */
+    record SentEmailVerification(String ticket, int expiresInMinutes) {
+    }
+
+    /**
+     * 凭用户名密码重新获取邮箱验证票据（匿名端点，免重签 PAT 不触发互踢）：
+     * 密码认证与登录同源（锁定闸门 + 认证 + 失败计数），仅 {@code emailVerified=false}
+     * 的启用账号可获取。用于登录票据过期后的无感续期——Halo 的
+     * ProfileCompletionFilter 拦截未验证邮箱用户的全部 PAT 请求，票据接口必须
+     * 匿名 + 密码重认证，不能走 PAT。
+     *
+     * @param username    用户名
+     * @param rawPassword 密码明文
+     * @param clientIp    来源 IP（TCP 源地址），用于登录尝试锁定；未知时传 null
+     * @return 验证票据 + 有效期（分钟）
+     */
+    Mono<IssuedVerifyTicket> issueVerifyTicket(String username, String rawPassword,
+            String clientIp);
+
+    /**
+     * 票据获取结果：验证票据 + 有效期（分钟）。
+     */
+    record IssuedVerifyTicket(String ticket, int expiresInMinutes) {
+    }
 }

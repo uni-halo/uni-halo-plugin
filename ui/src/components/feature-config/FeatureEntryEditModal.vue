@@ -16,8 +16,10 @@ const props = withDefaults(
     entry: FeatureConfigQuickNavigationItem | null;
     /** 新增模式：key 可编辑 */
     creating?: boolean;
+    /** 弹窗显隐（父级由 entry 是否为空派生） */
+    visible?: boolean;
   }>(),
-  { creating: false }
+  { creating: false, visible: false }
 );
 
 const emit = defineEmits<{
@@ -135,7 +137,8 @@ const handleClose = () => {
 </script>
 
 <template>
-  <VModal :title="creating ? '新增功能入口' : '编辑功能入口'" :width="640" @close="handleClose">
+  <VModal :visible="visible" :title="creating ? '新增功能入口' : '编辑功能入口'" :width="640" @update:visible="handleClose"
+    @close="handleClose">
     <div class=":uno: flex flex-col gap-4">
       <!-- 基础信息 -->
       <FormKit
@@ -200,7 +203,7 @@ const handleClose = () => {
           type="select"
           label="当前生效风格"
           :options="icons.map((i) => ({ label: i.key || '(未命名)', value: i.key }))"
-          help="app 端按该风格渲染，缺省取第一项"
+          help="App 端使用所选风格显示图标；未选择时默认取第一项"
         />
         <!-- 实时预览 -->
         <div class=":uno: flex items-center gap-3 rounded-md bg-gray-50 p-3">

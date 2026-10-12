@@ -123,9 +123,15 @@ const handleTypeEdit = (typeItem: NoticeType) => {
 
 const handleTypeSaved = () => {
   typeEditingVisible.value = false;
-  editingType.value = undefined;
   queryClient.invalidateQueries({ queryKey: ["uni-halo:notice-types-filter"] });
 };
+
+// 类型编辑弹窗常驻（不卸载）：关闭时释放选中类型
+watch(typeEditingVisible, (visible) => {
+  if (!visible) {
+    editingType.value = undefined;
+  }
+});
 
 const handleTypeDelete = (typeItem: NoticeType) => {
   confirmDeleteType({
@@ -235,11 +241,13 @@ const handleDeleteInBatch = () => {
   });
 };
 
-const onModalClose = () => {
-  editingModal.value = false;
-  selectedNotice.value = undefined;
-  refetch();
-};
+// 公告编辑弹窗常驻（不卸载）：关闭时释放选中条目并刷新列表
+watch(editingModal, (visible) => {
+  if (!visible) {
+    selectedNotice.value = undefined;
+    refetch();
+  }
+});
 
 /** 状态标签颜色（复用 Halo 语义色） */
 const statusColorClass = computed(
@@ -271,10 +279,10 @@ const formatTime = (value?: string | null) => {
 </script>
 
 <template>
-  <NoticeEditingModal v-if="editingModal" :item="selectedNotice" @close="onModalClose" />
+  <NoticeEditingModal v-model:visible="editingModal" :item="selectedNotice" />
 
   <!-- 类型编辑弹窗（新建/编辑，与公告编辑弹窗平级挂载） -->
-  <NoticeTypeEditingModal v-if="typeEditingVisible" :item="editingType" @close="typeEditingVisible = false"
+  <NoticeTypeEditingModal v-model:visible="typeEditingVisible" :item="editingType"
     @saved="handleTypeSaved" />
 
   <VPageHeader title="UniHalo-公告管理">

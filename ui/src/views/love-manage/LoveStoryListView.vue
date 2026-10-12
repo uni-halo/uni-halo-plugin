@@ -173,15 +173,17 @@ const handleDeleteInBatch = () => {
   });
 };
 
-const onModalClose = () => {
-  editingModal.value = false;
-  selectedStory.value = undefined;
-  refetch();
-};
+// 故事编辑弹窗常驻（不卸载）：关闭时释放选中故事并刷新列表
+watch(editingModal, (visible) => {
+  if (!visible) {
+    selectedStory.value = undefined;
+    refetch();
+  }
+});
 </script>
 
 <template>
-  <LoveStoryEditingModal v-if="editingModal" :story="selectedStory" @close="onModalClose" />
+  <LoveStoryEditingModal v-model:visible="editingModal" :story="selectedStory" />
 
   <VPageHeader title="UniHalo-恋爱故事">
     <template #actions>

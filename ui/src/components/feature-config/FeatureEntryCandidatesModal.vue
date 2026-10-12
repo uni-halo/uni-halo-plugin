@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Dialog, VButton, VEmpty, VModal, VSpace } from "@halo-dev/components";
-import { computed, onMounted, ref } from "vue";
+import { computed, ref, watch } from "vue";
 import FeatureEntryEditModal from "@/components/feature-config/FeatureEntryEditModal.vue";
 import {
   FEATURE_ENTRY_REGISTRY,
@@ -24,8 +24,9 @@ const props = withDefaults(
     selectedKeys?: string[];
     /** 自定义条目库（内置注册表之外的候选，可维护） */
     customEntries?: FeatureConfigQuickNavigationItem[];
+    visible?: boolean;
   }>(),
-  { selectedKeys: () => [], customEntries: () => [] }
+  { selectedKeys: () => [], customEntries: () => [], visible: false }
 );
 
 const emit = defineEmits<{
@@ -75,11 +76,17 @@ const removeCustom = (entry: FeatureConfigQuickNavigationItem) => {
   });
 };
 
-// 父组件 v-if 挂载，挂载即打开：重置搜索与已选
-onMounted(() => {
-  keyword.value = "";
-  localSelected.value = [];
-});
+// 弹窗常驻（不卸载）：打开时重置搜索与已选
+watch(
+  () => props.visible,
+  (visible) => {
+    if (!visible) {
+      return;
+    }
+    keyword.value = "";
+    localSelected.value = [];
+  }
+);
 
 /** 统一候选清单 = 内置注册表（只读）+ 自定义条目；关键字过滤（key/title/subTitle 命中） */
 const candidates = computed<FeatureEntry[]>(() => {
@@ -130,7 +137,13 @@ const handleClose = () => {
 </script>
 
 <template>
-  <VModal title="选择功能入口" :width="720" @close="handleClose">
+  <VModal
+    :visible="visible"
+    title="选择功能入口"
+    :width="720"
+    @update:visible="emit('update:visible', $event)"
+    @close="handleClose"
+  >
     <div class=":uno: flex flex-col gap-3">
       <!-- 搜索 + 已选计数 + 新增自定义 -->
       <div class=":uno: flex items-center gap-3">
@@ -221,7 +234,7 @@ const handleClose = () => {
     </template>
   </VModal>
 
-  <!-- 自定义条目新增/编辑弹窗（须置于 VModal 外：嵌套 VModal 会因 teleport 引发 insertBefore DOM 错误） -->
-  <FeatureEntryEditModal v-if="editingCustom" :entry="editingCustom" :creating="creatingCustom"
+  <!-- 自定义条目新增/编辑弹窗（与主弹窗平级挂载，显隐由 entry 是否为空派生） -->
+  <FeatureEntryEditModal :visible="!!editingCustom" :entry="editingCustom" :creating="creatingCustom"
     @update:entry="editingCustom = $event" @confirm="handleCustomConfirm" />
 </template>

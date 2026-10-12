@@ -37,6 +37,12 @@ public class PostRef extends AbstractExtension {
         private List<String> categories;
 
         /**
+         * 回收站标记（Halo Post.spec.deleted）：文章删除先进回收站（软删除），
+         * extension 本体仍存在，候选与已选回查须排除本标记为 true 的文章。
+         */
+        private Boolean deleted;
+
+        /**
          * 文章作者（Post.spec.owner，用户名；快照作者信息时据此查 User）
          */
         private String owner;

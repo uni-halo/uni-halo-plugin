@@ -127,46 +127,77 @@ spec:
         - $formkit: group
           name: registerEmailCodeConfig
           label: 注册邮箱验证码
+          help: App 端注册账号时发送的邮箱验证码邮件的频率限制
           children:
             - $formkit: number
               name: globalPerMinute
               label: 全站每分钟上限
               value: 30
-              help: 全站共享的发送总配额，防分布式滥用的最后防线；0 表示不限制（不建议）
+              help: 全站所有用户每分钟合计最多发送的验证码数量，防止验证码被大规模滥发；0 表示不限制（不建议）
               validation: required
             - $formkit: number
               name: ipPerMinute
               label: 单 IP 每分钟上限
               value: 10
-              help: 按客户端源地址限制，防止单一来源刷验证码
+              help: 同一个 IP 地址每分钟最多可发送的数量，防止同一来源连续刷验证码
               validation: required
             - $formkit: number
               name: emailPerTenMinutes
               label: 单邮箱每 10 分钟上限
               value: 3
-              help: 防止单个邮箱被轰炸
+              help: 同一个邮箱 10 分钟内最多可收到的验证码数量，防止邮箱被人恶意轰炸
               validation: required
         - $formkit: group
           name: resetEmailCodeConfig
-          label: 重置邮箱验证码
+          label: 重置密码验证码
+          help: App 端找回密码时发送的邮箱验证码邮件的频率限制
           children:
             - $formkit: number
               name: globalPerMinute
               label: 全站每分钟上限
               value: 30
-              help: 全站共享的发送总配额，防分布式滥用的最后防线；0 表示不限制（不建议）
+              help: 全站所有用户每分钟合计最多发送的验证码数量，防止验证码被大规模滥发；0 表示不限制（不建议）
               validation: required
             - $formkit: number
               name: ipPerMinute
               label: 单 IP 每分钟上限
               value: 10
-              help: 按客户端源地址限制，防止单一来源刷验证码
+              help: 同一个 IP 地址每分钟最多可发送的数量，防止同一来源连续刷验证码
               validation: required
             - $formkit: number
               name: usernamePerTenMinutes
               label: 单用户名每 10 分钟上限
               value: 3
-              help: 防止单个账号的绑定邮箱被轰炸（与注册限流隔离）
+              help: 同一个账号 10 分钟内最多可发送的数量，防止某账号的邮箱被重置邮件骚扰（各验证码类型的配额相互独立）
+              validation: required
+        - $formkit: group
+          name: verifyEmailCodeConfig
+          label: 邮箱绑定验证码
+          help: 登录后绑定/验证邮箱时发送的验证码邮件的频率限制
+          children:
+            - $formkit: number
+              name: globalPerMinute
+              label: 全站每分钟上限
+              value: 30
+              help: 全站所有用户每分钟合计最多发送的验证码数量，防止验证码被大规模滥发；0 表示不限制（不建议）
+              validation: required
+            - $formkit: number
+              name: ipPerMinute
+              label: 单 IP 每分钟上限
+              value: 10
+              help: 同一个 IP 地址每分钟最多可发送的数量，防止同一来源连续刷验证码
+              validation: required
+            - $formkit: number
+              name: emailPerTenMinutes
+              label: 单邮箱每 10 分钟上限
+              value: 3
+              help: 同一个邮箱 10 分钟内最多可收到的验证码数量，即使对方更换 IP 也无法绕过，防止邮箱被人恶意轰炸
+              validation: required
+            - $formkit: number
+              name: usernamePerTenMinutes
+              label: 单账号每 10 分钟上限
+              value: 5
+              help: 同一个账号 10 分钟内最多可发送的数量，防止单个账号被盗用后批量发码
               validation: required
     - group: integrationConfig
       label: 平台接入
@@ -321,12 +352,12 @@ spec:
               id: appShowcasePagePatterns
               label: 路径模式
               value: ""
-              help: 每行一个路径模式，匹配当前页面 pathname。* 匹配任意非 / 字符，** 匹配任意字符（含 /）；留空或只写 / 表示仅首页。例如 /archives/** 匹配笔记详情页。
+              help: 每行一条路径规则，匹配浏览器地址栏中「/」后的页面路径。* 匹配单层内的任意字符，** 匹配任意层级（含 /）；留空或只填 / 表示仅首页显示。例：/archives/** 匹配所有归档详情页。
             - $formkit: select
               name: position
               id: appShowcasePosition
               label: 显示位置
-              value: "bottom-right"
+              value: "right-center"
               options:
                 - label: 左上角
                   value: "top-left"
@@ -394,7 +425,7 @@ spec:
               name: closeEnabled
               id: appShowcaseCloseEnabled
               label: 允许关闭
-              value: true
+              value: false
             - $formkit: switch
               name: rememberClosed
               id: appShowcaseRememberClosed
@@ -414,7 +445,7 @@ spec:
                 - label: 暗黑模式
                   value: dark
               validation: required
-              help: 跟随主题时自动检测站点深色标记（html/body 上的 data-theme="dark"、data-color-scheme="dark"、.color-scheme-dark、.dark）并实时跟随切换；亮/暗模式强制固定。
+              help: 跟随主题时自动检测站点的深色模式标记（如 data-theme="dark"、.dark 等，需主题已适配）并实时切换；选「亮色模式/暗黑模式」则强制固定，不随主题变化。
             - $formkit: switch
               name: applyEntryEnabled
               id: appShowcaseApplyEntry
@@ -456,14 +487,6 @@ spec:
                   value: ""
                   validation: required
                   help: 小程序码图片。
-                - $formkit: text
-                  name: appId
-                  label: 小程序 AppID
-                  value: ""
-                - $formkit: text
-                  name: path
-                  label: 跳转页面路径
-                  value: ""
                 - $formkit: textarea
                   name: description
                   label: 描述
@@ -588,7 +611,7 @@ spec:
               id: loveDiaryThemeEnabled
               label: 启用恋爱日记主题页
               value: false
-              help: "关闭时插件不注册任何前台路由、不注入任何资源（默认关闭）。背景图取自「通用配置 → 页面设置 → 恋爱日记页」。"
+              help: "关闭后前台不显示恋爱日记相关页面（默认关闭）。背景图取自「通用配置 → 页面设置 → 恋爱日记页」。"
             - $formkit: group
               name: routes
               label: 页面路径
@@ -598,19 +621,19 @@ spec:
                   id: loveDiaryRouteHome
                   label: 恋爱日记首页
                   value: "/love"
-                  help: 以 / 开头 = 绝对完整路径；留空 = 不注册该页。
+                  help: 访问地址，以 / 开头为完整路径；留空表示不显示该页。
                 - $formkit: text
                   name: stories
                   id: loveDiaryRouteStories
                   label: 恋爱故事
                   value: "stories"
-                  help: 不以 / 开头 = 相对首页路径的子段（默认解析为 /love/stories）；以 / 开头 = 绝对路径；留空 = 不注册。
+                  help: 不以 / 开头时自动拼接在首页地址后（如 stories → /love/stories）；以 / 开头为完整路径；留空表示不显示。
                 - $formkit: text
                   name: albums
                   id: loveDiaryRouteAlbums
                   label: 恋爱相册
                   value: "albums"
-                  help: 同上。相册详情沿用页内查看器，不单独注册路由。
+                  help: 同上。相册详情在页面内查看，不单独占用地址。
                 - $formkit: text
                   name: daily
                   id: loveDiaryRouteDaily
@@ -627,7 +650,7 @@ spec:
                 - label: 独立页面
                   value: standalone
               validation: required
-              help: 跟随主题时复用主题的页头/页脚与整体外壳；独立页面则不依赖主题的 layout 契约，便于主题未适配时兜底。
+              help: 跟随主题时使用主题的页头页脚，风格统一；主题尚未适配本插件时选「独立页面」，使用插件自带样式。
             - $formkit: color
               name: primaryColor
               id: loveDiaryPrimaryColor
@@ -658,7 +681,7 @@ spec:
               id: wechatLoginEnabled
               label: 小程序一键登录
               value: false
-              help: 微信小程序一键登录。由 Halo 系统设置-用户设置的「允许注册」与「默认角色」决定。
+              help: 开启后微信小程序内可一键登录；新微信用户能否自动注册账号，由 Halo「系统设置 → 用户设置」的「允许注册」与「默认角色」决定。
             - $formkit: secret
               if: "$get(wechatLoginEnabled).value === true"
               name: wechatSecretName
@@ -697,4 +720,4 @@ spec:
               label: 令牌有效期（天）
               value: 30
               validation: required
-              help: 登录令牌的有效天数，过期只由令牌自身的 exp 声明保证，到期后需重新登录。
+              help: App 登录后多少天内免重新登录，超过有效期后需重新登录。

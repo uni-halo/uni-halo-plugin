@@ -109,6 +109,26 @@ public class EmailService {
     }
 
     /**
+     * 发送邮箱验证码邮件（自建验证闭环）。复用 Halo 内置邮件通知器 SMTP 配置，
+     * 返回是否实际发出（false = 配置缺失或发送异常，调用方据此返回明确错误）。
+     *
+     * @param to       收件邮箱
+     * @param siteName 站点名（用于邮件标题/正文，空则回落默认）
+     * @param code     6 位验证码
+     * @param minutes  有效期（分钟）
+     * @return true=邮件已发出；false=未发出（配置缺失或异常）
+     */
+    public Mono<Boolean> sendVerifyCodeEmail(String to, String siteName, String code, int minutes) {
+        if (isBlank(to) || isBlank(code)) {
+            return Mono.just(false);
+        }
+        String name = isBlank(siteName) ? SITE_NAME_DEFAULT : siteName;
+        String subject = "【" + name + "】邮箱验证码";
+        String content = buildVerifyHtml(name, code, minutes);
+        return sendEmail(to, subject, content);
+    }
+
+    /**
      * 读取 Halo 内置邮件通知器 SMTP 配置并发送；返回是否实际发出（配置缺失/异常返回 false，
      * 不抛出，由调用方决定后续——重置流程据此不下发票据，避免「假成功」）。
      */
@@ -201,6 +221,20 @@ public class EmailService {
                 + result + reasonBlock
                 + "<p style='margin:16px 0 0;color:#9ca3af;font-size:12px;'>此邮件由 "
                 + siteName + " 自动发送，请勿直接回复。</p></div>";
+    }
+
+    private String buildVerifyHtml(String siteName, String code, int minutes) {
+        return "<div style='max-width:520px;margin:0 auto;padding:24px;font-family:-apple-system,"
+                + "Segoe UI,Roboto,sans-serif;font-size:14px;color:#1f2937;line-height:1.7;'>"
+                + "<p style='margin:0 0 12px;color:#111827;font-size:18px;font-weight:600;'>"
+                + escape(siteName) + " 邮箱验证</p>"
+                + "<p style='margin:0 0 8px;'>您正在验证账号邮箱，验证码如下：</p>"
+                + "<p style='margin:12px 0;font-size:24px;font-weight:700;letter-spacing:4px;color:#2563eb;'>"
+                + escape(code) + "</p>"
+                + "<p style='margin:0 0 8px;color:#6b7280;'>验证码 " + minutes
+                + " 分钟内有效，且仅能用于本次验证。若非本人操作，请忽略此邮件并留意账号安全。</p>"
+                + "<p style='margin:16px 0 0;color:#9ca3af;font-size:12px;'>此邮件由 "
+                + escape(siteName) + " 自动发送，请勿直接回复。</p></div>";
     }
 
     private String buildResetHtml(String siteName, String code, int minutes) {

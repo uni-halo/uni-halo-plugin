@@ -134,7 +134,7 @@ const handleSave = async () => {
       <!-- 恋爱日记段：背景图置顶（通栏大图预览），其后为入口密码 -->
       <template v-if="segment === 'diary'">
         <AttachmentRow v-model="draft.diaryPage!.bgImageUrl!" name="love_diary_bg_image" label="恋爱页背景图"
-          help="恋爱页（恋爱日记）顶部背景图，留空使用内置回退" width="100%" aspect-ratio="16/9" />
+          help="恋爱页（恋爱日记）顶部背景图，留空时使用内置默认图" width="100%" aspect-ratio="16/9" />
         <ModuleEntryEditor v-model="draft.loveDiary!" label="恋爱日记入口" name-prefix="love_diary" :show-entry-fields="false"
           description="恋爱页（app 端恋爱页）本身的入口密码；设置后进入恋爱页前需先验证密码" />
       </template>

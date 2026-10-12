@@ -289,11 +289,18 @@ const handleDeleteGroup = (group: MiniProgramLinkGroup) => {
   });
 };
 
+/** 分组保存成功：关闭弹窗（选中分组由关闭 watch 释放）并刷新分组列表 */
 const handleGroupSaved = () => {
   groupEditingModalVisible.value = false;
-  editingGroup.value = undefined;
   refreshGroups();
 };
+
+// 分组编辑弹窗常驻（不卸载）：关闭时释放选中分组
+watch(groupEditingModalVisible, (visible) => {
+  if (!visible) {
+    editingGroup.value = undefined;
+  }
+});
 
 /** 分组保存/删除成功后刷新分组列表与编辑弹窗的选项 */
 const refreshGroups = () => {
@@ -301,20 +308,21 @@ const refreshGroups = () => {
   queryClient.invalidateQueries({ queryKey: ["uni-halo:mini-program-link-groups-options"] });
 };
 
-const onModalClose = () => {
-  editingModal.value = false;
-  selectedLink.value = undefined;
-  refetch();
-};
+// 友链编辑弹窗常驻（不卸载）：关闭时释放选中条目并刷新列表
+watch(editingModal, (visible) => {
+  if (!visible) {
+    selectedLink.value = undefined;
+    refetch();
+  }
+});
 </script>
 
 <template>
-  <!-- 单根包裹：避免多根 fragment + body Teleport 弹窗触发 insertBefore 挂载错误 -->
   <div>
-  <LinkEditingModal v-if="editingModal" :item="selectedLink" @close="onModalClose" />
+  <LinkEditingModal v-model:visible="editingModal" :item="selectedLink" />
 
   <!-- 分组编辑弹窗（新建/编辑共用，与编辑链接弹窗平级挂载） -->
-  <LinkGroupEditingModal v-if="groupEditingModalVisible" :item="editingGroup" @close="groupEditingModalVisible = false"
+  <LinkGroupEditingModal v-model:visible="groupEditingModalVisible" :item="editingGroup"
     @saved="handleGroupSaved" />
 
   <VPageHeader title="UniHalo-友链管理">

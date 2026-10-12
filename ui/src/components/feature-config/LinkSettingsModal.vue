@@ -153,7 +153,7 @@ const handleSave = async () => {
       <FormKit v-model="draft.siteInfo!.backlink" name="link_site_backlink" label="反链地址" type="text"
         placeholder="如 https://your-site.com/links" help="友链页面地址（反链）" />
       <FormKit v-model="feedUrlsText" name="link_site_feed_urls" label="订阅地址" type="textarea"
-        placeholder="每行一个 RSS/Atom 地址" help="RSS/Atom 订阅地址，每行一个（存储为数组）" />
+        placeholder="每行一个 RSS/Atom 地址" help="RSS/Atom 订阅地址，每行一个" />
       </template>
 
       <!-- 小程序信息（app 端「申请信息」弹窗展示） -->

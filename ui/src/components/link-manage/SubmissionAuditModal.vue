@@ -1,35 +1,51 @@
 <script setup lang="ts">
 import { Toast, VButton, VModal, VSpace } from "@halo-dev/components";
 import { useQueryClient } from "@tanstack/vue-query";
-import { computed, ref } from "vue";
+import { computed, ref, watch } from "vue";
 import SubmissionDetailContent from "@/components/link-manage/SubmissionDetailContent.vue";
 import LinkGroupSelectField from "@/components/link-manage/LinkGroupSelectField.vue";
 import { miniProgramLinkSubmissionsApi } from "@/api";
 import type { MiniProgramLinkSubmission } from "@/types";
 
-const props = defineProps<{
-  item: MiniProgramLinkSubmission;
-}>();
+const props = withDefaults(
+  defineProps<{
+    /** 待审核申请（常驻挂载时可能为空，内部按空值渲染） */
+    item?: MiniProgramLinkSubmission;
+    visible?: boolean;
+  }>(),
+  { visible: false }
+);
 
 const emit = defineEmits<{
-  (event: "close"): void;
+  (event: "update:visible", value: boolean): void;
   (event: "done"): void;
 }>();
 
-const modal = ref<InstanceType<typeof VModal> | null>(null);
 const reason = ref("");
-const groupName = ref(props.item.spec?.groupName || "");
+const groupName = ref(props.item?.spec?.groupName || "");
 const saving = ref(false);
 
 const queryClient = useQueryClient();
 
-const isPending = computed(() => (props.item.spec?.status || "PENDING") === "PENDING");
+const isPending = computed(() => (props.item?.spec?.status || "PENDING") === "PENDING");
+
+/** 重置审核表单：打开时清空上次的原因与分组选择 */
+watch(
+  () => props.visible,
+  (visible) => {
+    if (!visible) {
+      return;
+    }
+    reason.value = "";
+    groupName.value = props.item?.spec?.groupName || "";
+  }
+);
 
 const handleApprove = async () => {
   try {
     saving.value = true;
     await miniProgramLinkSubmissionsApi.approve(
-      props.item.metadata.name,
+      props.item!.metadata.name,
       reason.value.trim() || undefined,
       groupName.value
     );
@@ -50,7 +66,7 @@ const handleReject = async () => {
   try {
     saving.value = true;
     await miniProgramLinkSubmissionsApi.reject(
-      props.item.metadata.name,
+      props.item!.metadata.name,
       reason.value.trim(),
       groupName.value
     );
@@ -65,57 +81,48 @@ const handleReject = async () => {
 
 const finish = () => {
   queryClient.invalidateQueries({ queryKey: ["uni-halo:mini-program-link-submissions"] });
-  modal.value?.close();
+  emit("update:visible", false);
   emit("done");
 };
 </script>
 
 <template>
   <VModal
-    ref="modal"
+    :visible="visible"
     :title="isPending ? '审核申请' : '审核结果'"
     :width="640"
-    @close="emit('close')"
+    @update:visible="emit('update:visible', $event)"
+    @close="emit('update:visible', false)"
   >
-    <!-- 申请详情（仅设计字段，纯展示组件避免 VModal 嵌套） -->
-    <SubmissionDetailContent :item="item" />
+    <div v-if="item">
+      <!-- 申请详情（仅设计字段，纯展示组件避免 VModal 嵌套） -->
+      <SubmissionDetailContent :item="item" />
 
-    <!-- 审核操作区：仅待审核状态显示（分组选择 + FormKit textarea 审核说明） -->
-    <div v-if="isPending" class=":uno: mt-4 border-t border-gray-100 pt-4">
-      <LinkGroupSelectField v-model="groupName" help="选择一个分组" />
-      <FormKit
-        v-model="reason"
-        name="reason"
-        label="审核说明"
-        type="textarea"
-        rows="3"
-        :placeholder="'填写审核说明（通过时可选；拒绝时必填）'"
-      />
+      <!-- 审核操作区：仅待审核状态显示（分组选择 + FormKit textarea 审核说明） -->
+      <div v-if="isPending" class=":uno: mt-4 border-t border-gray-100 pt-4">
+        <LinkGroupSelectField v-model="groupName" help="选择一个分组" />
+        <FormKit
+          v-model="reason"
+          name="reason"
+          label="审核说明"
+          type="textarea"
+          rows="3"
+          :placeholder="'填写审核说明（通过时可选；拒绝时必填）'"
+        />
+      </div>
     </div>
 
-    <template v-if="isPending" #footer>
-      <VSpace>
-        <VButton
-          :loading="saving"
-          :disabled="saving"
-          type="danger"
-          @click="handleReject"
-        >
+    <template #footer>
+      <VSpace v-if="isPending">
+        <VButton :loading="saving" :disabled="saving" type="danger" @click="handleReject">
           拒绝
         </VButton>
-        <VButton
-          :loading="saving"
-          :disabled="saving"
-          type="primary"
-          @click="handleApprove"
-        >
+        <VButton :loading="saving" :disabled="saving" type="primary" @click="handleApprove">
           通过
         </VButton>
-        <VButton @click="modal?.close()">关闭</VButton>
+        <VButton @click="emit('update:visible', false)">关闭</VButton>
       </VSpace>
-    </template>
-    <template v-else #footer>
-      <VButton @click="modal?.close()">关闭</VButton>
+      <VButton v-else @click="emit('update:visible', false)">关闭</VButton>
     </template>
   </VModal>
 </template>

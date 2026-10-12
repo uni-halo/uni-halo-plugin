@@ -48,21 +48,21 @@ const removeStoreChannel = (index: number) => {
 
 const props = withDefaults(
   defineProps<{
+    visible?: boolean;
     appVersion?: AppVersion;
     apps: AppInfo[];
     initialAppid?: string;
   }>(),
   {
+    visible: false,
     appVersion: undefined,
     initialAppid: "",
   }
 );
 
 const emit = defineEmits<{
-  (event: "close"): void;
+  (event: "update:visible", value: boolean): void;
 }>();
-
-const modal = ref<InstanceType<typeof VModal> | null>(null);
 
 const saving = ref(false);
 
@@ -79,7 +79,7 @@ const appOptions = computed(() => {
   }));
 });
 
-const formState = ref<AppVersion>({
+const emptyForm = (): AppVersion => ({
   metadata: {
     name: "",
   },
@@ -103,6 +103,8 @@ const formState = ref<AppVersion>({
     isMandatory: false,
   },
 });
+
+const formState = ref<AppVersion>(emptyForm());
 
 // wgt 包仅支持应用内自更新，下载方式锁定直链
 watch(
@@ -215,28 +217,31 @@ watch(
   }
 );
 
-// 回填 / 初始化时同步所属应用下拉
-watch(
-  () => props.appVersion,
-  (appVersion) => {
-    if (appVersion) {
-      formState.value = cloneDeep(appVersion);
-      // 存量记录无 downloadType，回填缺省直链
-      formState.value.spec.downloadType = formState.value.spec.downloadType || "direct";
-      // 平台仅保留 Android（iOS / Harmony 已隐藏）
-      if (formState.value.spec.platform?.length) {
-        formState.value.spec.platform = formState.value.spec.platform.filter(
-          (p) => p === "Android"
-        );
-      }
-      selectedAppid.value = appVersion.spec.appid || "";
-    } else if (props.initialAppid) {
-      // 发布新版：预选所属应用
-      selectedAppid.value = props.initialAppid;
+/** 打开弹窗时回填草稿：编辑模式深拷贝条目，发布新版重置表单并预选所属应用 */
+const syncDraft = () => {
+  if (props.appVersion) {
+    formState.value = cloneDeep(props.appVersion);
+    // 存量记录无 downloadType，回填缺省直链
+    formState.value.spec.downloadType = formState.value.spec.downloadType || "direct";
+    // 平台仅保留 Android（iOS / Harmony 已隐藏）
+    if (formState.value.spec.platform?.length) {
+      formState.value.spec.platform = formState.value.spec.platform.filter(
+        (p) => p === "Android"
+      );
     }
-  },
-  {
-    immediate: true,
+    selectedAppid.value = props.appVersion.spec.appid || "";
+  } else {
+    formState.value = emptyForm();
+    selectedAppid.value = props.initialAppid;
+  }
+};
+
+watch(
+  () => props.visible,
+  (visible) => {
+    if (visible) {
+      syncDraft();
+    }
   }
 );
 
@@ -258,7 +263,7 @@ const handleSave = async () => {
     } else {
       await appVersionsApi.create(formState.value);
     }
-    modal.value?.close();
+    emit("update:visible", false);
     Toast.success("保存成功");
   } catch (error) {
     Toast.error((error as Error).message);
@@ -269,7 +274,13 @@ const handleSave = async () => {
 </script>
 
 <template>
-  <VModal ref="modal" :title="modalTitle" :width="720" @close="emit('close')">
+  <VModal
+    :visible="visible"
+    :title="modalTitle"
+    :width="720"
+    @update:visible="emit('update:visible', $event)"
+    @close="emit('update:visible', false)"
+  >
     <FormKit
       id="app-version-form"
       type="form"
@@ -483,7 +494,7 @@ const handleSave = async () => {
           text="提交"
           @submit="handleSubmit"
         />
-        <VButton @click="modal?.close()">关闭</VButton>
+        <VButton @click="emit('update:visible', false)">关闭</VButton>
       </VSpace>
     </template>
   </VModal>

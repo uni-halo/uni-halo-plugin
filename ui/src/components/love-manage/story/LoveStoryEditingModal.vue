@@ -12,17 +12,18 @@ import type { LoveStory } from "@/types";
 const props = withDefaults(
   defineProps<{
     story?: LoveStory;
+    visible?: boolean;
   }>(),
   {
     story: undefined,
+    visible: false,
   }
 );
 
 const emit = defineEmits<{
-  (event: "close"): void;
+  (event: "update:visible", value: boolean): void;
 }>();
 
-const modal = ref<InstanceType<typeof VModal> | null>(null);
 const saving = ref(false);
 
 // 弹窗宽度 80vw（VModal width 为 px 数值，动态计算）
@@ -36,18 +37,22 @@ const formState = ref<LoveStory>({
   spec: { title: "", content: "", date: "", location: "", images: [], priority: 0 },
 });
 
+/** 重置表单：编辑模式回显故事，新建模式回到空表单 */
+const resetForm = () => {
+  formState.value = props.story
+    ? { ...cloneDeep(props.story), spec: { ...cloneDeep(props.story.spec), images: props.story.spec.images || [] } }
+    : { metadata: { name: "" }, spec: { title: "", content: "", date: "", location: "", images: [], priority: 0 } };
+};
+
+watch(() => props.story, () => resetForm(), { immediate: true });
+
+// 弹窗常驻（不卸载）：打开时重置表单，避免保留上次未保存的内容
 watch(
-  () => props.story,
-  (story) => {
-    if (story) {
-      formState.value = cloneDeep(story);
-      if (!formState.value.spec.images) {
-        formState.value.spec.images = [];
-      }
+  () => props.visible,
+  (visible) => {
+    if (visible) {
+      resetForm();
     }
-  },
-  {
-    immediate: true,
   }
 );
 
@@ -63,7 +68,7 @@ const handleSave = async () => {
     } else {
       await loveStoryApi.create(formState.value);
     }
-    modal.value?.close();
+    emit("update:visible", false);
     Toast.success("保存成功");
   } catch (error) {
     Toast.error((error as Error).message);
@@ -75,10 +80,11 @@ const handleSave = async () => {
 
 <template>
   <VModal
-    ref="modal"
+    :visible="visible"
     :title="isUpdateMode ? '编辑故事' : '新建故事'"
     :width="modalWidth"
-    @close="emit('close')"
+    @update:visible="emit('update:visible', $event)"
+    @close="emit('update:visible', false)"
   >
     <!-- 左右布局：左侧基础表单（固定宽），右侧富文本故事内容（自适应） -->
     <div class=":uno: flex gap-4">
@@ -150,7 +156,7 @@ const handleSave = async () => {
           text="提交"
           @submit="handleSubmit"
         />
-        <VButton @click="modal?.close()">关闭</VButton>
+        <VButton @click="emit('update:visible', false)">关闭</VButton>
       </VSpace>
     </template>
   </VModal>

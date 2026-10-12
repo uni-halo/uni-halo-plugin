@@ -101,18 +101,19 @@ const handleDelete = (app: AppInfo) => {
   });
 };
 
-const onEditingModalClose = () => {
-  selectedApp.value = undefined;
-  editingModal.value = false;
-  refetch();
-};
+// 应用编辑弹窗常驻（不卸载）：关闭时释放选中条目并刷新列表
+watch(editingModal, (visible) => {
+  if (!visible) {
+    selectedApp.value = undefined;
+    refetch();
+  }
+});
 </script>
 
 <template>
   <AppInfoEditingModal
-    v-if="editingModal"
+    v-model:visible="editingModal"
     :app-info="selectedApp"
-    @close="onEditingModalClose"
   />
 
   <VPageHeader title="UniHalo-应用管理">

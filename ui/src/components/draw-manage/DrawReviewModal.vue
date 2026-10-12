@@ -1,25 +1,28 @@
 <script setup lang="ts">
 import { Toast, VButton, VModal, VSpace } from "@halo-dev/components";
 import { submitForm } from "@formkit/core";
-import { computed, ref } from "vue";
+import { computed, ref, watch } from "vue";
 import SubmitButton from "@/components/button/SubmitButton.vue";
 import { drawsApi } from "@/api";
 
-const props = defineProps<{
-  /** approve=通过 / reject=拒绝 */
-  action: "approve" | "reject";
-  /** 目标绘画 name 列表（单条或批量） */
-  names: string[];
-  /** 画作标题（单条时弹窗描述展示） */
-  title?: string;
-}>();
+const props = withDefaults(
+  defineProps<{
+    /** approve=通过 / reject=拒绝 */
+    action: "approve" | "reject";
+    /** 目标绘画 name 列表（单条或批量） */
+    names: string[];
+    /** 画作标题（单条时弹窗描述展示） */
+    title?: string;
+    visible?: boolean;
+  }>(),
+  { visible: false }
+);
 
 const emit = defineEmits<{
-  (event: "close"): void;
+  (event: "update:visible", value: boolean): void;
   (event: "done"): void;
 }>();
 
-const modal = ref<InstanceType<typeof VModal> | null>(null);
 const reason = ref("");
 const saving = ref(false);
 
@@ -33,6 +36,16 @@ const description = computed(() => {
     ? `确定拒绝${target}吗？拒绝后不会公开展示，需填写拒绝原因。`
     : `确定通过${target}吗？通过后将在站点公开展示，备注选填。`;
 });
+
+// 弹窗常驻（不卸载）：打开时清空上次的审核备注
+watch(
+  () => props.visible,
+  (visible) => {
+    if (visible) {
+      reason.value = "";
+    }
+  }
+);
 
 const handleSubmit = () => {
   submitForm("draw-review-form");
@@ -49,7 +62,7 @@ const handleConfirm = async () => {
       )
     );
     Toast.success(isReject.value ? "已拒绝" : "已通过");
-    modal.value?.close();
+    emit("update:visible", false);
     emit("done");
   } catch (error) {
     Toast.error((error as Error).message);
@@ -60,7 +73,13 @@ const handleConfirm = async () => {
 </script>
 
 <template>
-  <VModal ref="modal" :title="modalTitle" :width="480" @close="emit('close')">
+  <VModal
+    :visible="visible"
+    :title="modalTitle"
+    :width="480"
+    @update:visible="emit('update:visible', $event)"
+    @close="emit('update:visible', false)"
+  >
     <FormKit
       id="draw-review-form"
       type="form"
@@ -92,7 +111,7 @@ const handleConfirm = async () => {
           :text="modalTitle"
           @submit="handleSubmit"
         />
-        <VButton @click="modal?.close()">取消</VButton>
+        <VButton @click="emit('update:visible', false)">取消</VButton>
       </VSpace>
     </template>
   </VModal>
