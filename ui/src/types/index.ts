@@ -1099,6 +1099,45 @@ export interface DrawOwner {
   avatar?: string;
 }
 
+/** 竞猜记录（管理端画谜信息；每位猜者最近一次答案与对错） */
+export interface DrawPuzzleRecord {
+  username: string;
+  displayName?: string;
+  avatar?: string;
+  /** 最近一次提交的答案 */
+  answer?: string;
+  correct?: boolean;
+  /** 猜中时刻（RFC3339，未猜中为空） */
+  solvedAt?: string;
+  /** 最近作答时间（RFC3339） */
+  answeredAt?: string;
+}
+
+/** 画谜管理信息（管理端 GET /draws/{name}/puzzle，含谜底原文与竞猜记录） */
+export interface DrawPuzzleInfo {
+  drawName: string;
+  puzzleAnswer?: string;
+  puzzleHint?: string;
+  autoRevealAt?: string;
+  puzzleStatus?: string;
+  revealedAt?: string;
+  revealedBy?: string;
+  /** 参与人数（提交过作答的去重用户数） */
+  guessCount: number;
+  /** 猜中人数 */
+  solvedCount: number;
+  records: DrawPuzzleRecord[];
+}
+
+/** 猜画积分排行榜条目（公开 GET /draws/guess-rank；score = 累计猜中画作数） */
+export interface DrawRankItem {
+  rank: number;
+  username: string;
+  displayName?: string;
+  avatar?: string;
+  score: number;
+}
+
 export const DRAW_STATUS_LABELS: Record<string, string> = {
   PENDING: "待审核",
   APPROVED: "已通过",
@@ -1117,7 +1156,7 @@ export const DRAW_STATUS_OPTIONS: { label: string; value?: string }[] = [
 export const DRAW_TYPE_LABELS: Record<string, string> = {
   normal: "普通作品",
   puzzleGuessing: "画谜中",
-  puzzleRevealed: "🎨 已揭晓",
+  puzzleRevealed: "已揭晓",
 };
 
 /** 绘画类型选项（类型筛选） */

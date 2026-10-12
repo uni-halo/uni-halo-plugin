@@ -10,13 +10,15 @@ import type { FeatureConfigPatch } from "@/types";
  * 绘画设置弹窗（绘画作品管理页 ⚙ 入口）：
  * 发布审核开关（spec.pages.draw.auditEnabled）。仅保存 spec.pages.draw（后端 merge 不动其它分区）。
  */
+const props = withDefaults(defineProps<{ visible?: boolean }>(), { visible: false });
+
 const emit = defineEmits<{
-  (event: "close"): void;
+  (event: "update:visible", value: boolean): void;
 }>();
 
 const queryClient = useQueryClient();
 
-const { data: config, isLoading } = useQuery({
+const { data: config, isLoading, refetch } = useQuery({
   queryKey: ["uni-halo:feature-config"],
   queryFn: () => featureConfigApi.get(),
 });
@@ -30,20 +32,31 @@ const guessRankTopN = ref(20);
 const guessMinRevealWindowHours = ref(1);
 const guessRevealPostponeHours = ref(24);
 
+/** 用后端配置覆盖本地草稿（缺省值与后端默认保持一致） */
+const syncDraft = () => {
+  if (!config.value) {
+    return;
+  }
+  const draw = config.value.spec?.pages?.draw;
+  auditEnabled.value = draw?.auditEnabled ?? true;
+  guessEnabled.value = draw?.guessEnabled ?? true;
+  guessRankTopN.value = draw?.guessRankTopN ?? 20;
+  guessMinRevealWindowHours.value = draw?.guessMinRevealWindowHours ?? 1;
+  guessRevealPostponeHours.value = draw?.guessRevealPostponeHours ?? 24;
+};
+
+watch(() => config.value, () => syncDraft(), { immediate: true });
+
+// 弹窗常驻（不卸载）：打开时重取配置并覆盖草稿，避免保留上次未保存的修改
 watch(
-  () => config.value,
-  (value) => {
-    if (!value) {
+  () => props.visible,
+  async (visible) => {
+    if (!visible) {
       return;
     }
-    const draw = value.spec?.pages?.draw;
-    auditEnabled.value = draw?.auditEnabled ?? true;
-    guessEnabled.value = draw?.guessEnabled ?? true;
-    guessRankTopN.value = draw?.guessRankTopN ?? 20;
-    guessMinRevealWindowHours.value = draw?.guessMinRevealWindowHours ?? 1;
-    guessRevealPostponeHours.value = draw?.guessRevealPostponeHours ?? 24;
-  },
-  { immediate: true }
+    await refetch();
+    syncDraft();
+  }
 );
 
 const saving = ref(false);
@@ -67,7 +80,7 @@ const handleSave = async () => {
     });
     Toast.success("保存成功");
     queryClient.invalidateQueries({ queryKey: ["uni-halo:feature-config"] });
-    emit("close");
+    emit("update:visible", false);
   } catch (error) {
     Toast.error((error as Error).message);
   } finally {
@@ -77,8 +90,14 @@ const handleSave = async () => {
 </script>
 
 <template>
-  <!-- 不用 mount-to-body：Teleport 挂载 + 表单动态渲染会触发 Vue insertBefore DOM 错误（同 DrawReviewModal） -->
-  <VModal title="绘画设置" :layer-closable="true" @close="emit('close')">
+  <!-- 不用 mount-to-body：Teleport 挂载叠加动态表单渲染会触发 Vue 的 DOM 插入错误 -->
+  <VModal
+    :visible="visible"
+    title="绘画设置"
+    :layer-closable="true"
+    @update:visible="emit('update:visible', $event)"
+    @close="emit('update:visible', false)"
+  >
     <div v-if="isLoading" class=":uno: py-2"><VLoading /></div>
     <div v-else>
       <p class=":uno: mb-3 text-xs text-gray-400">
@@ -135,7 +154,7 @@ const handleSave = async () => {
     <template #footer>
       <div class=":uno: flex items-center gap-3">
         <SubmitButton type="secondary" :loading="saving" text="保存" @submit="handleSave" />
-        <VButton @click="emit('close')">取消</VButton>
+        <VButton @click="emit('update:visible', false)">取消</VButton>
       </div>
     </template>
   </VModal>

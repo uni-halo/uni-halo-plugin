@@ -24,6 +24,5 @@ const settingsVisible = ref(false);
     </template>
     设置
   </VButton>
-  <LoveSettingsModal v-if="settingsVisible" :initial-segment="props.defaultSegment"
-    @close="settingsVisible = false" />
+  <LoveSettingsModal v-model:visible="settingsVisible" :initial-segment="props.defaultSegment" />
 </template>

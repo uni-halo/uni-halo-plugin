@@ -533,6 +533,6 @@ const onModalClose = () => {
   <ImagePreviewModal v-model:visible="previewVisible" :images="previewUrl ? [previewUrl] : []" title="太阳码预览" />
 
   <!-- 友链设置弹窗（提交申请/邮件通知/申请弹窗内容） -->
-  <LinkSettingsModal v-if="settingsVisible" @close="settingsVisible = false" />
+  <LinkSettingsModal v-model:visible="settingsVisible" />
   </div>
 </template>

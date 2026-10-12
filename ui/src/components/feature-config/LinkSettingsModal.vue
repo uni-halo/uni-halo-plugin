@@ -13,8 +13,10 @@ import type { FeatureConfigLinkInfo, FeatureConfigSiteInfo } from "@/types";
  * 顶部分段器切换「提交申请 / 小程序信息 / 站点信息」三段。
  * 仅保存 spec.linkInfo（后端 merge 对 null/缺省字段不动其它分区）。
  */
+const props = withDefaults(defineProps<{ visible?: boolean }>(), { visible: false });
+
 const emit = defineEmits<{
-  (event: "close"): void;
+  (event: "update:visible", value: boolean): void;
 }>();
 
 /** 顶部分段器（当前分段） */
@@ -27,7 +29,7 @@ const segment = ref("submission");
 
 const queryClient = useQueryClient();
 
-const { data: config, isLoading } = useQuery({
+const { data: config, isLoading, refetch } = useQuery({
   queryKey: ["uni-halo:feature-config"],
   queryFn: () => featureConfigApi.get(),
 });
@@ -35,22 +37,33 @@ const { data: config, isLoading } = useQuery({
 /** 草稿（仅 linkInfo 分区；加载后深拷贝，保存时整块写回） */
 const draft = ref<FeatureConfigLinkInfo>({});
 
+/** 用后端配置覆盖本地草稿（缺分区段补空对象，保证深层字段可写） */
+const syncDraft = () => {
+  if (!config.value) {
+    return;
+  }
+  const linkInfo = cloneDeep(config.value.spec?.linkInfo || {});
+  draft.value = {
+    sendEmail: false,
+    sendEmailSiteName: "uni-halo",
+    ...linkInfo,
+    miniInfo: linkInfo.miniInfo || {},
+    siteInfo: linkInfo.siteInfo || {},
+  };
+};
+
+watch(() => config.value, () => syncDraft(), { immediate: true });
+
+// 弹窗常驻（不卸载）：打开时重取配置并覆盖草稿，避免保留上次未保存的修改
 watch(
-  () => config.value,
-  (value) => {
-    if (!value) {
+  () => props.visible,
+  async (visible) => {
+    if (!visible) {
       return;
     }
-    const linkInfo = cloneDeep(value.spec?.linkInfo || {});
-    draft.value = {
-      sendEmail: false,
-      sendEmailSiteName: "uni-halo",
-      ...linkInfo,
-      miniInfo: linkInfo.miniInfo || {},
-      siteInfo: linkInfo.siteInfo || {},
-    };
-  },
-  { immediate: true }
+    await refetch();
+    syncDraft();
+  }
 );
 
 /** 站点订阅地址（textarea 换行分隔 ↔ 数组，对齐官方 feedUrls 字段） */
@@ -78,7 +91,7 @@ const handleSave = async () => {
     });
     Toast.success("保存成功");
     queryClient.invalidateQueries({ queryKey: ["uni-halo:feature-config"] });
-    emit("close");
+    emit("update:visible", false);
   } catch (error) {
     Toast.error((error as Error).message);
   } finally {
@@ -88,7 +101,14 @@ const handleSave = async () => {
 </script>
 
 <template>
-  <VModal title="友链设置" :layer-closable="true" mount-to-body @close="emit('close')">
+  <VModal
+    :visible="visible"
+    title="友链设置"
+    :layer-closable="true"
+    mount-to-body
+    @update:visible="emit('update:visible', $event)"
+    @close="emit('update:visible', false)"
+  >
     <VTabbar v-model:active-id="segment" :items="SEGMENTS" class=":uno: mb-4" />
 
     <div v-if="isLoading" class=":uno: py-2"><VLoading /></div>
@@ -162,7 +182,7 @@ const handleSave = async () => {
     <template #footer>
       <div class=":uno: flex items-center gap-3">
         <SubmitButton type="secondary" :loading="saving" text="保存" @submit="handleSave" />
-        <VButton @click="emit('close')">取消</VButton>
+        <VButton @click="emit('update:visible', false)">取消</VButton>
       </div>
     </template>
   </VModal>

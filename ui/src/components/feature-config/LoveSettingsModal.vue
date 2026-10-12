@@ -19,12 +19,13 @@ const props = withDefaults(
   defineProps<{
     /** 默认分段 id（从不同管理页进入时定位到对应模块） */
     initialSegment?: string;
+    visible?: boolean;
   }>(),
-  { initialSegment: "diary" }
+  { initialSegment: "diary", visible: false }
 );
 
 const emit = defineEmits<{
-  (event: "close"): void;
+  (event: "update:visible", value: boolean): void;
 }>();
 
 /** 顶部分段器 */
@@ -38,7 +39,7 @@ const segment = ref(props.initialSegment);
 
 const queryClient = useQueryClient();
 
-const { data: config, isLoading } = useQuery({
+const { data: config, isLoading, refetch } = useQuery({
   queryKey: ["uni-halo:feature-config"],
   queryFn: () => featureConfigApi.get(),
 });
@@ -46,23 +47,34 @@ const { data: config, isLoading } = useQuery({
 /** 草稿（仅 love 分区；加载后深拷贝，保存时整块写回） */
 const draft = ref<FeatureConfigLove>({});
 
+/** 用后端配置覆盖本地草稿（各分区缺省为空对象，保证深层字段可写） */
+const syncDraft = () => {
+  if (!config.value) {
+    return;
+  }
+  const love = cloneDeep(config.value.spec?.love || {});
+  draft.value = {
+    ...love,
+    loveDiary: love.loveDiary || { passwordEnabled: false },
+    ourStory: love.ourStory || {},
+    lovePhoto: love.lovePhoto || {},
+    loveDaily: love.loveDaily || {},
+    diaryPage: love.diaryPage || {},
+  };
+};
+
+watch(() => config.value, () => syncDraft(), { immediate: true });
+
+// 弹窗常驻（不卸载）：打开时重取配置并覆盖草稿，避免保留上次未保存的修改
 watch(
-  () => config.value,
-  (value) => {
-    if (!value) {
+  () => props.visible,
+  async (visible) => {
+    if (!visible) {
       return;
     }
-    const love = cloneDeep(value.spec?.love || {});
-    draft.value = {
-      ...love,
-      loveDiary: love.loveDiary || { passwordEnabled: false },
-      ourStory: love.ourStory || {},
-      lovePhoto: love.lovePhoto || {},
-      loveDaily: love.loveDaily || {},
-      diaryPage: love.diaryPage || {},
-    };
-  },
-  { immediate: true }
+    await refetch();
+    syncDraft();
+  }
 );
 
 /** 三模块入口定义（key → 分段 id 一致，password 语义见 FeatureConfigLoveModule 类型） */
@@ -95,7 +107,7 @@ const handleSave = async () => {
     });
     Toast.success("保存成功");
     queryClient.invalidateQueries({ queryKey: ["uni-halo:feature-config"] });
-    emit("close");
+    emit("update:visible", false);
   } catch (error) {
     Toast.error((error as Error).message);
   } finally {
@@ -105,7 +117,14 @@ const handleSave = async () => {
 </script>
 
 <template>
-  <VModal title="恋爱设置" :layer-closable="true" mount-to-body @close="emit('close')">
+  <VModal
+    :visible="visible"
+    title="恋爱设置"
+    :layer-closable="true"
+    mount-to-body
+    @update:visible="emit('update:visible', $event)"
+    @close="emit('update:visible', false)"
+  >
     <VTabbar v-model:active-id="segment" :items="SEGMENTS" class=":uno: mb-4" />
 
     <div v-if="isLoading" class=":uno: py-2">
@@ -136,7 +155,7 @@ const handleSave = async () => {
     <template #footer>
       <div class=":uno: flex items-center gap-3">
         <SubmitButton type="secondary" :loading="saving" text="保存" @submit="handleSave" />
-        <VButton @click="emit('close')">取消</VButton>
+        <VButton @click="emit('update:visible', false)">取消</VButton>
       </div>
     </template>
   </VModal>

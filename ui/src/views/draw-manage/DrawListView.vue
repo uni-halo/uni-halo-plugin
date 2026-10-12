@@ -22,8 +22,11 @@ import { computed, ref, watch } from "vue";
 import RiEyeLine from "~icons/ri/eye-line";
 import RiEyeOffLine from "~icons/ri/eye-off-line";
 import RiSettings3Line from "~icons/ri/settings-3-line";
+import RiTrophyLine from "~icons/ri/trophy-line";
 import DrawReviewModal from "@/components/draw-manage/DrawReviewModal.vue";
+import DrawDetailModal from "@/components/draw-manage/DrawDetailModal.vue";
 import DrawSettingsModal from "@/components/feature-config/DrawSettingsModal.vue";
+import DrawRankModal from "@/components/draw-manage/DrawRankModal.vue";
 import ImagePreviewModal from "@/components/common/ImagePreviewModal.vue";
 import FilterDropdown from "@/components/common/FilterDropdown.vue";
 import FilterCleanButton from "@/components/common/FilterCleanButton.vue";
@@ -32,7 +35,6 @@ import { drawsApi } from "@/api";
 import {
   DRAW_STATUS_LABELS,
   DRAW_STATUS_OPTIONS,
-  DRAW_TYPE_LABELS,
   DRAW_TYPE_OPTIONS,
   DRAW_HIDDEN_OPTIONS,
 } from "@/types";
@@ -67,8 +69,20 @@ const reviewVisible = ref(false);
 const previewVisible = ref(false);
 const previewUrl = ref("");
 
+// 作品详情弹窗
+const detailVisible = ref(false);
+const detailDraw = ref<Draw>();
+
+const openDetail = (draw: Draw) => {
+  detailDraw.value = draw;
+  detailVisible.value = true;
+};
+
 // 模块设置弹窗（发布审核开关）
 const settingsVisible = ref(false);
+
+// 猜画排行榜弹窗
+const rankVisible = ref(false);
 
 const checkAll = ref(false);
 const selectedNames = ref<string[]>([]);
@@ -112,24 +126,16 @@ const handleClearFilters = () => {
   sortBy.value = undefined;
 };
 
-/** 行内类型标签：普通作品 / 竞猜中 / 已揭晓 */
-const typeLabel = computed(() => (draw: Draw) => {
-  if (!draw.spec.puzzleStatus) {
-    return DRAW_TYPE_LABELS.normal;
-  }
-  return draw.spec.puzzleStatus === "REVEALED"
-    ? DRAW_TYPE_LABELS.puzzleRevealed
-    : DRAW_TYPE_LABELS.puzzleGuessing;
-});
+/** 行内类型 tag（实底色，对齐轮播管理来源标签）：普通作品（灰）/ 画谜作品（橙）；揭晓进度仅在弹窗展示 */
+const typeLabel = computed(() => (draw: Draw) =>
+  draw.spec.puzzleStatus ? "画谜作品" : "普通作品"
+);
 
-const typeClass = computed(() => (draw: Draw) => {
-  if (!draw.spec.puzzleStatus) {
-    return "text-gray-400";
-  }
-  return draw.spec.puzzleStatus === "REVEALED"
-    ? "text-violet-500"
-    : "text-violet-400";
-});
+const typeClass = computed(() => (draw: Draw) =>
+  draw.spec.puzzleStatus
+    ? ":uno: rounded px-1.5 py-0.5 text-xs text-white bg-orange-500"
+    : ":uno: rounded px-1.5 py-0.5 text-xs text-white bg-gray-400"
+);
 
 watch(
   () => selectedNames.value,
@@ -247,9 +253,15 @@ const formatTime = (value?: string | null) => {
     @done="onReviewDone"
   />
 
-  <VPageHeader title="UniHalo-绘画作品管理">
+  <VPageHeader title="UniHalo-绘画管理">
     <template #actions>
       <VSpace>
+        <VButton @click="rankVisible = true">
+          <template #icon>
+            <RiTrophyLine class="w-4 h-4" />
+          </template>
+          排行榜
+        </VButton>
         <VButton @click="refetch">
           <template #icon>
             <IconRefreshLine class="w-4 h-4" :class="{ 'animate-spin text-gray-900': isFetching }" />
@@ -327,7 +339,13 @@ const formatTime = (value?: string | null) => {
               </VEntityField>
               <VEntityField width="16rem">
                 <template #title>
-                  <span class=":uno: font-semibold text-gray-900">
+                  <span
+                    role="button"
+                    tabindex="0"
+                    class=":uno: cursor-pointer text-gray-900 hover:text-blue-600"
+                    @click="openDetail(draw)"
+                    @keydown.enter="openDetail(draw)"
+                  >
                     {{ draw.spec.title || draw.metadata.name }}
                   </span>
                 </template>
@@ -362,7 +380,7 @@ const formatTime = (value?: string | null) => {
               </VEntityField>
               <VEntityField>
                 <template #description>
-                  <span class=":uno: text-xs font-medium" :class="typeClass(draw)">
+                  <span :class="typeClass(draw)">
                     {{ typeLabel(draw) }}
                   </span>
                 </template>
@@ -420,6 +438,9 @@ const formatTime = (value?: string | null) => {
               </VEntityField>
             </template>
             <template #dropdownItems>
+              <VDropdownItem @click="openDetail(draw)">
+                详情
+              </VDropdownItem>
               <VDropdownItem @click="handleOpenReview('approve', draw)">
                 通过
               </VDropdownItem>
@@ -453,7 +474,13 @@ const formatTime = (value?: string | null) => {
 
   <ImagePreviewModal v-model:visible="previewVisible" :images="previewUrl ? [previewUrl] : []" title="画作预览" />
 
+  <!-- 作品详情弹窗（常驻挂载，画作数据到位后随 visible 打开） -->
+  <DrawDetailModal v-model:visible="detailVisible" :draw="detailDraw" />
+
   <!-- 绘画设置弹窗（发布审核开关） -->
-  <DrawSettingsModal v-if="settingsVisible" @close="settingsVisible = false" />
+  <DrawSettingsModal v-model:visible="settingsVisible" />
+
+  <!-- 猜画排行榜弹窗 -->
+  <DrawRankModal v-model:visible="rankVisible" />
   </div>
 </template>

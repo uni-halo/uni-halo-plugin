@@ -30,6 +30,8 @@ import type {
   BindTicketIssued,
   BindTicketStatus,
   Draw,
+  DrawPuzzleInfo,
+  DrawRankItem,
   FeatureConfigPatch,
 } from "@/types";
 
@@ -388,6 +390,8 @@ export const ucWechatBindingApi = {
 // ===== 绘画作品（审核人仅限管理员）=====
 
 const DRAWS_BASE = `${PLUGIN_BASE}/draws`;
+/** 猜画排行榜在公开分组（匿名已放行） */
+const DRAWS_PUBLIC_BASE = `${PUBLIC_BASE}/draws`;
 
 export const drawsApi = {
   list: (query: {
@@ -402,6 +406,8 @@ export const drawsApi = {
     hidden?: string;
   } = {}) => http.get<PageResult<Draw>>(DRAWS_BASE, query),
   get: (name: string) => http.get<Draw>(`${DRAWS_BASE}/${name}`),
+  /** 画谜管理信息（谜底原文 + 竞猜记录） */
+  puzzle: (name: string) => http.get<DrawPuzzleInfo>(`${DRAWS_BASE}/${name}/puzzle`),
   /** 审核通过（note 选填，展示给作者的审核说明） */
   approve: (name: string, note?: string) =>
     http.post<Draw>(`${DRAWS_BASE}/${name}/approve`, { note }),
@@ -412,4 +418,6 @@ export const drawsApi = {
   setHidden: (name: string, hidden: boolean) =>
     http.put<Draw>(`${DRAWS_BASE}/${name}/hidden`, { hidden }),
   delete: (name: string) => http.delete<{ success: boolean }>(`${DRAWS_BASE}/${name}`),
+  /** 猜画积分排行榜（公开接口，按累计猜中画作数降序） */
+  guessRank: (top = 50) => http.get<DrawRankItem[]>(`${DRAWS_PUBLIC_BASE}/guess-rank`, { top }),
 };
