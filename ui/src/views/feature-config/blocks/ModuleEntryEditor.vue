@@ -21,7 +21,6 @@ withDefaults(
     namePrefix: string;
   }>(),
   {
-    // Vue 对未传的 Boolean prop 按 false 处理，必须显式给默认值
     showEnabledSwitch: false,
     showEntryFields: true,
   }
