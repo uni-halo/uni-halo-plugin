@@ -137,7 +137,7 @@ public class EmailService {
 
     private Mono<String> firstFromNotifier() {
         return client.fetch(Secret.class, NOTIFIER_SECRET_NAME)
-                .map(Secret::getStringData)
+                .mapNotNull(Secret::getStringData)
                 .mapNotNull(data -> data.get(NOTIFIER_SECRET_KEY))
                 .map(this::parseSenderConfig)
                 .filter(JsonNode::isObject)
@@ -174,7 +174,7 @@ public class EmailService {
      */
     private Mono<Boolean> sendEmail(String to, String subject, String content) {
         return client.fetch(Secret.class, NOTIFIER_SECRET_NAME)
-                .map(Secret::getStringData)
+                .mapNotNull(Secret::getStringData)
                 .mapNotNull(data -> data.get(NOTIFIER_SECRET_KEY))
                 .map(this::parseSenderConfig)
                 .filter(JsonNode::isObject)

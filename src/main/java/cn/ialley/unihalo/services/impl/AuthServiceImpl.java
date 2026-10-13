@@ -164,17 +164,9 @@ public class AuthServiceImpl implements AuthService {
                     .flatMap(config -> mustVerifyEmailOnRegistration().flatMap(flagOn -> {
                         if (flagOn) {
                             // Halo 原生链路：验证码由 Halo 签发，透传给 signUp 原生校验
-                            if (!isBlank(form.email()) && isBlank(form.emailCode())) {
-                                return Mono.error(BizErrorCode.BAD_REQUEST
-                                        .toException("请填写邮箱验证码"));
-                            }
                             return doRegister(form, config, clientIp, toSignUpData(form, true));
                         }
                         // 插件自管链路：signUp 前自行校验消费验证码，不向 signUp 透传
-                        if (!isBlank(form.email()) && isBlank(form.emailCode())) {
-                            return Mono.error(BizErrorCode.BAD_REQUEST
-                                    .toException("请填写邮箱验证码"));
-                        }
                         return verifyRegistrationEmailCode(form)
                                 .then(Mono.defer(() -> doRegister(form, config, clientIp,
                                         toSignUpData(form, false))));
