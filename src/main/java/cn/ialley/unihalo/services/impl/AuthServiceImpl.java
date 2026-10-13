@@ -467,7 +467,7 @@ public class AuthServiceImpl implements AuthService {
                     String ticket = resetEmailCodeTicketManager.issue(name, code, passwordHash);
                     // 仅当邮件真正发出才下发票据；发送失败（SMTP 未配置/异常）则报错，
                     // 不下发「假成功」票据，避免用户卡在收不到码的界面
-                    return emailService.sendResetCodeEmail(email, null, code, 10)
+                    return emailService.sendResetCodeEmail(email, code, 10)
                             .flatMap(sent -> sent
                                     ? Mono.just(ticket)
                                     : Mono.error(BizErrorCode.EMAIL_SEND_FAILED.toException()));
@@ -561,7 +561,7 @@ public class AuthServiceImpl implements AuthService {
                             return assertEmailAvailable(trimmedEmail, username)
                                     .then(verifyCodeStore.issue(username, trimmedEmail))
                                     .flatMap(code -> emailService.sendVerifyCodeEmail(
-                                            trimmedEmail, null, code, VerifyCodeStore.CODE_TTL_MINUTES)
+                                            trimmedEmail, code, VerifyCodeStore.CODE_TTL_MINUTES)
                                             .flatMap(sent -> {
                                                 if (!Boolean.TRUE.equals(sent)) {
                                                     return Mono.error(BizErrorCode.EMAIL_SEND_FAILED

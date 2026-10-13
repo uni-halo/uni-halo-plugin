@@ -37,7 +37,7 @@ public interface DrawGuessService {
     /**
      * 竞猜信息合一（匿名可访问）：榜单 + 统计，未揭晓不含谜底；入口先执行惰性揭晓检查
      */
-    Mono<GuessBoardVo> board(String drawName);
+    Mono<GuessBoardVo> board(String drawName, String viewerUsername);
 
     /**
      * 猜画积分排行榜（匿名可访问）：按累计猜中画作数降序，top 限制返回条数

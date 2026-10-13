@@ -10,8 +10,10 @@ import org.springframework.stereotype.Component;
 import cn.ialley.unihalo.scheme.FeatureConfig;
 import cn.ialley.unihalo.scheme.MiniProgramLinkSubmission;
 import reactor.core.publisher.Mono;
+import run.halo.app.extension.ConfigMap;
 import run.halo.app.extension.ReactiveExtensionClient;
 import run.halo.app.extension.Secret;
+import run.halo.app.infra.SystemSetting;
 import cn.ialley.unihalo.services.FeatureConfigService;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
@@ -24,8 +26,9 @@ import tools.jackson.databind.node.ObjectNode;
  * 复用 Halo 内置邮件通知器的 SMTP 配置：读取 Secret
  * {@code notifier-setting-secret} 的 {@code default-email-notifier.json}
  * （sender.host/port/username/password/displayName/encryption），不重复提供
- * SMTP 配置页。发送开关与邮件署名读 {@code FeatureConfig.spec.linkInfo}
- * （友链管理-设置）；发送失败仅记日志，不阻塞审核流程。
+ * SMTP 配置页。发送开关读 {@code FeatureConfig.spec.linkInfo}；
+ * 邮件署名按优先级取值：邮件通知器显示名称 → 功能设置应用名称 →
+ * 系统基本设置站点名称 → 默认值；发送失败仅记日志，不阻塞审核流程。
  *
  * @author 小莫唐尼
  */
@@ -69,43 +72,34 @@ public class EmailService {
                     if (linkInfo == null || !Boolean.TRUE.equals(linkInfo.getSendEmail())) {
                         return Mono.empty();
                     }
-                    String siteName = isBlank(linkInfo.getSendEmailSiteName())
-                            ? SITE_NAME_DEFAULT : linkInfo.getSendEmailSiteName();
-                    String subject = STATUS_APPROVED.equals(spec.getStatus())
-                            ? "【" + siteName + "】友情链接审核通过通知"
-                            : "【" + siteName + "】友情链接审核未通过通知";
-                    String content = buildHtml(spec, siteName);
-                    return sendEmail(spec.getEmail(), subject, content).then();
+                    return resolveSiteName().flatMap(siteName -> {
+                        String subject = STATUS_APPROVED.equals(spec.getStatus())
+                                ? "【" + siteName + "】友情链接审核通过通知"
+                                : "【" + siteName + "】友情链接审核未通过通知";
+                        String content = buildHtml(spec, siteName);
+                        return sendEmail(spec.getEmail(), subject, content).then();
+                    });
                 });
     }
 
     /**
      * 发送密码重置验证码邮件。复用 Halo 内置邮件通知器 SMTP 配置，
-     * 发送失败仅记日志，不阻塞重置主流程。
-     *
-     * @param to       收件邮箱（服务端按账号查得，客户端无法指定任意邮箱轰炸）
-     * @param siteName 站点名（用于邮件标题/正文，空则回落默认）
-     * @param code     6 位重置码
-     * @param minutes  有效期（分钟）
-     */
-    /**
-     * 发送密码重置验证码邮件。复用 Halo 内置邮件通知器 SMTP 配置，
      * 返回是否实际发出（false = 配置缺失或发送异常，调用方据此决定是否下发重置票据）。
      *
      * @param to       收件邮箱（服务端按账号查得，客户端无法指定任意邮箱轰炸）
-     * @param siteName 站点名（用于邮件标题/正文，空则回落默认）
      * @param code     6 位重置码
      * @param minutes  有效期（分钟）
      * @return true=邮件已发出；false=未发出（配置缺失或异常）
      */
-    public Mono<Boolean> sendResetCodeEmail(String to, String siteName, String code, int minutes) {
+    public Mono<Boolean> sendResetCodeEmail(String to, String code, int minutes) {
         if (isBlank(to) || isBlank(code)) {
             return Mono.just(false);
         }
-        String name = isBlank(siteName) ? SITE_NAME_DEFAULT : siteName;
-        String subject = "【" + name + "】密码重置验证码";
-        String content = buildResetHtml(name, code, minutes);
-        return sendEmail(to, subject, content);
+        return resolveSiteName().flatMap(name -> {
+            String subject = "【" + name + "】密码重置验证码";
+            String content = buildResetHtml(name, code, minutes);
+            return sendEmail(to, subject, content);
+        });
     }
 
     /**
@@ -113,19 +107,65 @@ public class EmailService {
      * 返回是否实际发出（false = 配置缺失或发送异常，调用方据此返回明确错误）。
      *
      * @param to       收件邮箱
-     * @param siteName 站点名（用于邮件标题/正文，空则回落默认）
      * @param code     6 位验证码
      * @param minutes  有效期（分钟）
      * @return true=邮件已发出；false=未发出（配置缺失或异常）
      */
-    public Mono<Boolean> sendVerifyCodeEmail(String to, String siteName, String code, int minutes) {
+    public Mono<Boolean> sendVerifyCodeEmail(String to, String code, int minutes) {
         if (isBlank(to) || isBlank(code)) {
             return Mono.just(false);
         }
-        String name = isBlank(siteName) ? SITE_NAME_DEFAULT : siteName;
-        String subject = "【" + name + "】邮箱验证码";
-        String content = buildVerifyHtml(name, code, minutes);
-        return sendEmail(to, subject, content);
+        return resolveSiteName().flatMap(name -> {
+            String subject = "【" + name + "】邮箱验证码";
+            String content = buildVerifyHtml(name, code, minutes);
+            return sendEmail(to, subject, content);
+        });
+    }
+
+    /**
+     * 邮件署名，按优先级取第一个非空值：
+     * 邮件通知器显示名称（系统设置-通知设置-邮件通知-显示名称）→
+     * 功能设置应用名称（功能设置-应用资料-应用信息-应用名称）→
+     * 系统基本设置站点名称（系统设置-基本设置-站点名称）→ 默认值。
+     */
+    public Mono<String> resolveSiteName() {
+        return firstFromNotifier()
+                .switchIfEmpty(firstFromAppInfo())
+                .switchIfEmpty(firstFromSystemTitle())
+                .defaultIfEmpty(SITE_NAME_DEFAULT);
+    }
+
+    private Mono<String> firstFromNotifier() {
+        return client.fetch(Secret.class, NOTIFIER_SECRET_NAME)
+                .map(Secret::getStringData)
+                .mapNotNull(data -> data.get(NOTIFIER_SECRET_KEY))
+                .map(this::parseSenderConfig)
+                .filter(JsonNode::isObject)
+                .mapNotNull(sender -> sender.path("displayName").asString(null))
+                .filter(name -> !isBlank(name));
+    }
+
+    private Mono<String> firstFromAppInfo() {
+        return featureConfigService.get()
+                .mapNotNull(config -> {
+                    var appInfo = config.getSpec() == null
+                            || config.getSpec().getProfile() == null
+                                    ? null : config.getSpec().getProfile().getAppInfo();
+                    return appInfo == null ? null : appInfo.getName();
+                })
+                .filter(name -> !isBlank(name));
+    }
+
+    private Mono<String> firstFromSystemTitle() {
+        return client.fetch(ConfigMap.class, SystemSetting.SYSTEM_CONFIG)
+                .mapNotNull(cm -> cm.getData() == null ? null : cm.getData().get(SystemSetting.Basic.GROUP))
+                .mapNotNull(EmailService::parseSettingValue)
+                .mapNotNull(raw -> parseConfig(raw).path("title").asString(null))
+                .filter(name -> !isBlank(name));
+    }
+
+    private static String parseSettingValue(String value) {
+        return value == null || value.isBlank() ? null : value;
     }
 
     /**

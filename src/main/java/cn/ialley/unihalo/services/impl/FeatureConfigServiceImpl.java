@@ -274,9 +274,8 @@ public class FeatureConfigServiceImpl implements FeatureConfigService {
     private static LinkInfo buildDefaultLinkInfo() {
         LinkInfo linkInfo = new LinkInfo();
         linkInfo.setSubmissionEnabled(true);
-        // 审核邮件通知：默认关闭，署名默认 uni-halo
+        // 审核邮件通知：默认关闭
         linkInfo.setSendEmail(false);
-        linkInfo.setSendEmailSiteName("uni-halo");
         linkInfo.setMiniInfo(new FeatureConfig.MiniInfo());
         linkInfo.setSiteInfo(new FeatureConfig.SiteInfo());
         return linkInfo;

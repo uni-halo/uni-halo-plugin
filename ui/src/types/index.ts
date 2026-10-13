@@ -600,8 +600,6 @@ export interface FeatureConfigLinkInfo {
   submissionEnabled?: boolean;
   /** 审核结果邮件通知（复用 Halo 系统设置的邮件通知器 SMTP 配置） */
   sendEmail?: boolean;
-  /** 邮件署名（审核邮件标题/正文中的站点名称，默认 uni-halo） */
-  sendEmailSiteName?: string;
   /** 小程序信息（小程序名称/太阳码/跳转地址/描述/申请说明） */
   miniInfo?: FeatureConfigMiniInfo;
   /** 站点信息（本站站点名片，对齐 Halo 官方友链提交 API 字段） */

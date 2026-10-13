@@ -143,7 +143,7 @@ public class DrawGuessServiceImpl implements DrawGuessService {
     // ===== 竞猜信息（榜单） =====
 
     @Override
-    public Mono<GuessBoardVo> board(String drawName) {
+    public Mono<GuessBoardVo> board(String drawName, String viewerUsername) {
         return fetchDraw(drawName)
                 .flatMap(this::revealIfDue)
                 .flatMap(draw -> listGuesses(drawName).collectList()
@@ -154,9 +154,13 @@ public class DrawGuessServiceImpl implements DrawGuessService {
                                             (DrawGuess g) -> g.getSpec().getSolvedAt(),
                                             Comparator.nullsLast(Comparator.naturalOrder())))
                                     .toList();
+                            boolean solvedByMe = viewerUsername != null && !viewerUsername.isBlank()
+                                    && solved.stream()
+                                            .anyMatch(g -> viewerUsername.equals(g.getSpec().getUsername()));
                             return resolveUsers(solved.stream()
                                             .map(g -> g.getSpec().getUsername()).distinct().toList())
                                     .map(users -> GuessBoardVo.of(draw, guesses.size(), solved.size(),
+                                            solvedByMe,
                                             solved.stream()
                                                     .map(g -> GuessBoardVo.itemOf(
                                                             g.getSpec().getUsername(),

@@ -240,10 +240,9 @@ function defaultSpec(): FeatureConfigSpec {
       diaryPage: { bgImageUrl: "" },
     },
     linkInfo: {
-      // 友链设置默认：开放公开提交申请；审核邮件通知默认关闭，署名 uni-halo
+      // 友链设置默认：开放公开提交申请；审核邮件通知默认关闭
       submissionEnabled: true,
       sendEmail: false,
-      sendEmailSiteName: "uni-halo",
       miniInfo: {
         displayName: "",
         miniProgramCode: "",

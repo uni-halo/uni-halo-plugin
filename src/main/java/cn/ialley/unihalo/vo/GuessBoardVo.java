@@ -73,12 +73,14 @@ public class GuessBoardVo {
         return item;
     }
 
-    public static GuessBoardVo of(Draw draw, long guessCount, long solvedCount, List<Item> board) {
+    public static GuessBoardVo of(Draw draw, long guessCount, long solvedCount,
+            boolean solvedByMe, List<Item> board) {
         var vo = new GuessBoardVo();
         var spec = draw.getSpec();
         boolean revealed = spec != null && Draw.PUZZLE_STATUS_REVEALED.equals(spec.getPuzzleStatus());
         vo.setRevealed(revealed);
-        vo.setAnswer(revealed && spec != null ? spec.getPuzzleAnswer() : null);
+        // 谜底：已揭晓全员可见；未揭晓时仅猜中者本人可见
+        vo.setAnswer((revealed || solvedByMe) && spec != null ? spec.getPuzzleAnswer() : null);
         vo.setPuzzleHint(spec == null ? null : spec.getPuzzleHint());
         vo.setAutoRevealAt(spec == null ? null : spec.getAutoRevealAt());
         vo.setGuessCount(guessCount);

@@ -515,8 +515,6 @@ public class FeatureConfig extends AbstractExtension {
         private Boolean submissionEnabled;
         /** 审核结果邮件通知（复用 Halo 系统设置的邮件通知器 SMTP 配置） */
         private Boolean sendEmail;
-        /** 邮件署名（审核邮件标题与正文中的站点名称，默认 uni-halo） */
-        private String sendEmailSiteName;
         /** 小程序信息（小程序名称/太阳码/跳转地址/描述/申请说明） */
         private MiniInfo miniInfo;
         /** 站点信息（本站站点名片，含站点名/简介/头像等字段） */

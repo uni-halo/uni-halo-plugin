@@ -45,7 +45,6 @@ const syncDraft = () => {
   const linkInfo = cloneDeep(config.value.spec?.linkInfo || {});
   draft.value = {
     sendEmail: false,
-    sendEmailSiteName: "uni-halo",
     ...linkInfo,
     miniInfo: linkInfo.miniInfo || {},
     siteInfo: linkInfo.siteInfo || {},
@@ -133,8 +132,6 @@ const handleSave = async () => {
         </div>
         <VSwitch v-model="draft.sendEmail" />
       </div>
-      <FormKit v-if="draft.sendEmail" v-model="draft.sendEmailSiteName" name="link_send_email_site_name"
-        label="邮件署名" type="text" help="审核邮件标题与正文中的站点名称" />
       </template>
 
       <!-- 站点信息（本站站点名片，对齐官方友链提交 API） -->

@@ -78,10 +78,12 @@ public class DrawPublicEndpoint implements CustomEndpoint {
     }
 
     /**
-     * 竞猜信息合一（榜单 + 统计；未揭晓不含谜底）
+     * 竞猜信息合一（榜单 + 统计；未揭晓不含谜底，猜中者本人可见谜底）
      */
     private Mono<ServerResponse> guessBoard(ServerRequest request) {
-        return drawGuessService.board(request.pathVariable("name"))
+        return optionalUsername(request)
+                .defaultIfEmpty("")
+                .flatMap(username -> drawGuessService.board(request.pathVariable("name"), username))
                 .flatMap(board -> ServerResponse.ok().bodyValue(board))
                 .onErrorResume(IllegalArgumentException.class,
                         e -> ServerResponse.badRequest()
@@ -107,6 +109,15 @@ public class DrawPublicEndpoint implements CustomEndpoint {
                 .filter(name -> !Constants.ANONYMOUS_USER.equals(name))
                 .switchIfEmpty(Mono.error(new ResponseStatusException(
                         HttpStatus.UNAUTHORIZED, "请先登录")));
+    }
+
+    /**
+     * 当前登录用户名；未认证时返回 Mono.empty()（匿名可访问场景）
+     */
+    private Mono<String> optionalUsername(ServerRequest request) {
+        return request.principal()
+                .map(Principal::getName)
+                .filter(name -> !Constants.ANONYMOUS_USER.equals(name));
     }
 
     /**
