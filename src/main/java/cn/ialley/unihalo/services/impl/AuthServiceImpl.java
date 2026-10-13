@@ -30,6 +30,7 @@ import cn.ialley.unihalo.utils.EmailService;
 import cn.ialley.unihalo.utils.EmailVerifyTicketManager;
 import cn.ialley.unihalo.utils.NotificationHelper;
 import cn.ialley.unihalo.utils.ResetEmailCodeTicketManager;
+import cn.ialley.unihalo.utils.RegisterEmailCodeClient;
 import cn.ialley.unihalo.utils.UserConnectionSupport;
 import cn.ialley.unihalo.utils.VerifyCodeStore;
 import cn.ialley.unihalo.utils.VerifyEmailCodeRateLimiter;
@@ -108,6 +109,7 @@ public class AuthServiceImpl implements AuthService {
     private final VerifyCodeStore verifyCodeStore;
     private final VerifyEmailCodeRateLimiter verifyEmailCodeRateLimiter;
     private final EmailService emailService;
+    private final RegisterEmailCodeClient registerEmailCodeClient;
 
     /** 系统设置 JSON 解析（ConfigMap system → user 组，与 FeatureConfigServiceImpl 同源）。 */
     private final ObjectMapper objectMapper = new ObjectMapper();
@@ -153,27 +155,96 @@ public class AuthServiceImpl implements AuthService {
                 return Mono.error(BizErrorCode.BAD_REQUEST
                         .toException("两次输入的密码不一致"));
             }
+            if (!isBlank(form.email()) && isBlank(form.emailCode())) {
+                return Mono.error(BizErrorCode.BAD_REQUEST
+                        .toException("请填写邮箱验证码"));
+            }
             return requireNotLocked(form.username(), clientIp)
                     .then(configResolver.config())
-                    .flatMap(config -> mustVerifyEmailOnRegistration()
-                            .flatMap(emailVerifyRequired -> {
-                                var data = toSignUpData(form, emailVerifyRequired);
-                                return userService.signUp(data)
-                                        .doOnSuccess(user -> attemptGuard
-                                                .resetUsername(form.username()))
-                                        // 只把「用户可修复」的错误计入限流（与登录闸门共用）
-                                        .onErrorMap(this::mapSignUpFailure)
-                                        .doOnError(AuthException.class,
-                                                e -> recordRegisterFailure(form.username(), clientIp, e))
-                                        // 注册成功发欢迎通知；失败不阻断注册
-                                        .doOnSuccess(user -> notificationHelper
-                                                .emitUserRegistered(form.username(),
-                                                        form.displayName().trim(),
-                                                        data.getEmail())
-                                                .subscribe());
-                            })
-                            .flatMap(user -> issueFor(user, config)));
+                    .flatMap(config -> mustVerifyEmailOnRegistration().flatMap(flagOn -> {
+                        if (flagOn) {
+                            // Halo 原生链路：验证码由 Halo 签发，透传给 signUp 原生校验
+                            if (!isBlank(form.email()) && isBlank(form.emailCode())) {
+                                return Mono.error(BizErrorCode.BAD_REQUEST
+                                        .toException("请填写邮箱验证码"));
+                            }
+                            return doRegister(form, config, clientIp, toSignUpData(form, true));
+                        }
+                        // 插件自管链路：signUp 前自行校验消费验证码，不向 signUp 透传
+                        if (!isBlank(form.email()) && isBlank(form.emailCode())) {
+                            return Mono.error(BizErrorCode.BAD_REQUEST
+                                    .toException("请填写邮箱验证码"));
+                        }
+                        return verifyRegistrationEmailCode(form)
+                                .then(Mono.defer(() -> doRegister(form, config, clientIp,
+                                        toSignUpData(form, false))));
+                    }));
         });
+    }
+
+    /** 调 Halo signUp 建号：限流记账、失败映射与欢迎通知的公共出口。 */
+    private Mono<LoginResult> doRegister(RegisterForm form, LoginConfig config,
+            String clientIp, SignUpData data) {
+        return userService.signUp(data)
+                .doOnSuccess(user -> attemptGuard.resetUsername(form.username()))
+                // 只把「用户可修复」的错误计入限流（与登录闸门共用）
+                .onErrorMap(this::mapSignUpFailure)
+                .doOnError(AuthException.class,
+                        e -> recordRegisterFailure(form.username(), clientIp, e))
+                // 注册成功发欢迎通知；失败不阻断注册
+                .doOnSuccess(user -> notificationHelper
+                        .emitUserRegistered(form.username(),
+                                form.displayName().trim(),
+                                data.getEmail())
+                        .subscribe())
+                .flatMap(user -> issueFor(user, config));
+    }
+
+    /**
+     * 发送注册邮箱验证码（自适应双模式）：
+     * <ul>
+     * <li>Halo 开关「注册时必须验证邮箱」<b>开启</b>：代理 Halo 匿名端点
+     * {@code POST /signup/send-email-code}，验证码由 Halo 签发，
+     * {@code signUp} 内部原生校验可通过（需站点侧验证码插件放行该端点）；</li>
+     * <li>开关<b>关闭</b>：插件自管闭环，自签 6 位验证码经邮件通知器 SMTP 直发，
+     * 注册时由插件在 {@code signUp} 前自行校验消费。</li>
+     * </ul>
+     */
+    @Override
+    public Mono<Void> sendRegisterEmailCode(String email, String baseUrl, String clientIp) {
+        var normalized = email.trim().toLowerCase();
+        return mustVerifyEmailOnRegistration().flatMap(flagOn -> {
+            if (flagOn) {
+                // Halo 原生链路：代理 Halo 发码（CSRF 握手由 RegisterEmailCodeClient 完成）
+                return registerEmailCodeClient.send(baseUrl, normalized, clientIp);
+            }
+            // 插件自管链路：邮箱未被占用才发码（selfUsername 传空串：注册场景无自身账号可比对）
+            return assertEmailAvailable(normalized, "")
+                    .then(verifyCodeStore.issueForRegistration(normalized))
+                    .flatMap(code -> emailService.sendVerifyCodeEmail(
+                            normalized, code, VerifyCodeStore.CODE_TTL_MINUTES))
+                    .flatMap(sent -> Boolean.TRUE.equals(sent) ? Mono.<Void>empty()
+                            : Mono.error(BizErrorCode.BAD_REQUEST
+                                    .toException("验证码邮件发送失败，请稍后重试或联系站点管理员")));
+        });
+    }
+
+    /**
+     * 注册验证码自验（填了邮箱才校验）：一次性消费，无效/过期返回业务错误；
+     * 未填邮箱跳过（Halo 侧以 {@code 用户名@example.com} 兜底）。
+     */
+    private Mono<Void> verifyRegistrationEmailCode(RegisterForm form) {
+        if (isBlank(form.email())) {
+            return Mono.empty();
+        }
+        return verifyAndConsumeRegistrationCode(form.email(), form.emailCode());
+    }
+
+    /** 邮箱 + 验证码维度的注册自验（微信补邮箱注册与密码注册共用）。 */
+    private Mono<Void> verifyAndConsumeRegistrationCode(String email, String code) {
+        return verifyCodeStore.verifyAndConsumeForRegistration(email.trim(), code)
+                .flatMap(matched -> Boolean.TRUE.equals(matched) ? Mono.<Void>empty()
+                        : Mono.error(BizErrorCode.EMAIL_CODE_INVALID.toException()));
     }
 
     @Override
@@ -721,19 +792,28 @@ public class AuthServiceImpl implements AuthService {
     }
 
     /**
-     * 表单 → Halo 注册数据（emailCode/agreedToTerms 原样透传，由 signUp 校验）。
-     * 邮箱：用户填写优先；未填写且站点未强制邮箱验证时兜底 {@code 用户名@example.com}。
+     * 表单 → Halo 注册数据（自适应双模式）：
+     * <ul>
+     * <li>Halo 开关<b>开启</b>：email/emailCode 原样透传，由 {@code signUp} 原生校验
+     * （验证码来自 Halo 代理发码链路）；未填邮箱传 null（signUp fail closed）；</li>
+     * <li>开关<b>关闭</b>：验证码由插件自管并已消费，emailCode 传 null；
+     * 未填邮箱兜底 {@code 用户名@example.com}。</li>
+     * </ul>
      */
-    private SignUpData toSignUpData(RegisterForm form, boolean emailVerifyRequired) {
+    private SignUpData toSignUpData(RegisterForm form, boolean flagOn) {
         var data = new SignUpData();
         data.setUsername(form.username().trim());
         data.setDisplayName(form.displayName().trim());
         data.setPassword(form.password());
         data.setConfirmPassword(form.confirmPassword());
-        data.setEmail(isBlank(form.email())
-                ? (emailVerifyRequired ? null : defaultEmail(form.username().trim()))
-                : form.email().trim());
-        data.setEmailCode(isBlank(form.emailCode()) ? null : form.emailCode().trim());
+        if (flagOn) {
+            data.setEmail(isBlank(form.email()) ? null : form.email().trim());
+            data.setEmailCode(isBlank(form.emailCode()) ? null : form.emailCode().trim());
+        } else {
+            data.setEmail(isBlank(form.email())
+                    ? defaultEmail(form.username().trim())
+                    : form.email().trim());
+        }
         data.setAgreedToTerms(Boolean.TRUE.equals(form.agreedToTerms()));
         return data;
     }

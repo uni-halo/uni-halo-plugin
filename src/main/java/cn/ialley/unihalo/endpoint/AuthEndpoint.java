@@ -20,7 +20,6 @@ import cn.ialley.unihalo.constants.Constants;
 import cn.ialley.unihalo.exception.AuthException;
 import cn.ialley.unihalo.exception.BizErrorCode;
 import cn.ialley.unihalo.services.AuthService;
-import cn.ialley.unihalo.utils.RegisterEmailCodeClient;
 import cn.ialley.unihalo.utils.RegisterEmailCodeRateLimiter;
 import cn.ialley.unihalo.utils.ResetEmailCodeRateLimiter;
 import cn.ialley.unihalo.utils.VerifyEmailCodeRateLimiter;
@@ -48,8 +47,6 @@ public class AuthEndpoint implements CustomEndpoint {
 
     private final AuthService authService;
 
-    private final RegisterEmailCodeClient registerEmailCodeClient;
-
     private final RegisterEmailCodeRateLimiter emailCodeRateLimiter;
 
     private final ResetEmailCodeRateLimiter resetEmailCodeRateLimiter;
@@ -59,13 +56,11 @@ public class AuthEndpoint implements CustomEndpoint {
     private final CaptchaService captchaService;
 
     public AuthEndpoint(AuthService authService,
-            RegisterEmailCodeClient registerEmailCodeClient,
             RegisterEmailCodeRateLimiter emailCodeRateLimiter,
             ResetEmailCodeRateLimiter resetEmailCodeRateLimiter,
             ExternalUrlSupplier externalUrlSupplier,
             CaptchaService captchaService) {
         this.authService = authService;
-        this.registerEmailCodeClient = registerEmailCodeClient;
         this.emailCodeRateLimiter = emailCodeRateLimiter;
         this.resetEmailCodeRateLimiter = resetEmailCodeRateLimiter;
         this.externalUrlSupplier = externalUrlSupplier;
@@ -159,8 +154,8 @@ public class AuthEndpoint implements CustomEndpoint {
     }
 
     /**
-     * 发送注册邮箱验证码：Halo 匿名端点在站点根下，CSRF 不豁免，小程序无法携带
-     * CSRF token 会 403，故经插件服务端完成 CSRF 握手后代发（保持 202 契约）。
+     * 发送注册邮箱验证码（自适应双模式）：图形验证码 + IP/邮箱限流后，
+     * 按站点开关走 Halo 代理发码或插件自管发码（保持 202 契约）。
      */
     private Mono<ServerResponse> sendRegisterEmailCode(ServerRequest request) {
         var clientIp = clientIpOf(request);
@@ -179,8 +174,8 @@ public class AuthEndpoint implements CustomEndpoint {
                         .flatMap(email -> emailCodeRateLimiter
                                 .check(clientIp, email.toLowerCase())
                                 .thenReturn(email))
-                        .flatMap(email -> registerEmailCodeClient
-                                .send(baseUrl, email, clientIp)))
+                        .flatMap(email -> authService
+                                .sendRegisterEmailCode(email, baseUrl, clientIp)))
                 .then(ServerResponse.accepted().build())
                 .onErrorResume(CaptchaValidationException.class, this::captchaForbidden)
                 .onErrorMap(RegisterEmailCodeRateLimiter.QuotaExceededException.class,

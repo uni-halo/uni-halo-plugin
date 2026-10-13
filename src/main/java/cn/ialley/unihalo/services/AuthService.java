@@ -49,6 +49,21 @@ public interface AuthService {
     Mono<LoginResult> registerByPassword(RegisterForm form, String clientIp);
 
     /**
+     * 发送注册邮箱验证码（自适应双模式）：
+     * <ul>
+     * <li>Halo 开关「注册时必须验证邮箱」<b>开启</b>：代理 Halo 匿名端点发码，
+     * 验证码由 Halo 签发，{@code signUp} 原生校验可通过；</li>
+     * <li>开关<b>关闭</b>：插件自管闭环，自签验证码经邮件通知器 SMTP 直发，
+     * 注册时由插件在 {@code signUp} 前自行校验消费。</li>
+     * </ul>
+     *
+     * @param email    收码邮箱（端点层已做格式与限流把关）
+     * @param baseUrl  站点根地址（Halo 原生链路的代理目标）
+     * @param clientIp 客户端源地址（透传 X-Forwarded-For 供 Halo 按 IP 限流）
+     */
+    Mono<Void> sendRegisterEmailCode(String email, String baseUrl, String clientIp);
+
+    /**
      * 微信一键注册：与 {@link #loginByWechat} 同源同语义，已绑定则直接登录，
      * 未绑定则自动建号（建号走 {@code signUp}，注册开关关闭时 fail closed 拒绝）。
      *

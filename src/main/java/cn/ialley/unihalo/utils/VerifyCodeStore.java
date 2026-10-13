@@ -50,6 +50,25 @@ public class VerifyCodeStore {
     }
 
     /**
+     * 注册场景专用：生成验证码（key 与登录用户无关，仅按邮箱维度，前缀 {@code reg:}）。
+     * 注册时用户尚不存在，不能按 username 建键；邮箱统一小写避免大小写绕过。
+     */
+    public Mono<String> issueForRegistration(String email) {
+        return issue(REG_KEY, normalizeEmail(email));
+    }
+
+    /** 注册场景专用：校验并消费验证码（一次性语义与通用方法一致）。 */
+    public Mono<Boolean> verifyAndConsumeForRegistration(String email, String code) {
+        return verifyAndConsume(REG_KEY, normalizeEmail(email), code);
+    }
+
+    private static final String REG_KEY = "reg";
+
+    private static String normalizeEmail(String email) {
+        return email == null ? "" : email.trim().toLowerCase();
+    }
+
+    /**
      * 生成 6 位数字验证码并存入（key = username + ":" + email，重复发码覆盖旧码）。
      *
      * @return 生成的验证码明文（仅供发信，不落日志/不落库）
