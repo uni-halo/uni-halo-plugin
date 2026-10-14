@@ -415,6 +415,23 @@ export class AppShowcaseWidgetElement extends LitElement {
     });
   }
 
+  /**
+   * 角点择优：以小球位置为基准选择面板锚定角，面板始终朝屏幕内侧展开。
+   * 默认面板左上角 = 小球位置；右缘放不下改右上角锚定（向左展开），
+   * 底缘放不下改左下角锚定（向上展开），双溢出改右下角。
+   */
+  private placePanelAtDot(dotLeft: number, dotTop: number, width: number, height: number): { left: number; top: number } {
+    let left = dotLeft;
+    let top = dotTop;
+    if (dotLeft + width > window.innerWidth) {
+      left = dotLeft - width; // 右缘溢出：面板右上角对齐小球，向左展开
+    }
+    if (dotTop + height > window.innerHeight) {
+      top = dotTop - height; // 底缘溢出：面板左下角对齐小球，向上展开
+    }
+    return { left, top };
+  }
+
   private onRestoreClick(): void {
     if (this.miniDotDragged) {
       this.miniDotDragged = false;
@@ -426,19 +443,30 @@ export class AppShowcaseWidgetElement extends LitElement {
       this.persistState({ minimized: false });
       return;
     }
-    // 恢复：把面板移动到小球当前位置（小球可被拖到任意位置，面板应跟随出现）
+    // 恢复：面板以小球当前位置为基准展开（小球可被拖到任意位置，面板应跟随出现）。
+    // 收起的面板 display:none 无法测量，先用估算尺寸做角点择优；显示后按真实尺寸复算修正。
+    // 注意：minimized=false 后小球元素会被重渲染移除，坐标必须在此之前捕获为快照
     const dot = this.miniDotEl;
     const panel = this.panelEl;
+    let dotLeft = 0;
+    let dotTop = 0;
+    let hasDotPos = false;
     if (dot && panel) {
       const rect = dot.getBoundingClientRect();
-      panel.style.left = Math.round(rect.left) + "px";
-      panel.style.top = Math.round(rect.top) + "px";
+      dotLeft = rect.left;
+      dotTop = rect.top;
+      hasDotPos = true;
+      const estWidth = Number(this.config.panelWidth) || 340;
+      const estHeight = Math.min(530, window.innerHeight - 48);
+      const { left, top } = this.placePanelAtDot(rect.left, rect.top, estWidth, estHeight);
+      panel.style.left = Math.round(left) + "px";
+      panel.style.top = Math.round(top) + "px";
       panel.style.right = "auto";
       panel.style.bottom = "auto";
       panel.style.transform = ""; // 清除锚点 transform（center 等 -50% 偏移），定位精确
     }
     this.minimized = false;
-    // 面板显示后按实际尺寸约束到视口内（小球贴近屏幕底部/右侧时，面板不超出屏幕）
+    // 面板显示后按真实尺寸复算角点择优（估算与实际内容高度可能有偏差），钳制仅作极端小屏兜底
     this.updateComplete.then(() => {
       const shown = this.panelEl;
       if (!shown) {
@@ -446,8 +474,17 @@ export class AppShowcaseWidgetElement extends LitElement {
       }
       const left = Number.parseInt(shown.style.left, 10) || 0;
       const top = Number.parseInt(shown.style.top, 10) || 0;
-      const [l, t] = this.clampToViewport(left, top, shown);
-      if (l !== left || t !== top) {
+      if (hasDotPos) {
+        const fixed = this.placePanelAtDot(dotLeft, dotTop, shown.offsetWidth, shown.offsetHeight);
+        if (fixed.left !== left || fixed.top !== top) {
+          this.setFree(fixed.left, fixed.top);
+        }
+      }
+      // 视口约束兜底 + 记住展开态与面板最终位置，跨页恢复
+      const finalLeft = Number.parseInt(shown.style.left, 10) || 0;
+      const finalTop = Number.parseInt(shown.style.top, 10) || 0;
+      const [l, t] = this.clampToViewport(finalLeft, finalTop, shown);
+      if (l !== finalLeft || t !== finalTop) {
         this.setFree(l, t);
       }
       // 记住展开态与面板最终位置（含视口约束修正），跨页恢复
@@ -501,12 +538,15 @@ export class AppShowcaseWidgetElement extends LitElement {
     const drag = this.miniDotDrag;
     if (drag?.moved) {
       this.miniDotDragged = true; // click 处理器据此忽略本次恢复
-      // 小球拖拽落点写入状态，跨页保持在拖后的位置
+      // 小球拖拽落点写入状态，跨页保持在拖后的位置；
+      // 同步写入 dotStyle：小球从锚点定位态转为像素定位态，
+      // 展开（onRestoreClick）才能走"面板跟随小球当前位置"分支
       const dot = this.miniDotEl;
       if (dot && dot.style.left && dot.style.top) {
-        this.persistState({
-          dotPos: { left: Number.parseFloat(dot.style.left), top: Number.parseFloat(dot.style.top) },
-        });
+        const left = Number.parseFloat(dot.style.left);
+        const top = Number.parseFloat(dot.style.top);
+        this.dotStyle = `left:${Math.round(left)}px;top:${Math.round(top)}px;`;
+        this.persistState({ dotPos: { left, top } });
       }
     }
     this.miniDotDrag = null;
