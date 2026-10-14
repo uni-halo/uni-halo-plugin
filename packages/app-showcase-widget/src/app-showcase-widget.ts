@@ -133,6 +133,7 @@ export class AppShowcaseWidgetElement extends LitElement {
     linksError: { state: true },
     miniInfo: { state: true },
     blogger: { state: true },
+    motion: { state: true },
   };
 
   declare tab: "all" | "miniprogram" | "app" | "other";
@@ -152,6 +153,8 @@ export class AppShowcaseWidgetElement extends LitElement {
   declare linksError: boolean;
   declare miniInfo: MiniInfo | null;
   declare blogger: BloggerInfo | null;
+  /** 形态切换动画阶段：expand=卡片弹入 / collapse=卡片收起 / ball-in=小球复现 */
+  declare motion: "" | "expand" | "collapse" | "ball-in";
 
   private config: AppShowcaseWidgetConfig;
   private panelDrag: DragState | null = null;
@@ -181,6 +184,7 @@ export class AppShowcaseWidgetElement extends LitElement {
     this.linksError = false;
     this.miniInfo = null;
     this.blogger = null;
+    this.motion = "";
   }
 
   connectedCallback(): void {
@@ -244,12 +248,8 @@ export class AppShowcaseWidgetElement extends LitElement {
     }
     const saved = loadWidgetState();
     if (saved) {
-      // 先恢复面板自由位置（覆盖锚点定位），最小化恢复基于该位置计算
-      if (saved.panelPos) {
-        this.setFree(saved.panelPos.left, saved.panelPos.top);
-      }
       if (saved.minimized) {
-        // 无 dotPos 时留空走锚点 CSS 定位：页面初始布局未完成时测量恒为 0，不可靠
+        // 球态：dotPos 即球位置；无 dotPos 留空走锚点 CSS 定位（初始布局未完成时测量不可靠）
         if (saved.dotPos) {
           this.dotStyle =
             `left:${Math.round(saved.dotPos.left)}px;top:${Math.round(saved.dotPos.top)}px;`;
@@ -257,7 +257,14 @@ export class AppShowcaseWidgetElement extends LitElement {
         this.minimized = true;
         return;
       }
-      return; // 展开态：位置已在上面恢复
+      // 卡片态：旧 panelPos 归一为球位置（球是唯一位置事实源），卡片位置由球派生
+      if (saved.panelPos) {
+        this.dotStyle =
+          `left:${Math.round(saved.panelPos.left)}px;top:${Math.round(saved.panelPos.top)}px;`;
+        this.expandAt(saved.panelPos.left, saved.panelPos.top);
+        return;
+      }
+      return; // 无位置信息：按锚点默认定位
     }
     if (this.config.defaultState === "minimized") {
       // 不测量：主题常在初始化期间隐藏 body，此时卡片无布局盒子，测量恒为 0；
@@ -384,52 +391,78 @@ export class AppShowcaseWidgetElement extends LitElement {
     }
     this.panelDrag = null;
     panel.classList.remove("uh-asw-dragging");
-    // 拖拽结束时的视口位置（此时 transform 已被 setFree 归零，rect 即 left/top）
-    const rect = panel.getBoundingClientRect();
-    // 记住拖拽后的自由位置，跨页保持
-    this.persistState({
-      minimized: false,
-      panelPos: { left: Math.round(rect.left), top: Math.round(rect.top) },
-    });
+    // 卡片位置由球派生，拖动仅本次会话有效，不持久化
   }
 
-  // ===== 最小化 =====
+  // ===== 最小化（收起） =====
   private onMinimizeClick(e: MouseEvent): void {
     const panel = this.panelEl;
-    if (!panel) {
-      return;
+    if (!panel || this.motion) {
+      return; // 动画进行中忽略重复点击
     }
-    // 小球出现在鼠标点击处（光标居中），并钳制到视口内（点击贴近屏幕边缘时不出屏）
-    const dotSize = 40; // 与 .uh-asw-mini-dot 尺寸一致
+    // 小球复现在收起触发点（鼠标点击处，光标居中），钳制到视口内
+    const dotSize = AppShowcaseWidgetElement.DOT_SIZE;
     const x = Math.min(Math.max(0, e.clientX - dotSize / 2), window.innerWidth - dotSize);
     const y = Math.min(Math.max(0, e.clientY - dotSize / 2), window.innerHeight - dotSize);
-    this.dotStyle = `left:${Math.round(x)}px;top:${Math.round(y)}px;`;
-    this.minimized = true;
-    // 记住最小化态与小球位置（小球即点击处），跨页恢复；
-    // panelPos 仍记面板当前视口位置（展开恢复的视口约束依赖它）
-    const rect = panel.getBoundingClientRect();
-    this.persistState({
-      minimized: true,
-      dotPos: { left: Math.round(x), top: Math.round(y) },
-      panelPos: { left: Math.round(rect.left), top: Math.round(rect.top) },
-    });
+    // 先播卡片收起动画，结束后切球态
+    this.motion = "collapse";
+    window.setTimeout(() => {
+      this.dotStyle = `left:${Math.round(x)}px;top:${Math.round(y)}px;`;
+      this.motion = "ball-in";
+      this.minimized = true;
+      this.persistState({ minimized: true, dotPos: { left: Math.round(x), top: Math.round(y) } });
+      window.setTimeout(() => {
+        this.motion = "";
+      }, 220);
+    }, 180);
   }
 
-  /**
-   * 角点择优：以小球位置为基准选择面板锚定角，面板始终朝屏幕内侧展开。
-   * 默认面板左上角 = 小球位置；右缘放不下改右上角锚定（向左展开），
-   * 底缘放不下改左下角锚定（向上展开），双溢出改右下角。
-   */
-  private placePanelAtDot(dotLeft: number, dotTop: number, width: number, height: number): { left: number; top: number } {
-    let left = dotLeft;
-    let top = dotTop;
-    if (dotLeft + width > window.innerWidth) {
-      left = dotLeft - width; // 右缘溢出：面板右上角对齐小球，向左展开
+  /** 以球为基准派生卡片位置：按球中心所在象限朝屏幕内侧展开，边缘留 12px 间距 */
+  private static readonly DOT_SIZE = 40;
+  private static readonly CARD_GAP = 12;
+  private placePanelNearBall(dotLeft: number, dotTop: number, width: number, height: number): { left: number; top: number } {
+    const size = AppShowcaseWidgetElement.DOT_SIZE;
+    const gap = AppShowcaseWidgetElement.CARD_GAP;
+    const centerX = dotLeft + size / 2;
+    const centerY = dotTop + size / 2;
+    const left = centerX > window.innerWidth / 2 ? dotLeft - gap - width : dotLeft + size + gap;
+    const top = centerY > window.innerHeight / 2 ? dotTop - gap - height : dotTop + size + gap;
+    return {
+      left: Math.max(0, Math.min(left, window.innerWidth - width)),
+      top: Math.max(0, Math.min(top, window.innerHeight - height)),
+    };
+  }
+
+  /** 展开卡片：收起面板无法测量，先按估算尺寸定位，显示后按真实尺寸复算修正 */
+  private expandAt(dotLeft: number, dotTop: number): void {
+    const panel = this.panelEl;
+    if (panel) {
+      const estWidth = Number(this.config.panelWidth) || 340;
+      const estHeight = Math.min(530, window.innerHeight - 48);
+      const { left, top } = this.placePanelNearBall(dotLeft, dotTop, estWidth, estHeight);
+      panel.style.left = Math.round(left) + "px";
+      panel.style.top = Math.round(top) + "px";
+      panel.style.right = "auto";
+      panel.style.bottom = "auto";
+      panel.style.transform = ""; // 清除锚点 transform（center 等 -50% 偏移），定位精确
     }
-    if (dotTop + height > window.innerHeight) {
-      top = dotTop - height; // 底缘溢出：面板左下角对齐小球，向上展开
-    }
-    return { left, top };
+    // 卡片弹入动画
+    this.motion = "expand";
+    this.minimized = false;
+    // 记住展开态，并清除可能残留的旧 panelPos（避免被误当作球位置）
+    this.persistState({ minimized: false, panelPos: undefined });
+    window.setTimeout(() => {
+      this.motion = "";
+    }, 220);
+    // 显示后按真实尺寸复算（估算与实际内容高度可能有偏差）
+    this.updateComplete.then(() => {
+      const shown = this.panelEl;
+      if (!shown) {
+        return;
+      }
+      const fixed = this.placePanelNearBall(dotLeft, dotTop, shown.offsetWidth, shown.offsetHeight);
+      this.setFree(fixed.left, fixed.top);
+    });
   }
 
   private onRestoreClick(): void {
@@ -437,62 +470,23 @@ export class AppShowcaseWidgetElement extends LitElement {
       this.miniDotDragged = false;
       return; // 刚拖拽过，忽略本次 click（防拖拽松手误触发恢复）
     }
+    if (this.motion) {
+      return; // 动画进行中忽略重复点击
+    }
     if (!this.dotStyle) {
-      // 小球处于锚点定位（默认小球态）：面板直接展开，保持锚点位置
+      // 初始锚点球（用户从未交互）：面板按锚点位置展开
       this.minimized = false;
       this.persistState({ minimized: false });
       return;
     }
-    // 恢复：面板以小球当前位置为基准展开（小球可被拖到任意位置，面板应跟随出现）。
-    // 收起的面板 display:none 无法测量，先用估算尺寸做角点择优；显示后按真实尺寸复算修正。
-    // 注意：minimized=false 后小球元素会被重渲染移除，坐标必须在此之前捕获为快照
+    // minimized=false 会触发重渲染卸载小球，球坐标必须在之前捕获
     const dot = this.miniDotEl;
-    const panel = this.panelEl;
-    let dotLeft = 0;
-    let dotTop = 0;
-    let hasDotPos = false;
-    if (dot && panel) {
-      const rect = dot.getBoundingClientRect();
-      dotLeft = rect.left;
-      dotTop = rect.top;
-      hasDotPos = true;
-      const estWidth = Number(this.config.panelWidth) || 340;
-      const estHeight = Math.min(530, window.innerHeight - 48);
-      const { left, top } = this.placePanelAtDot(rect.left, rect.top, estWidth, estHeight);
-      panel.style.left = Math.round(left) + "px";
-      panel.style.top = Math.round(top) + "px";
-      panel.style.right = "auto";
-      panel.style.bottom = "auto";
-      panel.style.transform = ""; // 清除锚点 transform（center 等 -50% 偏移），定位精确
+    if (!dot) {
+      this.minimized = false;
+      return;
     }
-    this.minimized = false;
-    // 面板显示后按真实尺寸复算角点择优（估算与实际内容高度可能有偏差），钳制仅作极端小屏兜底
-    this.updateComplete.then(() => {
-      const shown = this.panelEl;
-      if (!shown) {
-        return;
-      }
-      const left = Number.parseInt(shown.style.left, 10) || 0;
-      const top = Number.parseInt(shown.style.top, 10) || 0;
-      if (hasDotPos) {
-        const fixed = this.placePanelAtDot(dotLeft, dotTop, shown.offsetWidth, shown.offsetHeight);
-        if (fixed.left !== left || fixed.top !== top) {
-          this.setFree(fixed.left, fixed.top);
-        }
-      }
-      // 视口约束兜底 + 记住展开态与面板最终位置，跨页恢复
-      const finalLeft = Number.parseInt(shown.style.left, 10) || 0;
-      const finalTop = Number.parseInt(shown.style.top, 10) || 0;
-      const [l, t] = this.clampToViewport(finalLeft, finalTop, shown);
-      if (l !== finalLeft || t !== finalTop) {
-        this.setFree(l, t);
-      }
-      // 记住展开态与面板最终位置（含视口约束修正），跨页恢复
-      this.persistState({
-        minimized: false,
-        panelPos: { left: l, top: t },
-      });
-    });
+    const rect = dot.getBoundingClientRect();
+    this.expandAt(rect.left, rect.top);
   }
 
   // ===== 最小化小球拖拽（独立 fixed 元素，不受 dragEnabled 约束，无条件可拖） =====
@@ -891,7 +885,12 @@ export class AppShowcaseWidgetElement extends LitElement {
     // 小球定位：有像素位置（手动最小化/拖拽记忆）用像素；否则与面板同款锚点 CSS 定位；
     // 层级与面板同源（内联 z-index 覆盖 CSS 默认值）
     const zIndexStyle = "z-index:" + (Number(c.zIndex) || 9999) + ";";
-    const dotCls = this.dotStyle ? "uh-asw-mini-dot" : `uh-asw-mini-dot uh-asw-pos-${c.position || "bottom-right"}`;
+    // 形态切换动画类：expand/collapse 作用于面板，ball-in 作用于小球
+    const panelMotionCls =
+      this.motion === "expand" ? " uh-asw-motion-pop" : this.motion === "collapse" ? " uh-asw-motion-out" : "";
+    const dotMotionCls = this.motion === "ball-in" ? " uh-asw-motion-pop" : "";
+    const dotCls =
+      (this.dotStyle ? "uh-asw-mini-dot" : `uh-asw-mini-dot uh-asw-pos-${c.position || "bottom-right"}`) + dotMotionCls;
     const dotStyleVal = (this.dotStyle || this.anchorTransform(c.position || "bottom-right")) + zIndexStyle;
     // 页签显隐跟随数据：分类无条目则隐藏对应页签，当前页签分类被隐藏时高亮回退「全部」
     const counts = {
@@ -905,7 +904,7 @@ export class AppShowcaseWidgetElement extends LitElement {
       ${this.linksOpen ? this.renderLinksModal() : ""}
       ${this.detail ? this.renderDetailModal(this.detail) : ""}
       <div
-        class="uh-asw uh-asw-pos-${c.position || "bottom-right"} ${c.dragEnabled ? "uh-asw-draggable" : ""} ${this.minimized ? "uh-asw-minimized" : ""}"
+        class="uh-asw uh-asw-pos-${c.position || "bottom-right"} ${c.dragEnabled ? "uh-asw-draggable" : ""} ${this.minimized ? "uh-asw-minimized" : ""}${panelMotionCls}"
         style=${this.panelStyle}
       >
         <div

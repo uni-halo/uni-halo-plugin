@@ -856,4 +856,34 @@ export const styles = css`
     border-color: rgba(255, 255, 255, 0.12);
     color: #e5e7eb;
   }
+
+  /* ===== 形态切换过渡：scale/opacity 用独立属性驱动，不覆盖锚点 transform ===== */
+  @media (prefers-reduced-motion: no-preference) {
+    .uh-asw-motion-pop {
+      animation: uh-asw-pop-in 0.2s ease both;
+    }
+    .uh-asw-motion-out {
+      animation: uh-asw-pop-out 0.18s ease both;
+    }
+    @keyframes uh-asw-pop-in {
+      from {
+        opacity: 0;
+        scale: 0.6;
+      }
+      to {
+        opacity: 1;
+        scale: 1;
+      }
+    }
+    @keyframes uh-asw-pop-out {
+      from {
+        opacity: 1;
+        scale: 1;
+      }
+      to {
+        opacity: 0;
+        scale: 0.6;
+      }
+    }
+  }
 `;
