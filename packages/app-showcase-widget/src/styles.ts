@@ -308,7 +308,7 @@ export const styles = css`
     transition: background 0.15s ease;
   }
   .uh-asw-btn:hover {
-    background: #f1f5f9;
+    background: rgba(0, 0, 0, 0.03);
   }
   .uh-asw-btn-primary {
     background: #1A1B1D;
@@ -535,7 +535,7 @@ export const styles = css`
   }
   .uh-asw-field input[type="text"]:focus,
   .uh-asw-field textarea:focus {
-    border-color: #c6f921;
+    border-color: rgba(26, 27, 29, 0.4);
   }
   .uh-asw-field textarea {
     box-sizing: border-box;
@@ -592,7 +592,7 @@ export const styles = css`
     background: #ffffff;
   }
   .uh-asw-shot-input:focus {
-    border-color: #c6f921;
+    border-color: rgba(26, 27, 29, 0.4);
   }
   .uh-asw-shot-remove {
     flex-shrink: 0;
@@ -685,7 +685,7 @@ export const styles = css`
     font-family: inherit;
   }
   .uh-asw-copy-input:focus {
-    border-color: #c6f921;
+    border-color: rgba(26, 27, 29, 0.4);
   }
   .uh-asw-copy-textarea {
     height: auto;
@@ -743,8 +743,8 @@ export const styles = css`
     color: #9a9a9a;
   }
   :host(.uh-asw-dark) .uh-asw-seg-active {
-    background: #f1f3f5;
-    color: #1A1B1D;
+    background: rgb(61, 62, 64);
+    color: #f1f3f5;
   }
   :host(.uh-asw-dark) .uh-asw-group-name,
   :host(.uh-asw-dark) .uh-asw-item-desc,
@@ -795,12 +795,12 @@ export const styles = css`
     background: rgba(255, 255, 255, 0.14);
   }
   :host(.uh-asw-dark) .uh-asw-btn-primary {
-    background: #c6f921;
+    background: rgb(61, 62, 64);
     border-color: transparent;
-    color: #1A1B1D;
+    color: #f1f3f5;
   }
   :host(.uh-asw-dark) .uh-asw-btn-primary:hover {
-    background: #d3fa4d;
+    background: #4a4b4e;
   }
   /* 弹窗（二维码卡保持白底保证扫码对比度） */
   :host(.uh-asw-dark) .uh-asw-overlay {
@@ -829,6 +829,12 @@ export const styles = css`
     background: rgba(255, 255, 255, 0.06);
     border-color: rgba(255, 255, 255, 0.14);
     color: #e5e7eb;
+  }
+  :host(.uh-asw-dark) .uh-asw-field input[type="text"]:focus,
+  :host(.uh-asw-dark) .uh-asw-field textarea:focus,
+  :host(.uh-asw-dark) .uh-asw-shot-input:focus,
+  :host(.uh-asw-dark) .uh-asw-copy-input:focus {
+    border-color: rgba(255, 255, 255, 0.35);
   }
   :host(.uh-asw-dark) .uh-asw-captcha-img {
     border-color: rgba(255, 255, 255, 0.12);
@@ -864,6 +870,39 @@ export const styles = css`
     }
     .uh-asw-motion-out {
       animation: uh-asw-pop-out 0.18s ease both;
+    }
+    .uh-asw-fade-out {
+      animation: uh-asw-fade-out 0.18s ease both;
+    }
+    /* 申请/友链/详情弹窗：挂载即播，无需 JS 驱动 */
+    .uh-asw-overlay {
+      animation: uh-asw-fade-in 0.2s ease both;
+    }
+    .uh-asw-modal {
+      animation: uh-asw-pop-in 0.2s ease both;
+    }
+    /* 关闭动画需更高优先级压过上面的打开动画 */
+    .uh-asw-overlay.uh-asw-fade-out {
+      animation: uh-asw-fade-out 0.18s ease both;
+    }
+    .uh-asw-modal.uh-asw-motion-out {
+      animation: uh-asw-pop-out 0.18s ease both;
+    }
+    @keyframes uh-asw-fade-in {
+      from {
+        opacity: 0;
+      }
+      to {
+        opacity: 1;
+      }
+    }
+    @keyframes uh-asw-fade-out {
+      from {
+        opacity: 1;
+      }
+      to {
+        opacity: 0;
+      }
     }
     @keyframes uh-asw-pop-in {
       from {

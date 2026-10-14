@@ -134,6 +134,7 @@ export class AppShowcaseWidgetElement extends LitElement {
     miniInfo: { state: true },
     blogger: { state: true },
     motion: { state: true },
+    modalClose: { state: true },
   };
 
   declare tab: "all" | "miniprogram" | "app" | "other";
@@ -155,6 +156,8 @@ export class AppShowcaseWidgetElement extends LitElement {
   declare blogger: BloggerInfo | null;
   /** 形态切换动画阶段：expand=卡片弹入 / collapse=卡片收起 / ball-in=小球复现 */
   declare motion: "" | "expand" | "collapse" | "ball-in";
+  /** 正在播放关闭动画的弹窗：apply=申请 / links=友链 / detail=详情 */
+  declare modalClose: "" | "apply" | "links" | "detail";
 
   private config: AppShowcaseWidgetConfig;
   private panelDrag: DragState | null = null;
@@ -185,6 +188,7 @@ export class AppShowcaseWidgetElement extends LitElement {
     this.miniInfo = null;
     this.blogger = null;
     this.motion = "";
+    this.modalClose = "";
   }
 
   connectedCallback(): void {
@@ -417,16 +421,15 @@ export class AppShowcaseWidgetElement extends LitElement {
     }, 180);
   }
 
-  /** 以球为基准派生卡片位置：按球中心所在象限朝屏幕内侧展开，边缘留 12px 间距 */
+  /** 以球为基准派生卡片位置：面板角对齐球位（展开时球隐藏），放不下换对角并钳制 */
   private static readonly DOT_SIZE = 40;
-  private static readonly CARD_GAP = 12;
   private placePanelNearBall(dotLeft: number, dotTop: number, width: number, height: number): { left: number; top: number } {
     const size = AppShowcaseWidgetElement.DOT_SIZE;
-    const gap = AppShowcaseWidgetElement.CARD_GAP;
     const centerX = dotLeft + size / 2;
     const centerY = dotTop + size / 2;
-    const left = centerX > window.innerWidth / 2 ? dotLeft - gap - width : dotLeft + size + gap;
-    const top = centerY > window.innerHeight / 2 ? dotTop - gap - height : dotTop + size + gap;
+    // 默认面板左上角 = 球左上角；右侧/下侧放不下时改为面板右下角对齐球右下角
+    const left = centerX > window.innerWidth / 2 ? dotLeft + size - width : dotLeft;
+    const top = centerY > window.innerHeight / 2 ? dotTop + size - height : dotTop;
     return {
       left: Math.max(0, Math.min(left, window.innerWidth - width)),
       top: Math.max(0, Math.min(top, window.innerHeight - height)),
@@ -657,9 +660,27 @@ export class AppShowcaseWidgetElement extends LitElement {
     }
   }
 
+  /** 关闭弹窗：先播收起动画，动画结束再卸载 */
+  private closeModal(kind: "apply" | "links" | "detail"): void {
+    if (this.modalClose) {
+      return; // 已有弹窗在收起
+    }
+    this.modalClose = kind;
+    window.setTimeout(() => {
+      if (kind === "apply") {
+        this.applyOpen = false;
+      } else if (kind === "links") {
+        this.linksOpen = false;
+      } else {
+        this.detail = null;
+        this.detailQr = "";
+      }
+      this.modalClose = "";
+    }, 180);
+  }
+
   private closeDetail(): void {
-    this.detail = null;
-    this.detailQr = "";
+    this.closeModal("detail");
   }
 
   // ===== 弹窗通用 =====
@@ -671,9 +692,13 @@ export class AppShowcaseWidgetElement extends LitElement {
   }
 
   private closeModals(): void {
-    this.applyOpen = false;
-    this.linksOpen = false;
-    this.closeDetail();
+    if (this.applyOpen) {
+      this.closeModal("apply");
+    } else if (this.linksOpen) {
+      this.closeModal("links");
+    } else if (this.detail) {
+      this.closeModal("detail");
+    }
   }
 
   // ===== 申请弹窗 =====
@@ -833,7 +858,7 @@ export class AppShowcaseWidgetElement extends LitElement {
         captcha?: CaptchaResponse;
       };
       if (res.status === 200 || res.status === 201) {
-        this.applyOpen = false;
+        this.closeModal("apply");
         this.clearDraft(); // 提交成功后清空本地草稿
         form.reset(); // 清空表单字段（含验证码，下次打开为空）
         this.screenshotRows = [""]; // 预览图动态行重置
@@ -900,9 +925,9 @@ export class AppShowcaseWidgetElement extends LitElement {
     };
     const activeTab = this.tab !== "all" && !counts[this.tab] ? "all" : this.tab;
     return html`
-      ${this.applyOpen ? this.renderApplyModal() : ""}
-      ${this.linksOpen ? this.renderLinksModal() : ""}
-      ${this.detail ? this.renderDetailModal(this.detail) : ""}
+      ${this.applyOpen || this.modalClose === "apply" ? this.renderApplyModal() : ""}
+      ${this.linksOpen || this.modalClose === "links" ? this.renderLinksModal() : ""}
+      ${(this.detail || this.modalClose === "detail") && this.detail ? this.renderDetailModal(this.detail) : ""}
       <div
         class="uh-asw uh-asw-pos-${c.position || "bottom-right"} ${c.dragEnabled ? "uh-asw-draggable" : ""} ${this.minimized ? "uh-asw-minimized" : ""}${panelMotionCls}"
         style=${this.panelStyle}
@@ -1032,8 +1057,8 @@ export class AppShowcaseWidgetElement extends LitElement {
     const qrSrc = isMini ? entry.codeImage : entry.codeImage || this.detailQr;
     const initial = entry.displayName.slice(0, 1);
     return html`
-      <div class="uh-asw-overlay" @click=${this.onOverlayClick}>
-        <div class="uh-asw-modal">
+      <div class="uh-asw-overlay${this.modalClose === "detail" ? " uh-asw-fade-out" : ""}" @click=${this.onOverlayClick}>
+        <div class="uh-asw-modal${this.modalClose === "detail" ? " uh-asw-motion-out" : ""}">
           <div class="uh-asw-modal-header">
             <div class="uh-asw-modal-title">${isMini ? "小程序详情" : "应用详情"}<span class="uh-asw-tag">${entry.typeLabel}</span></div>
             <button type="button" class="uh-asw-modal-close" aria-label="关闭" @click=${this.closeDetail}>&times;</button>
@@ -1097,8 +1122,8 @@ export class AppShowcaseWidgetElement extends LitElement {
 
   private renderApplyModal() {
     return html`
-      <div class="uh-asw-overlay" @click=${this.onOverlayClick}>
-        <div class="uh-asw-modal">
+      <div class="uh-asw-overlay${this.modalClose === "apply" ? " uh-asw-fade-out" : ""}" @click=${this.onOverlayClick}>
+        <div class="uh-asw-modal${this.modalClose === "apply" ? " uh-asw-motion-out" : ""}">
           <div class="uh-asw-modal-header">
             <div class="uh-asw-modal-title">小程序申请</div>
             <button type="button" class="uh-asw-modal-close" aria-label="关闭" @click=${this.closeModals}>&times;</button>
@@ -1230,8 +1255,8 @@ export class AppShowcaseWidgetElement extends LitElement {
     const hasContent =
       miniRows.some((row) => row.value) || blogRows.some((row) => row.value);
     return html`
-      <div class="uh-asw-overlay" @click=${this.onOverlayClick}>
-        <div class="uh-asw-modal">
+      <div class="uh-asw-overlay${this.modalClose === "links" ? " uh-asw-fade-out" : ""}" @click=${this.onOverlayClick}>
+        <div class="uh-asw-modal${this.modalClose === "links" ? " uh-asw-motion-out" : ""}">
           <div class="uh-asw-modal-header">
             <div class="uh-asw-modal-title">小程序友链信息</div>
             <button type="button" class="uh-asw-modal-close" aria-label="关闭" @click=${this.closeModals}>&times;</button>
