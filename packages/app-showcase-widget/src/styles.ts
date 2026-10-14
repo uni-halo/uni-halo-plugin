@@ -11,6 +11,9 @@ import { css } from "lit";
 export const styles = css`
   :host {
     display: block;
+    /* 图标底色/文字色：暗黑模式仅覆写变量，规则只有一份 */
+    --uh-asw-icon-bg: #ffffff;
+    --uh-asw-icon-fg: #1A1B1D;
   }
 
   /* ===== 展开面板 ===== */
@@ -201,17 +204,10 @@ export const styles = css`
     display: flex;
     align-items: center;
     justify-content: center;
-    color: #ffffff;
+    color: var(--uh-asw-icon-fg);
     font-size: 15px;
     font-weight: 600;
-    background: #1A1B1D;
-  }
-  .uh-asw-item-icon.app {
-    background: #c6f921;
-    color: #1A1B1D;
-  }
-  .uh-asw-item-icon.other {
-    color: #1A1B1D;
+    background: var(--uh-asw-icon-bg);
   }
   .uh-asw-item-icon img {
     display: block;
@@ -770,8 +766,9 @@ export const styles = css`
     background: rgba(255, 255, 255, 0.09);
     color: #b9b9b9;
   }
-  :host(.uh-asw-dark) .uh-asw-item-icon.miniprogram {
-    background: #3a3b3e;
+  :host(.uh-asw-dark) {
+    --uh-asw-icon-bg: #1e1f22;
+    --uh-asw-icon-fg: #ffffff;
   }
   :host(.uh-asw-dark) .uh-asw-item-thumb {
     border-color: rgba(255, 255, 255, 0.12);

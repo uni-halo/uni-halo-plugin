@@ -394,19 +394,23 @@ export class AppShowcaseWidgetElement extends LitElement {
   }
 
   // ===== 最小化 =====
-  private onMinimizeClick(): void {
+  private onMinimizeClick(e: MouseEvent): void {
     const panel = this.panelEl;
     if (!panel) {
       return;
     }
-    // 记录面板当前视口位置：小球作为独立 fixed 元素定位到该处（不影响面板样式）
-    const rect = panel.getBoundingClientRect();
-    this.dotStyle = `left:${Math.round(rect.left)}px;top:${Math.round(rect.top)}px;`;
+    // 小球出现在鼠标点击处（光标居中），并钳制到视口内（点击贴近屏幕边缘时不出屏）
+    const dotSize = 40; // 与 .uh-asw-mini-dot 尺寸一致
+    const x = Math.min(Math.max(0, e.clientX - dotSize / 2), window.innerWidth - dotSize);
+    const y = Math.min(Math.max(0, e.clientY - dotSize / 2), window.innerHeight - dotSize);
+    this.dotStyle = `left:${Math.round(x)}px;top:${Math.round(y)}px;`;
     this.minimized = true;
-    // 记住最小化态与小球位置（小球即面板当前视口位置），跨页恢复
+    // 记住最小化态与小球位置（小球即点击处），跨页恢复；
+    // panelPos 仍记面板当前视口位置（展开恢复的视口约束依赖它）
+    const rect = panel.getBoundingClientRect();
     this.persistState({
       minimized: true,
-      dotPos: { left: Math.round(rect.left), top: Math.round(rect.top) },
+      dotPos: { left: Math.round(x), top: Math.round(y) },
       panelPos: { left: Math.round(rect.left), top: Math.round(rect.top) },
     });
   }

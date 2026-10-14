@@ -21,7 +21,7 @@ function mount(): void {
   document.body.appendChild(el);
 }
 
-/** 控制台标识日志：徽标 + 插件简介 + 边框包裹的三条链接（官网/文档/作者），上下空行与其他输出区隔 */
+/** 控制台标识日志：徽标 + 插件简介 + 无边框的链接列表（官网/文档/作者/组织），上下空行与其他输出区隔 */
 function printBanner(): void {
   const version = CONFIG?.version || "";
   const theme = "#c6f921";
@@ -42,15 +42,13 @@ function printBanner(): void {
 支持 40+ 功能，优雅、轻量、跨平台，让你的内容触达每一个角落。`,
     "color:#92cf57;",
   );
-  const pad = (url: string): string => url + " ".repeat(31 - url.length);
   const link = (label: string, url: string): void => {
-    console.log(`%c│%c ${label} %c ${pad(url)}%c  │`, accent, chip, "", accent);
+    console.log(`%c ${label} %c ${url}`, chip + "padding:1px 6px;", accent);
   };
-  console.log(`%c┌${"─".repeat(20)}┐`, accent);
   link("官网", "https://uni-halo.ialley.cn");
   link("文档", "https://uni-halo-doc.ialley.cn");
   link("作者", "https://www.xiaoxiaomo.cn");
-  console.log(`%c└${"─".repeat(20)}┘`, accent);
+  link("组织", "https://github.com/uni-halo");
   console.log("");
 }
 
