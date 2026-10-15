@@ -108,6 +108,17 @@ public class NoticeServiceImpl implements NoticeService {
     }
 
     @Override
+    public Mono<Notice> getPublicByName(String name) {
+        return getByName(name)
+                // 公开详情：删除中与未发布对象视为不存在
+                .filter(notice -> notice.getMetadata() == null
+                        || notice.getMetadata().getDeletionTimestamp() == null)
+                .filter(notice -> notice.getSpec() != null
+                        && STATUS_PUBLISHED.equals(notice.getSpec().getStatus()))
+                .switchIfEmpty(Mono.error(new NotFoundException("公告不存在")));
+    }
+
+    @Override
     public Mono<Notice> create(Notice notice) {
         return validate(notice, null)
                 .then(Mono.defer(() -> {

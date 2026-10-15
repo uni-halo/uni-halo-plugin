@@ -23,6 +23,7 @@ import run.halo.app.extension.GroupVersion;
 import run.halo.app.extension.ListResult;
 import tools.jackson.core.type.TypeReference;
 import tools.jackson.databind.ObjectMapper;
+import static cn.ialley.unihalo.utils.QueryParams.parseInt;
 
 /**
  * 通知公告公开接口（app 端，匿名可访问）。
@@ -117,18 +118,16 @@ public class NoticePublicEndpoint implements CustomEndpoint {
     }
 
     /**
-     * 公告详情（含 content 富文本正文，内嵌类型信息）；不存在返回 404。
-     * 删除中对象视为不存在。
+     * 公告详情（含 content 富文本正文，内嵌类型信息）；
+     * 仅 published 且非删除中的公告可见，其余返回 404。
      */
     private Mono<ServerResponse> getNotice(ServerRequest request) {
         String name = request.pathVariable("name");
-        return noticeService.getByName(name)
-                // 公开详情：删除中对象视为不存在
-                .filter(notice -> notice.getMetadata() == null
-                        || notice.getMetadata().getDeletionTimestamp() == null)
+        return noticeService.getPublicByName(name)
                 .flatMap(this::toDetailMap)
                 .flatMap(body -> ServerResponse.ok().bodyValue(body))
-                .switchIfEmpty(Mono.defer(() -> ServerResponse.notFound().build()));
+                .onErrorResume(cn.ialley.unihalo.exception.NotFoundException.class,
+                        e -> ServerResponse.notFound().build());
     }
 
     /**
@@ -181,10 +180,10 @@ public class NoticePublicEndpoint implements CustomEndpoint {
     }
 
     private static int queryPage(ServerRequest request) {
-        return request.queryParam("page").map(Integer::parseInt).orElse(1);
+        return parseInt(request.queryParam("page"), 1);
     }
 
     private static int querySize(ServerRequest request) {
-        return request.queryParam("size").map(Integer::parseInt).orElse(20);
+        return parseInt(request.queryParam("size"), 20);
     }
 }

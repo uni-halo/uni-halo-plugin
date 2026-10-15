@@ -34,6 +34,12 @@ public interface NoticeService {
     Mono<Notice> getByName(String name);
 
     /**
+     * 按 name 查询公开可见公告（仅 published 且非删除中，其余视为不存在）；
+     * 不存在或不可见时抛 {@link cn.ialley.unihalo.exception.NotFoundException}。
+     */
+    Mono<Notice> getPublicByName(String name);
+
+    /**
      * 新建（title 必填；summary 空时自动生成；publishTime 发布时记录）。
      */
     Mono<Notice> create(Notice notice);
