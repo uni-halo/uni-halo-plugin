@@ -41,6 +41,7 @@ const formState = ref<Notice>({
     summary: "",
     cover: "",
     link: "",
+    linkType: "none",
     typeName: "",
     status: "draft",
     priority: 0,
@@ -57,6 +58,10 @@ const resetForm = () => {
     if (!formState.value.spec.cover) {
       formState.value.spec.cover = "";
     }
+    // 历史数据兼容：linkType 为空且 link 非空时回退为 external
+    if (!formState.value.spec.linkType) {
+      formState.value.spec.linkType = formState.value.spec.link ? "external" : "none";
+    }
     return;
   }
   formState.value = {
@@ -67,6 +72,7 @@ const resetForm = () => {
       summary: "",
       cover: "",
       link: "",
+      linkType: "none",
       typeName: "",
       status: "draft",
       priority: 0,
@@ -197,13 +203,47 @@ function handleContentMarkdownError(message: string) {
             aspect-ratio="3/2"
           />
           <FormKit
+            v-model="formState.spec.linkType"
+            name="linkType"
+            label="链接类型"
+            type="select"
+            :options="[
+              { label: '无', value: 'none' },
+              { label: '外部链接', value: 'external' },
+              { label: '小程序链接', value: 'miniapp' },
+              { label: '内部页面链接', value: 'internal' },
+              { label: '微信公众号文章', value: 'wechat-mp' },
+            ]"
+            help="平台兼容：App（安卓/iOS）不支持小程序链接；小程序不支持外部链接/公众号文章直接跳转（按资质回退为复制链接）"
+          />
+          <FormKit
+            v-if="formState.spec.linkType === 'external' || formState.spec.linkType === 'wechat-mp' || formState.spec.linkType === 'internal'"
             v-model="formState.spec.link"
             name="link"
-            label="外链"
+            :label="formState.spec.linkType === 'internal' ? '页面路径' : '链接地址'"
             type="text"
-            help="关联的跳转地址（可选）"
-            placeholder="https://..."
+            :help="formState.spec.linkType === 'internal' ? 'app 内页面路径，如 /pages-blog/notice/notice' : '完整的跳转地址'"
+            :placeholder="formState.spec.linkType === 'internal' ? '/pages-...' : 'https://...'"
           />
+          <template v-if="formState.spec.linkType === 'miniapp'">
+            <FormKit
+              v-model="formState.spec.linkAppId"
+              name="linkAppId"
+              label="小程序 AppID"
+              type="text"
+              validation="required"
+              :validation-messages="{ required: '小程序 AppID 不能为空' }"
+              placeholder="wx..."
+            />
+            <FormKit
+              v-model="formState.spec.linkPath"
+              name="linkPath"
+              label="小程序页面路径"
+              type="text"
+              help="留空则打开小程序首页"
+              placeholder="/pages/index/index"
+            />
+          </template>
           <FormKit
             v-model="formState.spec.typeName"
             name="typeName"

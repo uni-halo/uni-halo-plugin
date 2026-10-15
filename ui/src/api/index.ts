@@ -19,6 +19,7 @@ import type {
   MiniProgramLinkSubmission,
   Notice,
   NoticeType,
+  Faq,
   AuditDataConfig,
   AuditDataConfigDetail,
   AuditDataCandidateResult,
@@ -166,6 +167,23 @@ export const noticeTypeApi = {
   /** 拖拽排序保存：names 为按新顺序排列的类型 name 列表 */
   sortOrder: (names: string[]) =>
     http.put<{ success: boolean }>(`${PLUGIN_BASE}/notice-types/order`, { names }),
+};
+
+// ===== 常见问题（FAQ） =====
+
+export const faqApi = {
+  list: (query: {
+    page?: number;
+    size?: number;
+    keyword?: string;
+    category?: string;
+    visible?: string;
+  } = {}) => http.get<PageResult<Faq>>(`${PLUGIN_BASE}/faqs`, query),
+  create: (data: Faq) => http.post<Faq>(`${PLUGIN_BASE}/faqs`, data),
+  update: (name: string, data: Faq) =>
+    http.put<Faq>(`${PLUGIN_BASE}/faqs/${name}`, data),
+  delete: (name: string) =>
+    http.delete<{ success: boolean }>(`${PLUGIN_BASE}/faqs/${name}`),
 };
 
 // ===== 友情链接（小程序链接） =====

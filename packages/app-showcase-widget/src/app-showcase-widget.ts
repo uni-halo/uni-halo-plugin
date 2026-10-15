@@ -1238,12 +1238,12 @@ export class AppShowcaseWidgetElement extends LitElement {
 
   private renderLinksModal() {
     const miniRows: LinkInfoRow[] = [
-      { label: "小程序名称", value: this.miniInfo?.displayName },
+      { label: "应用名称", value: this.miniInfo?.displayName },
       { label: "太阳码地址", value: normalizeImageUrl(this.miniInfo?.miniProgramCode) },
       { label: "小程序 AppID", value: this.miniInfo?.appId },
       { label: "跳转页面路径", value: this.miniInfo?.path },
-      { label: "小程序地址", value: this.miniInfo?.link },
-      { label: "小程序描述", value: this.miniInfo?.description, textarea: true },
+      { label: "应用地址", value: this.miniInfo?.link },
+      { label: "应用简介", value: this.miniInfo?.description, textarea: true },
       { label: "申请说明", value: this.miniInfo?.applyRemark, textarea: true, copyable: false },
     ];
     const blogRows: LinkInfoRow[] = [
@@ -1367,12 +1367,12 @@ export class AppShowcaseWidgetElement extends LitElement {
       }
     };
     const mini = this.miniInfo;
-    push("小程序名称", mini?.displayName);
+    push("应用名称", mini?.displayName);
     push("太阳码地址", normalizeImageUrl(mini?.miniProgramCode));
     push("小程序 AppID", mini?.appId);
     push("跳转页面路径", mini?.path);
-    push("小程序地址", mini?.link);
-    push("描述", mini?.description);
+    push("应用地址", mini?.link);
+    push("应用简介", mini?.description);
     push("申请说明", mini?.applyRemark);
     const blog = this.blogger;
     push("博主昵称", blog?.nickname);

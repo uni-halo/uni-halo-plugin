@@ -99,6 +99,11 @@ function handleIntroMarkdownError(message: string) {
       help="小程序应用展示名称，如关于页标题等处使用" />
     <FormKit v-model="formState.spec.profile.appInfo.logo" name="appinfo_logo" label="应用图标" type="attachment"
       :accepts="['image/*']" help="小程序应用图标" />
+    <FormKit v-model="formState.spec.profile.appInfo.qualification" name="appinfo_qualification" label="小程序资质类型"
+      type="select" :options="[
+        { label: '个人资质', value: 'personal' },
+        { label: '非个人（企业）资质', value: 'enterprise' },
+      ]" help="个人资质小程序的内部 webview 域名校验严格，app 端据此决定外部链接是内部打开还是复制链接提示" />
   </template>
 
   <!-- 应用资料 → 博主资料 -->

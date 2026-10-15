@@ -6,6 +6,7 @@ import RiGalleryLine from '~icons/ri/gallery-line'
 import RiCheckboxMultipleLine from '~icons/ri/checkbox-multiple-line'
 import RiBook2Line from '~icons/ri/book-2-line'
 import RiMegaphoneLine from '~icons/ri/megaphone-line'
+import RiQuestionLine from '~icons/ri/question-line'
 import RiLink from '~icons/ri/link'
 import RiFileList3Line from '~icons/ri/file-list-3-line'
 import RiShieldCheckLine from '~icons/ri/shield-check-line'
@@ -60,7 +61,7 @@ export default definePlugin({
             name: '功能设置',
             group: GROUP_NAME,
             icon: markRaw(RiSettings3Line),
-            priority: 0,
+            priority: 1,
           },
         },
       },
@@ -81,7 +82,7 @@ export default definePlugin({
             name: '应用管理',
             group: GROUP_NAME,
             icon: markRaw(IconGrid),
-            priority: 0,
+            priority: 8,
           },
         },
         children: [
@@ -136,7 +137,7 @@ export default definePlugin({
             name: '恋爱管理',
             group: GROUP_NAME,
             icon: markRaw(RiHeartLine),
-            priority: 2,
+            priority: 6,
           },
         },
         children: [
@@ -222,7 +223,27 @@ export default definePlugin({
             name: '公告管理',
             group: GROUP_NAME,
             icon: markRaw(RiMegaphoneLine),
-            priority: 3,
+            priority: 4,
+          },
+        },
+      },
+    },
+    {
+      parentName: 'Root',
+      route: {
+        path: baseRoutePath('/faq'),
+        name: 'FaqList',
+        component: () => import('@/views/faq-manage/FaqListView.vue'),
+        meta: {
+          title: '问题管理',
+          searchable: true,
+          hideFooter: false,
+          permissions: ['plugin:uni-halo:faq:view'],
+          menu: {
+            name: '问题管理',
+            group: GROUP_NAME,
+            icon: markRaw(RiQuestionLine),
+            priority: 7,
           },
         },
       },
@@ -243,7 +264,7 @@ export default definePlugin({
             name: '友链管理',
             group: GROUP_NAME,
             icon: markRaw(RiLink),
-            priority: 4,
+            priority: 5,
           },
         },
         children: [
@@ -297,7 +318,7 @@ export default definePlugin({
             name: '审核模式',
             group: GROUP_NAME,
             icon: markRaw(RiShieldCheckLine),
-            priority: 5,
+            priority: 9,
           },
         },
       },
@@ -317,7 +338,7 @@ export default definePlugin({
             name: '轮播管理',
             group: GROUP_NAME,
             icon: markRaw(RiSlideshowLine),
-            priority: 6,
+            priority: 3,
           },
         },
       },
@@ -337,7 +358,7 @@ export default definePlugin({
             name: '绘画管理',
             group: GROUP_NAME,
             icon: markRaw(RiPaletteLine),
-            priority: 7,
+            priority: 2,
           },
         },
       },

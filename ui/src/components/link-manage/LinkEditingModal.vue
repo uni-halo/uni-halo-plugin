@@ -250,7 +250,7 @@ const handleSave = async () => {
             type="attachment"
             multiple
             :accepts="['image/*']"
-            help="支持多张预览图，可从附件库选择或直接上传（参考应用管理的截图上传）"
+            help="app 端以小图网格展示，点击可查看大图；支持多张，可从附件库选择或直接上传"
           />
         </div>
       </div>
@@ -302,8 +302,8 @@ const handleSave = async () => {
             label="可见性"
             type="select"
             :options="[
-              { label: '显示（app 端可见）', value: 'true' },
-              { label: '隐藏（仅控制台可见）', value: 'false' },
+              { label: '显示（app 端友链列表/详情可见）', value: 'true' },
+              { label: '隐藏（仅控制台可见，app 端不展示）', value: 'false' },
             ]"
           />
           <FormKit

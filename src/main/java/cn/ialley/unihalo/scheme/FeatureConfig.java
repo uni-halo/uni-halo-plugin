@@ -60,6 +60,12 @@ public class FeatureConfig extends AbstractExtension {
     public static class AppInfo {
         private String name;
         private String logo;
+        /**
+         * 小程序资质类型：personal 个人资质 / enterprise 非个人（企业）资质；
+         * app 端据此控制外部链接是否可在内部 webview 打开（个人资质小程序
+         * webview 业务域名校验严格，默认回退复制链接提示）
+         */
+        private String qualification;
     }
 
     /** 博主信息（昵称/头像/邮箱/简介/主页/介绍） */
@@ -246,6 +252,8 @@ public class FeatureConfig extends AbstractExtension {
         private String votes;
         /** 投票详情页 */
         private String voteDetail;
+        /** 常见问题页 */
+        private String faq;
         /** 联系博主页 */
         private String contact;
         /** 项目集页 */

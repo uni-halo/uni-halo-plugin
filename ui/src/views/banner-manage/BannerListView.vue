@@ -319,13 +319,13 @@ const sourceBadgeClass = (source?: string) =>
           <template #icon>
             <IconAddCircle class="w-5 h-5" />
           </template>
-          新建（从文章）
+          选文章
         </VButton>
         <VButton v-permission="['plugin:uni-halo:banner:manage']" type="primary" @click="handleCreateCustom">
           <template #icon>
             <IconAddCircle class="w-5 h-5" />
           </template>
-          新建（自定义）
+          新建
         </VButton>
       </VSpace>
     </template>
@@ -390,8 +390,8 @@ const sourceBadgeClass = (source?: string) =>
         <!-- 非手动排序模式手柄不渲染，handle 无匹配时列表不可拖；
              target 指向 VEntityContainer（sortable 的直接子元素须为各个 VEntity，
              否则整个容器会被当成一个可拖项） -->
-        <VueDraggable v-model="bannerList" :disabled="!!keyword || !!source || page > 1" handle=".banner-drag-handle" target=".banner-drag-container tbody"
-          @end="handleDragEnd">
+        <VueDraggable v-model="bannerList" :disabled="!!keyword || !!source || page > 1" handle=".banner-drag-handle"
+          target=".banner-drag-container tbody" @end="handleDragEnd">
           <VEntityContainer class="banner-drag-container">
             <VEntity v-for="banner in bannerList" :key="banner.metadata.name">
               <template #checkbox>
@@ -459,12 +459,9 @@ const sourceBadgeClass = (source?: string) =>
                 </VEntityField>
                 <VEntityField>
                   <template #description>
-                    <button
-                      v-tooltip="banner.spec.hidden ? '恢复公开展示' : '隐藏（公开列表/详情不展示）'"
-                      type="button"
+                    <button v-tooltip="banner.spec.hidden ? '恢复公开展示' : '隐藏（公开列表/详情不展示）'" type="button"
                       class=":uno: flex cursor-pointer items-center border-none bg-transparent p-0"
-                      @click="handleToggleHidden(banner)"
-                    >
+                      @click="handleToggleHidden(banner)">
                       <RiEyeOffLine v-if="banner.spec.hidden" class=":uno: h-4 w-4 text-orange-400" />
                       <RiEyeLine v-else class=":uno: h-4 w-4 text-gray-400" />
                     </button>

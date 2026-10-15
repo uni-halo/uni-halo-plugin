@@ -240,6 +240,12 @@ export interface NoticeSpec {
   cover?: string;
   /** 外链地址（可选） */
   link?: string;
+  /** 链接类型：none 无 / external 外部链接 / miniapp 小程序链接 / internal 内部页面 / wechat-mp 微信公众号文章 */
+  linkType?: "none" | "external" | "miniapp" | "internal" | "wechat-mp";
+  /** 小程序 appId（仅 linkType=miniapp） */
+  linkAppId?: string;
+  /** 小程序内页面路径（仅 linkType=miniapp，可空=首页） */
+  linkPath?: string;
   /** 公告类型（关联 NoticeType.metadata.name，可为空=不分类） */
   typeName?: string;
   status?: NoticeStatus;
@@ -280,6 +286,54 @@ export const NOTICE_STATUS_OPTIONS: { label: string; value: string }[] = [
   { label: "已发布", value: "published" },
   { label: "已下线", value: "offline" },
 ];
+
+// ===== 常见问题（FAQ） =====
+
+/** FAQ 相关链接类型：external 外部链接 / internal 内部页面 / contact 客服按钮（无需 url） */
+export type FaqLinkType = "external" | "internal" | "contact";
+
+export interface FaqLink {
+  /** 按钮标题 */
+  title?: string;
+  type?: FaqLinkType;
+  /** 外部链接 url / 内部页面路径；客服按钮无需填写 */
+  url?: string;
+}
+
+export interface FaqSpec {
+  /** 问题标题（必填） */
+  title?: string;
+  /** 摘要描述（折叠展开时显示） */
+  description?: string;
+  /** 分类（软分组） */
+  category?: string;
+  /** 详细内容（富文本 HTML，详情弹窗展示） */
+  content?: string;
+  /** 相关链接（详情弹窗底部按钮） */
+  links?: FaqLink[];
+  /** 是否显示（false = 仅控制台可见） */
+  visible?: boolean;
+  /** 排序权重，越小越靠前 */
+  priority?: number;
+}
+
+export interface Faq {
+  metadata: Metadata;
+  spec: FaqSpec;
+}
+
+/** FAQ 链接类型选项 */
+export const FAQ_LINK_TYPE_OPTIONS: { label: string; value: FaqLinkType }[] = [
+  { label: "外部链接", value: "external" },
+  { label: "内部页面", value: "internal" },
+  { label: "客服按钮", value: "contact" },
+];
+
+export const FAQ_LINK_TYPE_LABELS: Record<string, string> = {
+  external: "外部链接",
+  internal: "内部页面",
+  contact: "客服按钮",
+};
 
 // ===== 轮播图 =====
 
@@ -644,6 +698,8 @@ export interface FeatureConfigProfile {
   appInfo: {
     name?: string;
     logo?: string;
+    /** 小程序资质类型：personal 个人资质 / enterprise 非个人（企业）资质；控制外部链接 webview 打开策略 */
+    qualification?: "personal" | "enterprise";
   };
   blogger: {
     nickname?: string;

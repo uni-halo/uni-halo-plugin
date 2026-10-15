@@ -50,9 +50,27 @@ public class Notice extends AbstractExtension {
         private String cover;
 
         /**
-         * 外链地址（可选）
+         * 链接地址（按 linkType 语义使用：external/wechat-mp 为完整 URL，
+         * internal 为 app 内页面路径；miniapp 类型不使用此字段）
          */
         private String link;
+
+        /**
+         * 链接类型：none 无（默认，不展示跳转入口）/ external 外部链接 /
+         * miniapp 小程序链接 / internal 内部页面 / wechat-mp 微信公众号文章；
+         * 为空时按 link 非空回退为 external（兼容历史数据）
+         */
+        private String linkType;
+
+        /**
+         * 小程序 appId（仅 linkType=miniapp）
+         */
+        private String linkAppId;
+
+        /**
+         * 小程序内页面路径（仅 linkType=miniapp，可空=首页）
+         */
+        private String linkPath;
 
         /**
          * 公告类型（引用 NoticeType 的 metadata.name，为空=不分类）

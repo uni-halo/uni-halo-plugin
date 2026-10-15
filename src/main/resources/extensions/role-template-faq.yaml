@@ -1,0 +1,39 @@
+apiVersion: v1alpha1
+kind: "Role"
+metadata:
+  name: uni-halo-role-template-view-faq
+  labels:
+    halo.run/role-template: "true"
+    rbac.authorization.halo.run/aggregate-to-admin: "true"
+  annotations:
+    rbac.authorization.halo.run/module: "[UH] 常见问题"
+    rbac.authorization.halo.run/display-name: "常见问题查看"
+    rbac.authorization.halo.run/ui-permissions: |
+      ["plugin:uni-halo:faq:view"]
+rules:
+  - apiGroups: [ "console.api.unihalo.ialley.cn" ]
+    resources:
+      - "faqs"
+    verbs: [ "get", "list" ]
+
+---
+
+apiVersion: v1alpha1
+kind: "Role"
+metadata:
+  name: uni-halo-role-template-manage-faq
+  labels:
+    halo.run/role-template: "true"
+    rbac.authorization.halo.run/aggregate-to-admin: "true"
+  annotations:
+    rbac.authorization.halo.run/dependencies: |
+      [ "uni-halo-role-template-view-faq" ]
+    rbac.authorization.halo.run/module: "[UH] 常见问题"
+    rbac.authorization.halo.run/display-name: "常见问题管理"
+    rbac.authorization.halo.run/ui-permissions: |
+      ["plugin:uni-halo:faq:manage"]
+rules:
+  - apiGroups: [ "console.api.unihalo.ialley.cn" ]
+    resources:
+      - "faqs"
+    verbs: [ "create", "patch", "update", "delete", "deletecollection" ]

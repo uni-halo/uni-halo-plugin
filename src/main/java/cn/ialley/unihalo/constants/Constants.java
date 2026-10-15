@@ -63,6 +63,11 @@ public class Constants {
     public static final String BANNER_API_BASE_PATH = "banners";
 
     /**
+     * 常见问题（console/公开）接口基础路径
+     */
+    public static final String FAQ_API_BASE_PATH = "faqs";
+
+    /**
      * 审核模式（console/公开）接口基础路径
      */
     public static final String AUDIT_DATA_API_BASE_PATH = "audit-data";

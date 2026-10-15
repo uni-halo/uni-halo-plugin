@@ -490,12 +490,12 @@ public class FeatureConfigServiceImpl implements FeatureConfigService {
     }
 
     /**
-     * 我的页面-其他功能默认 5 项：偏好设置/关于项目/免责声明/用户协议/隐私政策，
+     * 我的页面-其他功能默认 6 项：偏好设置/关于项目/免责声明/用户协议/隐私政策/常见问题，
      * 顺序即展示顺序。
      */
     private static List<QuickNavigationItem> defaultMineOtherFeatures() {
         List<QuickNavigationItem> items = new ArrayList<>();
-        items.add(navItem("setting", "偏好设置", "首页布局、卡片样式等设置", "#7986CB", "#7986CB24",
+        items.add(navItem("setting", "偏好设置", "页面布局样式设置", "#7986CB", "#7986CB24",
                 "settings-3-line", "sanhuamao", "uhemoji2-icon", "-tired", "/pages-blog/setting/setting"));
         items.add(navItem("aboutProject", "关于项目", "小莫唐尼的开源项目", "#607D8B", "#607D8B24",
                 "information-2-line", "fadou", "uhemoji2-icon", "-happy-", "/pages-blog/about-project/about-project"));
@@ -505,6 +505,8 @@ public class FeatureConfigServiceImpl implements FeatureConfigService {
                 "contract-line", "bianmu", "uhemoji2-icon", "-tongue", "/pages-blog/user-agreement/user-agreement"));
         items.add(navItem("privacy-policy", "隐私政策", "站点隐私政策", "#A1887F", "#A1887F24",
                 "spy-line", "heimao", "uhemoji2-icon", "-secret", "/pages-blog/privacy-policy/privacy-policy"));
+        items.add(navItem("faq", "常见问题", "快速解决使用疑问", "#3F51B5", "#3F51B524",
+                "question-line", "wumaomao", "uhemoji-icon", "-thinking", "/pages-blog/faq/faq"));
         return items;
     }
 

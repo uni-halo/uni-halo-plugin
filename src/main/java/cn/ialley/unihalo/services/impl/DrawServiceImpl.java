@@ -383,13 +383,37 @@ public class DrawServiceImpl implements DrawService {
     }
 
     /**
-     * 公开响应脱敏：谜底任何情况下不出公开接口（仅出题人/管理端点返回原文）
+     * 公开响应脱敏：谜底任何情况下不出公开接口（仅出题人/管理端点返回原文）；
+     * 竞猜中作品标题一并置空 —— 标题可能就是谜底（如画作标题=谜底原文），
+     * 揭晓前由客户端以占位文案展示，揭晓后恢复原文，防泄题不依赖客户端自觉。
      */
     private DrawVo sanitize(DrawVo vo) {
         if (vo != null && vo.getSpec() != null) {
-            vo.getSpec().setPuzzleAnswer(null);
+            var spec = vo.getSpec();
+            // 列表路径不触发惰性揭晓,autoRevealAt 已过期的竞猜按已揭晓处理,
+            // 否则到点后标题会一直空占位,直到有人打开详情才恢复
+            if (Draw.PUZZLE_STATUS_GUESSING.equals(spec.getPuzzleStatus())
+                    && notBlank(spec.getPuzzleAnswer())
+                    && !isRevealDue(spec)) {
+                spec.setTitle(null);
+            }
+            spec.setPuzzleAnswer(null);
         }
         return vo;
+    }
+
+    /** 自动揭晓时间是否已过(到点即视为已揭晓;解析失败按未到点处理,交由读路径的惰性揭晓兜底) */
+    private static boolean isRevealDue(Draw.DrawSpec spec) {
+        var autoRevealAt = spec.getAutoRevealAt();
+        if (autoRevealAt == null || autoRevealAt.isBlank()) {
+            return false;
+        }
+        try {
+            return Instant.now().isAfter(Instant.parse(autoRevealAt));
+        }
+        catch (Exception e) {
+            return false;
+        }
     }
 
     private ListResult<DrawVo> sanitize(ListResult<DrawVo> result) {

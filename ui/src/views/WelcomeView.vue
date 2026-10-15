@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import confetti from 'canvas-confetti'
-import { onMounted, ref } from 'vue'
+import { onMounted, ref, type Component } from 'vue'
 import RiSettingsLine from '~icons/ri/settings-line'
 import RiSmartphoneLine from '~icons/ri/smartphone-line'
 import RiLayoutLine from '~icons/ri/layout-line'
@@ -32,10 +32,19 @@ import RiArchiveLine from '~icons/ri/archive-line'
 import RiThumbUpLine from '~icons/ri/thumb-up-line'
 import RiNotificationLine from '~icons/ri/notification-line'
 import RiBookmarkLine from '~icons/ri/bookmark-line'
-import RiArticleLine from '~icons/ri/article-line'
 import RiLoginCircleLine from '~icons/ri/login-circle-line'
-import RiEditBoxLine from '~icons/ri/edit-box-line'
-import RiToolsLine from '~icons/ri/tools-line'
+import RiShapeLine from '~icons/ri/shape-line'
+import RiChat3Line from '~icons/ri/chat-3-line'
+import RiBarChart2Line from '~icons/ri/bar-chart-2-line'
+import RiMovieLine from '~icons/ri/movie-line'
+import RiPencilLine from '~icons/ri/pencil-line'
+import RiPaintBrushLine from '~icons/ri/paint-brush-line'
+import RiGalleryLine from '~icons/ri/gallery-line'
+import RiDeviceLine from '~icons/ri/device-line'
+import RiUserSmileLine from '~icons/ri/user-smile-line'
+import RiApps2Line from '~icons/ri/apps-2-line'
+import RiQuestionLine from '~icons/ri/question-line'
+import RiMagicLine from '~icons/ri/magic-line'
 
 import mpImg from '@/assets/mp.jpeg'
 import qqqunImg from '@/assets/qqqun.jpeg'
@@ -45,7 +54,14 @@ import qqPng from '@/assets/qq.png'
 import logoPng from '@/assets/logo.png'
 
 const isLoaded = ref(false)
-const activeFeatureTab = ref<'console' | 'mobile'>('console')
+const activeFeatureTab = ref<'console' | 'mobile' | 'plugins'>('console')
+
+/** 功能模块各分段下的区块副标题文案 */
+const featureTabSubtitles: Record<'console' | 'mobile' | 'plugins', string> = {
+  console: '全方位满足你的小程序配置需求',
+  mobile: '25+ 功能开箱即用，移动端体验一站配齐',
+  plugins: '与多款 Halo 插件无缝协作，按需安装启用',
+}
 
 onMounted(() => {
   setTimeout(() => {
@@ -58,7 +74,76 @@ onMounted(() => {
     origin: { y: 0.4, x: 0.5 },
     colors: ['#B9E424', '#5BA4F5', '#2D7AD6'],
   })
+
+  loadPluginLogos()
 })
+
+/** Halo 插件市场单应用接口地址 */
+const STORE_APPLICATION_API = 'https://www.halo.run/apis/api.store.halo.run/v1alpha1/applications/'
+
+/** 支持插件 logo 的 localStorage 缓存键 */
+const PLUGIN_LOGOS_CACHE_KEY = 'unihalo-welcome-plugin-logos'
+
+/** 支持插件 logo 表（市场应用 ID -> logo 地址），未加载成功时卡片回退为图标 */
+const pluginLogos = ref<Record<string, string>>({})
+
+/** 从插件市场链接中提取应用 ID */
+function pluginAppId(href: string): string {
+  return href.split('/').pop() ?? ''
+}
+
+/** 将市场返回的相对路径 logo 补全为站点绝对地址 */
+function toAbsoluteLogoUrl(logo: string): string {
+  return /^https?:\/\//.test(logo) ? logo : `https://www.halo.run${logo}`
+}
+
+/** 加载失败的 logo 地址记录，命中后卡片回退到下一候选 */
+const failedLogoUrls = ref<Record<string, boolean>>({})
+
+/** 解析插件卡片 logo 展示地址：市场接口结果优先，其次插件自带静态资源，都没有则回退渐变图标 */
+function pluginLogoSrc(plugin: (typeof pluginFeatures)[number]): string {
+  const candidates = [pluginLogos.value[pluginAppId(plugin.href)], plugin.logo]
+  const available = candidates.find((item) => typeof item === 'string' && !failedLogoUrls.value[item])
+  return available ?? ''
+}
+
+/** logo 图片加载失败时记录地址，卡片回退到下一候选 */
+function onLogoError(src: string) {
+  failedLogoUrls.value = { ...failedLogoUrls.value, [src]: true }
+}
+
+/** 从插件市场接口拉取各支持插件 logo 并缓存到 localStorage */
+async function loadPluginLogos() {
+  try {
+    const cached = localStorage.getItem(PLUGIN_LOGOS_CACHE_KEY)
+    if (cached) {
+      pluginLogos.value = JSON.parse(cached)
+      return
+    }
+  } catch {
+    pluginLogos.value = {}
+  }
+
+  const appIds = pluginFeatures.map((plugin) => pluginAppId(plugin.href))
+  const results = await Promise.allSettled(
+    appIds.map((id) => fetch(`${STORE_APPLICATION_API}${id}`).then((res) => res.json())),
+  )
+  const logos: Record<string, string> = {}
+  appIds.forEach((id, index) => {
+    const result = results[index]
+    if (!result || result.status !== 'fulfilled') return
+    const logo: unknown = result.value?.application?.spec?.logo
+    if (typeof logo === 'string' && logo) {
+      logos[id] = toAbsoluteLogoUrl(logo)
+    }
+  })
+  pluginLogos.value = logos
+  try {
+    localStorage.setItem(PLUGIN_LOGOS_CACHE_KEY, JSON.stringify(logos))
+  } catch {
+    // 缓存写入失败不影响本次展示
+  }
+}
 
 const consoleFeatures = [
   {
@@ -109,103 +194,187 @@ const consoleFeatures = [
     description: '首页轮播配置、笔记同步、自定义轮播内容',
     color: '#8B5CF6',
   },
+  {
+    icon: RiApps2Line,
+    title: '应用展示主题组件',
+    description: '博客主题侧应用展示挂件，展示应用信息与下载入口',
+    color: '#3E87F7',
+  },
+  {
+    icon: RiPaintBrushLine,
+    title: '绘画管理',
+    description: '绘画作品管理，支持作品列表维护',
+    color: '#8B5CF6',
+  },
+  {
+    icon: RiLoginCircleLine,
+    title: '移动端登录配置',
+    description: '登录方式、注册与微信一键登录、登录限流配置',
+    color: '#2D7AD6',
+  },
+  {
+    icon: RiQuestionLine,
+    title: '问题管理',
+    description: '常见问题维护，旧称常见问题管理',
+    color: '#F59E0B',
+  },
 ]
 
 const mobileFeatures = [
+  { icon: RiHomeLine, title: '首页', description: '轮播展示、笔记列表、快捷导航、分类推荐', color: '#368FEF', tab: true },
+  { icon: RiLayoutLine, title: '分类', description: '笔记分类浏览、分类详情、标签筛选', color: '#10B981', tab: true },
+  { icon: RiImageLine, title: '图库', description: '图片瀑布流展示、相册浏览、图片预览', color: '#8B5CF6', tab: true },
+  { icon: RiMessage2Line, title: '瞬间', description: '动态发布、生活记录、互动交流', color: '#EC4899', tab: true },
+  { icon: RiUserLine, title: '博主', description: '博主信息、功能入口、个人中心', color: '#06B6D4', tab: true },
+  { icon: RiMapPinLine, title: '足迹地图', description: '博主去过的地方，基于高德地图', color: '#65A30D' },
+  { icon: RiMailLine, title: '联系博主', description: '博主常用联系方式', color: '#FF9800' },
+  { icon: RiMegaphoneLine, title: '通知公告', description: '站点公告与通知、公告详情', color: '#9C27B0' },
+  { icon: RiBookmarkLine, title: '我的收藏', description: '笔记和瞬间收藏管理', color: '#FFB300' },
+  { icon: RiHeartLine, title: '恋爱日记', description: '恋爱日记、相册、清单与故事', color: '#FF4C67' },
+  { icon: RiLinksLine, title: '友情链接', description: '看看博主的朋友们', color: '#009688' },
+  { icon: RiArchiveLine, title: '笔记归档', description: '笔记按时间归档、历史检索', color: '#03A9F4' },
+  { icon: RiThumbUpLine, title: '投票中心', description: '查看和参与投票', color: '#00BCD4' },
+  { icon: RiBarChart2Line, title: '数据看板', description: '站点数据可视化统计', color: '#663CC9' },
+  { icon: RiCodeBoxLine, title: '项目展示', description: '博主的项目与作品集', color: '#3E87F7' },
+  { icon: RiMovieLine, title: '豆瓣展示', description: '博主的书影音记录', color: '#43B024' },
+  { icon: RiPaintBrushLine, title: '绘画作品', description: '大家的绘画作品与画谜', color: '#8B5CF6' },
+  { icon: RiDeviceLine, title: '装备展示', description: '博主的装备清单', color: '#EF6C00' },
+  { icon: RiSettingsLine, title: '偏好设置', description: '页面布局与样式设置', color: '#7986CB' },
+  { icon: RiMessage2Line, title: '瞬间管理', description: '管理已发布的瞬间，需权限', color: '#EC4899' },
+  { icon: RiPencilLine, title: '瞬间发布', description: '发布图文、视频动态，需权限', color: '#F97316' },
+  { icon: RiHeartLine, title: '恋爱日记管理', description: '相册、清单、故事管理，需权限', color: '#DB2777' },
+  { icon: RiGalleryLine, title: '我的绘画管理', description: '管理我的绘画作品，需权限', color: '#6366F1' },
+  { icon: RiShieldCheckLine, title: '绘画审核管理', description: '审核绘画作品，需管理员', color: '#2D7AD6' },
+  { icon: RiLoginCircleLine, title: '登录注册', description: '账号密码登录、微信一键登录与绑定', color: '#2D7AD6' },
+  { icon: RiNotificationLine, title: '消息通知', description: '评论、点赞等消息聚合查看', color: '#F59E0B' },
+  { icon: RiUserSmileLine, title: '我的资料', description: '编辑个人资料信息', color: '#10B981' },
+  { icon: RiMagicLine, title: 'AI对话', description: '智阅全能AI助手，站点全局智能问答', color: '#7C3AED' },
+  { icon: RiSearchLine, title: '内容搜索', description: '全文内容搜索、关键词快速定位', color: '#06B6D4' },
+]
+
+/** 支持插件来源类型：core 本插件 / official Halo 官方 / third 社区第三方 */
+type PluginVendor = 'core' | 'official' | 'third'
+
+const vendorMeta: Record<PluginVendor, { label: string; color: string }> = {
+  core: { label: '核心', color: '#65A30D' },
+  official: { label: '官方', color: '#2D7AD6' },
+  third: { label: '第三方', color: '#F59E0B' },
+}
+
+const pluginFeatures: {
+  icon: Component
+  /** 插件自带静态 logo 资源，市场接口 logo 拉取失败时兜底 */
+  logo?: string
+  title: string
+  description: string
+  color: string
+  vendor: PluginVendor
+  href: string
+}[] = [
   {
-    icon: RiHomeLine,
-    title: '首页',
-    description: '轮播展示、笔记列表、快捷导航、分类推荐',
-    color: '#368FEF',
-    tab: true,
-  },
-  {
-    icon: RiLayoutLine,
-    title: '分类',
-    description: '笔记分类浏览、分类详情、标签筛选',
-    color: '#10B981',
-    tab: true,
+    icon: RiSparklingLine,
+    logo: logoPng,
+    title: 'UniHalo 配置',
+    description: '本插件本体，UniHalo 全部功能的基础，需安装并启用',
+    color: '#65A30D',
+    vendor: 'core',
+    href: 'https://www.halo.run/store/apps/app-aukgwe3y',
   },
   {
     icon: RiImageLine,
-    title: '图库',
-    description: '图片瀑布流展示、相册浏览、图片预览',
-    color: '#8B5CF6',
-    tab: true,
+    title: '图库管理',
+    description: '官方图库插件，为移动端图库模块提供数据',
+    color: '#368FEF',
+    vendor: 'official',
+    href: 'https://www.halo.run/store/apps/app-BmQJW',
+  },
+  {
+    icon: RiLinksLine,
+    title: '链接管理',
+    description: '官方友链插件，为移动端友链模块提供数据',
+    color: '#10B981',
+    vendor: 'official',
+    href: 'https://www.halo.run/store/apps/app-hfbQg',
   },
   {
     icon: RiMessage2Line,
     title: '瞬间',
-    description: '动态发布、生活记录、互动交流',
+    description: '官方瞬间插件，图文 / 视频 / 音频动态展示',
     color: '#EC4899',
-    tab: true,
-  },
-  {
-    icon: RiUserLine,
-    title: '关于',
-    description: '博主信息、社交链接、个人主页、偏好设置',
-    color: '#06B6D4',
-    tab: true,
-  },
-  {
-    icon: RiArticleLine,
-    title: '笔记',
-    description: '笔记详情阅读、评论互动、收藏分享',
-    color: '#F59E0B',
-  },
-  {
-    icon: RiArchiveLine,
-    title: '归档',
-    description: '笔记按时间归档、历史笔记检索',
-    color: '#368FEF',
-  },
-  {
-    icon: RiBookmarkLine,
-    title: '收藏',
-    description: '笔记收藏管理、阅读历史记录',
-    color: '#10B981',
-  },
-  {
-    icon: RiThumbUpLine,
-    title: '投票',
-    description: '投票参与、投票结果查看',
-    color: '#8B5CF6',
+    vendor: 'official',
+    href: 'https://www.halo.run/store/apps/app-SnwWD',
   },
   {
     icon: RiSearchLine,
-    title: '搜索',
-    description: '全文内容搜索、关键词快速定位',
+    title: '搜索组件',
+    description: '官方搜索插件，为移动端提供全文搜索能力',
     color: '#06B6D4',
+    vendor: 'official',
+    href: 'https://www.halo.run/store/apps/app-DlacW',
   },
   {
-    icon: RiNotificationLine,
-    title: '公告',
-    description: '公告中心浏览、公告详情查看',
+    icon: RiChat3Line,
+    title: '评论组件',
+    description: '官方评论插件，提供完整的评论解决方案',
+    color: '#8B5CF6',
+    vendor: 'official',
+    href: 'https://www.halo.run/store/apps/app-YXyaD',
+  },
+  {
+    icon: RiThumbUpLine,
+    title: '投票管理',
+    description: '社区插件，为移动端投票模块提供支持',
     color: '#F59E0B',
+    vendor: 'third',
+    href: 'https://www.halo.run/store/apps/app-veyvzyhv',
   },
   {
-    icon: RiHeartLine,
-    title: '恋爱',
-    description: '恋爱故事、恋爱相册、恋爱清单',
-    color: '#EC4899',
-  },
-  {
-    icon: RiLoginCircleLine,
-    title: '登录',
-    description: '账号密码登录、微信一键登录、注册与微信绑定',
+    icon: RiBarChart2Line,
+    title: '数据看板',
+    description: '社区插件，数据可视化统计与站点流量分析',
     color: '#2D7AD6',
+    vendor: 'third',
+    href: 'https://www.halo.run/store/apps/app-rtnbbgfk',
   },
   {
-    icon: RiEditBoxLine,
-    title: '内容管理',
-    description: '恋爱相册 / 日记 / 故事、瞬间管理，需管理员权限',
+    icon: RiCodeBoxLine,
+    title: '项目集',
+    description: '社区插件，项目与作品集集中展示',
+    color: '#0EA5E9',
+    vendor: 'third',
+    href: 'https://www.halo.run/store/apps/app-ix3j4n6d',
+  },
+  {
+    icon: RiMovieLine,
+    title: '豆瓣',
+    description: '社区插件，豆瓣影书记录展示',
+    color: '#10B981',
+    vendor: 'third',
+    href: 'https://www.halo.run/store/apps/app-srBOL',
+  },
+  {
+    icon: RiMapPinLine,
+    title: '足迹',
+    description: '社区插件，基于高德地图的足迹地图',
     color: '#F97316',
+    vendor: 'third',
+    href: 'https://www.halo.run/store/apps/app-XCtAQ',
   },
   {
-    icon: RiToolsLine,
-    title: '维护模式',
-    description: '站点维护期间统一展示维护提示页',
+    icon: RiArchiveLine,
+    title: '装备管理',
+    description: '社区插件，博主装备清单展示（支持分组）',
     color: '#64748B',
+    vendor: 'third',
+    href: 'https://www.halo.run/store/apps/app-ytygyqml',
+  },
+  {
+    icon: RiMagicLine,
+    title: '智阅全能AI助手',
+    description: '社区 AI 插件，为移动端提供全局 AI 对话',
+    color: '#7C3AED',
+    vendor: 'third',
+    href: 'https://www.halo.run/store/apps/app-OWBzA',
   },
 ]
 
@@ -350,7 +519,7 @@ const activeUiPreviewTab = ref('main')
         <!-- 统计数据 -->
         <div class="flex justify-center gap-10 sm:gap-16 mb-10">
           <div class="text-center">
-            <div class="text-3xl sm:text-4xl font-bold" style="color: #B9E424">8+</div>
+            <div class="text-3xl sm:text-4xl font-bold" style="color: #B9E424">12+</div>
             <div class="text-sm text-slate-500 mt-1">管理模块</div>
           </div>
           <div class="text-center">
@@ -509,7 +678,7 @@ const activeUiPreviewTab = ref('main')
       <div class="max-w-5xl mx-auto px-4">
         <div class="text-center mb-8">
           <h2 class="text-3xl sm:text-4xl font-bold text-slate-800 mb-4">功能模块</h2>
-          <p class="text-lg text-slate-500">全方位满足你的小程序配置需求</p>
+          <p class="text-lg text-slate-500">{{ featureTabSubtitles[activeFeatureTab] }}</p>
         </div>
 
         <!-- 分段器 -->
@@ -531,6 +700,14 @@ const activeUiPreviewTab = ref('main')
                 <span>移动端模块</span>
               </div>
             </button>
+            <button class="px-6 py-2.5 rounded-lg text-sm font-medium transition-all duration-200"
+              :class="activeFeatureTab === 'plugins' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-700'"
+              @click="activeFeatureTab = 'plugins'">
+              <div class="flex items-center gap-2">
+                <RiShapeLine class="w-4 h-4" />
+                <span>支持插件</span>
+              </div>
+            </button>
           </div>
         </div>
 
@@ -549,7 +726,7 @@ const activeUiPreviewTab = ref('main')
         </div>
 
         <!-- 移动端模块 -->
-        <div v-else class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+        <div v-else-if="activeFeatureTab === 'mobile'" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
           <div v-for="feature in mobileFeatures" :key="feature.title"
             class="group bg-white rounded-2xl p-5 shadow-sm border border-slate-100 hover:shadow-md transition-all duration-300 cursor-pointer relative">
             <div v-if="feature.tab" class="absolute top-3 right-3 px-2 py-0.5 text-xs font-medium rounded-full"
@@ -564,6 +741,29 @@ const activeUiPreviewTab = ref('main')
             <h3 class="text-base font-semibold text-slate-800 mb-1.5">{{ feature.title }}</h3>
             <p class="text-slate-500 text-xs leading-relaxed">{{ feature.description }}</p>
           </div>
+        </div>
+
+        <!-- 支持插件 -->
+        <div v-else class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+          <a v-for="plugin in pluginFeatures" :key="plugin.title" :href="plugin.href" target="_blank"
+            class="group relative bg-white rounded-2xl p-6 shadow-sm border border-slate-100 hover:shadow-md hover:-translate-y-0.5 transition-all duration-300">
+            <div class="absolute top-3 right-3 px-2 py-0.5 text-xs font-medium rounded-full"
+              :style="{ background: `${vendorMeta[plugin.vendor].color}20`, color: vendorMeta[plugin.vendor].color }">
+              {{ vendorMeta[plugin.vendor].label }}
+            </div>
+            <div v-if="pluginLogoSrc(plugin)"
+              class="w-11 h-11 rounded-xl flex items-center justify-center mb-4 overflow-hidden bg-slate-50 border border-slate-100">
+              <img :src="pluginLogoSrc(plugin)" :alt="plugin.title" class="w-full h-full object-contain"
+                @error="onLogoError(pluginLogoSrc(plugin))" />
+            </div>
+            <div v-else
+              class="w-11 h-11 rounded-xl flex items-center justify-center text-white mb-4 group-hover:scale-110 transition-transform duration-300"
+              :style="{ background: `linear-gradient(135deg, ${plugin.color} 0%, ${plugin.color}cc 100%)` }">
+              <component :is="plugin.icon" class="w-5.5 h-5.5" />
+            </div>
+            <h3 class="text-lg font-semibold text-slate-800 mb-2">{{ plugin.title }}</h3>
+            <p class="text-slate-500 text-sm leading-relaxed">{{ plugin.description }}</p>
+          </a>
         </div>
       </div>
     </section>

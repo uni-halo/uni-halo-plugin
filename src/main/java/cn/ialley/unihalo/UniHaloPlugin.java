@@ -6,6 +6,7 @@ import cn.ialley.unihalo.scheme.AuditDataConfig;
 import cn.ialley.unihalo.scheme.Banner;
 import cn.ialley.unihalo.scheme.Draw;
 import cn.ialley.unihalo.scheme.DrawGuess;
+import cn.ialley.unihalo.scheme.Faq;
 import cn.ialley.unihalo.scheme.FeatureConfig;
 import cn.ialley.unihalo.scheme.LoveAlbum;
 import cn.ialley.unihalo.scheme.LoveDailyItem;
@@ -204,6 +205,20 @@ public class UniHaloPlugin extends BasePlugin {
                     .indexFunc(guess -> guess.getSpec() == null ? null : guess.getSpec().getSolvedAt()));
         });
 
+        schemeManager.register(Faq.class, indexSpecs -> {
+            // 显隐筛选（fieldQuery equal spec.visible）依赖索引
+            indexSpecs.add(IndexSpecs.<Faq, Boolean>single("spec.visible", Boolean.class)
+                    .indexFunc(faq -> faq.getSpec() == null ? null
+                            : faq.getSpec().getVisible()));
+            indexSpecs.add(IndexSpecs.<Faq, Integer>single("spec.priority", Integer.class)
+                    .indexFunc(faq -> faq.getSpec() == null ? null
+                            : faq.getSpec().getPriority()));
+            // 分类筛选（fieldQuery equal spec.category）依赖索引
+            indexSpecs.add(IndexSpecs.<Faq, String>single("spec.category", String.class)
+                    .indexFunc(faq -> faq.getSpec() == null ? null
+                            : faq.getSpec().getCategory()));
+        });
+
         log.info("【UniHalo】插件启动成功！");
     }
 
@@ -225,6 +240,7 @@ public class UniHaloPlugin extends BasePlugin {
         unregisterQuietly(MiniProgramLinkSubmission.class);
         unregisterQuietly(Draw.class);
         unregisterQuietly(DrawGuess.class);
+        unregisterQuietly(Faq.class);
 
         log.info("【UniHalo】插件停止！");
     }
