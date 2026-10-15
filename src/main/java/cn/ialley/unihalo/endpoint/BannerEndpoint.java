@@ -17,6 +17,7 @@ import run.halo.app.core.extension.User;
 import run.halo.app.core.extension.endpoint.CustomEndpoint;
 import run.halo.app.extension.GroupVersion;
 import run.halo.app.extension.ReactiveExtensionClient;
+import static cn.ialley.unihalo.utils.QueryParams.parseInt;
 
 /**
  * 首页轮播图接口（控制台，需登录）。
@@ -160,11 +161,11 @@ public class BannerEndpoint implements CustomEndpoint {
     }
 
     private static int queryPage(ServerRequest request) {
-        return request.queryParam("page").map(Integer::parseInt).orElse(1);
+        return parseInt(request.queryParam("page"), 1);
     }
 
     private static int querySize(ServerRequest request) {
-        return request.queryParam("size").map(Integer::parseInt).orElse(20);
+        return parseInt(request.queryParam("size"), 20);
     }
 
     private static boolean isBlank(String value) {

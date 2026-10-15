@@ -18,6 +18,7 @@ import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Mono;
 import run.halo.app.core.extension.endpoint.CustomEndpoint;
 import run.halo.app.extension.GroupVersion;
+import static cn.ialley.unihalo.utils.QueryParams.parseInt;
 
 /**
  * 绘画作品控制台接口（需登录且持有 draws 管理角色，审核人仅限管理员）。
@@ -179,11 +180,10 @@ public class DrawEndpoint implements CustomEndpoint {
     }
 
     private static int queryPage(ServerRequest request) {
-        return request.queryParam("page").map(Integer::parseInt).orElse(1);
+        return parseInt(request.queryParam("page"), 1);
     }
 
     private static int querySize(ServerRequest request) {
-        return request.queryParam("size").map(Integer::parseInt)
-                .orElse(Constants.DEFAULT_PAGE_SIZE);
+        return parseInt(request.queryParam("size"), Constants.DEFAULT_PAGE_SIZE);
     }
 }

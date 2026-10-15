@@ -20,6 +20,7 @@ import run.halo.app.core.extension.User;
 import run.halo.app.core.extension.endpoint.CustomEndpoint;
 import run.halo.app.extension.GroupVersion;
 import run.halo.app.extension.ReactiveExtensionClient;
+import static cn.ialley.unihalo.utils.QueryParams.parseInt;
 
 /**
  * 绘画作品用户中心接口（App 端，需登录且持有 uc-draw-use 角色）。
@@ -163,11 +164,10 @@ public class DrawUcEndpoint implements CustomEndpoint {
     }
 
     private static int queryPage(ServerRequest request) {
-        return request.queryParam("page").map(Integer::parseInt).orElse(1);
+        return parseInt(request.queryParam("page"), 1);
     }
 
     private static int querySize(ServerRequest request) {
-        return request.queryParam("size").map(Integer::parseInt)
-                .orElse(Constants.DEFAULT_PAGE_SIZE);
+        return parseInt(request.queryParam("size"), Constants.DEFAULT_PAGE_SIZE);
     }
 }

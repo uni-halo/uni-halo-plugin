@@ -15,6 +15,7 @@ import cn.ialley.unihalo.services.NoticeTypeService;
 import reactor.core.publisher.Mono;
 import run.halo.app.core.extension.endpoint.CustomEndpoint;
 import run.halo.app.extension.GroupVersion;
+import static cn.ialley.unihalo.utils.QueryParams.parseInt;
 
 /**
  * 公告类型接口（控制台，需登录）。
@@ -105,10 +106,10 @@ public class NoticeTypeEndpoint implements CustomEndpoint {
     }
 
     private static int queryPage(ServerRequest request) {
-        return request.queryParam("page").map(Integer::parseInt).orElse(1);
+        return parseInt(request.queryParam("page"), 1);
     }
 
     private static int querySize(ServerRequest request) {
-        return request.queryParam("size").map(Integer::parseInt).orElse(20);
+        return parseInt(request.queryParam("size"), 20);
     }
 }

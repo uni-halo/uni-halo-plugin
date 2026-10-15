@@ -30,6 +30,7 @@ import static run.halo.app.extension.index.query.Queries.and;
 import static run.halo.app.extension.index.query.Queries.contains;
 import static run.halo.app.extension.index.query.Queries.equal;
 import static run.halo.app.extension.index.query.Queries.or;
+import static cn.ialley.unihalo.utils.QueryParams.parseInt;
 
 /**
  * 应用升级管理接口（控制台，需登录）。
@@ -168,10 +169,10 @@ public class AppVersionEndpoint implements CustomEndpoint {
     }
 
     private static int queryPage(ServerRequest request) {
-        return request.queryParam("page").map(Integer::parseInt).orElse(1);
+        return parseInt(request.queryParam("page"), 1);
     }
 
     private static int querySize(ServerRequest request) {
-        return request.queryParam("size").map(Integer::parseInt).orElse(20);
+        return parseInt(request.queryParam("size"), 20);
     }
 }

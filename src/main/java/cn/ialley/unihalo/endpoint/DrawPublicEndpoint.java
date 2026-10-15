@@ -17,6 +17,7 @@ import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Mono;
 import run.halo.app.core.extension.endpoint.CustomEndpoint;
 import run.halo.app.extension.GroupVersion;
+import static cn.ialley.unihalo.utils.QueryParams.parseInt;
 
 /**
  * 绘画作品公开接口（匿名可访问，仅返回已通过审核的画作）。
@@ -95,7 +96,7 @@ public class DrawPublicEndpoint implements CustomEndpoint {
      * 猜画积分排行榜（匿名可见，累计猜中画作数）
      */
     private Mono<ServerResponse> guessRank(ServerRequest request) {
-        int top = request.queryParam("top").map(Integer::parseInt).orElse(0);
+        int top = parseInt(request.queryParam("top"), 0);
         return drawGuessService.rank(top)
                 .flatMap(items -> ServerResponse.ok().bodyValue(items));
     }
@@ -131,11 +132,10 @@ public class DrawPublicEndpoint implements CustomEndpoint {
     }
 
     private static int queryPage(ServerRequest request) {
-        return request.queryParam("page").map(Integer::parseInt).orElse(1);
+        return parseInt(request.queryParam("page"), 1);
     }
 
     private static int querySize(ServerRequest request) {
-        return request.queryParam("size").map(Integer::parseInt)
-                .orElse(Constants.DEFAULT_PAGE_SIZE);
+        return parseInt(request.queryParam("size"), Constants.DEFAULT_PAGE_SIZE);
     }
 }
