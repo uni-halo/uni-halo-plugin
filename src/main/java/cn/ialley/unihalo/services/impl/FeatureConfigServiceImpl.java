@@ -107,6 +107,7 @@ public class FeatureConfigServiceImpl implements FeatureConfigService {
                             PostDetailPage postDetail = new PostDetailPage();
                             postDetail.setShowComment(true);
                             postDetail.setCopyrightEnabled(true);
+                            postDetail.setPodcastEnabled(true);
                             pages.setPostDetail(postDetail);
                         }
                         pages.getPostDetail().setEnableComment(enable);
@@ -429,6 +430,7 @@ public class FeatureConfigServiceImpl implements FeatureConfigService {
         PostDetailPage postDetail = new PostDetailPage();
         postDetail.setShowComment(true);
         postDetail.setCopyrightEnabled(true);
+        postDetail.setPodcastEnabled(true);
         postDetail.setCopyrightAuthor("uni-halo");
         postDetail.setCopyrightDesc("使用《非商业性使用-相同方式共享 4.0 国际 (CC BY-NC-SA 4.0)》"
                 + "协议授权，文章来源于网上收集或者原创，若未在文章内说明的均为原创文章");

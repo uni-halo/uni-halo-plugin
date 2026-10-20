@@ -16,7 +16,6 @@ import { FeatureConfigFormKey } from "../form-context";
 import BloggerProfileCard from "../blocks/BloggerProfileCard.vue";
 import CommentSwitchGroup from "../blocks/CommentSwitchGroup.vue";
 import QuickNavEditor from "../blocks/QuickNavEditor.vue";
-import SwitchRow from "../fields/SwitchRow.vue";
 
 /**
  * 外观布局分区（9 个子 tab）：
@@ -62,6 +61,16 @@ const interactionPlusEnabled = computed({
   get: () => formState.value.spec.preferences.interactionPlusEnabled !== false,
   set: (value: boolean) => {
     formState.value.spec.preferences.interactionPlusEnabled = value;
+  },
+});
+
+// ===== 内容页：显示播客听读（spec.pages.postDetail.podcastEnabled）=====
+
+/** 播客听读开关（未配置视为开启，与插件端默认值/ app 端兜底一致） */
+const podcastEnabled = computed({
+  get: () => formState.value.spec.pages.postDetail?.podcastEnabled !== false,
+  set: (value: boolean) => {
+    formState.value.spec.pages.postDetail!.podcastEnabled = value;
   },
 });
 
@@ -298,22 +307,18 @@ const removeCategory = (item: FeatureConfigCategoryItem) => {
   <template v-if="subTab === 'content'">
     <CommentSwitchGroup v-model:moment="formState.spec.pages.moment!"
       v-model:post-detail="formState.spec.pages.postDetail!" />
-    <div class=":uno: mt-4 rounded-lg bg-gray-50 p-4">
-      <SwitchRow v-model="summaryTypewriterEnabled" title="开启摘要打字机"
-        description="笔记摘要以打字机动画逐字呈现（笔记详情页摘要卡），开启后部分安卓设备可能会发生抖动现象" />
-      <div class=":uno: mt-4">
-        <SwitchRow v-model="formState.spec.pages.postDetail!.copyrightEnabled!" title="显示笔记版权"
-          description="笔记底部是否展示版权声明" />
-      </div>
-      <div class=":uno: mt-4">
-        <FormKit v-model="formState.spec.pages.postDetail!.copyrightAuthor" name="post_copyright_author" label="笔记版权作者"
-          type="text" />
-        <FormKit v-model="formState.spec.pages.postDetail!.copyrightDesc" name="post_copyright_desc" label="笔记版权描述"
-          type="textarea" />
-        <FormKit v-model="formState.spec.pages.postDetail!.copyrightViolation" name="post_copyright_violation"
-          label="笔记侵权说明" type="textarea" />
-      </div>
-    </div>
+    <FormKit v-model="summaryTypewriterEnabled" name="pref_articles_summary_typewriter" label="开启摘要打字机" type="checkbox"
+      help="笔记摘要以打字机动画逐字呈现（笔记详情页摘要卡），开启后部分安卓设备可能会发生抖动现象" />
+    <FormKit v-model="formState.spec.pages.postDetail!.copyrightEnabled!" name="post_copyright_enabled" label="显示笔记版权"
+      type="checkbox" help="笔记底部是否展示版权声明" />
+    <FormKit v-model="podcastEnabled" name="post_podcast_enabled" label="显示播客听读"
+      type="checkbox" help="笔记详情页是否展示播客听读入口" />
+    <FormKit v-model="formState.spec.pages.postDetail!.copyrightAuthor" name="post_copyright_author" label="笔记版权作者"
+      type="text" />
+    <FormKit v-model="formState.spec.pages.postDetail!.copyrightDesc" name="post_copyright_desc" label="笔记版权描述"
+      type="textarea" />
+    <FormKit v-model="formState.spec.pages.postDetail!.copyrightViolation" name="post_copyright_violation"
+      label="笔记侵权说明" type="textarea" />
   </template>
 
   <!-- 精选分类候选弹窗（固定 3 个） -->

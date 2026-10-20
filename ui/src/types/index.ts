@@ -855,6 +855,8 @@ export interface FeatureConfigPages {
     showComment?: boolean;
     enableComment?: boolean;
     copyrightEnabled?: boolean;
+    /** 是否显示播客听读（App 端笔记详情页听读入口；未配置视为开启） */
+    podcastEnabled?: boolean;
     copyrightAuthor?: string;
     copyrightDesc?: string;
     copyrightViolation?: string;

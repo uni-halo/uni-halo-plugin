@@ -126,8 +126,10 @@ public class FeatureConfig extends AbstractExtension {
         private Boolean showComment;
         /** 是否开启评论（服务端经系统设置 comment.enable 注入） */
         private Boolean enableComment;
-        /** 是否使用文章版权 */
+        /** 是否显示笔记版权 */
         private Boolean copyrightEnabled;
+        /** 是否显示播客听读（App 端笔记详情页听读入口；未配置视为开启） */
+        private Boolean podcastEnabled;
         private String copyrightAuthor;
         private String copyrightDesc;
         private String copyrightViolation;
