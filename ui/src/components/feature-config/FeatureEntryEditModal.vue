@@ -30,9 +30,18 @@ const emit = defineEmits<{
 /** 编辑草稿（深拷贝传入条目，确认前不污染原数据） */
 const draft = ref<FeatureConfigQuickNavigationItem>({});
 
+/**
+ * 弹窗打开（visible 变 true）时重建草稿：编辑 = 深拷贝传入条目；
+ * 新增 = 仅 key/visible 起始草稿。以 visible 为锚点可保证每次打开都清空
+ * 上次新增 confirmed 后 draft 中的残留值（弹窗常驻不卸载，仅靠 entry
+ * 前值引用变化在部分路径下不会触发重建）。
+ */
 watch(
-  () => props.entry,
-  (value) => {
+  () => [props.entry, props.visible] as const,
+  ([value, visible]) => {
+    if (!visible) {
+      return;
+    }
     draft.value = value ? JSON.parse(JSON.stringify(value)) : {};
     // 无 icons 的旧数据补默认风格（emoji-font），确保编辑表单可用
     if (value && !draft.value.icons?.length) {
@@ -157,22 +166,22 @@ const handleClose = () => {
         <VSwitch v-model="draft.visible" />
       </div>
 
-      <!-- 配色 -->
+      <!-- 配色（FormKit 需走响应式 model-value 绑定，:value 仅初始生效、编辑不回显） -->
       <div class=":uno: flex gap-4">
         <div class=":uno: flex flex-1 items-center gap-2">
           <span class=":uno: shrink-0 text-sm text-gray-600">图标颜色</span>
           <FormKit type="color" format="hex8" outer-class=":uno: flex-1 !py-0"
-            :value="toColorInput(draft.iconColor || draft.color)" @input="onIconColor" />
+            :model-value="toColorInput(draft.iconColor || draft.color)" @update:model-value="onIconColor" />
         </div>
         <div class=":uno: flex flex-1 items-center gap-2">
           <span class=":uno: shrink-0 text-sm text-gray-600">文字颜色</span>
           <FormKit type="color" format="hex8" outer-class=":uno: flex-1 !py-0"
-            :value="toColorInput(draft.color)" @input="onColor" />
+            :model-value="toColorInput(draft.color)" @update:model-value="onColor" />
         </div>
         <div class=":uno: flex flex-1 items-center gap-2">
           <span class=":uno: shrink-0 text-sm text-gray-600">背景颜色</span>
           <FormKit type="color" format="hex8" outer-class=":uno: flex-1 !py-0"
-            :value="toColorInput(draft.bgColor)" @input="onBgColor" />
+            :model-value="toColorInput(draft.bgColor)" @update:model-value="onBgColor" />
         </div>
       </div>
 
@@ -230,8 +239,8 @@ const handleClose = () => {
 
     <template #footer>
       <VSpace>
-        <VButton @click="handleClose">取消</VButton>
         <VButton type="secondary" @click="handleConfirm">确定</VButton>
+        <VButton @click="handleClose">取消</VButton>
       </VSpace>
     </template>
   </VModal>

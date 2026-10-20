@@ -73,6 +73,11 @@ public class Constants {
     public static final String AUDIT_DATA_API_BASE_PATH = "audit-data";
 
     /**
+     * 用户公开资料（公开）接口基础路径
+     */
+    public static final String USER_PROFILE_API_BASE_PATH = "users";
+
+    /**
      * 验证码（公开）接口基础路径
      */
     public static final String CAPTCHA_API_BASE_PATH = "captcha/generate";

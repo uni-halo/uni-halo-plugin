@@ -423,6 +423,11 @@ public class FeatureConfig extends AbstractExtension {
         private String articlesListLayout;
         /** 文章列表页卡片样式（客户端 layout.articles.cardType） */
         private String articlesCardType;
+        /** 内容页摘要打字机效果（App 端笔记详情摘要卡逐字打字；未配置视为开启） */
+        private Boolean articlesSummaryTypewriterEnabled;
+        /** 互动增强展示（依赖第三方插件 interaction-plus；控制 App 端头像框/主勋章/称号/名片背景装饰展示；
+         * 插件未启用或审核模式下无论本开关如何均隐藏；未配置视为开启） */
+        private Boolean interactionPlusEnabled;
         /** 文章归档页列表布局（客户端 layout.archives.listLayout）：single / double */
         private String archivesListLayout;
         /** 文章归档页卡片样式（客户端 layout.archives.cardType） */

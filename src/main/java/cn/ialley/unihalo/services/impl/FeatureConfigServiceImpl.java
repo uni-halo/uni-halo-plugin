@@ -289,6 +289,10 @@ public class FeatureConfigServiceImpl implements FeatureConfigService {
         preferences.setHomeCardType("image_bottom");
         preferences.setArticlesListLayout("single");
         preferences.setArticlesCardType("image_bottom");
+        // 内容页摘要打字机效果：默认开启（对齐 App 端笔记详情摘要组件的既有行为）
+        preferences.setArticlesSummaryTypewriterEnabled(true);
+        // 互动增强展示：默认开启（依赖 interaction-plus 插件可用 + 非审核模式，App 端组合判定）
+        preferences.setInteractionPlusEnabled(true);
         preferences.setArchivesListLayout("single");
         preferences.setArchivesCardType("image_bottom");
         // 分类笔记 / 标签笔记页与归档页同构，默认同样 single + image_bottom

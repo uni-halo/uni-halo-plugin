@@ -226,10 +226,10 @@ const handleClose = () => {
     <template #footer>
       <div class="mb-2 text-xs text-orange-500"> 提示：所有的操作都需要通过页面右上角的 保存设置 按钮才会保存成功 </div>
       <VSpace>
-        <VButton @click="emit('update:visible', false)">取消</VButton>
         <VButton type="secondary" @click="handleConfirm">
           确认选择（{{ localSelected.length }}）
         </VButton>
+        <VButton @click="emit('update:visible', false)">取消</VButton>
       </VSpace>
     </template>
   </VModal>

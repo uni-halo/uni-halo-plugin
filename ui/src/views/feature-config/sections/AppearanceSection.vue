@@ -45,8 +45,27 @@ const commonFeaturesMode = computed({
   },
 });
 
-// ===== 自定义功能入口候选库（spec.pages.customEntries，候选弹窗内维护）=====
+// ===== 内容页：摘要打字机效果（spec.preferences.articlesSummaryTypewriterEnabled）=====
 
+/** 摘要打字机开关（未配置视为开启，与插件端默认值/ app 端兜底一致） */
+const summaryTypewriterEnabled = computed({
+  get: () => formState.value.spec.preferences.articlesSummaryTypewriterEnabled !== false,
+  set: (value: boolean) => {
+    formState.value.spec.preferences.articlesSummaryTypewriterEnabled = value;
+  },
+});
+
+// ===== 通用外观：互动增强展示（spec.preferences.interactionPlusEnabled）=====
+
+/** 互动增强展示开关（未配置视为开启，与插件端默认值/ app 端兜底一致） */
+const interactionPlusEnabled = computed({
+  get: () => formState.value.spec.preferences.interactionPlusEnabled !== false,
+  set: (value: boolean) => {
+    formState.value.spec.preferences.interactionPlusEnabled = value;
+  },
+});
+
+// ===== 自定义功能入口候选库（spec.pages.customEntries，候选弹窗内维护）=====
 const customEntries = computed<FeatureConfigQuickNavigationItem[]>(
   () => formState.value.spec.pages.customEntries || []
 );
@@ -108,6 +127,10 @@ const removeCategory = (item: FeatureConfigCategoryItem) => {
         { label: '方形', value: 'square' },
         { label: '圆形', value: 'circle' },
       ]" help="应用于文章卡片（上文下图）与瞬间卡片的用户头像" />
+    <div class=":uno: rounded-lg bg-gray-50 p-3">
+      <SwitchRow v-model="interactionPlusEnabled" title="显示互动增强"
+        description="依赖第三方插件「互动增强」（interaction-plus）；控制 App 端头像框、主勋章、称号与用户卡名片背景等装饰的展示。插件未启用或站点处于审核模式时自动隐藏，无论本开关状态。" />
+    </div>
   </template>
 
   <!-- 博主页（资料卡视觉 + 功能入口，mine 对标博主页） -->
@@ -116,11 +139,10 @@ const removeCategory = (item: FeatureConfigCategoryItem) => {
 
     <div class=":uno: mt-6 space-y-4">
       <div class=":uno: rounded-lg bg-gray-50 p-3">
-        <FormKit v-model="commonFeaturesMode" name="about_common_features_mode" label="常用功能显示方式" type="radio"
-          :options="[
-            { label: '网格（宫格图标）', value: 'grid' },
-            { label: '列表（分行条目）', value: 'list' },
-          ]" />
+        <FormKit v-model="commonFeaturesMode" name="about_common_features_mode" label="常用功能显示方式" type="radio" :options="[
+          { label: '网格（宫格图标）', value: 'grid' },
+          { label: '列表（分行条目）', value: 'list' },
+        ]" />
       </div>
 
       <!-- 常用功能入口 -->
@@ -144,18 +166,18 @@ const removeCategory = (item: FeatureConfigCategoryItem) => {
     <p class=":uno: mb-3 text-xs text-gray-400">
       首页默认展示偏好与功能开关；布局偏好与小程序端「偏好设置-布局」首页分组对齐，用户可在小程序端覆盖。
     </p>
-    <FormKit v-model="formState.spec.preferences.homeListLayout" name="pref_home_layout" label="首页列表布局"
-      type="select" :options="[
+    <FormKit v-model="formState.spec.preferences.homeListLayout" name="pref_home_layout" label="首页列表布局" type="select"
+      :options="[
         { label: '单列', value: 'single' },
         { label: '双列', value: 'double' },
       ]" help="首页笔记列表默认展示方式" />
-    <FormKit v-model="formState.spec.preferences.homeCardType" name="pref_home_card_type" label="首页卡片样式"
-      type="select" :options="CARD_STYLE_OPTIONS" help="封面图与文字的位置关系" />
+    <FormKit v-model="formState.spec.preferences.homeCardType" name="pref_home_card_type" label="首页卡片样式" type="select"
+      :options="CARD_STYLE_OPTIONS" help="封面图与文字的位置关系" />
 
-    <FormKit v-model="formState.spec.pages.home.useHitokoto" name="home_use_hitokoto" label="显示一言"
-      type="checkbox" help="依赖【轻言】插件" />
-    <FormKit v-model="formState.spec.pages.home.useQuickNavigation" name="home_use_quick_navigation"
-      label="显示快捷导航" type="checkbox" help="首页顶部快捷入口" />
+    <FormKit v-model="formState.spec.pages.home.useHitokoto" name="home_use_hitokoto" label="显示一言" type="checkbox"
+      help="依赖【轻言】插件" />
+    <FormKit v-model="formState.spec.pages.home.useQuickNavigation" name="home_use_quick_navigation" label="显示快捷导航"
+      type="checkbox" help="首页顶部快捷入口" />
 
     <div v-if="formState.spec.pages.home.useQuickNavigation" class=":uno: mt-4">
       <QuickNavEditor v-model="formState.spec.pages.home.quickNavigation!" group-label="快捷导航项"
@@ -165,8 +187,8 @@ const removeCategory = (item: FeatureConfigCategoryItem) => {
         @delete-custom="(entry) => setCustomEntries(customEntries.filter((it) => it.key !== entry.key))" />
     </div>
 
-    <FormKit v-model="formState.spec.pages.home.useCategory" name="home_use_category" label="显示精选分类"
-      type="checkbox" help="首页是否展示精选分类栏" />
+    <FormKit v-model="formState.spec.pages.home.useCategory" name="home_use_category" label="显示精选分类" type="checkbox"
+      help="首页是否展示精选分类栏" />
 
     <!-- 精选分类栏（固定 3 个，快照含封面/名称，拖拽排序） -->
     <div v-if="formState.spec.pages.home.useCategory" class=":uno: mt-4 rounded-lg bg-gray-50 p-4">
@@ -279,8 +301,12 @@ const removeCategory = (item: FeatureConfigCategoryItem) => {
     <CommentSwitchGroup v-model:moment="formState.spec.pages.moment!"
       v-model:post-detail="formState.spec.pages.postDetail!" />
     <div class=":uno: mt-4 rounded-lg bg-gray-50 p-4">
-      <SwitchRow v-model="formState.spec.pages.postDetail!.copyrightEnabled!" title="显示笔记版权"
-        description="笔记底部是否展示版权声明" />
+      <SwitchRow v-model="summaryTypewriterEnabled" title="开启摘要打字机"
+        description="笔记摘要以打字机动画逐字呈现（笔记详情页摘要卡），开启后部分安卓设备可能会发生抖动现象" />
+      <div class=":uno: mt-4">
+        <SwitchRow v-model="formState.spec.pages.postDetail!.copyrightEnabled!" title="显示笔记版权"
+          description="笔记底部是否展示版权声明" />
+      </div>
       <div class=":uno: mt-4">
         <FormKit v-model="formState.spec.pages.postDetail!.copyrightAuthor" name="post_copyright_author" label="笔记版权作者"
           type="text" />
