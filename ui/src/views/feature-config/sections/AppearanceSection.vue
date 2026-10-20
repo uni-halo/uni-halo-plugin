@@ -127,10 +127,8 @@ const removeCategory = (item: FeatureConfigCategoryItem) => {
         { label: '方形', value: 'square' },
         { label: '圆形', value: 'circle' },
       ]" help="应用于文章卡片（上文下图）与瞬间卡片的用户头像" />
-    <div class=":uno: rounded-lg bg-gray-50 p-3">
-      <SwitchRow v-model="interactionPlusEnabled" title="显示互动增强"
-        description="依赖第三方插件「互动增强」（interaction-plus）；控制 App 端头像框、主勋章、称号与用户卡名片背景等装饰的展示。插件未启用或站点处于审核模式时自动隐藏，无论本开关状态。" />
-    </div>
+    <FormKit v-model="interactionPlusEnabled" name="pref_interaction_plus_enabled" label="显示互动增强" type="checkbox"
+      help="依赖【互动增强】插件（interaction-plus）；插件未启用或站点处于审核模式时自动隐藏，无论本开关状态。" />
   </template>
 
   <!-- 博主页（资料卡视觉 + 功能入口，mine 对标博主页） -->
