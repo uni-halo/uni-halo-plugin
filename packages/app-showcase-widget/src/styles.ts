@@ -327,6 +327,10 @@ export const styles = css`
     box-sizing: border-box;
     width: 40px;
     height: 40px;
+    /* 拖拽走 Pointer Events：禁掉浏览器触摸手势，避免拖动被滚动/手势截胡 */
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
     padding: 0;
     border: 2px solid rgba(255, 255, 255, 1);
     border-radius: 50%;
@@ -345,6 +349,8 @@ export const styles = css`
     width: 60%;
     height: 60%;
     object-fit: contain;
+    /* 图标默认可原生拖拽（HTML5 drag），会劫持指针拖拽并波及下方页面元素 */
+    -webkit-user-drag: none;
   }
   /* 小球默认态复用面板的 9 向锚点（不依赖 JS 测量，规避主题初始化期间 body 隐藏） */
   .uh-asw-mini-dot.uh-asw-pos-top-left { top: 8px; left: 8px; }
@@ -887,6 +893,10 @@ export const styles = css`
     }
     .uh-asw-modal.uh-asw-motion-out {
       animation: uh-asw-pop-out 0.18s ease both;
+    }
+    /* 面板收起向最小化按钮（标题栏右上角）方向收缩；弹窗保持默认中心收缩 */
+    .uh-asw.uh-asw-motion-out:not(.uh-asw-modal) {
+      transform-origin: top right;
     }
     @keyframes uh-asw-fade-in {
       from {

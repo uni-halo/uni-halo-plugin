@@ -66,6 +66,7 @@ interface DragState {
 
 /** 小球拖拽中间态 */
 interface MiniDotDrag {
+  pointerId: number;
   startX: number;
   startY: number;
   left: number;
@@ -404,31 +405,37 @@ export class AppShowcaseWidgetElement extends LitElement {
     if (!panel || this.motion) {
       return; // 动画进行中忽略重复点击
     }
-    // 小球复现在收起触发点（鼠标点击处，光标居中），钳制到视口内
+    // 小球复现在收起触发点（- 按钮即鼠标点击处，光标居中），钳制到视口内
     const dotSize = AppShowcaseWidgetElement.DOT_SIZE;
     const x = Math.min(Math.max(0, e.clientX - dotSize / 2), window.innerWidth - dotSize);
     const y = Math.min(Math.max(0, e.clientY - dotSize / 2), window.innerHeight - dotSize);
+    // 面板原位置一并记忆：未被拖动时展开原位还原（避免面板右缘贴球导致的左移漂移）
+    const rect = panel.getBoundingClientRect();
     // 先播卡片收起动画，结束后切球态
     this.motion = "collapse";
     window.setTimeout(() => {
       this.dotStyle = `left:${Math.round(x)}px;top:${Math.round(y)}px;`;
       this.motion = "ball-in";
       this.minimized = true;
-      this.persistState({ minimized: true, dotPos: { left: Math.round(x), top: Math.round(y) } });
+      this.persistState({
+        minimized: true,
+        dotPos: { left: Math.round(x), top: Math.round(y) },
+        panelPos: { left: Math.round(rect.left), top: Math.round(rect.top) },
+      });
       window.setTimeout(() => {
         this.motion = "";
       }, 220);
     }, 180);
   }
 
-  /** 以球为基准派生卡片位置：面板角对齐球位（展开时球隐藏），放不下换对角并钳制 */
+  /** 以球为基准派生卡片位置：水平方向默认面板在球左侧（面板右缘贴球左缘），
+   * 左侧放不下才改到球右侧；垂直方向球在下半屏时面板贴球向上展开。
+   * 结果钳制到视口内。 */
   private static readonly DOT_SIZE = 40;
   private placePanelNearBall(dotLeft: number, dotTop: number, width: number, height: number): { left: number; top: number } {
     const size = AppShowcaseWidgetElement.DOT_SIZE;
-    const centerX = dotLeft + size / 2;
     const centerY = dotTop + size / 2;
-    // 默认面板左上角 = 球左上角；右侧/下侧放不下时改为面板右下角对齐球右下角
-    const left = centerX > window.innerWidth / 2 ? dotLeft + size - width : dotLeft;
+    const left = dotLeft - width >= 0 ? dotLeft - width : dotLeft + size;
     const top = centerY > window.innerHeight / 2 ? dotTop + size - height : dotTop;
     return {
       left: Math.max(0, Math.min(left, window.innerWidth - width)),
@@ -436,18 +443,32 @@ export class AppShowcaseWidgetElement extends LitElement {
     };
   }
 
-  /** 展开卡片：收起面板无法测量，先按估算尺寸定位，显示后按真实尺寸复算修正 */
-  private expandAt(dotLeft: number, dotTop: number): void {
+  /** 面板贴球的角 → transform-origin：弹入/收缩动画从贴球的角生长，
+   * 避免默认中心缩放导致展开瞬间面板边缘与小球之间出现视觉间隙 */
+  private panelOriginNearBall(dotLeft: number, dotTop: number, left: number, top: number, width: number, height: number): string {
+    const size = AppShowcaseWidgetElement.DOT_SIZE;
+    const onLeft = Math.abs(left + width - dotLeft) <= Math.abs(left - (dotLeft + size));
+    const topAligned = Math.abs(top - dotTop) <= Math.abs(top + height - (dotTop + size));
+    return (onLeft ? "right" : "left") + " " + (topAligned ? "top" : "bottom");
+  }
+
+  /** 展开卡片：有记忆的面板原位置（收起时未拖动球）优先原位还原并钳制视口；
+   * 否则按球定位（先估算尺寸，显示后按真实尺寸复算修正） */
+  private expandAt(dotLeft: number, dotTop: number, restorePos?: { left: number; top: number }): void {
     const panel = this.panelEl;
+    const estWidth = Number(this.config.panelWidth) || 340;
+    const estHeight = Math.min(530, window.innerHeight - 48);
     if (panel) {
-      const estWidth = Number(this.config.panelWidth) || 340;
-      const estHeight = Math.min(530, window.innerHeight - 48);
-      const { left, top } = this.placePanelNearBall(dotLeft, dotTop, estWidth, estHeight);
-      panel.style.left = Math.round(left) + "px";
-      panel.style.top = Math.round(top) + "px";
+      const est = restorePos
+        ? { left: restorePos.left, top: restorePos.top }
+        : this.placePanelNearBall(dotLeft, dotTop, estWidth, estHeight);
+      const [estLeft, estTop] = this.clampToViewport(est.left, est.top, panel);
+      panel.style.left = Math.round(estLeft) + "px";
+      panel.style.top = Math.round(estTop) + "px";
       panel.style.right = "auto";
       panel.style.bottom = "auto";
       panel.style.transform = ""; // 清除锚点 transform（center 等 -50% 偏移），定位精确
+      panel.style.transformOrigin = this.panelOriginNearBall(dotLeft, dotTop, estLeft, estTop, estWidth, estHeight);
     }
     // 卡片弹入动画
     this.motion = "expand";
@@ -463,8 +484,17 @@ export class AppShowcaseWidgetElement extends LitElement {
       if (!shown) {
         return;
       }
-      const fixed = this.placePanelNearBall(dotLeft, dotTop, shown.offsetWidth, shown.offsetHeight);
-      this.setFree(fixed.left, fixed.top);
+      let finalPos: { left: number; top: number };
+      if (restorePos) {
+        const [l, t] = this.clampToViewport(restorePos.left, restorePos.top, shown);
+        finalPos = { left: l, top: t };
+      } else {
+        finalPos = this.placePanelNearBall(dotLeft, dotTop, shown.offsetWidth, shown.offsetHeight);
+      }
+      shown.style.transformOrigin = this.panelOriginNearBall(
+        dotLeft, dotTop, finalPos.left, finalPos.top, shown.offsetWidth, shown.offsetHeight,
+      );
+      this.setFree(finalPos.left, finalPos.top);
     });
   }
 
@@ -478,6 +508,14 @@ export class AppShowcaseWidgetElement extends LitElement {
     }
     if (!this.dotStyle) {
       // 初始锚点球（用户从未交互）：面板按锚点位置展开
+      const anchorPanel = this.panelEl;
+      if (anchorPanel) {
+        // 锚点球与面板同角对齐：动画原点取锚点角，面板从球所在角生长
+        const pos = this.config.position || "bottom-right";
+        const h = pos.includes("left") ? "left" : pos.includes("right") ? "right" : "center";
+        const v = pos.startsWith("top") ? "top" : pos.startsWith("bottom") ? "bottom" : "center";
+        anchorPanel.style.transformOrigin = h + " " + v;
+      }
       this.minimized = false;
       this.persistState({ minimized: false });
       return;
@@ -489,29 +527,55 @@ export class AppShowcaseWidgetElement extends LitElement {
       return;
     }
     const rect = dot.getBoundingClientRect();
-    this.expandAt(rect.left, rect.top);
+    // 收起时记忆了面板原位置且球此后未被拖动（panelPos 未被拖拽清除）：原位还原；
+    // 否则贴球展开
+    const saved = loadWidgetState();
+    this.expandAt(rect.left, rect.top, saved?.panelPos);
   }
 
+  /** 拖拽期间全局拦截原生拖拽/选区（捕获阶段）：即使指针捕获被原生拖拽破坏，
+   * 任何元素（含小球下方的页面图片）上启动的 dragstart 也会先经过 window 捕获被拦下 */
+  private readonly onGlobalDragBlock = (e: Event): void => {
+    if (this.miniDotDrag) {
+      e.preventDefault();
+    }
+  };
+
   // ===== 最小化小球拖拽（独立 fixed 元素，不受 dragEnabled 约束，无条件可拖） =====
+  // move/up 全部挂 window 捕获阶段：不依赖 setPointerCapture 是否生效，
+  // 即使指针捕获被浏览器原生拖拽破坏，跟踪与默认行为压制也不会中断
   private onMiniDotPointerDown(e: PointerEvent): void {
     const dot = e.currentTarget as HTMLElement;
     const rect = dot.getBoundingClientRect();
     this.miniDotDrag = {
+      pointerId: e.pointerId,
       startX: e.clientX,
       startY: e.clientY,
       left: rect.left,
       top: rect.top,
       moved: false,
     };
-    dot.setPointerCapture(e.pointerId);
-    // 不 preventDefault：未移动时保留 click 恢复；移动后由 miniDotDragged 拦截恢复
+    // 先阻止默认行为（原生图片/链接拖拽、文本选区），再做指针捕获（失败由 window 监听兜底）
+    e.preventDefault();
+    try {
+      dot.setPointerCapture(e.pointerId);
+    } catch {
+      // 捕获失败不阻断拖拽
+    }
+    window.addEventListener("dragstart", this.onGlobalDragBlock, true);
+    window.addEventListener("selectstart", this.onGlobalDragBlock, true);
+    window.addEventListener("pointermove", this.onGlobalDotPointerMove, true);
+    window.addEventListener("pointerup", this.onGlobalDotPointerEnd, true);
+    window.addEventListener("pointercancel", this.onGlobalDotPointerEnd, true);
   }
 
-  private onMiniDotPointerMove(e: PointerEvent): void {
+  private readonly onGlobalDotPointerMove = (e: PointerEvent): void => {
     const drag = this.miniDotDrag;
-    if (!drag) {
+    const dot = this.miniDotEl;
+    if (!drag || !dot || e.pointerId !== drag.pointerId) {
       return;
     }
+    e.preventDefault();
     const dx = e.clientX - drag.startX;
     const dy = e.clientY - drag.startY;
     if (!drag.moved && (Math.abs(dx) > 3 || Math.abs(dy) > 3)) {
@@ -520,21 +584,33 @@ export class AppShowcaseWidgetElement extends LitElement {
     if (!drag.moved) {
       return;
     }
-    const dot = e.currentTarget as HTMLElement;
-    const [left, top] = this.clampToViewport(
-      drag.left + dx,
-      drag.top + dy,
-      dot,
-    );
+    const [left, top] = this.clampToViewport(drag.left + dx, drag.top + dy, dot);
     // 直接写内联样式，避免 state 重渲染干扰指针捕获
     dot.style.left = left + "px";
     dot.style.top = top + "px";
-  }
+  };
+
+  private readonly onGlobalDotPointerEnd = (e: PointerEvent): void => {
+    if (this.miniDotDrag && e.pointerId === this.miniDotDrag.pointerId) {
+      this.onMiniDotPointerEnd();
+    }
+  };
 
   private onMiniDotPointerEnd(): void {
     const drag = this.miniDotDrag;
+    window.removeEventListener("dragstart", this.onGlobalDragBlock, true);
+    window.removeEventListener("selectstart", this.onGlobalDragBlock, true);
+    window.removeEventListener("pointermove", this.onGlobalDotPointerMove, true);
+    window.removeEventListener("pointerup", this.onGlobalDotPointerEnd, true);
+    window.removeEventListener("pointercancel", this.onGlobalDotPointerEnd, true);
     if (drag?.moved) {
       this.miniDotDragged = true; // click 处理器据此忽略本次恢复
+      // 自动复位：pointerdown 的 preventDefault 会抑制拖拽后的合成 click，
+      // 若标记只等下一次 click 才清除，会吞掉用户的第一次真实点击；
+      // 延迟到宏任务（click 若触发则先被 onRestoreClick 消费）之后复位
+      window.setTimeout(() => {
+        this.miniDotDragged = false;
+      }, 0);
       // 小球拖拽落点写入状态，跨页保持在拖后的位置；
       // 同步写入 dotStyle：小球从锚点定位态转为像素定位态，
       // 展开（onRestoreClick）才能走"面板跟随小球当前位置"分支
@@ -543,7 +619,8 @@ export class AppShowcaseWidgetElement extends LitElement {
         const left = Number.parseFloat(dot.style.left);
         const top = Number.parseFloat(dot.style.top);
         this.dotStyle = `left:${Math.round(left)}px;top:${Math.round(top)}px;`;
-        this.persistState({ dotPos: { left, top } });
+        // 面板原位置随小球被拖动而失效：此后展开以球为基准贴球展开
+        this.persistState({ dotPos: { left, top }, panelPos: undefined });
       }
     }
     this.miniDotDrag = null;
@@ -1000,12 +1077,10 @@ export class AppShowcaseWidgetElement extends LitElement {
               style=${dotStyleVal}
               @click=${this.onRestoreClick}
               @pointerdown=${this.onMiniDotPointerDown}
-              @pointermove=${this.onMiniDotPointerMove}
-              @pointerup=${this.onMiniDotPointerEnd}
-              @pointercancel=${this.onMiniDotPointerEnd}
+              @dragstart=${(e: DragEvent) => e.preventDefault()}
               aria-label="恢复应用展示面板"
             >
-              ${entryIcon ? html`<img src=${entryIcon} alt="" />` : ""}
+              ${entryIcon ? html`<img src=${entryIcon} alt="" draggable="false" />` : ""}
               <span class="uh-asw-mini-plus">+</span>
             </button>`
         : ""}
