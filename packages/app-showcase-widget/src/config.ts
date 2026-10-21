@@ -19,6 +19,9 @@ export interface WidgetPersistedState {
   panelPos?: { left: number; top: number };
   /** 最小化小球位置 */
   dotPos?: { left: number; top: number };
+  /** 收起时面板相对小球的偏移（panel.left - dot.left / panel.top - dot.top）：
+   * 拖动小球后展开按此偏移保持收起时的相对姿态，避免贴球外缘造成的视觉偏移 */
+  panelOffset?: { dx: number; dy: number };
   /** 配置指纹：站长改动布局类配置后旧位置作废 */
   fp?: string;
 }

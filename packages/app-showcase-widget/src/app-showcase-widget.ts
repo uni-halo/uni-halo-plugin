@@ -421,6 +421,7 @@ export class AppShowcaseWidgetElement extends LitElement {
         minimized: true,
         dotPos: { left: Math.round(x), top: Math.round(y) },
         panelPos: { left: Math.round(rect.left), top: Math.round(rect.top) },
+        panelOffset: { dx: Math.round(rect.left - x), dy: Math.round(rect.top - y) },
       });
       window.setTimeout(() => {
         this.motion = "";
@@ -527,10 +528,16 @@ export class AppShowcaseWidgetElement extends LitElement {
       return;
     }
     const rect = dot.getBoundingClientRect();
-    // 收起时记忆了面板原位置且球此后未被拖动（panelPos 未被拖拽清除）：原位还原；
-    // 否则贴球展开
+    // 展开定位优先级：1) 收起时未拖动球 → 原位还原（panelPos）；
+    // 2) 拖动过球 → 按收起时记忆的相对偏移跟随球，保持面板与球的相对姿态；
+    // 3) 无记忆（锚点球等）→ 贴球展开兜底
     const saved = loadWidgetState();
-    this.expandAt(rect.left, rect.top, saved?.panelPos);
+    const restorePos = saved?.panelPos
+      ? { left: saved.panelPos.left, top: saved.panelPos.top }
+      : saved?.panelOffset
+        ? { left: rect.left + saved.panelOffset.dx, top: rect.top + saved.panelOffset.dy }
+        : undefined;
+    this.expandAt(rect.left, rect.top, restorePos);
   }
 
   /** 拖拽期间全局拦截原生拖拽/选区（捕获阶段）：即使指针捕获被原生拖拽破坏，
