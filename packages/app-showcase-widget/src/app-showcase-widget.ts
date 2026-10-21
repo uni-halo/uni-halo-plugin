@@ -206,6 +206,12 @@ export class AppShowcaseWidgetElement extends LitElement {
     super.disconnectedCallback();
     this.themeObserver?.disconnect();
     this.themeObserver = null;
+    // 拖拽中途组件被卸载：清掉挂在 window 上的捕获监听，否则会持续拦截页面级 dragstart/selectstart
+    window.removeEventListener("dragstart", this.onGlobalDragBlock, true);
+    window.removeEventListener("selectstart", this.onGlobalDragBlock, true);
+    window.removeEventListener("pointermove", this.onGlobalDotPointerMove, true);
+    window.removeEventListener("pointerup", this.onGlobalDotPointerEnd, true);
+    window.removeEventListener("pointercancel", this.onGlobalDotPointerEnd, true);
   }
 
   /** 主题模式：跟随主题（检测宿主深色标记并监听变化）/ 亮色 / 暗黑 */
@@ -411,6 +417,8 @@ export class AppShowcaseWidgetElement extends LitElement {
     const y = Math.min(Math.max(0, e.clientY - dotSize / 2), window.innerHeight - dotSize);
     // 面板原位置一并记忆：未被拖动时展开原位还原（避免面板右缘贴球导致的左移漂移）
     const rect = panel.getBoundingClientRect();
+    // 收起动画原点对准 - 按钮方向（球即落在点击处）；覆盖上次展开残留的内联 transform-origin
+    panel.style.transformOrigin = "top right";
     // 先播卡片收起动画，结束后切球态
     this.motion = "collapse";
     window.setTimeout(() => {
@@ -626,7 +634,7 @@ export class AppShowcaseWidgetElement extends LitElement {
         const left = Number.parseFloat(dot.style.left);
         const top = Number.parseFloat(dot.style.top);
         this.dotStyle = `left:${Math.round(left)}px;top:${Math.round(top)}px;`;
-        // 面板原位置随小球被拖动而失效：此后展开以球为基准贴球展开
+        // 拖动后面板原位置失效：展开按 panelOffset（球↔面板相对偏移）跟随球，保持收起时的相对姿态
         this.persistState({ dotPos: { left, top }, panelPos: undefined });
       }
     }

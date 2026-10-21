@@ -108,7 +108,7 @@ export const styles = css`
     justify-content: center;
     box-sizing: border-box;
     border-radius: 6px;
-    border: 1px solid rgba(255, 255, 255, 0.5);
+    border: 1px solid rgba(0, 0, 0, 0.1);
     background: rgba(255, 255, 255, 0.75);
     box-shadow: 0 0 12px rgba(0, 0, 0, 0.075);
     color: #999999;
