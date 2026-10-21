@@ -953,7 +953,7 @@ export interface FeatureConfigPreferences {
   articlesCardType?: "image_top" | "image_right" | "image_bottom" | "image_left";
   /** 内容页摘要打字机效果（App 端笔记详情摘要卡逐字打字；未配置视为开启） */
   articlesSummaryTypewriterEnabled?: boolean;
-  /** 互动增强展示（依赖第三方插件 interaction-plus；插件未启用或审核模式下无论本开关如何均隐藏；未配置视为开启） */
+  /** 互动增强展示（依赖第三方插件 interaction-plus；插件未启用或审核模式下无论本开关如何均隐藏；默认不开启，未配置视为关闭） */
   interactionPlusEnabled?: boolean;
   /** 文章归档页列表布局（L0 默认，客户端 layout.archives.listLayout）：single / double */
   archivesListLayout?: "single" | "double";

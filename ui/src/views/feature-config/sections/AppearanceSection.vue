@@ -56,9 +56,9 @@ const summaryTypewriterEnabled = computed({
 
 // ===== 通用外观：互动增强展示（spec.preferences.interactionPlusEnabled）=====
 
-/** 互动增强展示开关（未配置视为开启，与插件端默认值/ app 端兜底一致） */
+/** 互动增强展示开关（默认不开启，未配置视为关闭，与插件端默认值/ app 端兜底一致） */
 const interactionPlusEnabled = computed({
-  get: () => formState.value.spec.preferences.interactionPlusEnabled !== false,
+  get: () => formState.value.spec.preferences.interactionPlusEnabled === true,
   set: (value: boolean) => {
     formState.value.spec.preferences.interactionPlusEnabled = value;
   },
@@ -137,7 +137,7 @@ const removeCategory = (item: FeatureConfigCategoryItem) => {
         { label: '圆形', value: 'circle' },
       ]" help="应用于文章卡片（上文下图）与瞬间卡片的用户头像" />
     <FormKit v-model="interactionPlusEnabled" name="pref_interaction_plus_enabled" label="显示互动增强" type="checkbox"
-      help="依赖【互动增强】插件（interaction-plus）；插件未启用或站点处于审核模式时自动隐藏，无论本开关状态。" />
+      help="依赖【互动增强】插件（interaction-plus），默认不开启；插件未启用或站点处于审核模式时自动隐藏，无论本开关状态。" />
   </template>
 
   <!-- 博主页（资料卡视觉 + 功能入口，mine 对标博主页） -->

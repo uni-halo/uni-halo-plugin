@@ -125,7 +125,8 @@ public class PublicConfigAssembler {
      * 审核模式输出层覆盖（纯输出态，不改落库配置，开关关闭即自动还原）：
      * 登录入口（密码/微信）两开关置 false；瞬间页/笔记详情页评论显隐与
      * 评论开关置 false；hiddenNavKeys 命中的功能入口（首页快捷导航/
-     * 我的页面功能项）visible 置 false；移动端 AI 助手开关置 false。
+     * 我的页面功能项）visible 置 false；移动端 AI 助手开关置 false；
+     * 互动增强展示开关置 false。
      */
     private static void applyAuditModeOverride(ObjectNode root, List<String> hiddenNavKeys) {
         JsonNode login = root.get("loginConfig");
@@ -166,6 +167,10 @@ public class PublicConfigAssembler {
                 hideNavEntries(pages.path("mine").path("commonFeatures"), keys);
                 hideNavEntries(pages.path("mine").path("otherFeatures"), keys);
             }
+        }
+        JsonNode preferences = root.path("featureConfig").path("preferences");
+        if (preferences.isObject()) {
+            ((ObjectNode) preferences).put("interactionPlusEnabled", false);
         }
     }
 
