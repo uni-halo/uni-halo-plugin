@@ -7,3 +7,9 @@ allowBuilds:
   core-js: true
   "@parcel/watcher": true
   vue-demi: true
+
+overrides:
+  markdown-it: ">=14.3.3"
+  follow-redirects: ">=1.16.1"
+  shell-quote: ">=1.11.0"
+  source-map-js: ">=1.2.2"
